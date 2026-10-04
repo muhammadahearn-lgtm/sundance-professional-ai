@@ -13,6 +13,7 @@ import { appStatusCounts, appWindows, countBy, jobStatusCounts, recruiterKpis, s
 import { APP_STATUSES, STAGES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
 import { RecruiterMatchWidget } from "@/components/match/Match";
+import { RecruiterRecsWidget } from "@/components/recommend/Recommend";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const linkBtn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
@@ -243,9 +244,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
           <Widget title="Candidate Alerts" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["New candidate matches", "Availability changes", "Profile updates", "Recently joined candidates"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>
-          <Widget title="Recommended Candidates" action={<Soon />}>
-            <ul className="space-y-1.5 text-sm text-muted-foreground">{["Best candidate matches", "Top talent recommendations", "Role-based recommendations"].map((x) => <li key={x}>• {x}</li>)}</ul>
-          </Widget>
+          <RecruiterRecsWidget uid={uid} />
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Candidate Readiness", "Skill Gap Analysis", "Market Intelligence", "Salary Intelligence"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>

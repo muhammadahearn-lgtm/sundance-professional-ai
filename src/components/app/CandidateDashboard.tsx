@@ -11,6 +11,7 @@ import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { CareerWidget } from "@/components/career/Career";
+import { CandidateRecsWidget } from "@/components/recommend/Recommend";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -177,10 +178,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
             )}
           </Widget>
 
-          <Widget title="Recommended Jobs" action={<Soon />}>
-            <div className="grid gap-3 sm:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-20 rounded-xl border border-dashed border-border bg-muted/40" />)}</div>
-            <p className="mt-3 text-xs text-muted-foreground">Personalized job picks are on the way.</p>
-          </Widget>
+          <CandidateRecsWidget uid={uid} />
 
           <Widget title="Recent Activity">
             {activity.length === 0 ? <Empty text="No activity yet." cta={<Link to="/candidate/profile" className={linkBtn}>Complete Profile</Link>} /> : (
