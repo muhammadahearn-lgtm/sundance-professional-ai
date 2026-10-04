@@ -73,7 +73,7 @@ function Bar({ label, v, weight }: { label: string; v: number; weight: string })
   );
 }
 
-const asDetails = (d: unknown): MatchDetails => {
+export const asDetails = (d: unknown): MatchDetails => {
   const x = (d ?? {}) as Partial<MatchDetails>;
   return { strengths: x.strengths ?? [], missing: { languages: x.missing?.languages ?? [], skills: x.missing?.skills ?? [], technologies: x.missing?.technologies ?? [], requiredMissing: x.missing?.requiredMissing ?? [] }, experienceGap: x.experienceGap ?? 0, recommendations: x.recommendations ?? [] };
 };
