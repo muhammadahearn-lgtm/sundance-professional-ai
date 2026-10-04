@@ -7,7 +7,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listComparedCandidates, listSavedCandidates, listTalent, loadCandidateFull, resumeUrl, setComparedCandidate, setSavedCandidate, talentByIds, type CandidateFull } from "@/lib/talent-data";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, TALENT_SORTS, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
@@ -100,6 +100,50 @@ export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonom
   );
 }
 
+const matchTone = (s: number) => (s >= 90 ? "bg-success/15 text-success" : s >= 75 ? "bg-primary-soft text-primary" : s >= 60 ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground");
+const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? "bg-primary" : "bg-muted-foreground");
+
+function PhotoCover({ name, path }: { name: string; path?: string | null | undefined }) {
+  const url = useAvatarUrl(path);
+  const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  return url ? <img src={url} alt={`${name} photo`} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+    : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
+}
+
+export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
+  const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
+  const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
+  return (
+    <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated`}>
+      <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="relative block aspect-[5/4] overflow-hidden bg-muted">
+        <PhotoCover name={c.name} path={c.avatarPath} />
+        {score !== undefined && <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-soft backdrop-blur ${matchTone(score)} bg-card/90`}>{Math.round(score)}% Match</span>}
+        {c.availability && <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold shadow-soft"><span className={`h-2 w-2 rounded-full ${availDot(c.availability)}`} />{label(AVAILABILITY, c.availability)}</span>}
+        {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
+      </Link>
+      <div className="flex flex-1 flex-col p-4">
+        <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
+        <p className="truncate text-sm">{c.jobTitle || "—"}</p>
+        <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs</span></p>
+        <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} /></div>
+        <div className="mt-auto flex items-center gap-1.5 pt-4">
+          <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
+          <button onClick={() => lists.toggleSave(c.id)} aria-pressed={saved} aria-label={saved ? "Unsave candidate" : "Save candidate"} title="Save" className={`${icon} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}</button>
+          <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} aria-label="Compare candidate" title="Compare" className={`${icon} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" /></button>
+          <button onClick={soon("Talent pools")} aria-label="Add to talent pool" title="Talent Pool" className={icon}><UserPlus className="h-4 w-4" /></button>
+          <button onClick={soon("Messaging")} aria-label="Message candidate" title="Message" className={icon}><MessageSquare className="h-4 w-4" /></button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function useViewMode() {
+  const [v, setV] = useState<"list" | "grid">("list");
+  useEffect(() => { if (localStorage.getItem("talent-view") === "grid") setV("grid"); }, []);
+  return [v, (n: "list" | "grid") => { setV(n); localStorage.setItem("talent-view", n); }] as const;
+}
+
 function CompareTray({ lists }: { lists: Lists }) {
   if (!lists.compareIds.length) return null;
   return <div className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-elevated"><span className="text-sm font-semibold">{lists.compareIds.length} of {CANDIDATE_COMPARE_MAX} candidates selected</span><Link to="/recruiter/candidates/compare" className={primaryBtn}>Compare</Link></div>;
@@ -121,6 +165,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
   const best = useBestScores();
   const [kw, setKw] = useState(f.q);
   const [open, setOpen] = useState(false);
+  const [view, setView] = useViewMode();
   const set = (p: Partial<TalentFilters>) => navigate({ to: "/recruiter/candidates", search: { ...f, page: 1, ...p } });
 
   const results = useMemo(() => {
@@ -174,9 +219,16 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
         {open && <div className="fixed inset-0 z-40 overflow-y-auto bg-background p-4 lg:hidden"><div className="mb-3 flex justify-between"><p className="font-display text-lg font-bold">Filters</p><button onClick={() => setOpen(false)} aria-label="Close filters"><X className="h-5 w-5" /></button></div>{filters}<button onClick={() => setOpen(false)} className={`${primaryBtn} mt-4 w-full justify-center`}>Show {results.length} candidates</button></div>}
         <div className="min-w-0 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p>
-            <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{TALENT_SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-          {q.isLoading || !t ? [0, 1, 2].map((i) => <div key={i} className={`${card} h-48 animate-pulse`} />)
-            : shown.length === 0 ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No candidates found</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p></div>
+            <div className="flex items-center gap-2">
+              <div role="group" aria-label="Results view" className="inline-flex rounded-xl border border-input p-0.5">
+                {(["list", "grid"] as const).map((m) => <button key={m} type="button" aria-pressed={view === m} onClick={() => setView(m)} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${view === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}>{m === "list" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}<span className="hidden sm:inline">{m === "list" ? "List View" : "Grid View"}</span></button>)}
+              </div>
+              <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{TALENT_SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            </div></div>
+          {q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-4" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
+            : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
+                <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
+            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}</div>
             : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
