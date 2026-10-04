@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, ArrowDown, Briefcase, Users, Target, Brain, LineChart, Search, Gauge, Sparkles,
-  XCircle, Check, Quote, UserCircle2, Building2,
+  Check, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
@@ -28,7 +28,6 @@ function Index() {
   return (
     <>
       <Hero />
-      <Problem />
       <Solution />
       <HowItWorks />
       <SkillFirst />
@@ -85,36 +84,6 @@ function Hero() {
   );
 }
 
-function Problem() {
-  const cols = [
-    { icon: UserCircle2, title: "Candidates", items: ["Hard to determine job fit", "Limited career guidance", "Poor keyword matching", "Too many irrelevant opportunities", "Difficult to understand qualifications", "Time-consuming job searches"] },
-    { icon: Building2, title: "Recruiters", items: ["Resume overload", "Difficulty sourcing technical talent", "Poor candidate quality", "Manual screening", "Long hiring cycles", "Limited visibility into qualifications"] },
-  ];
-  return (
-    <section className="bg-secondary py-24">
-      <div className="container-x">
-        <SectionHeading eyebrow="The problem" title="Hiring Is Broken" desc="Resumes and keywords fail both sides of the marketplace." />
-        <div className="mt-14 grid gap-6 md:grid-cols-2">
-          {cols.map(({ icon: I, title, items }) => (
-            <div key={title} className="rounded-3xl border border-border bg-card p-8 shadow-soft">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft"><I className="h-5 w-5 text-primary" /></span>
-                <h3 className="text-xl font-bold">{title}</h3>
-              </div>
-              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                {items.map((i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive/70" /> {i}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function Solution() {
   const feats = [
