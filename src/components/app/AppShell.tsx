@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Compass, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -14,6 +14,7 @@ const NAV = {
     { to: "/candidate/jobs", label: "Jobs", Icon: Briefcase },
     { to: "/candidate/jobs/saved", label: "Saved Jobs", Icon: Bookmark },
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
+    { to: "/candidate/career", label: "Career", Icon: Compass },
     { to: "/candidate/messages", label: "Messages", Icon: MessageSquare },
     { to: "/candidate/profile", label: "Profile", Icon: UserRound },
     { to: "/candidate/settings", label: "Settings", Icon: Settings },

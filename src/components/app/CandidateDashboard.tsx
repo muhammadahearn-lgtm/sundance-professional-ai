@@ -10,6 +10,7 @@ import { applicationMetrics, buildActivity, statusBreakdown, type AppLite } from
 import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
 import { CandidateMatchWidget } from "@/components/match/Match";
+import { CareerWidget } from "@/components/career/Career";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -218,9 +219,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
           <CandidateMatchWidget uid={uid} />
 
-          <Widget title="Career Intelligence" action={<Soon />}>
-            <ul className="space-y-1.5 text-sm text-muted-foreground">{["Career Readiness Score", "Skill Gap Analysis", "Market Demand", "Salary Intelligence", "Career Recommendations"].map((x) => <li key={x}>• {x}</li>)}</ul>
-          </Widget>
+          <CareerWidget uid={uid} />
 
           <Widget title="Notifications" action={<Soon />}>
             <div className="flex items-start gap-2 text-sm text-muted-foreground"><Bell className="mt-0.5 h-4 w-4 text-primary" /><span>Updates like "Application Viewed" will appear here.</span></div>
