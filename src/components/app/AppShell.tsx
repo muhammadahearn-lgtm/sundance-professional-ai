@@ -51,9 +51,30 @@ export function AppShell({ account }: { account: Account }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => { setCollapsed(localStorage.getItem("sundance.sidebarCollapsed") === "1"); }, []);
+  const [width, setWidth] = useState(240);
+  useEffect(() => {
+    setCollapsed(localStorage.getItem("sundance.sidebarCollapsed") === "1");
+    const w = Number(localStorage.getItem("sundance.sidebarWidth"));
+    if (w >= 200 && w <= 360) setWidth(w);
+  }, []);
   function toggleCollapsed() {
     setCollapsed((c) => { localStorage.setItem("sundance.sidebarCollapsed", c ? "0" : "1"); return !c; });
+  }
+  function startResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = width;
+    function onMove(ev: PointerEvent) {
+      const w = Math.min(360, Math.max(200, startW + ev.clientX - startX));
+      setWidth(w);
+      localStorage.setItem("sundance.sidebarWidth", String(w));
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
   }
   const onboarding = pathname.endsWith("/onboarding");
   const name = `${account.firstName} ${account.lastName}`.trim() || account.email;
@@ -114,7 +135,17 @@ export function AppShell({ account }: { account: Account }) {
         {open && !onboarding && <div className="border-t border-border bg-background p-4 lg:hidden">{nav}</div>}
       </header>
       <div className="flex">
-        {!onboarding && !collapsed && <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:block">{nav}</aside>}
+        {!onboarding && !collapsed && (
+          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:block" style={{ width }}>
+            {nav}
+            <div
+              role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
+              title="Drag to resize"
+              onPointerDown={startResize}
+              className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
+            />
+          </aside>
+        )}
         <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><Outlet /></main>
       </div>
     </div>
