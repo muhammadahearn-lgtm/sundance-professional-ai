@@ -9,7 +9,7 @@ import { AuthCard, FormAlert, SuccessScreen } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Set New Password — Sundance Professionals" },
       { name: "description", content: "Choose a new password for your Sundance Professionals account." },
       { property: "og:title", content: "Set a new password" },

@@ -9,7 +9,7 @@ import { PageHero } from "@/components/site/shared";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Contact Sundance Professionals — Talk to Our Team" },
       { name: "description", content: "Get in touch with Sundance Professionals about recruiting, enterprise plans or partnerships." },
       { property: "og:title", content: "Contact Sundance Professionals" },

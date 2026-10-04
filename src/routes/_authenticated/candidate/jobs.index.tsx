@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/candidate/jobs/")({
     for (const k of ["smin", "smax", "page", "mm"] as const) { const v = num(s[k]); if (v) out[k] = v; }
     return out;
   },
-  head: () => ({ meta: [{ title: "Find Jobs — Sundance Professionals" }, { name: "description", content: "Search active jobs by role, skill, technology, salary and location." }, { property: "og:title", content: "Find Jobs — Sundance Professionals" }, { property: "og:description", content: "Search active jobs by role, skill, technology, salary and location." }] }),
+  head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Find Jobs — Sundance Professionals" }, { name: "description", content: "Search active jobs by role, skill, technology, salary and location." }, { property: "og:title", content: "Find Jobs — Sundance Professionals" }, { property: "og:description", content: "Search active jobs by role, skill, technology, salary and location." }] }),
   component: Page,
 });
 

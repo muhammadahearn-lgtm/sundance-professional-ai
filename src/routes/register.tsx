@@ -13,7 +13,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Create Account — Sundance Professionals" },
       { name: "description", content: "Join Sundance Professionals as a technology professional or recruiter." },
       { property: "og:title", content: "Join Sundance Professionals" },

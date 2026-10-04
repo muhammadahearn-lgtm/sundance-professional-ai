@@ -15,7 +15,7 @@ const DESC = "AI hiring platform for technology recruiting: skill-based hiring, 
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: TITLE },
       { name: "description", content: DESC },
       { name: "keywords", content: "AI Hiring Platform, Technology Recruiting, Career Intelligence, Skill-Based Hiring, Candidate Discovery, Recruiter Marketplace" },

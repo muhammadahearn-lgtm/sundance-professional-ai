@@ -4,7 +4,7 @@ import { PageHero, SectionHeading } from "@/components/site/shared";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "About Sundance Professionals — Mission, Vision & Principles" },
       { name: "description", content: "Sundance Professionals transforms hiring from keyword matching into intelligent, skill-first talent discovery." },
       { property: "og:title", content: "About Sundance Professionals" },

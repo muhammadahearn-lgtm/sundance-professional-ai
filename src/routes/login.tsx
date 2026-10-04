@@ -17,7 +17,7 @@ export const Route = createFileRoute("/login")({
     reason: s["reason"] === "expired" || s["reason"] === "reset" ? s["reason"] : undefined,
   }),
   head: () => ({
-    meta: [
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Log in — Sundance Professionals" },
       { name: "description", content: "Log in to your Sundance Professionals candidate or recruiter account." },
       { property: "og:title", content: "Log in to Sundance Professionals" },
