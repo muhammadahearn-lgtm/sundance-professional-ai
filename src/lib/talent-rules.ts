@@ -16,7 +16,7 @@ export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skill
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; years: number; availability: string;
   headline: string; summary: string; salary: string; arrangement: string; industries: string[]; roleId: string | null;
-  langs: string[]; skills: string[]; techs: string[]; updatedAt: string; completion: number;
+  langs: string[]; skills: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
 };
 
 /** First number in free text, "k" = thousands. "$120k-150k" -> 120000. */

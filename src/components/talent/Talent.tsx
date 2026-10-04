@@ -1,4 +1,5 @@
 import { track } from "@/lib/track";
+import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
 import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
 import { meetsMinMatch } from "@/lib/match-engine";
@@ -27,9 +28,10 @@ export const nameOf = (opts: { id: string; name: string }[], id: string) => opts
 export const btn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
 export const primaryBtn = "inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
 
-export function Avatar({ name, size = "h-12 w-12 text-base" }: { name: string; size?: string }) {
+export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name: string; size?: string; path?: string | null | undefined }) {
+  const url = useAvatarUrl(path);
   const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
-  return <div className={`grid shrink-0 place-items-center rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{i}</div>;
+  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{url ? <img src={url} alt={`${name} photo`} className="h-full w-full object-cover" /> : i}</div>;
 }
 export function Chips({ ids, opts, max = 5 }: { ids: string[]; opts: { id: string; name: string }[]; max?: number }) {
   if (!ids.length) return <span className="text-xs text-muted-foreground">—</span>;
@@ -73,7 +75,7 @@ export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonom
   return (
     <article className={`${card} p-5`}>
       <div className="flex gap-4">
-        <Avatar name={c.name} />
+        <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
@@ -294,7 +296,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
       <h1 className="font-display text-2xl font-extrabold">Compare Candidates</h1>
       {q.error ? <ErrorBox msg="Unable to load comparison." retry={() => q.refetch()} /> : q.isLoading || !t ? <div className={`${card} h-48 animate-pulse`} />
         : (q.data?.length ?? 0) < 2 ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">Select at least 2 candidates to compare</p><p className="mt-1 text-sm text-muted-foreground">You can compare up to {CANDIDATE_COMPARE_MAX}.</p>{q.data?.map((c) => <button key={c.id} onClick={() => lists.toggleCompare(c.id)} className={`${btn} mt-3`}>Remove {c.name}</button>)}<Link to="/recruiter/candidates" className={`${primaryBtn} ml-2 mt-4`}>Search talent</Link></div>
-        : <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] text-sm"><thead><tr className="border-b border-border"><th className="p-4 text-left" />{q.data!.map((c) => <th key={c.id} className="p-4 text-left align-top"><Avatar name={c.name} size="h-10 w-10 text-sm" /><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><button onClick={() => lists.toggleCompare(c.id)} className="text-xs text-muted-foreground hover:text-destructive">Remove</button></th>)}</tr></thead>
+        : <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] text-sm"><thead><tr className="border-b border-border"><th className="p-4 text-left" />{q.data!.map((c) => <th key={c.id} className="p-4 text-left align-top"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><button onClick={() => lists.toggleCompare(c.id)} className="text-xs text-muted-foreground hover:text-destructive">Remove</button></th>)}</tr></thead>
           <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-b border-border last:border-0"><td className="p-4 text-xs font-semibold uppercase text-muted-foreground">{l}</td>{q.data!.map((c) => <td key={c.id} className="p-4 align-top">{fn(c) || "—"}</td>)}</tr>)}</tbody></table></div>}
     </div>
   );
