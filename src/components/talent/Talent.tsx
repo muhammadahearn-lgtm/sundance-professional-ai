@@ -114,11 +114,11 @@ export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Tax
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
-    <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated`}>
+    <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
       <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="relative block aspect-[5/4] overflow-hidden bg-muted">
         <PhotoCover name={c.name} path={c.avatarPath} />
-        {score !== undefined && <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-soft backdrop-blur ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
-        {c.availability && <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold shadow-soft"><span className={`h-2 w-2 rounded-full ${availDot(c.availability)}`} />{label(AVAILABILITY, c.availability)}</span>}
+        {score !== undefined && <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
+        {c.availability && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold shadow-soft" title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
         {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
       </Link>
       <div className="flex flex-1 flex-col p-4">
@@ -225,10 +225,10 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
               </div>
               <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{TALENT_SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
             </div></div>
-{q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
+{q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 3xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
-            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}</div>
+            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}</div>
             : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
