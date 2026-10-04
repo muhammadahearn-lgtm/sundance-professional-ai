@@ -32,7 +32,6 @@ function Index() {
       <SkillFirst />
       <AudienceSplit />
       <Intelligence />
-      <Transparency />
       <Testimonials />
       <section className="py-24">
         <div className="container-x">
@@ -222,52 +221,6 @@ function Intelligence() {
   );
 }
 
-function Bar({ label, v }: { label: string; v: number }) {
-  return (
-    <div>
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{v}%</span></div>
-      <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${v}%` }} /></div>
-    </div>
-  );
-}
-
-
-function Transparency() {
-  const explains = ["Why you match", "Which skills align", "Which technologies align", "Missing skills", "Career readiness"];
-  return (
-    <section className="bg-secondary py-24">
-      <div className="container-x grid items-center gap-14 lg:grid-cols-2">
-        <div>
-          <SectionHeading center={false} eyebrow="Why Sundance AI" title="Transparent Hiring Intelligence" desc="Every match should explain:" />
-          <ul className="mt-6 space-y-3">
-            {explains.map((e) => <li key={e} className="flex items-center gap-3 font-medium"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-soft"><Check className="h-3.5 w-3.5 text-primary" /></span>{e}</li>)}
-          </ul>
-        </div>
-        <div className="rounded-3xl border border-border bg-card p-8 shadow-elevated">
-          <div className="flex items-center gap-6">
-            <div className="relative h-32 w-32 shrink-0">
-              <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-primary" strokeWidth="3" strokeDasharray="95 100" strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="font-display text-3xl font-extrabold">95%</span><span className="text-xs text-muted-foreground">Match Score</span></div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Senior ML Engineer</div>
-              <div className="font-display text-xl font-bold">Excellent match</div>
-              <div className="mt-2 flex flex-wrap gap-1.5">{["Python", "PyTorch", "AWS"].map((t) => <span key={t} className="rounded-md bg-primary-soft px-2 py-0.5 text-xs font-medium text-accent-foreground">{t}</span>)}<span className="rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground">Missing: Kubeflow</span></div>
-            </div>
-          </div>
-          <div className="mt-8 space-y-4">
-            <Bar label="Skill Alignment" v={96} />
-            <Bar label="Experience Alignment" v={92} />
-            <Bar label="Career Readiness" v={89} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function Testimonials() {
   const t = [
