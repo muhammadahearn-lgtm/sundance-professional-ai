@@ -3,8 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass,
-} from "lucide-react";
+  Compass,, Lightbulb } from "lucide-react";
 import { Logo } from "@/components/site/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
@@ -16,6 +15,7 @@ const NAV = {
     { to: "/candidate/jobs/saved", label: "Saved Jobs", Icon: Bookmark },
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
     { to: "/candidate/career", label: "Career", Icon: Compass },
+    { to: "/candidate/recommendations", label: "For You", Icon: Lightbulb },
     { to: "/candidate/messages", label: "Messages", Icon: MessageSquare },
     { to: "/candidate/profile", label: "Profile", Icon: UserRound },
     { to: "/candidate/settings", label: "Settings", Icon: Settings },
@@ -26,6 +26,7 @@ const NAV = {
     { to: "/recruiter/candidates", label: "Search Talent", Icon: Search },
     { to: "/recruiter/applications", label: "Applications", Icon: FileText },
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
+    { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare },
     { to: "/recruiter/company", label: "Company", Icon: Building2 },
     { to: "/recruiter/profile", label: "Profile", Icon: UserRound },
