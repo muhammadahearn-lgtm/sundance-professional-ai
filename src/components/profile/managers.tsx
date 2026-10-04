@@ -67,12 +67,12 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
     start_date: item?.start_date ?? "", end_date: item?.end_date ?? "", current_position: item?.current_position ?? false,
     responsibilities: item?.responsibilities ?? "", achievements: item?.achievements ?? "", technologies_used: item?.technologies_used ?? [],
   });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const er: Record<string, string> = {};
+    const er: Partial<Record<keyof typeof f, string>> = {};
     if (!f.company_name.trim()) er.company_name = "Company is required.";
     if (!f.job_title.trim()) er.job_title = "Job title is required.";
     if (!f.start_date) er.start_date = "Start date is required.";
@@ -84,7 +84,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
       ? await supabase.from("work_experience").update(row).eq("experience_id", item.experience_id)
       : await supabase.from("work_experience").insert({ ...row, candidate_id: uid });
     setSaving(false);
-    if (error) return toast.error(friendlyError(error, "Profile save failed. Please try again."));
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
     toast.success(item ? "Experience updated" : "Experience added"); onDone();
   }
   return (
@@ -134,11 +134,11 @@ export function EducationManager({ uid, items, adding, setAdding }: { uid: strin
 
 function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Edu; onDone: () => void; onCancel: () => void }) {
   const [f, setF] = useState({ institution_name: item?.institution_name ?? "", degree: item?.degree ?? "", field_of_study: item?.field_of_study ?? "", graduation_year: item?.graduation_year?.toString() ?? "" });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const er: Record<string, string> = {};
+    const er: Partial<Record<keyof typeof f, string>> = {};
     if (!f.institution_name.trim()) er.institution_name = "Institution is required.";
     const y = Number(f.graduation_year);
     if (f.graduation_year && (!Number.isInteger(y) || y < 1950 || y > 2040)) er.graduation_year = "Enter a valid year.";
@@ -147,7 +147,7 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
     const row = { institution_name: f.institution_name.trim(), degree: f.degree.trim(), field_of_study: f.field_of_study.trim(), graduation_year: f.graduation_year ? y : null };
     const { error } = item ? await supabase.from("education").update(row).eq("education_id", item.education_id) : await supabase.from("education").insert({ ...row, candidate_id: uid });
     setSaving(false);
-    if (error) return toast.error(friendlyError(error, "Profile save failed. Please try again."));
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
     toast.success(item ? "Education updated" : "Education added"); onDone();
   }
   return (
@@ -195,11 +195,11 @@ export function CertificationManager({ uid, items, adding, setAdding }: { uid: s
 
 function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; onDone: () => void; onCancel: () => void }) {
   const [f, setF] = useState({ certification_name: item?.certification_name ?? "", issuing_organization: item?.issuing_organization ?? "", issue_date: item?.issue_date ?? "", expiration_date: item?.expiration_date ?? "", certification_number: item?.certification_number ?? "" });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const er: Record<string, string> = {};
+    const er: Partial<Record<keyof typeof f, string>> = {};
     if (!f.certification_name.trim()) er.certification_name = "Certification name is required.";
     if (f.issue_date && f.expiration_date && f.expiration_date < f.issue_date) er.expiration_date = "Expiration must be after issue date.";
     setErr(er); if (Object.keys(er).length) return;
@@ -207,7 +207,7 @@ function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; o
     const row = { certification_name: f.certification_name.trim(), issuing_organization: f.issuing_organization.trim(), issue_date: f.issue_date || null, expiration_date: f.expiration_date || null, certification_number: f.certification_number.trim() };
     const { error } = item ? await supabase.from("certifications").update(row).eq("certification_id", item.certification_id) : await supabase.from("certifications").insert({ ...row, candidate_id: uid });
     setSaving(false);
-    if (error) return toast.error(friendlyError(error, "Profile save failed. Please try again."));
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
     toast.success(item ? "Certification updated" : "Certification added"); onDone();
   }
   return (

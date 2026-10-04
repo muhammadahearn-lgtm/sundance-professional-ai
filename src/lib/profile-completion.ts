@@ -52,8 +52,8 @@ export function computeCompletion(i: CompletionInput): { percent: number; recomm
 
 export type ProfessionalInput = { jobTitle: string; headline: string; location: string; yearsExperience: string; summary: string };
 
-export function validateProfessional(p: ProfessionalInput): Record<string, string> {
-  const e: Record<string, string> = {};
+export function validateProfessional(p: ProfessionalInput): Partial<Record<keyof ProfessionalInput, string>> {
+  const e: Partial<Record<keyof ProfessionalInput, string>> = {};
   if (!p.jobTitle.trim()) e.jobTitle = "Current role is required.";
   if (!p.headline.trim()) e.headline = "Headline is required.";
   if (!p.location.trim()) e.location = "Location is required.";

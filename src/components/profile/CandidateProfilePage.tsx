@@ -205,7 +205,7 @@ function useSaveProfile(uid: string) {
 function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone: () => void }) {
   const save = useSaveProfile(uid);
   const [f, setF] = useState({ jobTitle: p.job_title, headline: p.headline, employer: p.current_employer, location: p.location, yearsExperience: String(p.years_experience), industries: p.industry_experience, summary: p.summary });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -287,12 +287,12 @@ function ResumeManager({ uid, p }: { uid: string; p: Profile }) {
 
   async function upload(file: File) {
     const bad = validateResumeFile(file);
-    if (bad) return toast.error(bad);
+    if (bad) { toast.error(bad); return; }
     setBusy(true);
     const safe = file.name.replace(/[^\w.-]+/g, "_").slice(-80);
     const path = `${uid}/${Date.now()}-${safe}`;
-    const { error } = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || undefined });
-    if (error) { setBusy(false); return toast.error(friendlyError(error, "Resume upload failed. Please try again.")); }
+    const { error } = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || "application/octet-stream" });
+    if (error) { setBusy(false); { toast.error(friendlyError(error, "Resume upload failed. Please try again.")); return; } }
     const old = p.resume_path;
     const ok = await save({ resume_path: path, resume_file_name: file.name, resume_uploaded_at: new Date().toISOString() }, old ? "Resume replaced" : "Resume uploaded");
     if (ok && old) await supabase.storage.from("resumes").remove([old]);
@@ -302,14 +302,14 @@ function ResumeManager({ uid, p }: { uid: string; p: Profile }) {
   async function download() {
     if (!p.resume_path) return;
     const { data, error } = await supabase.storage.from("resumes").createSignedUrl(p.resume_path, 60, { download: p.resume_file_name ?? true });
-    if (error || !data) return toast.error(friendlyError(error, "Couldn't download your resume."));
+    if (error || !data) { toast.error(friendlyError(error, "Couldn't download your resume.")); return; }
     window.location.href = data.signedUrl;
   }
   async function remove() {
     if (!p.resume_path || !window.confirm("Delete your resume?")) return;
     setBusy(true);
     const { error } = await supabase.storage.from("resumes").remove([p.resume_path]);
-    if (error) { setBusy(false); return toast.error(friendlyError(error, "Couldn't delete your resume.")); }
+    if (error) { setBusy(false); { toast.error(friendlyError(error, "Couldn't delete your resume.")); return; } }
     await save({ resume_path: null, resume_file_name: null, resume_uploaded_at: null }, "Resume deleted");
     setBusy(false);
   }
