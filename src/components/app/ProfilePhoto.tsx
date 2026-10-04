@@ -26,7 +26,7 @@ export function ProfilePhoto({ uid, path, initials, className = "h-24 w-24 text-
   async function pick(file: File | undefined) {
     if (!file) return;
     const err = validateAvatar(file);
-    if (err) return toast.error(err);
+    if (err) { toast.error(err); return; }
     setBusy(true);
     try {
       const p = await uploadAvatar(uid, await toSquareDataUrl(file));
