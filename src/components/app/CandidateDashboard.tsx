@@ -33,7 +33,7 @@ async function loadDashboard(uid: string) {
     supabase.from("education").select("education_id").eq("candidate_id", uid),
     supabase.from("certifications").select("created_at, certification_name").eq("candidate_id", uid),
   ]);
-  for (const r of [p, apps, saved, skills, langs, techs, exp, edu, certs]) if (r.error) throw r.error;
+  for (const r of [p, prof, apps, saved, skills, langs, techs, exp, edu, certs]) if (r.error) throw r.error;
   return { profile: p.data, apps: apps.data ?? [], saved: saved.data ?? [], skills: skills.data ?? [], langCount: langs.data?.length ?? 0, techCount: techs.data?.length ?? 0, expCount: exp.data?.length ?? 0, eduCount: edu.data?.length ?? 0, certs: certs.data ?? [] };
 }
 
