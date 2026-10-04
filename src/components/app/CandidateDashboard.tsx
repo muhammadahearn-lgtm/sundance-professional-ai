@@ -11,6 +11,7 @@ import { computeCompletion } from "@/lib/profile-completion";
 import { applicationMetrics, buildActivity, statusBreakdown, type AppLite } from "@/lib/candidate-dashboard";
 import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
+import { useAvatarUrl } from "./ProfilePhoto";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { CareerWidget } from "@/components/career/Career";
 import { MessagesWidget } from "@/components/messages/Messages";
