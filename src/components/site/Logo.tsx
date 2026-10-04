@@ -7,7 +7,7 @@ export function Logo() {
         <span className="h-3 w-3 rounded-full bg-primary-foreground" />
       </span>
       <span className="font-display text-lg font-extrabold tracking-tight">
-        Sundance<span className="text-primary"> AI</span>
+        Sundance<span className="text-primary"> Professional AI</span>
       </span>
     </Link>
   );
