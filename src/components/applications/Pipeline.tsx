@@ -1,3 +1,4 @@
+import { MessageButton } from "@/components/messages/Messages";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -82,6 +83,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     <div className="mt-3 flex items-center gap-1.5">
                       {c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className="text-xs font-semibold text-primary">View</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className="text-xs font-semibold text-primary">View</Link>}
+                      <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className="text-xs font-semibold text-primary" />
                       <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} className="ml-auto rounded-lg border border-input bg-background px-1.5 py-1 text-xs">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
                     </div>
                   </article>))}

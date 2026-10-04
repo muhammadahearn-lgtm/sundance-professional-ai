@@ -155,6 +155,7 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
               <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
                 <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Candidate Moved To Pipeline")} className={btn}>Move To Pipeline</button>
+                <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
                 {a.application_status !== "rejected" && <button onClick={() => act(() => setApplicationStatus(a.application_id, "rejected"), "Candidate Rejected")} className={`${btn} hover:border-destructive hover:text-destructive`}>Reject</button>}</div>
             </article>))}</div>}
     </div>
