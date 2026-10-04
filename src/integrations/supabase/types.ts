@@ -350,40 +350,70 @@ export type Database = {
       }
       companies: {
         Row: {
+          banner_url: string | null
           company_id: string
           company_name: string
           company_size: string
+          contact_email: string
           created_at: string
           created_by: string
           description: string
+          gallery_urls: string[]
+          headquarters: string
+          hiring_regions: string[]
+          hiring_volume: string
           industry: string
+          logo_url: string | null
           organization_type: Database["public"]["Enums"]["organization_type"]
+          preferred_work_arrangements: string[]
+          primary_technical_roles: string[]
           updated_at: string
           website: string
+          why_work_here: string
         }
         Insert: {
+          banner_url?: string | null
           company_id?: string
           company_name: string
           company_size?: string
+          contact_email?: string
           created_at?: string
           created_by?: string
           description?: string
+          gallery_urls?: string[]
+          headquarters?: string
+          hiring_regions?: string[]
+          hiring_volume?: string
           industry?: string
+          logo_url?: string | null
           organization_type?: Database["public"]["Enums"]["organization_type"]
+          preferred_work_arrangements?: string[]
+          primary_technical_roles?: string[]
           updated_at?: string
           website?: string
+          why_work_here?: string
         }
         Update: {
+          banner_url?: string | null
           company_id?: string
           company_name?: string
           company_size?: string
+          contact_email?: string
           created_at?: string
           created_by?: string
           description?: string
+          gallery_urls?: string[]
+          headquarters?: string
+          hiring_regions?: string[]
+          hiring_volume?: string
           industry?: string
+          logo_url?: string | null
           organization_type?: Database["public"]["Enums"]["organization_type"]
+          preferred_work_arrangements?: string[]
+          primary_technical_roles?: string[]
           updated_at?: string
           website?: string
+          why_work_here?: string
         }
         Relationships: []
       }
@@ -751,14 +781,27 @@ export type Database = {
           company_name: string
           company_website: string
           created_at: string
+          experience_levels: string[]
+          geographic_regions: string[]
           industry: string
+          industry_specializations: string[]
           location: string
+          notify_applications: boolean
+          notify_candidates: boolean
+          notify_email: boolean
+          notify_pipeline: boolean
           organization_type: string
+          preferred_candidate_types: string[]
+          preferred_contact_method: string
           professional_summary: string
+          recruiter_visibility: string
+          roles_recruited: string[]
+          secondary_specializations: string[]
           specialization: string
           title: string
           updated_at: string
           user_id: string
+          work_arrangements: string[]
           years_experience: number
         }
         Insert: {
@@ -767,14 +810,27 @@ export type Database = {
           company_name?: string
           company_website?: string
           created_at?: string
+          experience_levels?: string[]
+          geographic_regions?: string[]
           industry?: string
+          industry_specializations?: string[]
           location?: string
+          notify_applications?: boolean
+          notify_candidates?: boolean
+          notify_email?: boolean
+          notify_pipeline?: boolean
           organization_type?: string
+          preferred_candidate_types?: string[]
+          preferred_contact_method?: string
           professional_summary?: string
+          recruiter_visibility?: string
+          roles_recruited?: string[]
+          secondary_specializations?: string[]
           specialization?: string
           title?: string
           updated_at?: string
           user_id: string
+          work_arrangements?: string[]
           years_experience?: number
         }
         Update: {
@@ -783,14 +839,27 @@ export type Database = {
           company_name?: string
           company_website?: string
           created_at?: string
+          experience_levels?: string[]
+          geographic_regions?: string[]
           industry?: string
+          industry_specializations?: string[]
           location?: string
+          notify_applications?: boolean
+          notify_candidates?: boolean
+          notify_email?: boolean
+          notify_pipeline?: boolean
           organization_type?: string
+          preferred_candidate_types?: string[]
+          preferred_contact_method?: string
           professional_summary?: string
+          recruiter_visibility?: string
+          roles_recruited?: string[]
+          secondary_specializations?: string[]
           specialization?: string
           title?: string
           updated_at?: string
           user_id?: string
+          work_arrangements?: string[]
           years_experience?: number
         }
         Relationships: [
@@ -1127,6 +1196,17 @@ export type Database = {
       candidate_visible_to_recruiters: {
         Args: { _candidate: string }
         Returns: boolean
+      }
+      company_recruiters: {
+        Args: { _company: string }
+        Returns: {
+          first_name: string
+          last_name: string
+          location: string
+          specialization: string
+          title: string
+          user_id: string
+        }[]
       }
       complete_onboarding: { Args: never; Returns: undefined }
       has_role: {
