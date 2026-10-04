@@ -14,3 +14,4 @@
 
 - [x] Stage 12 – Match Intelligence (salary in preferences, match filters, lowest-match sort, pipeline/compare scores, recalc on job publish/edit, dashboard extras)
 - [x] Stage 13 – Career Intelligence (readiness, gaps, demand, salary, recommendations, roadmap, trends)
+- [x] Stage 14 – Recommendation Engine

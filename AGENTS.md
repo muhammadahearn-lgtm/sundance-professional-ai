@@ -26,3 +26,4 @@
 - Moving a pipeline card updates the linked application status via `stageToStatus` (src/lib/talent-rules.ts); pipeline writes are guarded by the `pipeline_job_guard` trigger. Why: candidate timeline mirrors recruiter progress, recruiters can't touch others' jobs.
 - Talent search loads searchable candidates once and filters client-side (`matchesTalent`); filter state lives in the URL. Why: free-text salary and array fields don't filter well in the API at this scale.
 - Career intelligence is computed client-side by the pure `career-engine` from profile, taxonomy, active jobs and match_scores; only daily `career_snapshots` (candidate-owned) are stored for trend history. Why: deterministic, explainable output and no fakeable shared data.
+- Recommendations are computed client-side by the pure `recommend-engine` on top of match_scores and the career report; nothing new is stored. Why: explainable, deterministic and unfakeable, with no extra tables.
