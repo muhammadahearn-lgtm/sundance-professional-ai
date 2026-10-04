@@ -1,4 +1,5 @@
-import { MatchBadge, useAutoRecalc, useScores } from "@/components/match/Match";
+import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
+import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
@@ -123,7 +124,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
     const low = f.q.trim().toLowerCase();
     const t = tax.data;
     const kwIds = low ? [...t.languages, ...t.skills, ...t.technologies, ...t.roles].filter((o) => o.name.toLowerCase().includes(low) || low.includes(o.name.toLowerCase())).map((o) => o.id) : [];
-    const filtered = q.data.filter((c) => matchesTalent(c, f, kwIds));
+    const filtered = q.data.filter((c) => matchesTalent(c, f, kwIds) && meetsMinMatch(best[c.id], f.mm));
     if (f.sort === "match") return [...filtered].sort((a, b) => (best[b.id] ?? -1) - (best[a.id] ?? -1));
     return sortTalent(filtered, f.sort, f.q);
   }, [q.data, tax.data, f, best]);

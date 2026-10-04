@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/recruiter/candidates/")({
     const full: TalentFilters = {
       q: str(s["q"]), role: str(s["role"]), exp: str(s["exp"]), loc: str(s["loc"]), sort: str(s["sort"]) || "match",
       langs: arr(s["langs"]), skills: arr(s["skills"]), techs: arr(s["techs"]), avail: arr(s["avail"]), arr: arr(s["arr"]), ind: arr(s["ind"]),
-      smin: num(s["smin"]), smax: num(s["smax"]), page: num(s["page"]) || 1, remote: s["remote"] === true || s["remote"] === "true",
+      smin: num(s["smin"]), smax: num(s["smax"]), page: num(s["page"]) || 1, mm: num(s["mm"]), remote: s["remote"] === true || s["remote"] === "true",
     };
     const o: Partial<TalentFilters> = {};
     for (const [k, v] of Object.entries(full)) { const d = DEFAULT_TALENT[k as keyof TalentFilters]; if (Array.isArray(v) ? v.length : v !== d) Object.assign(o, { [k]: v }); }

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/candidate/jobs/")({
     const out: Partial<SearchState> = {};
     for (const k of ["q", "role", "exp", "loc", "company", "sort"] as const) { const v = str(s[k]); if (v) out[k] = v; }
     for (const k of ["langs", "skills", "techs", "arr", "emp"] as const) { const v = arr(s[k]); if (v.length) out[k] = v; }
-    for (const k of ["smin", "smax", "page"] as const) { const v = num(s[k]); if (v) out[k] = v; }
+    for (const k of ["smin", "smax", "page", "mm"] as const) { const v = num(s[k]); if (v) out[k] = v; }
     return out;
   },
   head: () => ({ meta: [{ title: "Find Jobs — Sundance Professional AI" }, { name: "description", content: "Search active jobs by role, skill, technology, salary and location." }, { property: "og:title", content: "Find Jobs — Sundance Professional AI" }, { property: "og:description", content: "Search active jobs by role, skill, technology, salary and location." }] }),
