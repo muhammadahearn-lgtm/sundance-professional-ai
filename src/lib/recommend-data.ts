@@ -76,6 +76,7 @@ export async function loadRecruiterRecs(uid: string) {
   return {
     candidates: recommendCandidates(rows),
     pipeline: recommendPipeline(pipe.map((p) => ({ pipelineId: p.pipeline_id, candidateId: p.candidate_id, name: p.name, jobTitle: p.jobs?.job_title ?? "General", stage: p.current_stage, stageDate: p.stage_date, match: scoreOf(p.candidate_id, p.job_id) ? Number(scoreOf(p.candidate_id, p.job_id)!.overall_match_score) : null }))),
+    appIdByPipeline: Object.fromEntries(pipe.map((p) => [p.pipeline_id, p.applicationId])) as Record<string, string | null>,
     hiring: recommendHiring(health),
     searches: active.filter((j) => j.role_id).map((j) => ({ jobId: j.job_id, title: j.job_title, roleId: j.role_id!, remote: j.work_arrangement === "remote" })),
   };
