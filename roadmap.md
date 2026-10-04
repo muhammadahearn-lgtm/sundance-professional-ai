@@ -17,3 +17,4 @@
 - [x] Stage 14 – Recommendation Engine
 - [x] Stage 15 – Messaging System
 - [x] Stage 16 – Notifications System
+- [x] Stage 17 – Analytics & Reporting
