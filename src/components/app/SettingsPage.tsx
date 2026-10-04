@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -105,10 +106,10 @@ export function SettingsPage({ account }: { account: Account }) {
         <Card title="Change Password">
           <form className="space-y-4" onSubmit={changePassword}>
             {pw && <FormAlert kind={pw.k}>{pw.t}</FormAlert>}
-            <div className="space-y-2"><Label htmlFor="current">Current Password</Label><Input id="current" name="current" type="password" autoComplete="current-password" /></div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label htmlFor="next">New Password</Label><Input id="next" name="next" type="password" autoComplete="new-password" /></div>
-              <div className="space-y-2"><Label htmlFor="confirm">Confirm New Password</Label><Input id="confirm" name="confirm" type="password" autoComplete="new-password" /></div>
+            <div className="space-y-2"><Label htmlFor="current">Current Password</Label><PasswordInput id="current" name="current" autoComplete="current-password" /></div>
+<div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2"><Label htmlFor="next">New Password</Label><PasswordInput id="next" name="next" autoComplete="new-password" /></div>
+              <div className="space-y-2"><Label htmlFor="confirm">Confirm New Password</Label><PasswordInput id="confirm" name="confirm" autoComplete="new-password" /></div>
             </div>
             <Button type="submit" className="rounded-full">Update Password</Button>
           </form>

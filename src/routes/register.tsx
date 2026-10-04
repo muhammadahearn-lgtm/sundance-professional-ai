@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyAuthError, validateRegistration, type Role } from "@/lib/auth-rules";
 import { AuthCard, FieldError, FormAlert } from "@/components/auth/AuthCard";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -139,8 +140,8 @@ function Register() {
               <div className="space-y-2"><Label htmlFor="lastName">Last Name</Label><Input id="lastName" name="lastName" autoComplete="family-name" /><FieldError msg={errors["lastName"]} /></div>
             </div>
             <div className="space-y-2"><Label htmlFor="email">Email Address</Label><Input id="email" name="email" type="email" autoComplete="email" /><FieldError msg={errors["email"]} /></div>
-            <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" name="password" type="password" autoComplete="new-password" /><FieldError msg={errors["password"]} /></div>
-            <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><Input id="confirm" name="confirm" type="password" autoComplete="new-password" /><FieldError msg={errors["confirm"]} /></div>
+            <div className="space-y-2"><Label htmlFor="password">Password</Label><PasswordInput id="password" name="password" autoComplete="new-password" /><FieldError msg={errors["password"]} /></div>
+            <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><PasswordInput id="confirm" name="confirm" autoComplete="new-password" /><FieldError msg={errors["confirm"]} /></div>
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
               <span>I agree to the Terms of Service and Privacy Policy</span>

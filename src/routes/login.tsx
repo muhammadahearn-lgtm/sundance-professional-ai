@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { dashboardPath, friendlyAuthError } from "@/lib/auth-rules";
 import { fetchAccount } from "@/lib/account";
 import { AuthCard, FormAlert } from "@/components/auth/AuthCard";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 
 type Search = { reason?: "expired" | "reset" | undefined };
 
@@ -78,7 +79,7 @@ function Login() {
         )}
         {info && <FormAlert kind="success">{info}</FormAlert>}
         <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" autoComplete="email" /></div>
-        <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" name="password" type="password" autoComplete="current-password" /></div>
+        <div className="space-y-2"><Label htmlFor="password">Password</Label><PasswordInput id="password" name="password" autoComplete="current-password" /></div>
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2"><Checkbox id="remember" defaultChecked /> Remember me</label>
           <Link to="/forgot-password" className="font-medium text-primary hover:underline">Forgot password?</Link>
