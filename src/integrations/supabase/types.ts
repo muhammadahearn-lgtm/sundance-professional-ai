@@ -491,6 +491,32 @@ export type Database = {
         }
         Relationships: []
       }
+      company_contacts: {
+        Row: {
+          company_id: string
+          contact_email: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contact_email?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contact_email?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           application_id: string | null
