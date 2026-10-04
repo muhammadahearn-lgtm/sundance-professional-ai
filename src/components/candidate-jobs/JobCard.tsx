@@ -109,7 +109,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
       <div className="flex gap-4">
         <CompanyLogo path={j.companies?.logo_url} />
         <div className="min-w-0 flex-1">
-          <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
+          <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-base font-bold leading-tight hover:text-primary">{j.job_title}</Link>
           <p className="text-sm font-medium">{j.companies?.company_name}</p>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
@@ -120,7 +120,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
           </div>
           <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{plainPreview(j.job_description)}</p>
           {tax && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 space-y-2">
               <ReqGroup title="Programming Languages" rows={j.job_languages} names={tax.languages} tone="primary" />
               <ReqGroup title="Technical Skills" rows={j.job_skills} names={tax.skills} tone="violet" />
               <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} tone="teal" />
