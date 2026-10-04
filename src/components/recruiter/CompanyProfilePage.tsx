@@ -146,13 +146,34 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   );
 }
 
-function Header({ c, children }: { c: Company; children?: React.ReactNode }) {
+function HeaderUpload({ onFile, label, className }: { onFile: (f: File) => void; label: string; className: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
+        onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; setBusy(true); await onFile(f); setBusy(false); }} />
+      <button type="button" disabled={busy} onClick={() => ref.current?.click()} aria-label={label} title={label}
+        className={`absolute grid h-8 w-8 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow hover:opacity-90 disabled:opacity-60 ${className}`}>
+        <Camera className="h-4 w-4" />
+      </button>
+    </>
+  );
+}
+
+function Header({ c, children, onUploadLogo, onUploadBanner }: { c: Company; children?: React.ReactNode; onUploadLogo?: ((f: File) => Promise<void>) | undefined; onUploadBanner?: ((f: File) => Promise<void>) | undefined }) {
   return (
     <div className={`${card} overflow-hidden`}>
-      {c.banner_url ? <BrandImg path={c.banner_url} alt="Company banner" className="h-32 w-full object-cover sm:h-44" /> : <div className="h-32 bg-gradient-primary sm:h-44" />}
+      <div className="relative">
+        {c.banner_url ? <BrandImg path={c.banner_url} alt="Company banner" className="h-32 w-full object-cover sm:h-44" /> : <div className="h-32 bg-gradient-primary sm:h-44" />}
+        {onUploadBanner && <HeaderUpload onFile={onUploadBanner} label={c.banner_url ? "Change banner" : "Upload banner"} className="right-3 top-3" />}
+      </div>
       <div className="p-6 pt-0">
         <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end">
-          {c.logo_url ? <BrandImg path={c.logo_url} alt="Company logo" className="h-20 w-20 rounded-2xl border-4 border-card bg-card object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-muted"><Building2 className="h-8 w-8 text-muted-foreground" /></div>}
+          <div className="relative shrink-0 self-start">
+            {c.logo_url ? <BrandImg path={c.logo_url} alt="Company logo" className="h-20 w-20 rounded-2xl border-4 border-card bg-card object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-muted"><Building2 className="h-8 w-8 text-muted-foreground" /></div>}
+            {onUploadLogo && <HeaderUpload onFile={onUploadLogo} label={c.logo_url ? "Change logo" : "Upload logo"} className="-bottom-1 -right-1" />}
+          </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-2xl font-extrabold">{c.company_name}</h1>
             <p className="text-sm text-muted-foreground">{[c.industry, c.company_size && `${c.company_size} employees`, ORG_TYPES.find(([k]) => k === c.organization_type)?.[1]].filter(Boolean).join(" · ")}</p>
