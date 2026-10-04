@@ -1,3 +1,4 @@
+import { meetsMinMatch } from "./match-engine";
 import { supabase } from "@/integrations/supabase/client";
 import type { Taxonomy } from "./jobs-data";
 import type { ReqItem, ReqLevel } from "./job-rules";
@@ -67,11 +68,14 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
   else query = query.order("created_at", { ascending: false });
 
   const from = (Math.max(1, s.page) - 1) * PAGE_SIZE;
-  if (s.sort === "match") {
-    const { data, error, count } = await query;
+  if (s.sort === "match" || s.sort === "match_low" || s.mm) {
+    const { data, error } = await query;
     if (error) throw error;
-    const ranked = [...(data ?? [])].sort((a, b) => (scores[b.job_id] ?? -1) - (scores[a.job_id] ?? -1));
-    return { rows: ranked.slice(from, from + PAGE_SIZE), total: count ?? ranked.length };
+    let ranked = (data ?? []).filter((r) => meetsMinMatch(scores[r.job_id], s.mm));
+    const dir = s.sort === "match_low" ? -1 : 1;
+    if (s.sort === "match" || s.sort === "match_low") ranked = [...ranked].sort((a, b) => dir * ((scores[b.job_id] ?? -1) - (scores[a.job_id] ?? -1)));
+    else if (s.sort === "relevant" && q) ranked = [...ranked].sort((a, b) => relevance(b.job_title, b.job_description, q) - relevance(a.job_title, a.job_description, q));
+    return { rows: ranked.slice(from, from + PAGE_SIZE), total: ranked.length };
   }
   const { data, error, count } = await query.range(from, from + PAGE_SIZE - 1);
   if (error) throw error;

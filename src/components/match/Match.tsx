@@ -6,7 +6,7 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculateMatches } from "@/lib/match.functions";
-import { matchTier, type MatchDetails } from "@/lib/match-engine";
+import { MATCH_FILTERS, matchTier, type MatchDetails } from "@/lib/match-engine";
 
 export type ScoreRow = {
   candidate_id: string; job_id: string; overall_match_score: number; language_alignment_score: number; skill_alignment_score: number;
@@ -48,6 +48,12 @@ export function useAutoRecalc(enabled = true) {
     r.mutate(undefined, { onError: () => toast.error("Unable to calculate match scores") });
   }, [enabled, r]);
   return r;
+}
+
+/** 90%+ / 80%+ / 70%+ / 60%+ / All Matches. 0 = all. */
+export function MatchFilter({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const opts: [number, string][] = [...MATCH_FILTERS.map((n): [number, string] => [n, `${n}%+`]), [0, "All Matches"]];
+  return <div className="flex flex-wrap gap-1.5" role="group" aria-label="Minimum match">{opts.map(([n, l]) => <button key={n} type="button" onClick={() => onChange(n)} aria-pressed={value === n} className={`rounded-full border px-2.5 py-1 text-xs font-medium ${value === n ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}>{l}</button>)}</div>;
 }
 
 const toneCls = { success: "bg-success/15 text-success", primary: "bg-primary-soft text-primary", warning: "bg-warning/15 text-warning", muted: "bg-muted text-muted-foreground" };
@@ -132,13 +138,14 @@ export function CandidateMatchWidget({ uid, compact = false }: { uid: string; co
         <button onClick={() => r.mutate(undefined, { onSuccess: () => toast.success("Profile Re-Evaluated") })} disabled={r.isPending} aria-label="Recalculate matches" className="ml-auto text-muted-foreground hover:text-primary disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${r.isPending ? "animate-spin" : ""}`} /></button></div>
       {q.isLoading ? <div className="h-24 animate-pulse rounded-xl bg-muted" /> : q.error ? <p className="text-sm text-destructive">Match Score Unavailable.</p> : rows.length === 0 ? <p className="text-sm text-muted-foreground">{r.isPending ? "Calculating matches…" : "No active jobs to match yet."}</p> : (
         <>
-          {!compact && <div className="mb-3 flex items-end gap-2"><span className="text-3xl font-extrabold">{avg}%</span><span className="pb-1 text-xs text-muted-foreground">average across {rows.length} active job{rows.length === 1 ? "" : "s"}</span></div>}
+          {!compact && <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs"><div className="rounded-lg bg-muted/60 py-2"><div className="text-2xl font-extrabold">{avg}%</div><div className="text-muted-foreground">Average across {rows.length} job{rows.length === 1 ? "" : "s"}</div></div><div className="rounded-lg bg-muted/60 py-2"><div className="text-2xl font-extrabold">{Math.round(Number(rows[0]!.overall_match_score))}%</div><div className="text-muted-foreground">Highest match</div></div></div>}
           <ul className="space-y-2">{rows.slice(0, compact ? 5 : 3).map((x) => (
             <li key={x.job_id} className="flex items-center justify-between gap-2 text-sm"><div className="min-w-0"><Link to="/candidate/jobs/$id" params={{ id: x.job_id }} className="block truncate font-semibold hover:text-primary">{x.jobs.job_title}</Link><span className="text-xs text-muted-foreground">{x.jobs.companies?.company_name}</span></div><MatchBadge score={x.overall_match_score} /></li>
           ))}</ul>
           {!compact && <>
             <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match spread</p>
             <div className="mt-1 grid grid-cols-4 gap-1 text-center text-xs">{tiers.map((t) => <div key={t.l} className="rounded-lg bg-muted/60 py-1.5"><div className="font-bold">{t.n}</div><div className="text-muted-foreground">{t.l}</div></div>)}</div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">{["Recent Match Improvements", "Match Trend"].map((l) => <div key={l} className="rounded-lg border border-dashed border-border p-2"><p className="font-semibold">{l}</p><p className="text-muted-foreground">Coming Soon</p></div>)}</div>
             {gaps.length > 0 && <><p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Improve your match</p><ul className="mt-1 space-y-0.5 text-sm">{gaps.map(([g, n]) => <li key={g}>→ Add {g} <span className="text-xs text-muted-foreground">(required by {n} job{n === 1 ? "" : "s"})</span></li>)}</ul></>}
           </>}
           <Link to="/candidate/jobs" search={{ sort: "match" }} className={`${linkCls} mt-3 inline-block`}>See all matches</Link>
@@ -157,7 +164,8 @@ export function RecruiterMatchWidget() {
       const { data, error } = await supabase.from("match_scores").select("candidate_id, job_id, overall_match_score, jobs(job_title)").order("overall_match_score", { ascending: false }).limit(200);
       if (error) throw error;
       const rows = data ?? [];
-      const ids = [...new Set(rows.slice(0, 20).map((x) => x.candidate_id))];
+      const firstPerJob = [...new Map([...rows].reverse().map((x) => [x.job_id, x.candidate_id] as const)).values()];
+      const ids = [...new Set([...rows.slice(0, 20).map((x) => x.candidate_id), ...firstPerJob])];
       const names: Record<string, string> = {};
       if (ids.length) {
         const n = await supabase.rpc("candidate_names", { _ids: ids });
@@ -172,13 +180,17 @@ export function RecruiterMatchWidget() {
   const strong = rows.filter((x) => Number(x.overall_match_score) >= 75).length;
   return (
     <section className={card}>
-      <div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /><h2 className="font-bold">Candidate Match Rankings</h2>
+      <div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /><h2 className="font-bold">Hiring Intelligence</h2>
         <button onClick={() => r.mutate(undefined, { onSuccess: () => toast.success("Scores Calculated") })} disabled={r.isPending} aria-label="Recalculate matches" className="ml-auto text-muted-foreground hover:text-primary disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${r.isPending ? "animate-spin" : ""}`} /></button></div>
       {q.isLoading ? <div className="h-24 animate-pulse rounded-xl bg-muted" /> : q.error ? <p className="text-sm text-destructive">Match Score Unavailable.</p> : rows.length === 0 ? <p className="text-sm text-muted-foreground">{r.isPending ? "Calculating matches…" : "Publish a job to see matching candidates."}</p> : (
         <>
           <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs"><div className="rounded-lg bg-muted/60 py-2"><div className="text-lg font-bold">{avg}%</div><div className="text-muted-foreground">Average match</div></div><div className="rounded-lg bg-muted/60 py-2"><div className="text-lg font-bold">{strong}</div><div className="text-muted-foreground">Strong matches (75%+)</div></div></div>
           <ul className="space-y-2">{rows.slice(0, 5).map((x) => (
             <li key={`${x.candidate_id}:${x.job_id}`} className="flex items-center justify-between gap-2 text-sm"><div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: x.candidate_id }} className="block truncate font-semibold hover:text-primary">{q.data?.names[x.candidate_id] ?? "Candidate"}</Link><span className="text-xs text-muted-foreground">for {x.jobs?.job_title}</span></div><MatchBadge score={x.overall_match_score} /></li>
+          ))}</ul>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best candidate per job</p>
+          <ul className="mt-1 space-y-1.5">{[...new Map(rows.map((x) => [x.job_id, x] as const)).values()].filter((x, i, arr) => arr.findIndex((y) => y.job_id === x.job_id) === i).map((x) => rows.find((y) => y.job_id === x.job_id)!).slice(0, 5).map((x) => (
+            <li key={x.job_id} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 truncate"><span className="text-muted-foreground">{x.jobs?.job_title}:</span> <Link to="/recruiter/candidates/$id" params={{ id: x.candidate_id }} className="font-semibold hover:text-primary">{q.data?.names[x.candidate_id] ?? "Candidate"}</Link></span><MatchBadge score={x.overall_match_score} /></li>
           ))}</ul>
           <Link to="/recruiter/candidates" search={{ sort: "match" }} className={`${linkCls} mt-3 inline-block`}>Rank all candidates</Link>
         </>

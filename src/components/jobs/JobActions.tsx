@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Copy, Eye, Pause, Pencil, Play, Rocket, Trash2, XCircle } from "lucide-react";
 import { allowedActions, canDelete, canEdit, nextStatus, type JobAction, type JobStatus } from "@/lib/job-rules";
 import { deleteJob, duplicateJob, setJobStatus } from "@/lib/jobs-data";
+import { useRecalc } from "@/components/match/Match";
 import { friendlyError } from "@/components/profile/parts";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -20,10 +21,11 @@ const META: Record<JobAction, { label: string; ok: string; Icon: typeof Play }> 
 export function useJobActions(uid: string) {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const recalc = useRecalc();
   const refresh = (id?: string) => Promise.all([qc.invalidateQueries({ queryKey: ["jobs"] }), id ? qc.invalidateQueries({ queryKey: ["job", id] }) : null]);
   return {
     status: async (id: string, a: JobAction) => {
-      try { await setJobStatus(id, nextStatus(a)); toast.success(META[a].ok); await refresh(id); }
+      try { await setJobStatus(id, nextStatus(a)); toast.success(META[a].ok); if (a === "publish" || a === "resume") recalc.mutate(id); await refresh(id); }
       catch (e) { toast.error(friendlyError(e, "Unable to save changes.")); }
     },
     duplicate: async (id: string) => {

@@ -5,14 +5,14 @@ export const SALARY_MAX = 400000;
 export const EXPERIENCE_BUCKETS: [string, string, number, number | null][] = [
   ["0-2", "0-2 Years", 0, 2], ["3-5", "3-5 Years", 3, 5], ["5-8", "5-8 Years", 5, 8], ["8-10", "8-10 Years", 8, 10], ["10+", "10+ Years", 10, null],
 ];
-export const SORTS: [string, string][] = [["match", "Highest Match"], ["relevant", "Most Relevant"], ["newest", "Newest First"], ["oldest", "Oldest First"], ["salary_high", "Highest Salary"], ["salary_low", "Lowest Salary"]];
+export const SORTS: [string, string][] = [["match", "Highest Match"], ["match_low", "Lowest Match"], ["relevant", "Most Relevant"], ["newest", "Newest First"], ["oldest", "Oldest First"], ["salary_high", "Highest Salary"], ["salary_low", "Lowest Salary"]];
 export const POPULAR_SEARCHES = ["Python", "Remote Data Engineer", "AWS Snowflake", "Machine Learning Engineer", "Kubernetes", "TypeScript"];
 
 export type SearchState = {
   q: string; role: string; langs: string[]; skills: string[]; techs: string[]; arr: string[]; emp: string[];
-  exp: string; smin: number; smax: number; loc: string; company: string; sort: string; page: number;
+  exp: string; smin: number; smax: number; loc: string; company: string; sort: string; page: number; mm: number;
 };
-export const DEFAULT_SEARCH: SearchState = { q: "", role: "", langs: [], skills: [], techs: [], arr: [], emp: [], exp: "", smin: 0, smax: 0, loc: "", company: "", sort: "match", page: 1 };
+export const DEFAULT_SEARCH: SearchState = { q: "", role: "", langs: [], skills: [], techs: [], arr: [], emp: [], exp: "", smin: 0, smax: 0, loc: "", company: "", sort: "match", page: 1, mm: 0 };
 
 /** Strip characters that would break a PostgREST or() filter. */
 export function sanitizeKeyword(q: string): string {
@@ -32,7 +32,7 @@ export function intersect(a: string[] | null, b: string[]): string[] {
 }
 
 export function activeFilterCount(s: SearchState): number {
-  return [s.role, s.exp, s.loc, s.company].filter(Boolean).length + s.langs.length + s.skills.length + s.techs.length + s.arr.length + s.emp.length + (s.smin || s.smax ? 1 : 0);
+  return [s.role, s.exp, s.loc, s.company].filter(Boolean).length + s.langs.length + s.skills.length + s.techs.length + s.arr.length + s.emp.length + (s.smin || s.smax ? 1 : 0) + (s.mm ? 1 : 0);
 }
 
 export function canAddToCompare(current: number): boolean {

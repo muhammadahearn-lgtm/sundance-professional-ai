@@ -1,4 +1,5 @@
-import { MatchBadge, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
+import { meetsMinMatch } from "@/lib/match-engine";
+import { MatchBadge, MatchFilter, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -130,9 +131,9 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   useAutoRecalc();
   const scores = useScores({});
   const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
-  const [f, setF] = useState({ job: "", status: "", since: "", loc: "", role: "" });
+  const [f, setF] = useState({ job: "", status: "", since: "", loc: "", role: "", mm: 0 });
   const jobs = useMemo(() => [...new Map((q.data ?? []).map((a) => [a.job_id, a.jobs.job_title])).entries()], [q.data]);
-  const rows = (q.data ?? []).filter((a) => (!f.job || a.job_id === f.job) && (!f.status || a.application_status === f.status) && (!f.since || a.application_date >= f.since) && (!f.loc || a.candLocation.toLowerCase().includes(f.loc.toLowerCase())) && (!f.role || a.jobs.role_id === f.role));
+  const rows = (q.data ?? []).filter((a) => (!f.job || a.job_id === f.job) && (!f.status || a.application_status === f.status) && (!f.since || a.application_date >= f.since) && (!f.loc || a.candLocation.toLowerCase().includes(f.loc.toLowerCase())) && (!f.role || a.jobs.role_id === f.role) && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   return (
     <div className="space-y-6">
@@ -143,6 +144,7 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
         <input type="date" value={f.since} onChange={(e) => setF({ ...f, since: e.target.value })} className={inputCls} aria-label="Applied since" />
         <input value={f.loc} onChange={(e) => setF({ ...f, loc: e.target.value })} placeholder="Location" className={inputCls} />
         <select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} className={inputCls} aria-label="Role"><option value="">All roles</option>{tax.data?.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
+        <div className="sm:col-span-2 lg:col-span-5"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
       </div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>

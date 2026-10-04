@@ -7,11 +7,11 @@ export const MATCH_FILTERS = [90, 80, 70, 60] as const;
 export type Req = { id: string; level: string };
 export type MatchCandidate = {
   langs: string[]; skills: string[]; techs: string[]; years: number;
-  workArrangement: string; location: string; locationsOfInterest: string[]; targetRoles: string[]; roleId: string | null; availability: string;
+  workArrangement: string; location: string; locationsOfInterest: string[]; targetRoles: string[]; roleId: string | null; availability: string; salaryExpectation?: string | undefined;
 };
 export type MatchJob = {
   langs: Req[]; skills: Req[]; techs: Req[]; minYears: number;
-  workArrangement: string; location: string; roleId: string | null; title: string;
+  workArrangement: string; location: string; roleId: string | null; title: string; maxSalary?: number | null | undefined;
 };
 export type MatchDetails = {
   strengths: string[];
@@ -46,7 +46,20 @@ export function experienceScore(years: number, minYears: number): number {
 const norm = (s: string) => s.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const city = (s: string) => s.split(",")[0]?.trim().toLowerCase() ?? "";
 
-/** Four equal checks: work arrangement, location, target role, availability. */
+/** First number in free text, "k" = thousands. "$120k-150k" -> 120000. */
+export function salaryNumber(text: string | undefined): number | null {
+  const m = (text ?? "").replace(/,/g, "").match(/(\d+(?:\.\d+)?)\s*(k)?/i);
+  if (!m) return null;
+  const n = parseFloat(m[1]!) * (m[2] ? 1000 : 1);
+  return n < 1000 ? n * 1000 : n;
+}
+
+/** Keep rows at or above a minimum match (0 = all). Unscored rows only pass "all". */
+export function meetsMinMatch(score: number | null | undefined, min: number): boolean {
+  return !min || (score != null && score >= min);
+}
+
+/** Five equal checks: work arrangement, location, target role, availability, salary. */
 export function preferenceScore(c: MatchCandidate, j: MatchJob): { score: number; hits: string[]; misses: string[] } {
   const hits: string[] = [], misses: string[] = [];
   const ca = norm(c.workArrangement), ja = norm(j.workArrangement);
@@ -57,7 +70,9 @@ export function preferenceScore(c: MatchCandidate, j: MatchJob): { score: number
   const title = j.title.toLowerCase();
   if ((j.roleId && j.roleId === c.roleId) || c.targetRoles.some((r) => r.trim() && (title.includes(r.toLowerCase()) || r.toLowerCase().includes(title)))) hits.push("Role alignment"); else misses.push("Not a target role");
   if (norm(c.availability) !== "not_looking") hits.push("Open to opportunities"); else misses.push("Not currently looking");
-  return { score: hits.length * 25, hits, misses };
+  const want = salaryNumber(c.salaryExpectation);
+  if (!want || !j.maxSalary || want <= j.maxSalary) hits.push("Salary alignment"); else misses.push("Salary expectation above range");
+  return { score: hits.length * 20, hits, misses };
 }
 
 export function matchTier(score: number): { label: string; tone: "success" | "primary" | "warning" | "muted" } {

@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { ARRANGEMENT, EMPLOYMENT } from "@/components/jobs/shared";
 import { supabase } from "@/integrations/supabase/client";
 import { CompareTray, JobCard } from "./JobCard";
-import { useAutoRecalc, useScores } from "@/components/match/Match";
+import { MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
 import { useJobLists } from "./useJobLists";
 
 type Props = { account: Account; search: SearchState; setSearch: (patch: Partial<SearchState>) => void };
@@ -160,6 +160,7 @@ function Filters({ tax, s, set, onApply }: { tax: Taxonomy; s: SearchState; set:
   return (
     <div className={`${card} p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto`}>
       <div className="flex items-center justify-between"><p className="font-display font-bold">Filters</p>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
+      <Group title="Match Score"><MatchFilter value={s.mm} onChange={(mm) => p({ mm })} /></Group>
       <Group title="Role"><select className={inputCls} value={s.role} onChange={(e) => p({ role: e.target.value })}><option value="">All roles</option>{tax.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
       <Group title="Work Arrangement"><CheckList options={ARRANGEMENT.map(([id, name]) => ({ id, name }))} value={s.arr} onChange={(v) => p({ arr: v })} /></Group>
       <Group title="Employment Type"><CheckList options={EMPLOYMENT.map(([id, name]) => ({ id, name }))} value={s.emp} onChange={(v) => p({ emp: v })} /></Group>
