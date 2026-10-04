@@ -71,6 +71,13 @@
       "when": 1791089174867,
       "tag": "0009_stage13_career_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791090168476,
+      "tag": "0010_stage15_messaging",
+      "breakpoints": true
     }
   ]
 }
