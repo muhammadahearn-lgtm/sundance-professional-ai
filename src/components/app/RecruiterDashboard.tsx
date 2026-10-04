@@ -223,15 +223,15 @@ export function RecruiterDashboard({ account }: { account: Account }) {
           <Widget title="Saved Candidates" action={<Link to="/recruiter/candidates/saved" className={small}>View all ({data.savedCount})</Link>}>
             {data.saved.length === 0 ? <Empty text="No saved candidates yet." cta={<Link to="/recruiter/candidates" className={linkBtn}>Search Candidates</Link>} /> : (
               <div className="space-y-2">{data.saved.map((c) => (
-                <div key={c.user_id} className="rounded-xl border border-border px-3 py-2.5">
+                <div key={c.id} className="rounded-xl border border-border px-3 py-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><div className="truncate text-sm font-semibold">{c.name}</div><div className="truncate text-xs text-muted-foreground">{c.job_title} · {c.years_experience} yrs · {c.availability}</div></div>
-                    <button aria-label="Remove saved candidate" onClick={() => run(() => setSavedCandidate(uid, c.user_id, false), "Removed from saved")} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    <div className="min-w-0"><div className="truncate text-sm font-semibold">{c.name}</div><div className="truncate text-xs text-muted-foreground">{c.jobTitle} · {c.years} yrs · {c.availability}</div></div>
+                    <button aria-label="Remove saved candidate" onClick={() => run(() => setSavedCandidate(uid, c.id, false), "Removed from saved")} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-3">
-                    <Link to="/recruiter/candidates/$id" params={{ id: c.user_id }} className={small}>Profile</Link>
-                    <button onClick={() => run(async () => { await setComparedCandidate(uid, c.user_id, true); navigate({ to: "/recruiter/candidates/compare" }); }, "Added to compare")} className={small}>Compare</button>
-                    <button onClick={() => run(() => addToPipeline(uid, c.user_id, null), "Candidate added to pipeline")} className={small}>Add to pipeline</button>
+                    <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={small}>Profile</Link>
+                    <button onClick={() => run(async () => { await setComparedCandidate(uid, c.id, true); navigate({ to: "/recruiter/candidates/compare" }); }, "Added to compare")} className={small}>Compare</button>
+                    <button onClick={() => run(() => addToPipeline(uid, c.id, null), "Candidate added to pipeline")} className={small}>Add to pipeline</button>
                   </div>
                 </div>
               ))}</div>
