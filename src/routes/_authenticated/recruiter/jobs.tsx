@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Placeholder } from "@/components/app/AppShell";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/recruiter/jobs")({
-  head: () => ({ meta: [{ title: "Jobs — Sundance Professional AI" }, { name: "description", content: "Jobs in your Sundance Professional AI account." }, { property: "og:title", content: "Jobs — Sundance Professional AI" }, { property: "og:description", content: "Jobs in your Sundance Professional AI account." }] }),
+  head: () => ({ meta: [{ title: "Jobs — Sundance Professional AI" }, { name: "description", content: "Create and manage your open roles." }, { property: "og:title", content: "Jobs — Sundance Professional AI" }, { property: "og:description", content: "Create and manage your open roles." }] }),
   component: Page,
 });
 
 function Page() {
-  return <Placeholder title="Jobs" subtitle="Create and manage your open roles." />;
+  return <Outlet />;
 }
