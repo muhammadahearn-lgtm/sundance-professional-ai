@@ -21,3 +21,4 @@
 - Only a company's creator edits it; other recruiters see it read-only and the directory comes from the `company_recruiters` RPC. Why: recruiter_profiles stay private to their owner.
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
 - Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: preserves application history.
+- Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable searches and limits users cannot bypass.
