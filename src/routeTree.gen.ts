@@ -28,11 +28,14 @@ import { Route as AuthenticatedCandidateCareerRouteImport } from './routes/_auth
 import { Route as AuthenticatedCandidateDashboardRouteImport } from './routes/_authenticated/candidate/dashboard'
 import { Route as AuthenticatedCandidateJobsRouteImport } from './routes/_authenticated/candidate/jobs'
 import { Route as AuthenticatedCandidateMessagesRouteImport } from './routes/_authenticated/candidate/messages'
+import { Route as AuthenticatedCandidateNotificationsRouteImport } from './routes/_authenticated/candidate/notifications'
 import { Route as AuthenticatedCandidateOnboardingRouteImport } from './routes/_authenticated/candidate/onboarding'
 import { Route as AuthenticatedCandidateProfileRouteImport } from './routes/_authenticated/candidate/profile'
 import { Route as AuthenticatedCandidateRecommendationsRouteImport } from './routes/_authenticated/candidate/recommendations'
 import { Route as AuthenticatedCandidateSavedJobsRouteImport } from './routes/_authenticated/candidate/saved-jobs'
 import { Route as AuthenticatedCandidateSettingsRouteImport } from './routes/_authenticated/candidate/settings'
+import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications.index'
+import { Route as AuthenticatedNotificationsIdRouteImport } from './routes/_authenticated/notifications.$id'
 import { Route as AuthenticatedRecruiterIndexRouteImport } from './routes/_authenticated/recruiter/index'
 import { Route as AuthenticatedRecruiterApplicationsRouteImport } from './routes/_authenticated/recruiter/applications'
 import { Route as AuthenticatedRecruiterCandidatesRouteImport } from './routes/_authenticated/recruiter/candidates'
@@ -40,6 +43,7 @@ import { Route as AuthenticatedRecruiterCompanyRouteImport } from './routes/_aut
 import { Route as AuthenticatedRecruiterDashboardRouteImport } from './routes/_authenticated/recruiter/dashboard'
 import { Route as AuthenticatedRecruiterJobsRouteImport } from './routes/_authenticated/recruiter/jobs'
 import { Route as AuthenticatedRecruiterMessagesRouteImport } from './routes/_authenticated/recruiter/messages'
+import { Route as AuthenticatedRecruiterNotificationsRouteImport } from './routes/_authenticated/recruiter/notifications'
 import { Route as AuthenticatedRecruiterOnboardingRouteImport } from './routes/_authenticated/recruiter/onboarding'
 import { Route as AuthenticatedRecruiterPipelineRouteImport } from './routes/_authenticated/recruiter/pipeline'
 import { Route as AuthenticatedRecruiterProfileRouteImport } from './routes/_authenticated/recruiter/profile'
@@ -53,6 +57,8 @@ import { Route as AuthenticatedCandidateJobsCompareRouteImport } from './routes/
 import { Route as AuthenticatedCandidateJobsSavedRouteImport } from './routes/_authenticated/candidate/jobs.saved'
 import { Route as AuthenticatedCandidateMessagesIndexRouteImport } from './routes/_authenticated/candidate/messages.index'
 import { Route as AuthenticatedCandidateMessagesConversationIdRouteImport } from './routes/_authenticated/candidate/messages.$conversationId'
+import { Route as AuthenticatedCandidateNotificationsIndexRouteImport } from './routes/_authenticated/candidate/notifications.index'
+import { Route as AuthenticatedCandidateNotificationsIdRouteImport } from './routes/_authenticated/candidate/notifications.$id'
 import { Route as AuthenticatedRecruiterApplicationsIndexRouteImport } from './routes/_authenticated/recruiter/applications.index'
 import { Route as AuthenticatedRecruiterApplicationsIdRouteImport } from './routes/_authenticated/recruiter/applications.$id'
 import { Route as AuthenticatedRecruiterCandidatesIndexRouteImport } from './routes/_authenticated/recruiter/candidates.index'
@@ -63,6 +69,8 @@ import { Route as AuthenticatedRecruiterJobsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedRecruiterJobsCreateRouteImport } from './routes/_authenticated/recruiter/jobs.create'
 import { Route as AuthenticatedRecruiterMessagesIndexRouteImport } from './routes/_authenticated/recruiter/messages.index'
 import { Route as AuthenticatedRecruiterMessagesConversationIdRouteImport } from './routes/_authenticated/recruiter/messages.$conversationId'
+import { Route as AuthenticatedRecruiterNotificationsIndexRouteImport } from './routes/_authenticated/recruiter/notifications.index'
+import { Route as AuthenticatedRecruiterNotificationsIdRouteImport } from './routes/_authenticated/recruiter/notifications.$id'
 import { Route as AuthenticatedRecruiterPipelineIndexRouteImport } from './routes/_authenticated/recruiter/pipeline.index'
 import { Route as AuthenticatedRecruiterPipelineJobIdRouteImport } from './routes/_authenticated/recruiter/pipeline.$jobId'
 import { Route as AuthenticatedRecruiterJobsIdIndexRouteImport } from './routes/_authenticated/recruiter/jobs.$id.index'
@@ -169,6 +177,12 @@ const AuthenticatedCandidateMessagesRoute =
     path: '/messages',
     getParentRoute: () => AuthenticatedCandidateRoute,
   } as any)
+const AuthenticatedCandidateNotificationsRoute =
+  AuthenticatedCandidateNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
 const AuthenticatedCandidateOnboardingRoute =
   AuthenticatedCandidateOnboardingRouteImport.update({
     id: '/onboarding',
@@ -198,6 +212,18 @@ const AuthenticatedCandidateSettingsRoute =
     id: '/settings',
     path: '/settings',
     getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNotificationsIdRoute =
+  AuthenticatedNotificationsIdRouteImport.update({
+    id: '/notifications/$id',
+    path: '/notifications/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRecruiterIndexRoute =
   AuthenticatedRecruiterIndexRouteImport.update({
@@ -239,6 +265,12 @@ const AuthenticatedRecruiterMessagesRoute =
   AuthenticatedRecruiterMessagesRouteImport.update({
     id: '/messages',
     path: '/messages',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterNotificationsRoute =
+  AuthenticatedRecruiterNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedRecruiterRoute,
   } as any)
 const AuthenticatedRecruiterOnboardingRoute =
@@ -319,6 +351,18 @@ const AuthenticatedCandidateMessagesConversationIdRoute =
     path: '/$conversationId',
     getParentRoute: () => AuthenticatedCandidateMessagesRoute,
   } as any)
+const AuthenticatedCandidateNotificationsIndexRoute =
+  AuthenticatedCandidateNotificationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCandidateNotificationsRoute,
+  } as any)
+const AuthenticatedCandidateNotificationsIdRoute =
+  AuthenticatedCandidateNotificationsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedCandidateNotificationsRoute,
+  } as any)
 const AuthenticatedRecruiterApplicationsIndexRoute =
   AuthenticatedRecruiterApplicationsIndexRouteImport.update({
     id: '/',
@@ -379,6 +423,18 @@ const AuthenticatedRecruiterMessagesConversationIdRoute =
     path: '/$conversationId',
     getParentRoute: () => AuthenticatedRecruiterMessagesRoute,
   } as any)
+const AuthenticatedRecruiterNotificationsIndexRoute =
+  AuthenticatedRecruiterNotificationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedRecruiterNotificationsRoute,
+  } as any)
+const AuthenticatedRecruiterNotificationsIdRoute =
+  AuthenticatedRecruiterNotificationsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedRecruiterNotificationsRoute,
+  } as any)
 const AuthenticatedRecruiterPipelineIndexRoute =
   AuthenticatedRecruiterPipelineIndexRouteImport.update({
     id: '/',
@@ -428,43 +484,51 @@ export interface FileRoutesByFullPath {
   '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
   '/candidate/jobs': typeof AuthenticatedCandidateJobsRouteWithChildren
   '/candidate/messages': typeof AuthenticatedCandidateMessagesRouteWithChildren
+  '/candidate/notifications': typeof AuthenticatedCandidateNotificationsRouteWithChildren
   '/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
   '/candidate/profile': typeof AuthenticatedCandidateProfileRoute
   '/candidate/recommendations': typeof AuthenticatedCandidateRecommendationsRoute
   '/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
   '/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRouteWithChildren
   '/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRouteWithChildren
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/recruiter/jobs': typeof AuthenticatedRecruiterJobsRouteWithChildren
   '/recruiter/messages': typeof AuthenticatedRecruiterMessagesRouteWithChildren
+  '/recruiter/notifications': typeof AuthenticatedRecruiterNotificationsRouteWithChildren
   '/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
   '/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineRouteWithChildren
   '/recruiter/profile': typeof AuthenticatedRecruiterProfileRoute
   '/recruiter/recommendations': typeof AuthenticatedRecruiterRecommendationsRoute
   '/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
   '/candidate/': typeof AuthenticatedCandidateIndexRoute
+  '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/recruiter/': typeof AuthenticatedRecruiterIndexRoute
   '/candidate/applications/$id': typeof AuthenticatedCandidateApplicationsIdRoute
   '/candidate/jobs/$id': typeof AuthenticatedCandidateJobsIdRoute
   '/candidate/jobs/compare': typeof AuthenticatedCandidateJobsCompareRoute
   '/candidate/jobs/saved': typeof AuthenticatedCandidateJobsSavedRoute
   '/candidate/messages/$conversationId': typeof AuthenticatedCandidateMessagesConversationIdRoute
+  '/candidate/notifications/$id': typeof AuthenticatedCandidateNotificationsIdRoute
   '/recruiter/applications/$id': typeof AuthenticatedRecruiterApplicationsIdRoute
   '/recruiter/candidates/$id': typeof AuthenticatedRecruiterCandidatesIdRoute
   '/recruiter/candidates/compare': typeof AuthenticatedRecruiterCandidatesCompareRoute
   '/recruiter/candidates/saved': typeof AuthenticatedRecruiterCandidatesSavedRoute
   '/recruiter/jobs/create': typeof AuthenticatedRecruiterJobsCreateRoute
   '/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
+  '/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
   '/candidate/applications/': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/candidate/jobs/': typeof AuthenticatedCandidateJobsIndexRoute
   '/candidate/messages/': typeof AuthenticatedCandidateMessagesIndexRoute
+  '/candidate/notifications/': typeof AuthenticatedCandidateNotificationsIndexRoute
   '/recruiter/applications/': typeof AuthenticatedRecruiterApplicationsIndexRoute
   '/recruiter/candidates/': typeof AuthenticatedRecruiterCandidatesIndexRoute
   '/recruiter/jobs/': typeof AuthenticatedRecruiterJobsIndexRoute
   '/recruiter/messages/': typeof AuthenticatedRecruiterMessagesIndexRoute
+  '/recruiter/notifications/': typeof AuthenticatedRecruiterNotificationsIndexRoute
   '/recruiter/pipeline/': typeof AuthenticatedRecruiterPipelineIndexRoute
   '/recruiter/jobs/$id/edit': typeof AuthenticatedRecruiterJobsIdEditRoute
   '/recruiter/jobs/$id/preview': typeof AuthenticatedRecruiterJobsIdPreviewRoute
@@ -488,6 +552,7 @@ export interface FileRoutesByTo {
   '/candidate/recommendations': typeof AuthenticatedCandidateRecommendationsRoute
   '/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
   '/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
@@ -495,26 +560,31 @@ export interface FileRoutesByTo {
   '/recruiter/recommendations': typeof AuthenticatedRecruiterRecommendationsRoute
   '/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
   '/candidate': typeof AuthenticatedCandidateIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/recruiter': typeof AuthenticatedRecruiterIndexRoute
   '/candidate/applications/$id': typeof AuthenticatedCandidateApplicationsIdRoute
   '/candidate/jobs/$id': typeof AuthenticatedCandidateJobsIdRoute
   '/candidate/jobs/compare': typeof AuthenticatedCandidateJobsCompareRoute
   '/candidate/jobs/saved': typeof AuthenticatedCandidateJobsSavedRoute
   '/candidate/messages/$conversationId': typeof AuthenticatedCandidateMessagesConversationIdRoute
+  '/candidate/notifications/$id': typeof AuthenticatedCandidateNotificationsIdRoute
   '/recruiter/applications/$id': typeof AuthenticatedRecruiterApplicationsIdRoute
   '/recruiter/candidates/$id': typeof AuthenticatedRecruiterCandidatesIdRoute
   '/recruiter/candidates/compare': typeof AuthenticatedRecruiterCandidatesCompareRoute
   '/recruiter/candidates/saved': typeof AuthenticatedRecruiterCandidatesSavedRoute
   '/recruiter/jobs/create': typeof AuthenticatedRecruiterJobsCreateRoute
   '/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
+  '/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
   '/candidate/applications': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/candidate/jobs': typeof AuthenticatedCandidateJobsIndexRoute
   '/candidate/messages': typeof AuthenticatedCandidateMessagesIndexRoute
+  '/candidate/notifications': typeof AuthenticatedCandidateNotificationsIndexRoute
   '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsIndexRoute
   '/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesIndexRoute
   '/recruiter/jobs': typeof AuthenticatedRecruiterJobsIndexRoute
   '/recruiter/messages': typeof AuthenticatedRecruiterMessagesIndexRoute
+  '/recruiter/notifications': typeof AuthenticatedRecruiterNotificationsIndexRoute
   '/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineIndexRoute
   '/recruiter/jobs/$id/edit': typeof AuthenticatedRecruiterJobsIdEditRoute
   '/recruiter/jobs/$id/preview': typeof AuthenticatedRecruiterJobsIdPreviewRoute
@@ -540,43 +610,51 @@ export interface FileRoutesById {
   '/_authenticated/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
   '/_authenticated/candidate/jobs': typeof AuthenticatedCandidateJobsRouteWithChildren
   '/_authenticated/candidate/messages': typeof AuthenticatedCandidateMessagesRouteWithChildren
+  '/_authenticated/candidate/notifications': typeof AuthenticatedCandidateNotificationsRouteWithChildren
   '/_authenticated/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
   '/_authenticated/candidate/profile': typeof AuthenticatedCandidateProfileRoute
   '/_authenticated/candidate/recommendations': typeof AuthenticatedCandidateRecommendationsRoute
   '/_authenticated/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
   '/_authenticated/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/_authenticated/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/_authenticated/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRouteWithChildren
   '/_authenticated/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRouteWithChildren
   '/_authenticated/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/_authenticated/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/_authenticated/recruiter/jobs': typeof AuthenticatedRecruiterJobsRouteWithChildren
   '/_authenticated/recruiter/messages': typeof AuthenticatedRecruiterMessagesRouteWithChildren
+  '/_authenticated/recruiter/notifications': typeof AuthenticatedRecruiterNotificationsRouteWithChildren
   '/_authenticated/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
   '/_authenticated/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineRouteWithChildren
   '/_authenticated/recruiter/profile': typeof AuthenticatedRecruiterProfileRoute
   '/_authenticated/recruiter/recommendations': typeof AuthenticatedRecruiterRecommendationsRoute
   '/_authenticated/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
   '/_authenticated/candidate/': typeof AuthenticatedCandidateIndexRoute
+  '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/recruiter/': typeof AuthenticatedRecruiterIndexRoute
   '/_authenticated/candidate/applications/$id': typeof AuthenticatedCandidateApplicationsIdRoute
   '/_authenticated/candidate/jobs/$id': typeof AuthenticatedCandidateJobsIdRoute
   '/_authenticated/candidate/jobs/compare': typeof AuthenticatedCandidateJobsCompareRoute
   '/_authenticated/candidate/jobs/saved': typeof AuthenticatedCandidateJobsSavedRoute
   '/_authenticated/candidate/messages/$conversationId': typeof AuthenticatedCandidateMessagesConversationIdRoute
+  '/_authenticated/candidate/notifications/$id': typeof AuthenticatedCandidateNotificationsIdRoute
   '/_authenticated/recruiter/applications/$id': typeof AuthenticatedRecruiterApplicationsIdRoute
   '/_authenticated/recruiter/candidates/$id': typeof AuthenticatedRecruiterCandidatesIdRoute
   '/_authenticated/recruiter/candidates/compare': typeof AuthenticatedRecruiterCandidatesCompareRoute
   '/_authenticated/recruiter/candidates/saved': typeof AuthenticatedRecruiterCandidatesSavedRoute
   '/_authenticated/recruiter/jobs/create': typeof AuthenticatedRecruiterJobsCreateRoute
   '/_authenticated/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
+  '/_authenticated/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/_authenticated/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
   '/_authenticated/candidate/applications/': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/_authenticated/candidate/jobs/': typeof AuthenticatedCandidateJobsIndexRoute
   '/_authenticated/candidate/messages/': typeof AuthenticatedCandidateMessagesIndexRoute
+  '/_authenticated/candidate/notifications/': typeof AuthenticatedCandidateNotificationsIndexRoute
   '/_authenticated/recruiter/applications/': typeof AuthenticatedRecruiterApplicationsIndexRoute
   '/_authenticated/recruiter/candidates/': typeof AuthenticatedRecruiterCandidatesIndexRoute
   '/_authenticated/recruiter/jobs/': typeof AuthenticatedRecruiterJobsIndexRoute
   '/_authenticated/recruiter/messages/': typeof AuthenticatedRecruiterMessagesIndexRoute
+  '/_authenticated/recruiter/notifications/': typeof AuthenticatedRecruiterNotificationsIndexRoute
   '/_authenticated/recruiter/pipeline/': typeof AuthenticatedRecruiterPipelineIndexRoute
   '/_authenticated/recruiter/jobs/$id/edit': typeof AuthenticatedRecruiterJobsIdEditRoute
   '/_authenticated/recruiter/jobs/$id/preview': typeof AuthenticatedRecruiterJobsIdPreviewRoute
@@ -602,43 +680,51 @@ export interface FileRouteTypes {
     | '/candidate/dashboard'
     | '/candidate/jobs'
     | '/candidate/messages'
+    | '/candidate/notifications'
     | '/candidate/onboarding'
     | '/candidate/profile'
     | '/candidate/recommendations'
     | '/candidate/saved-jobs'
     | '/candidate/settings'
+    | '/notifications/$id'
     | '/recruiter/applications'
     | '/recruiter/candidates'
     | '/recruiter/company'
     | '/recruiter/dashboard'
     | '/recruiter/jobs'
     | '/recruiter/messages'
+    | '/recruiter/notifications'
     | '/recruiter/onboarding'
     | '/recruiter/pipeline'
     | '/recruiter/profile'
     | '/recruiter/recommendations'
     | '/recruiter/settings'
     | '/candidate/'
+    | '/notifications/'
     | '/recruiter/'
     | '/candidate/applications/$id'
     | '/candidate/jobs/$id'
     | '/candidate/jobs/compare'
     | '/candidate/jobs/saved'
     | '/candidate/messages/$conversationId'
+    | '/candidate/notifications/$id'
     | '/recruiter/applications/$id'
     | '/recruiter/candidates/$id'
     | '/recruiter/candidates/compare'
     | '/recruiter/candidates/saved'
     | '/recruiter/jobs/create'
     | '/recruiter/messages/$conversationId'
+    | '/recruiter/notifications/$id'
     | '/recruiter/pipeline/$jobId'
     | '/candidate/applications/'
     | '/candidate/jobs/'
     | '/candidate/messages/'
+    | '/candidate/notifications/'
     | '/recruiter/applications/'
     | '/recruiter/candidates/'
     | '/recruiter/jobs/'
     | '/recruiter/messages/'
+    | '/recruiter/notifications/'
     | '/recruiter/pipeline/'
     | '/recruiter/jobs/$id/edit'
     | '/recruiter/jobs/$id/preview'
@@ -662,6 +748,7 @@ export interface FileRouteTypes {
     | '/candidate/recommendations'
     | '/candidate/saved-jobs'
     | '/candidate/settings'
+    | '/notifications/$id'
     | '/recruiter/company'
     | '/recruiter/dashboard'
     | '/recruiter/onboarding'
@@ -669,26 +756,31 @@ export interface FileRouteTypes {
     | '/recruiter/recommendations'
     | '/recruiter/settings'
     | '/candidate'
+    | '/notifications'
     | '/recruiter'
     | '/candidate/applications/$id'
     | '/candidate/jobs/$id'
     | '/candidate/jobs/compare'
     | '/candidate/jobs/saved'
     | '/candidate/messages/$conversationId'
+    | '/candidate/notifications/$id'
     | '/recruiter/applications/$id'
     | '/recruiter/candidates/$id'
     | '/recruiter/candidates/compare'
     | '/recruiter/candidates/saved'
     | '/recruiter/jobs/create'
     | '/recruiter/messages/$conversationId'
+    | '/recruiter/notifications/$id'
     | '/recruiter/pipeline/$jobId'
     | '/candidate/applications'
     | '/candidate/jobs'
     | '/candidate/messages'
+    | '/candidate/notifications'
     | '/recruiter/applications'
     | '/recruiter/candidates'
     | '/recruiter/jobs'
     | '/recruiter/messages'
+    | '/recruiter/notifications'
     | '/recruiter/pipeline'
     | '/recruiter/jobs/$id/edit'
     | '/recruiter/jobs/$id/preview'
@@ -713,43 +805,51 @@ export interface FileRouteTypes {
     | '/_authenticated/candidate/dashboard'
     | '/_authenticated/candidate/jobs'
     | '/_authenticated/candidate/messages'
+    | '/_authenticated/candidate/notifications'
     | '/_authenticated/candidate/onboarding'
     | '/_authenticated/candidate/profile'
     | '/_authenticated/candidate/recommendations'
     | '/_authenticated/candidate/saved-jobs'
     | '/_authenticated/candidate/settings'
+    | '/_authenticated/notifications/$id'
     | '/_authenticated/recruiter/applications'
     | '/_authenticated/recruiter/candidates'
     | '/_authenticated/recruiter/company'
     | '/_authenticated/recruiter/dashboard'
     | '/_authenticated/recruiter/jobs'
     | '/_authenticated/recruiter/messages'
+    | '/_authenticated/recruiter/notifications'
     | '/_authenticated/recruiter/onboarding'
     | '/_authenticated/recruiter/pipeline'
     | '/_authenticated/recruiter/profile'
     | '/_authenticated/recruiter/recommendations'
     | '/_authenticated/recruiter/settings'
     | '/_authenticated/candidate/'
+    | '/_authenticated/notifications/'
     | '/_authenticated/recruiter/'
     | '/_authenticated/candidate/applications/$id'
     | '/_authenticated/candidate/jobs/$id'
     | '/_authenticated/candidate/jobs/compare'
     | '/_authenticated/candidate/jobs/saved'
     | '/_authenticated/candidate/messages/$conversationId'
+    | '/_authenticated/candidate/notifications/$id'
     | '/_authenticated/recruiter/applications/$id'
     | '/_authenticated/recruiter/candidates/$id'
     | '/_authenticated/recruiter/candidates/compare'
     | '/_authenticated/recruiter/candidates/saved'
     | '/_authenticated/recruiter/jobs/create'
     | '/_authenticated/recruiter/messages/$conversationId'
+    | '/_authenticated/recruiter/notifications/$id'
     | '/_authenticated/recruiter/pipeline/$jobId'
     | '/_authenticated/candidate/applications/'
     | '/_authenticated/candidate/jobs/'
     | '/_authenticated/candidate/messages/'
+    | '/_authenticated/candidate/notifications/'
     | '/_authenticated/recruiter/applications/'
     | '/_authenticated/recruiter/candidates/'
     | '/_authenticated/recruiter/jobs/'
     | '/_authenticated/recruiter/messages/'
+    | '/_authenticated/recruiter/notifications/'
     | '/_authenticated/recruiter/pipeline/'
     | '/_authenticated/recruiter/jobs/$id/edit'
     | '/_authenticated/recruiter/jobs/$id/preview'
@@ -905,6 +1005,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCandidateMessagesRouteImport
       parentRoute: typeof AuthenticatedCandidateRoute
     }
+    '/_authenticated/candidate/notifications': {
+      id: '/_authenticated/candidate/notifications'
+      path: '/notifications'
+      fullPath: '/candidate/notifications'
+      preLoaderRoute: typeof AuthenticatedCandidateNotificationsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
     '/_authenticated/candidate/onboarding': {
       id: '/_authenticated/candidate/onboarding'
       path: '/onboarding'
@@ -939,6 +1046,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/candidate/settings'
       preLoaderRoute: typeof AuthenticatedCandidateSettingsRouteImport
       parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications/$id': {
+      id: '/_authenticated/notifications/$id'
+      path: '/notifications/$id'
+      fullPath: '/notifications/$id'
+      preLoaderRoute: typeof AuthenticatedNotificationsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/recruiter/': {
       id: '/_authenticated/recruiter/'
@@ -987,6 +1108,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/recruiter/messages'
       preLoaderRoute: typeof AuthenticatedRecruiterMessagesRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/notifications': {
+      id: '/_authenticated/recruiter/notifications'
+      path: '/notifications'
+      fullPath: '/recruiter/notifications'
+      preLoaderRoute: typeof AuthenticatedRecruiterNotificationsRouteImport
       parentRoute: typeof AuthenticatedRecruiterRoute
     }
     '/_authenticated/recruiter/onboarding': {
@@ -1080,6 +1208,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCandidateMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedCandidateMessagesRoute
     }
+    '/_authenticated/candidate/notifications/': {
+      id: '/_authenticated/candidate/notifications/'
+      path: '/'
+      fullPath: '/candidate/notifications/'
+      preLoaderRoute: typeof AuthenticatedCandidateNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedCandidateNotificationsRoute
+    }
+    '/_authenticated/candidate/notifications/$id': {
+      id: '/_authenticated/candidate/notifications/$id'
+      path: '/$id'
+      fullPath: '/candidate/notifications/$id'
+      preLoaderRoute: typeof AuthenticatedCandidateNotificationsIdRouteImport
+      parentRoute: typeof AuthenticatedCandidateNotificationsRoute
+    }
     '/_authenticated/recruiter/applications/': {
       id: '/_authenticated/recruiter/applications/'
       path: '/'
@@ -1149,6 +1291,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/recruiter/messages/$conversationId'
       preLoaderRoute: typeof AuthenticatedRecruiterMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedRecruiterMessagesRoute
+    }
+    '/_authenticated/recruiter/notifications/': {
+      id: '/_authenticated/recruiter/notifications/'
+      path: '/'
+      fullPath: '/recruiter/notifications/'
+      preLoaderRoute: typeof AuthenticatedRecruiterNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRecruiterNotificationsRoute
+    }
+    '/_authenticated/recruiter/notifications/$id': {
+      id: '/_authenticated/recruiter/notifications/$id'
+      path: '/$id'
+      fullPath: '/recruiter/notifications/$id'
+      preLoaderRoute: typeof AuthenticatedRecruiterNotificationsIdRouteImport
+      parentRoute: typeof AuthenticatedRecruiterNotificationsRoute
     }
     '/_authenticated/recruiter/pipeline/': {
       id: '/_authenticated/recruiter/pipeline/'
@@ -1245,12 +1401,31 @@ const AuthenticatedCandidateMessagesRouteWithChildren =
     AuthenticatedCandidateMessagesRouteChildren,
   )
 
+interface AuthenticatedCandidateNotificationsRouteChildren {
+  AuthenticatedCandidateNotificationsIdRoute: typeof AuthenticatedCandidateNotificationsIdRoute
+  AuthenticatedCandidateNotificationsIndexRoute: typeof AuthenticatedCandidateNotificationsIndexRoute
+}
+
+const AuthenticatedCandidateNotificationsRouteChildren: AuthenticatedCandidateNotificationsRouteChildren =
+  {
+    AuthenticatedCandidateNotificationsIdRoute:
+      AuthenticatedCandidateNotificationsIdRoute,
+    AuthenticatedCandidateNotificationsIndexRoute:
+      AuthenticatedCandidateNotificationsIndexRoute,
+  }
+
+const AuthenticatedCandidateNotificationsRouteWithChildren =
+  AuthenticatedCandidateNotificationsRoute._addFileChildren(
+    AuthenticatedCandidateNotificationsRouteChildren,
+  )
+
 interface AuthenticatedCandidateRouteChildren {
   AuthenticatedCandidateApplicationsRoute: typeof AuthenticatedCandidateApplicationsRouteWithChildren
   AuthenticatedCandidateCareerRoute: typeof AuthenticatedCandidateCareerRoute
   AuthenticatedCandidateDashboardRoute: typeof AuthenticatedCandidateDashboardRoute
   AuthenticatedCandidateJobsRoute: typeof AuthenticatedCandidateJobsRouteWithChildren
   AuthenticatedCandidateMessagesRoute: typeof AuthenticatedCandidateMessagesRouteWithChildren
+  AuthenticatedCandidateNotificationsRoute: typeof AuthenticatedCandidateNotificationsRouteWithChildren
   AuthenticatedCandidateOnboardingRoute: typeof AuthenticatedCandidateOnboardingRoute
   AuthenticatedCandidateProfileRoute: typeof AuthenticatedCandidateProfileRoute
   AuthenticatedCandidateRecommendationsRoute: typeof AuthenticatedCandidateRecommendationsRoute
@@ -1269,6 +1444,8 @@ const AuthenticatedCandidateRouteChildren: AuthenticatedCandidateRouteChildren =
       AuthenticatedCandidateJobsRouteWithChildren,
     AuthenticatedCandidateMessagesRoute:
       AuthenticatedCandidateMessagesRouteWithChildren,
+    AuthenticatedCandidateNotificationsRoute:
+      AuthenticatedCandidateNotificationsRouteWithChildren,
     AuthenticatedCandidateOnboardingRoute:
       AuthenticatedCandidateOnboardingRoute,
     AuthenticatedCandidateProfileRoute: AuthenticatedCandidateProfileRoute,
@@ -1370,6 +1547,24 @@ const AuthenticatedRecruiterMessagesRouteWithChildren =
     AuthenticatedRecruiterMessagesRouteChildren,
   )
 
+interface AuthenticatedRecruiterNotificationsRouteChildren {
+  AuthenticatedRecruiterNotificationsIdRoute: typeof AuthenticatedRecruiterNotificationsIdRoute
+  AuthenticatedRecruiterNotificationsIndexRoute: typeof AuthenticatedRecruiterNotificationsIndexRoute
+}
+
+const AuthenticatedRecruiterNotificationsRouteChildren: AuthenticatedRecruiterNotificationsRouteChildren =
+  {
+    AuthenticatedRecruiterNotificationsIdRoute:
+      AuthenticatedRecruiterNotificationsIdRoute,
+    AuthenticatedRecruiterNotificationsIndexRoute:
+      AuthenticatedRecruiterNotificationsIndexRoute,
+  }
+
+const AuthenticatedRecruiterNotificationsRouteWithChildren =
+  AuthenticatedRecruiterNotificationsRoute._addFileChildren(
+    AuthenticatedRecruiterNotificationsRouteChildren,
+  )
+
 interface AuthenticatedRecruiterPipelineRouteChildren {
   AuthenticatedRecruiterPipelineJobIdRoute: typeof AuthenticatedRecruiterPipelineJobIdRoute
   AuthenticatedRecruiterPipelineIndexRoute: typeof AuthenticatedRecruiterPipelineIndexRoute
@@ -1395,6 +1590,7 @@ interface AuthenticatedRecruiterRouteChildren {
   AuthenticatedRecruiterDashboardRoute: typeof AuthenticatedRecruiterDashboardRoute
   AuthenticatedRecruiterJobsRoute: typeof AuthenticatedRecruiterJobsRouteWithChildren
   AuthenticatedRecruiterMessagesRoute: typeof AuthenticatedRecruiterMessagesRouteWithChildren
+  AuthenticatedRecruiterNotificationsRoute: typeof AuthenticatedRecruiterNotificationsRouteWithChildren
   AuthenticatedRecruiterOnboardingRoute: typeof AuthenticatedRecruiterOnboardingRoute
   AuthenticatedRecruiterPipelineRoute: typeof AuthenticatedRecruiterPipelineRouteWithChildren
   AuthenticatedRecruiterProfileRoute: typeof AuthenticatedRecruiterProfileRoute
@@ -1415,6 +1611,8 @@ const AuthenticatedRecruiterRouteChildren: AuthenticatedRecruiterRouteChildren =
       AuthenticatedRecruiterJobsRouteWithChildren,
     AuthenticatedRecruiterMessagesRoute:
       AuthenticatedRecruiterMessagesRouteWithChildren,
+    AuthenticatedRecruiterNotificationsRoute:
+      AuthenticatedRecruiterNotificationsRouteWithChildren,
     AuthenticatedRecruiterOnboardingRoute:
       AuthenticatedRecruiterOnboardingRoute,
     AuthenticatedRecruiterPipelineRoute:
@@ -1434,11 +1632,15 @@ const AuthenticatedRecruiterRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCandidateRoute: typeof AuthenticatedCandidateRouteWithChildren
   AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRouteWithChildren
+  AuthenticatedNotificationsIdRoute: typeof AuthenticatedNotificationsIdRoute
+  AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCandidateRoute: AuthenticatedCandidateRouteWithChildren,
   AuthenticatedRecruiterRoute: AuthenticatedRecruiterRouteWithChildren,
+  AuthenticatedNotificationsIdRoute: AuthenticatedNotificationsIdRoute,
+  AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

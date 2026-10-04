@@ -1,3 +1,4 @@
+import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Bookmark, Briefcase, Building2, CheckCircle2, Copy, FileText, Gift, KanbanSquare, MapPin, Plus, Search, Trash2, Users, CalendarCheck } from "lucide-react";
@@ -250,9 +251,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Candidate Readiness", "Skill Gap Analysis", "Market Intelligence", "Salary Intelligence"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>
-          <Widget title="Notifications" action={<Soon />}>
-            <div className="flex items-start gap-2 text-sm text-muted-foreground"><Bell className="mt-0.5 h-4 w-4 text-primary" /><span>Application, pipeline, candidate and system alerts will appear here.</span></div>
-          </Widget>
+          <NotificationWidget uid={uid} role="recruiter" />
         </div>
       </div>
     </>
