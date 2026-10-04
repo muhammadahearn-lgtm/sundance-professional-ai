@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
+  Briefcase, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
@@ -149,7 +150,7 @@ function SkillFirst() {
 }
 
 const PREVIEW_TABS = [
-  { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / dashboard" },
+  { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / candidate-dashboard" },
   { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter" },
   { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / profile" },
   { id: "jobs", label: "Job Search", path: "app.sundance.ai / job-search" },
@@ -189,6 +190,28 @@ function StatTile({ n, l }: { n: number; l: string }) {
   );
 }
 
+function StatCard({ I, n, l }: { I: typeof Briefcase; n: number; l: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6">
+      <I className="h-5 w-5 text-primary" />
+      <div className="mt-3 font-display text-3xl font-extrabold">{n}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{l}</div>
+    </div>
+  );
+}
+
+function JobRow({ title, sub, score }: { title: string; sub: string; score: number }) {
+  return (
+    <div className="flex items-center justify-between py-4">
+      <div>
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>
+      </div>
+      <MatchBadge score={score} />
+    </div>
+  );
+}
+
 function ProductPreview() {
   const [tab, setTab] = useState<PreviewTabId>("talent");
   const active = PREVIEW_TABS.find((t) => t.id === tab)!;
@@ -215,6 +238,33 @@ function ProductPreview() {
             <span className="ml-4 text-xs text-muted-foreground">{active.path}</span>
           </div>
           <div className="bg-secondary/60 p-5 sm:p-8 lg:p-10">
+            {tab === "candidate" ? (
+              <div className="mx-auto max-w-5xl space-y-4">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <StatCard I={TrendingUp} n={84} l="Career readiness" />
+                  <StatCard I={Briefcase} n={6} l="Active applications" />
+                  <StatCard I={Users} n={23} l="Recruiter views" />
+                </div>
+                <div className="grid gap-4 lg:grid-cols-5">
+                  <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-3">
+                    <h3 className="font-display text-lg font-bold">Top matches for you</h3>
+                    <div className="mt-2 divide-y divide-border">
+                      <JobRow title="Senior Frontend Engineer" sub="Northwind Labs · Remote · US" score={96} />
+                      <JobRow title="Staff ML Engineer" sub="Hello Systems · San Francisco, CA" score={91} />
+                      <JobRow title="Full-Stack Developer" sub="Brightpath · Austin, TX" score={87} />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-2">
+                    <h3 className="font-display text-lg font-bold">Skill gaps</h3>
+                    <div className="mt-6 space-y-6">
+                      <Bar label="React" v={94} strong />
+                      <Bar label="System Design" v={68} strong />
+                      <Bar label="GraphQL" v={52} strong />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
             <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 sm:p-7">
               {tab === "talent" && (
                 <div className="space-y-4">
