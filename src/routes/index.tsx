@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
-  Briefcase, Users,
+  Briefcase, Users, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
@@ -151,7 +151,7 @@ function SkillFirst() {
 
 const PREVIEW_TABS = [
   { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / candidate-dashboard" },
-  { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter" },
+  { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter-dashboard" },
   { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / profile" },
   { id: "jobs", label: "Job Search", path: "app.sundance.ai / job-search" },
   { id: "talent", label: "Talent Search", path: "app.sundance.ai / talent-search" },
@@ -190,12 +190,28 @@ function StatTile({ n, l }: { n: number; l: string }) {
   );
 }
 
-function StatCard({ I, n, l }: { I: typeof Briefcase; n: number; l: string }) {
+function StatCard({ I, n, l }: { I: typeof Briefcase; n: number | string; l: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <I className="h-5 w-5 text-primary" />
       <div className="mt-3 font-display text-3xl font-extrabold">{n}</div>
       <div className="mt-1 text-sm text-muted-foreground">{l}</div>
+    </div>
+  );
+}
+
+function PipelineCol({ title, n, people }: { title: string; n: number; people: string[] }) {
+  return (
+    <div className="rounded-2xl border border-border bg-primary-soft/50 p-4">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="text-sm font-bold text-primary">{n}</span>
+      </div>
+      <div className="mt-3 space-y-2">
+        {people.map((p) => (
+          <div key={p} className="rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium">{p}</div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -264,6 +280,21 @@ function ProductPreview() {
                   </div>
                 </div>
               </div>
+            ) : tab === "recruiter" ? (
+              <div className="mx-auto max-w-5xl space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <StatCard I={Briefcase} n={12} l="Open roles" />
+                  <StatCard I={Users} n={348} l="Matched talent" />
+                  <StatCard I={Star} n={27} l="Interviews" />
+                  <StatCard I={TrendingUp} n="18d" l="Avg. time to hire" />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <PipelineCol title="Sourced" n={42} people={["Priya Raman", "Marcus Lee"]} />
+                  <PipelineCol title="Screening" n={18} people={["Priya Raman", "Marcus Lee"]} />
+                  <PipelineCol title="Interview" n={9} people={["Priya Raman", "Marcus Lee"]} />
+                  <PipelineCol title="Offer" n={3} people={["Priya Raman", "Marcus Lee"]} />
+                </div>
+              </div>
             ) : (
             <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 sm:p-7">
               {tab === "talent" && (
@@ -282,21 +313,6 @@ function ProductPreview() {
                     <PersonRow initials="ML" name="Marcus Lee" sub="Full-Stack Engineer · 5 yrs" score={92} />
                     <PersonRow initials="ET" name="Elena Torres" sub="Frontend Lead · 9 yrs" score={89} />
                     <PersonRow initials="DO" name="David Okafor" sub="TypeScript Engineer · 4 yrs" score={84} />
-                  </div>
-                </div>
-              )}
-              {tab === "recruiter" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-4 gap-3">
-                    <StatTile n={48} l="Sourced" />
-                    <StatTile n={21} l="Screen" />
-                    <StatTile n={9} l="Interview" />
-                    <StatTile n={3} l="Offer" />
-                  </div>
-                  <div className="space-y-3">
-                    <PersonRow initials="P" name="Priya Sharma" sub="Full-Stack · React, AWS" score={96} />
-                    <PersonRow initials="D" name="Daniel Kim" sub="ML · Python, PyTorch" score={92} />
-                    <PersonRow initials="M" name="Marcus Lee" sub="DevOps · Kubernetes" score={88} />
                   </div>
                 </div>
               )}
