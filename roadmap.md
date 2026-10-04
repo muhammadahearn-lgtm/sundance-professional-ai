@@ -11,3 +11,5 @@
 - [ ] Stage 10+: awaiting next spec
 - [x] Stage 10 — Candidate Dashboard (real data)
 - [x] Stage 11 — Recruiter Dashboard (real data)
+
+- [x] Stage 12 – Match Intelligence (salary in preferences, match filters, lowest-match sort, pipeline/compare scores, recalc on job publish/edit, dashboard extras)
