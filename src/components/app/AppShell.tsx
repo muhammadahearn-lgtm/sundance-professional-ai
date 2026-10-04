@@ -1,9 +1,9 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb, Bell, BarChart3 } from "lucide-react";
+  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { NotificationBell, NotificationNavBadge, NotificationsLive } from "@/components/notifications/Notifications";
 import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
@@ -50,6 +50,11 @@ export function AppShell({ account }: { account: Account }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => { setCollapsed(localStorage.getItem("sundance.sidebarCollapsed") === "1"); }, []);
+  function toggleCollapsed() {
+    setCollapsed((c) => { localStorage.setItem("sundance.sidebarCollapsed", c ? "0" : "1"); return !c; });
+  }
   const onboarding = pathname.endsWith("/onboarding");
   const name = `${account.firstName} ${account.lastName}`.trim() || account.email;
   const initials = (account.firstName[0] ?? account.email[0] ?? "?").toUpperCase() + (account.lastName[0] ?? "").toUpperCase();
@@ -83,6 +88,13 @@ export function AppShell({ account }: { account: Account }) {
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             )}
+            {!onboarding && (
+              <button className="hidden rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex"
+                aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}
+                aria-expanded={!collapsed} onClick={toggleCollapsed}>
+                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+              </button>
+            )}
             <Logo />
           </div>
           <div className="flex items-center gap-3">
@@ -102,7 +114,7 @@ export function AppShell({ account }: { account: Account }) {
         {open && !onboarding && <div className="border-t border-border bg-background p-4 lg:hidden">{nav}</div>}
       </header>
       <div className="flex">
-        {!onboarding && <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 border-r border-border bg-background p-4 lg:block">{nav}</aside>}
+        {!onboarding && !collapsed && <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:block">{nav}</aside>}
         <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><Outlet /></main>
       </div>
     </div>
