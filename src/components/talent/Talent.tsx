@@ -1,3 +1,4 @@
+import { MessageButton } from "@/components/messages/Messages";
 import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -239,7 +240,7 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
           <ProfileHeader d={q.data} actions={<>
             <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
             <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
-            <button onClick={soon("Messaging")} className={btn}><MessageSquare className="h-4 w-4" />Contact (Coming Soon)</button></>} />
+            <MessageButton role="recruiter" candidateId={id} className={btn} /></>} />
           <CandidateProfileBody d={q.data} t={tax.data} />
         </div>
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start"><MatchPlaceholder /></aside>

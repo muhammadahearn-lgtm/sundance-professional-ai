@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
   Compass, Lightbulb } from "lucide-react";
+import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
@@ -34,6 +35,11 @@ const NAV = {
   ],
 } as const;
 
+function UnreadBadge() {
+  const n = useUnreadCount();
+  return n ? <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">{n}</span> : null;
+}
+
 export function AppShell({ account }: { account: Account }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -56,7 +62,7 @@ export function AppShell({ account }: { account: Account }) {
         <Link key={to} to={to} onClick={() => setOpen(false)}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           activeProps={{ className: "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary" }}>
-          <Icon className="h-4 w-4" /> {label}
+          <Icon className="h-4 w-4" /> {label}{to.endsWith("/messages") && <UnreadBadge />}
         </Link>
       ))}
     </nav>

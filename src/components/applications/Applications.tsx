@@ -1,3 +1,4 @@
+import { MessageButton } from "@/components/messages/Messages";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { MatchBadge, MatchFilter, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
 import { Link } from "@tanstack/react-router";
@@ -115,7 +116,7 @@ export function CandidateApplicationDetail({ id }: { id: string }) {
     <div className="mx-auto max-w-3xl space-y-6">
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
-        <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+        <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={a.candidate_id} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
         <ol className="mt-5 space-y-4">{timeline(a.application_status as AppStatus).map((s) => (
           <li key={s.key} className="flex items-center gap-3">{s.state === "done" ? <CheckCircle2 className="h-5 w-5 text-success" /> : s.state === "rejected" ? <XCircle className="h-5 w-5 text-destructive" /> : <Circle className={`h-5 w-5 ${s.state === "current" ? "text-primary" : "text-muted-foreground"}`} />}
@@ -184,6 +185,7 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
           <div className={`${card} space-y-3 p-5`}><p className="font-display font-bold">Application Status</p><p className="text-sm text-muted-foreground">For {a.jobs?.job_title} · applied {fmt(a.application_date)}</p>
             <select value={a.application_status} onChange={(e) => update(e.target.value as AppStatus)} className={inputCls} aria-label="Application status">{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
             <button onClick={toPipeline} className={`${primaryBtn} w-full justify-center`}>Move To Pipeline</button>
+            <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={`${btn} w-full justify-center`} />
             {a.job_id && <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} className={`${btn} w-full justify-center`}>Job Pipeline</Link>}</div>
           <MatchPlaceholder />
         </aside>

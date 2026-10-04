@@ -11,6 +11,7 @@ import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { CareerWidget } from "@/components/career/Career";
+import { MessagesWidget } from "@/components/messages/Messages";
 import { CandidateRecsWidget } from "@/components/recommend/Recommend";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
@@ -179,6 +180,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
           </Widget>
 
           <CandidateRecsWidget uid={uid} />
+          <MessagesWidget role="candidate" />
 
           <Widget title="Recent Activity">
             {activity.length === 0 ? <Empty text="No activity yet." cta={<Link to="/candidate/profile" className={linkBtn}>Complete Profile</Link>} /> : (
