@@ -10,3 +10,4 @@
 - [x] Stage 9: apply to jobs, application tracking, recruiter review, kanban pipeline
 - [ ] Stage 10+: awaiting next spec
 - [x] Stage 10 — Candidate Dashboard (real data)
+- [x] Stage 11 — Recruiter Dashboard (real data)
