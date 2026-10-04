@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create Account — Sundance AI" },
-      { name: "description", content: "Join Sundance AI as a technology professional or recruiter." },
-      { property: "og:title", content: "Join Sundance AI" },
+      { title: "Create Account — Sundance Professional AI" },
+      { name: "description", content: "Join Sundance Professional AI as a technology professional or recruiter." },
+      { property: "og:title", content: "Join Sundance Professional AI" },
       { property: "og:description", content: "Create a candidate or recruiter account in minutes." },
     ],
   }),
@@ -39,7 +39,7 @@ function Register() {
 
           {step === 1 ? (
             <>
-              <h1 className="mt-8 text-3xl font-extrabold">How will you use Sundance AI?</h1>
+              <h1 className="mt-8 text-3xl font-extrabold">How will you use Sundance Professional AI?</h1>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {([["candidate", Briefcase, "Candidate", "Find opportunities that match your skills."], ["recruiter", Users, "Recruiter", "Discover qualified technical talent."]] as const).map(([v, I, t, d]) => (
                   <button key={v} type="button" onClick={() => setRole(v)}
