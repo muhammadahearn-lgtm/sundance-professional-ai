@@ -10,6 +10,7 @@ import { BrandImg } from "@/components/recruiter/shared";
 import { ARRANGEMENT, EMPLOYMENT, formatSalary, lbl } from "@/components/jobs/shared";
 import { shareJob, type JobLists } from "./useJobLists";
 import { asDetails, type ScoreRow } from "@/components/match/Match";
+import { Button } from "@/components/ui/button";
 
 export const postedAgo = (iso: string) => {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -29,30 +30,31 @@ const TONE = {
   muted: { text: "text-muted-foreground", bg: "bg-muted", ring: "border-border", bar: "bg-muted-foreground" },
 };
 
-function MatchIntelligence({ score, row }: { score: number | undefined; row: ScoreRow | undefined }) {
-  const [open, setOpen] = useState(false);
-  if (score == null) return <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"><Sparkles className="mr-1.5 inline h-4 w-4" />Match score unavailable — complete your profile to see how you match.</div>;
+function MatchIntelligence({ score, row, open, onToggle }: { score: number | undefined; row: ScoreRow | undefined; open: boolean; onToggle: () => void }) {
+  if (score == null) return <div className="max-w-44 text-right text-xs text-muted-foreground"><Sparkles className="mr-1 inline h-3.5 w-3.5" />Match score unavailable — complete your profile to see how you match.</div>;
   const s = Math.round(score), tier = matchTier(s), t = TONE[tier.tone];
-  const d = row ? asDetails(row.details) : null;
-  const missing = d ? [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies] : [];
-  const bars: [string, number][] = row ? [["Language Match", row.language_alignment_score], ["Skill Match", row.skill_alignment_score], ["Technology Match", row.technology_alignment_score], ["Experience Match", row.experience_alignment_score], ["Career Alignment", row.preference_alignment_score]] : [];
   return (
-    <div className={`mt-4 rounded-2xl border ${t.ring} ${t.bg} p-4`}>
-      <div className="flex flex-wrap items-center gap-4">
-        <div>
-          <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground"><Sparkles className="h-3.5 w-3.5" />Match Score</p>
-          <p className={`font-display text-5xl font-extrabold leading-none ${t.text}`}>{s}%</p>
-        </div>
-        <div className="min-w-[8rem] flex-1">
-          <p className={`text-base font-bold ${t.text}`}>{tier.label}</p>
-          <div className="mt-2 h-2 rounded-full bg-card"><div className={`h-2 rounded-full ${t.bar}`} style={{ width: `${s}%` }} /></div>
-        </div>
-        {row && <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="inline-flex items-center gap-1 rounded-xl bg-card px-3 py-1.5 text-sm font-semibold text-primary shadow-soft hover:opacity-90">View Match Insights<ChevronDown className={`h-4 w-4 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button>}
+    <div className="flex flex-col items-center text-center">
+      <div className={`flex h-28 w-28 shrink-0 flex-col items-center justify-center rounded-full border-[3px] ${t.ring} ${t.bg}`}>
+        <p className={`font-display text-3xl font-extrabold leading-none ${t.text}`}>{s}%</p>
+        {row && <Button type="button" variant="link" size="sm" onClick={onToggle} aria-expanded={open} aria-label={`Detail: ${s}% match insights`} className={`mt-1 h-6 gap-0.5 px-1 text-xs ${t.text}`}>Detail<ChevronDown className={`!h-3 !w-3 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></Button>}
       </div>
-      {row && d && (
-        <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-          <div className="overflow-hidden">
-            <div className="mt-4 grid gap-4 rounded-xl bg-card p-4 md:grid-cols-3">
+      <p className="mt-1 text-xs font-bold text-foreground">Match Score</p>
+      <p className={`text-xs font-semibold ${t.text}`}>{tier.label}</p>
+    </div>
+  );
+}
+
+function MatchInsights({ row, open }: { row: ScoreRow | undefined; open: boolean }) {
+  if (!row) return null;
+  const d = asDetails(row.details);
+  const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies];
+  const bars: [string, number][] = [["Language Match", row.language_alignment_score], ["Skill Match", row.skill_alignment_score], ["Technology Match", row.technology_alignment_score], ["Experience Match", row.experience_alignment_score], ["Career Alignment", row.preference_alignment_score]];
+  return (
+    <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+      <div className="overflow-hidden">
+        <div className="mt-3 border-t border-border pt-3">
+          <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2.5">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Match Summary</p>
                 {bars.map(([l, v]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l}</span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
@@ -70,10 +72,9 @@ function MatchIntelligence({ score, row }: { score: number | undefined; row: Sco
                   </div>
                 ) : <p className="mt-2 text-sm text-muted-foreground">No gaps — you cover every requirement.</p>}
               </div>
-            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -98,20 +99,16 @@ function ReqGroup({ title, rows, names, tone }: { title: string; rows: ReqRow[] 
 }
 
 export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined }) {
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
   return (
     <article className={`${card} p-5 transition-shadow hover:shadow-md`}>
-      <div className="flex gap-4">
+      <div className="flex items-start gap-4">
         <CompanyLogo path={j.companies?.logo_url} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
-              <p className="text-sm font-medium">{j.companies?.company_name}</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">{salary && <span className="hidden rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success sm:inline">{salary}</span>}</div>
-          </div>
+          <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
+          <p className="text-sm font-medium">{j.companies?.company_name}</p>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
             <span>{lbl(EMPLOYMENT, j.employment_type)}</span>
@@ -119,8 +116,6 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
             {roleName && <span className="rounded-full bg-primary-soft px-2 py-0.5 font-semibold text-primary">{roleName}</span>}
             <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{postedAgo(j.published_at ?? j.created_at)}</span>
           </div>
-          {salary && <p className="mt-2 text-sm font-semibold text-success sm:hidden">{salary}</p>}
-          <MatchIntelligence score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
           <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{plainPreview(j.job_description)}</p>
           {tax && (
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -129,14 +124,19 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
               <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} tone="teal" />
             </div>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
+        </div>
+        <div className="flex w-32 shrink-0 flex-col items-center gap-2 sm:w-40">
+          {salary && <span className="text-center text-xs font-bold text-success sm:text-sm">{salary}</span>}
+          <MatchIntelligence score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} open={insightsOpen} onToggle={() => setInsightsOpen((value) => !value)} />
+        </div>
+      </div>
+      <MatchInsights row={scoreRow} open={insightsOpen} />
+      <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">View Job</Link>
             {onRemove ? <button onClick={onRemove} className={act}><BookmarkCheck className="h-4 w-4" />Remove</button>
               : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}
             <button onClick={() => lists.toggleCompare(j.job_id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare"}</button>
             <button onClick={() => shareJob(j.job_id, j.job_title)} className={act} aria-label="Share job"><Share2 className="h-4 w-4" /><span className="hidden sm:inline">Share</span></button>
-          </div>
-        </div>
       </div>
     </article>
   );
