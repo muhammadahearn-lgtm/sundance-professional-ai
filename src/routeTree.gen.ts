@@ -24,6 +24,7 @@ import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authentica
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedCandidateIndexRouteImport } from './routes/_authenticated/candidate/index'
 import { Route as AuthenticatedCandidateApplicationsRouteImport } from './routes/_authenticated/candidate/applications'
+import { Route as AuthenticatedCandidateCareerRouteImport } from './routes/_authenticated/candidate/career'
 import { Route as AuthenticatedCandidateDashboardRouteImport } from './routes/_authenticated/candidate/dashboard'
 import { Route as AuthenticatedCandidateJobsRouteImport } from './routes/_authenticated/candidate/jobs'
 import { Route as AuthenticatedCandidateMessagesRouteImport } from './routes/_authenticated/candidate/messages'
@@ -136,6 +137,12 @@ const AuthenticatedCandidateApplicationsRoute =
   AuthenticatedCandidateApplicationsRouteImport.update({
     id: '/applications',
     path: '/applications',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateCareerRoute =
+  AuthenticatedCandidateCareerRouteImport.update({
+    id: '/career',
+    path: '/career',
     getParentRoute: () => AuthenticatedCandidateRoute,
   } as any)
 const AuthenticatedCandidateDashboardRoute =
@@ -375,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/candidate/applications': typeof AuthenticatedCandidateApplicationsRouteWithChildren
+  '/candidate/career': typeof AuthenticatedCandidateCareerRoute
   '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
   '/candidate/jobs': typeof AuthenticatedCandidateJobsRouteWithChildren
   '/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
@@ -425,6 +433,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/candidate/career': typeof AuthenticatedCandidateCareerRoute
   '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
   '/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
   '/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
@@ -475,6 +484,7 @@ export interface FileRoutesById {
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/candidate/applications': typeof AuthenticatedCandidateApplicationsRouteWithChildren
+  '/_authenticated/candidate/career': typeof AuthenticatedCandidateCareerRoute
   '/_authenticated/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
   '/_authenticated/candidate/jobs': typeof AuthenticatedCandidateJobsRouteWithChildren
   '/_authenticated/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
@@ -530,6 +540,7 @@ export interface FileRouteTypes {
     | '/recruiter'
     | '/auth/callback'
     | '/candidate/applications'
+    | '/candidate/career'
     | '/candidate/dashboard'
     | '/candidate/jobs'
     | '/candidate/messages'
@@ -580,6 +591,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/unauthorized'
     | '/auth/callback'
+    | '/candidate/career'
     | '/candidate/dashboard'
     | '/candidate/messages'
     | '/candidate/onboarding'
@@ -629,6 +641,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recruiter'
     | '/auth/callback'
     | '/_authenticated/candidate/applications'
+    | '/_authenticated/candidate/career'
     | '/_authenticated/candidate/dashboard'
     | '/_authenticated/candidate/jobs'
     | '/_authenticated/candidate/messages'
@@ -788,6 +801,13 @@ declare module '@tanstack/react-router' {
       path: '/applications'
       fullPath: '/candidate/applications'
       preLoaderRoute: typeof AuthenticatedCandidateApplicationsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/career': {
+      id: '/_authenticated/candidate/career'
+      path: '/career'
+      fullPath: '/candidate/career'
+      preLoaderRoute: typeof AuthenticatedCandidateCareerRouteImport
       parentRoute: typeof AuthenticatedCandidateRoute
     }
     '/_authenticated/candidate/dashboard': {
@@ -1093,6 +1113,7 @@ const AuthenticatedCandidateJobsRouteWithChildren =
 
 interface AuthenticatedCandidateRouteChildren {
   AuthenticatedCandidateApplicationsRoute: typeof AuthenticatedCandidateApplicationsRouteWithChildren
+  AuthenticatedCandidateCareerRoute: typeof AuthenticatedCandidateCareerRoute
   AuthenticatedCandidateDashboardRoute: typeof AuthenticatedCandidateDashboardRoute
   AuthenticatedCandidateJobsRoute: typeof AuthenticatedCandidateJobsRouteWithChildren
   AuthenticatedCandidateMessagesRoute: typeof AuthenticatedCandidateMessagesRoute
@@ -1107,6 +1128,7 @@ const AuthenticatedCandidateRouteChildren: AuthenticatedCandidateRouteChildren =
   {
     AuthenticatedCandidateApplicationsRoute:
       AuthenticatedCandidateApplicationsRouteWithChildren,
+    AuthenticatedCandidateCareerRoute: AuthenticatedCandidateCareerRoute,
     AuthenticatedCandidateDashboardRoute: AuthenticatedCandidateDashboardRoute,
     AuthenticatedCandidateJobsRoute:
       AuthenticatedCandidateJobsRouteWithChildren,

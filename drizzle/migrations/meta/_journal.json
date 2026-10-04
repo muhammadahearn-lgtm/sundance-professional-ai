@@ -64,6 +64,13 @@
       "when": 1791088438337,
       "tag": "0008_stage12_match_details",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791089174867,
+      "tag": "0009_stage13_career_snapshots",
+      "breakpoints": true
     }
   ]
 }

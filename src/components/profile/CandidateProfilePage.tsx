@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -149,6 +150,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
             ))}</ul>
           ) : <p className="mt-4 text-sm text-success">Your profile is complete. Great work!</p>}
         </div>
+        <Link to="/candidate/career" className="block rounded-2xl border border-primary/30 bg-primary-soft/40 p-4 text-sm font-semibold text-primary hover:bg-primary-soft">Career Intelligence → readiness, gaps, salary & roadmap</Link>
         <CandidateMatchWidget compact uid={uid} key={`${data.skills.length}-${data.languages.length}-${data.technologies.length}-${p.updated_at}`} />
         {missing.length > 0 && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">

@@ -304,6 +304,53 @@ export type Database = {
           },
         ]
       }
+      career_snapshots: {
+        Row: {
+          average_match: number | null
+          candidate_id: string
+          created_at: string
+          details: Json
+          profile_completion: number
+          readiness_score: number
+          skill_count: number
+          snapshot_date: string
+          snapshot_id: string
+          technology_count: number
+        }
+        Insert: {
+          average_match?: number | null
+          candidate_id: string
+          created_at?: string
+          details?: Json
+          profile_completion?: number
+          readiness_score?: number
+          skill_count?: number
+          snapshot_date?: string
+          snapshot_id?: string
+          technology_count?: number
+        }
+        Update: {
+          average_match?: number | null
+          candidate_id?: string
+          created_at?: string
+          details?: Json
+          profile_completion?: number
+          readiness_score?: number
+          skill_count?: number
+          snapshot_date?: string
+          snapshot_id?: string
+          technology_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_snapshots_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       certifications: {
         Row: {
           candidate_id: string
