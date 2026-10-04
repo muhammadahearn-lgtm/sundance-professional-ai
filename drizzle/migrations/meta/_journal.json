@@ -43,6 +43,13 @@
       "when": 1791085603832,
       "tag": "0005_stage6_job_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791086117629,
+      "tag": "0006_stage7_job_compare_limits",
+      "breakpoints": true
     }
   ]
 }

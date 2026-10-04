@@ -12,7 +12,7 @@ const NAV = {
   candidate: [
     { to: "/candidate/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/candidate/jobs", label: "Jobs", Icon: Briefcase },
-    { to: "/candidate/saved-jobs", label: "Saved Jobs", Icon: Bookmark },
+    { to: "/candidate/jobs/saved", label: "Saved Jobs", Icon: Bookmark },
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
     { to: "/candidate/messages", label: "Messages", Icon: MessageSquare },
     { to: "/candidate/profile", label: "Profile", Icon: UserRound },

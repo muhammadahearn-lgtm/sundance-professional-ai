@@ -5,4 +5,5 @@
 - [x] Auth, roles, onboarding, dashboards, settings (from uploaded spec)
 - [x] Stage 5: recruiter profile + company profile pages
 - [x] Stage 6: job management (create/edit/duplicate/status/preview)
-- [ ] Stage 7+: job search, candidate search, applications (awaiting next spec)
+- [x] Stage 7: candidate job search, saved jobs, compare
+- [ ] Stage 8+: candidate search, applications (awaiting next spec)
