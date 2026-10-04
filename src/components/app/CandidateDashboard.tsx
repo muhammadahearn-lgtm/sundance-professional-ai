@@ -89,7 +89,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
   async function removeSaved(id: string) {
     const { error: e } = await supabase.from("saved_jobs").delete().eq("saved_job_id", id);
-    if (e) return toast.error("Couldn't remove saved job.");
+    if (e) { toast.error("Couldn't remove saved job."); return; }
     toast.success("Removed from saved jobs");
     qc.invalidateQueries({ queryKey: ["candidate-dashboard", uid] });
   }
