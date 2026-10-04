@@ -30,6 +30,7 @@ function Index() {
       <Hero />
       <Solution />
       <SkillFirst />
+      <AudienceSplit />
       <Intelligence />
       <Preview />
       <Transparency />
@@ -139,6 +140,53 @@ function SkillFirst() {
         <div className="grid gap-5 sm:grid-cols-2">
           <Flow title="Traditional Hiring" steps={["Resume", "Keyword Search", "Manual Screening", "Interview"]} />
           <Flow good title="Sundance AI" steps={["Talent Profile", "AI Matching", "Candidate Discovery", "Hire"]} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AudienceSplit() {
+  const candidate = [
+    { I: Brain, label: "AI-Powered Job Matching" },
+    { I: Gauge, label: "Career Readiness Scoring" },
+    { I: ChartColumn, label: "Skill Gap Analysis" },
+    { I: Sparkles, label: "Personalized Recommendations" },
+    { I: ListChecks, label: "Application Tracking" },
+    { I: Eye, label: "Recruiter Visibility" },
+  ];
+  const recruiter = [
+    { I: Brain, label: "AI-Powered Candidate Matching" },
+    { I: Search, label: "Talent Search" },
+    { I: GitCompareArrows, label: "Candidate Comparison" },
+    { I: Layers, label: "Recruiting Pipeline" },
+    { I: CalendarCheck, label: "Interview Tracking" },
+    { I: TrendingUp, label: "Hiring Insights" },
+  ];
+  const FeatureCard = ({ I, label }: { I: typeof Brain; label: string }) => (
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><I className="h-5 w-5" /></div>
+      <div className="font-semibold leading-snug">{label}</div>
+    </div>
+  );
+  return (
+    <section className="py-24">
+      <div className="container-x grid items-center gap-14 lg:grid-cols-2">
+        <div>
+          <SectionHeading center={false} eyebrow="For Candidates" title="Advance Your Career" desc="Know exactly where you stand, what to improve, and which roles are worth your time." />
+          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Create Candidate Profile <ArrowRight /></Link></Button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {candidate.map(({ I, label }) => <FeatureCard key={label} I={I} label={label} />)}
+        </div>
+      </div>
+      <div className="container-x mt-24 grid items-center gap-14 lg:grid-cols-2">
+        <div className="order-last grid gap-4 sm:grid-cols-2 lg:order-first">
+          {recruiter.map(({ I, label }) => <FeatureCard key={label} I={I} label={label} />)}
+        </div>
+        <div>
+          <SectionHeading center={false} eyebrow="For Recruiters" title="Find Qualified Talent Faster" desc="Stop sifting through resumes. Start with candidates already scored against your role." />
+          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Create Recruiter Account <ArrowRight /></Link></Button>
         </div>
       </div>
     </section>
