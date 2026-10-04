@@ -97,7 +97,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
-        <Header c={c}>
+        <Header c={c} onUploadLogo={(f) => uploadBrand(f, "logo")} onUploadBanner={(f) => uploadBrand(f, "banner")}>
           <button onClick={() => { setEdit("info"); document.getElementById("company-info")?.scrollIntoView({ behavior: "smooth" }); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Company</button>
           <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Company</button>
         </Header>
