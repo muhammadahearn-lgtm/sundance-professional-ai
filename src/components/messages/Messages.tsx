@@ -171,6 +171,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
       if (error) throw error;
       return (data ?? []) as Msg[];
     },
+    refetchInterval: 15000,
   });
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -189,11 +190,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
     const ch = supabase.channel(`thread-${c.conversation_id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${c.conversation_id}` }, (p) => {
         const m = p.new as Msg;
-        qc.setQueryData<Msg[]>(key, (prev = []) => {
-          const i = prev.findIndex((x) => x.message_id === m.message_id);
-          if (i >= 0) { const n = [...prev]; n[i] = m; return n; }
-          return [...prev, m];
-        });
+        void qc.invalidateQueries({ queryKey: key });
         if (p.eventType === "INSERT" && m.sender_id !== uid) void markRead();
       }).subscribe();
     return () => { void supabase.removeChannel(ch); };
