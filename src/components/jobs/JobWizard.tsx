@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Building2, Check } from "lucide-react";
 import type { Account } from "@/lib/account";
 import { DESCRIPTION_MAX, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
+import { useRecalc } from "@/components/match/Match";
 import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/jobs-data";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
@@ -57,6 +58,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
     setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const recalc = useRecalc();
   const submit = async (target: JobStatus | "save") => {
     const e = validateAll(f); setErrs(e);
     if (Object.keys(e).length) {
@@ -68,6 +70,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
     setSaving(target);
     try {
       const id = await saveJob(uid, f, { id: jobId, status: target === "save" ? undefined : target });
+      recalc.mutate(id);
       await qc.invalidateQueries({ queryKey: ["jobs"] });
       await qc.invalidateQueries({ queryKey: ["job", id] });
       toast.success(target === "active" && status !== "active" ? "Job published" : jobId ? "Job updated" : "Job created");
