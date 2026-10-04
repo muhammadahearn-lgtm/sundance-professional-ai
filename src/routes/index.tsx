@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
@@ -32,6 +34,8 @@ function Index() {
       <SkillFirst />
       <AudienceSplit />
       <Intelligence />
+      <ProductPreview />
+
       <Testimonials />
       <section className="py-24">
         <div className="container-x">
@@ -138,6 +142,160 @@ function SkillFirst() {
         <div className="grid gap-5 sm:grid-cols-2">
           <Flow title="Traditional Hiring" steps={["Resume", "Keyword Search", "Manual Screening", "Interview"]} />
           <Flow good title="Sundance AI" steps={["Talent Profile", "AI Matching", "Candidate Discovery", "Hire"]} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const PREVIEW_TABS = [
+  { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / dashboard" },
+  { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter" },
+  { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / profile" },
+  { id: "jobs", label: "Job Search", path: "app.sundance.ai / job-search" },
+  { id: "talent", label: "Talent Search", path: "app.sundance.ai / talent-search" },
+] as const;
+type PreviewTabId = (typeof PREVIEW_TABS)[number]["id"];
+
+function Bar({ label, v }: { label: string; v: number }) {
+  return (
+    <div>
+      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{v}%</span></div>
+      <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${v}%` }} /></div>
+    </div>
+  );
+}
+
+
+function MatchBadge({ score }: { score: number }) {
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${score >= 90 ? "bg-success/15 text-success" : "bg-primary-soft text-primary"}`}>{score}% match</span>;
+}
+
+function PersonRow({ initials, name, sub, score }: { initials: string; name: string; sub: string; score: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-bold text-primary">{initials}</span>
+        <div><div className="text-sm font-semibold">{name}</div><div className="text-xs text-muted-foreground">{sub}</div></div>
+      </div>
+      <MatchBadge score={score} />
+    </div>
+  );
+}
+
+function StatTile({ n, l }: { n: number; l: string }) {
+  return (
+    <div className="rounded-lg bg-primary-soft p-3 text-center"><div className="font-display text-xl font-bold text-primary">{n}</div><div className="text-xs text-muted-foreground">{l}</div></div>
+  );
+}
+
+function ProductPreview() {
+  const [tab, setTab] = useState<PreviewTabId>("talent");
+  const active = PREVIEW_TABS.find((t) => t.id === tab)!;
+  return (
+    <section className="py-24">
+      <div className="container-x">
+        <SectionHeading eyebrow="Product preview" title="See Sundance AI in Action" desc="Explore the experience for candidates and recruiters." />
+        <div className="mt-12 flex flex-wrap justify-center gap-3">
+          {PREVIEW_TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition ${tab === t.id ? "border-primary bg-primary text-primary-foreground shadow-elevated" : "border-border bg-card text-foreground hover:border-primary/40"}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-10 overflow-hidden rounded-3xl border border-border bg-card shadow-elevated">
+          <div className="flex items-center gap-2 border-b border-border bg-secondary px-5 py-3">
+            <span className="h-3 w-3 rounded-full bg-destructive/70" />
+            <span className="h-3 w-3 rounded-full bg-chart-4" />
+            <span className="h-3 w-3 rounded-full bg-success/80" />
+            <span className="ml-4 text-xs text-muted-foreground">{active.path}</span>
+          </div>
+          <div className="bg-secondary/60 p-5 sm:p-8 lg:p-10">
+            <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 sm:p-7">
+              {tab === "talent" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Senior React engineers with 5+ years...</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["5+ years", "US-based", "Open to work", "TypeScript"].map((c, i) => (
+                      <span key={c} className={`rounded-full px-3 py-1 text-xs font-medium ${i < 3 ? "bg-primary-soft text-primary" : "border border-border text-muted-foreground"}`}>{c}</span>
+                    ))}
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <PersonRow initials="PR" name="Priya Raman" sub="Senior React Engineer · 7 yrs" score={97} />
+                    <PersonRow initials="ML" name="Marcus Lee" sub="Full-Stack Engineer · 5 yrs" score={92} />
+                    <PersonRow initials="ET" name="Elena Torres" sub="Frontend Lead · 9 yrs" score={89} />
+                    <PersonRow initials="DO" name="David Okafor" sub="TypeScript Engineer · 4 yrs" score={84} />
+                  </div>
+                </div>
+              )}
+              {tab === "candidate" && (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-border p-4">
+                    <Bar label="Career Readiness" v={89} />
+                  </div>
+                  <div className="space-y-3">
+                    <PersonRow initials="S" name="Senior ML Engineer" sub="Northwind AI" score={96} />
+                    <PersonRow initials="D" name="Data Engineer" sub="Lumen Cloud" score={91} />
+                    <PersonRow initials="A" name="AI Platform Engineer" sub="Vertex Labs" score={88} />
+                  </div>
+                </div>
+              )}
+              {tab === "recruiter" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-4 gap-3">
+                    <StatTile n={48} l="Sourced" />
+                    <StatTile n={21} l="Screen" />
+                    <StatTile n={9} l="Interview" />
+                    <StatTile n={3} l="Offer" />
+                  </div>
+                  <div className="space-y-3">
+                    <PersonRow initials="P" name="Priya Sharma" sub="Full-Stack · React, AWS" score={96} />
+                    <PersonRow initials="D" name="Daniel Kim" sub="ML · Python, PyTorch" score={92} />
+                    <PersonRow initials="M" name="Marcus Lee" sub="DevOps · Kubernetes" score={88} />
+                  </div>
+                </div>
+              )}
+              {tab === "profile" && (
+                <div className="space-y-5">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft font-display text-lg font-bold text-primary">AC</span>
+                    <div>
+                      <div className="font-display text-lg font-bold">Alex Chen</div>
+                      <div className="text-sm text-muted-foreground">Full-Stack Engineer · 6 yrs</div>
+                    </div>
+                    <div className="ml-auto hidden sm:block"><MatchBadge score={89} /></div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"].map((s) => (
+                      <span key={s} className="rounded-md bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">{s}</span>
+                    ))}
+                    <span className="rounded-md border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground">Missing: Kubernetes</span>
+                  </div>
+                  <Bar label="Career Readiness" v={89} />
+                </div>
+              )}
+              {tab === "jobs" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Machine learning roles near San Francisco...</span>
+                  </div>
+                  <div className="space-y-3">
+                    <PersonRow initials="N" name="Senior ML Engineer" sub="Northwind AI · Remote" score={96} />
+                    <PersonRow initials="L" name="Data Engineer" sub="Lumen Cloud · San Francisco" score={91} />
+                    <PersonRow initials="V" name="AI Platform Engineer" sub="Vertex Labs · Hybrid" score={88} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>
