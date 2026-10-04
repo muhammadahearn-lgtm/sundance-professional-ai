@@ -333,6 +333,7 @@ function ProductPreview() {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>
