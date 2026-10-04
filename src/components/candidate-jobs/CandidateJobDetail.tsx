@@ -8,11 +8,9 @@ import { card, friendlyError } from "@/components/profile/parts";
 import { BrandImg, Item } from "@/components/recruiter/shared";
 import { Markdown } from "@/components/jobs/Markdown";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
-import { COMPANY_SIZES } from "@/components/recruiter/shared";
 import { CompanyLogo, CompareTray, postedAgo } from "./JobCard";
 import { shareJob, useJobLists } from "./useJobLists";
 
-void COMPANY_SIZES;
 const act = "inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary";
 
 export function CandidateJobDetail({ account, id }: { account: Account; id: string }) {
