@@ -73,8 +73,8 @@ function ResetPassword() {
           <h1 className="text-3xl font-extrabold">Set a new password</h1>
           <form className="mt-8 space-y-5" noValidate onSubmit={submit}>
             {error && <FormAlert>{error}</FormAlert>}
-            <div className="space-y-2"><Label htmlFor="password">New Password</Label><Input id="password" name="password" type="password" autoComplete="new-password" /></div>
-            <div className="space-y-2"><Label htmlFor="confirm">Confirm New Password</Label><Input id="confirm" name="confirm" type="password" autoComplete="new-password" /></div>
+            <div className="space-y-2"><Label htmlFor="password">New Password</Label><PasswordInput id="password" name="password" autoComplete="new-password" /></div>
+            <div className="space-y-2"><Label htmlFor="confirm">Confirm New Password</Label><PasswordInput id="confirm" name="confirm" autoComplete="new-password" /></div>
             <Button type="submit" size="lg" className="w-full rounded-full" disabled={loading}>{loading ? "Updating…" : "Update Password"}</Button>
           </form>
         </>
