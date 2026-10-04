@@ -3,6 +3,12 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
+import { useSession } from "@/hooks/use-session";
+import { supabase } from "@/integrations/supabase/client";
+
+function useDashboardPath(userRole: unknown) {
+  return userRole === "recruiter" ? "/recruiter/dashboard" : "/candidate/dashboard";
+}
 
 const nav = [
   { to: "/", label: "Home" },
@@ -13,6 +19,9 @@ const nav = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { session } = useSession();
+  const dash = useDashboardPath(session?.user.user_metadata?.role);
+  const signOut = () => supabase.auth.signOut();
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="container-x flex h-16 items-center justify-between">
@@ -31,8 +40,13 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild variant="ghost" size="sm"><Link to="/login">Login</Link></Button>
-          <Button asChild size="sm" className="rounded-full px-4"><Link to="/register">Get Started</Link></Button>
+          {session ? (<>
+            <Button variant="ghost" size="sm" onClick={signOut}>Log out</Button>
+            <Button asChild size="sm" className="rounded-full px-4"><Link to={dash}>Dashboard</Link></Button>
+          </>) : (<>
+            <Button asChild variant="ghost" size="sm"><Link to="/login">Login</Link></Button>
+            <Button asChild size="sm" className="rounded-full px-4"><Link to="/register">Get Started</Link></Button>
+          </>)}
         </div>
         <button className="md:hidden p-2" aria-label="Toggle menu" onClick={() => setOpen(!open)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -47,8 +61,13 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <Button asChild variant="outline"><Link to="/login" onClick={() => setOpen(false)}>Login</Link></Button>
-              <Button asChild><Link to="/register" onClick={() => setOpen(false)}>Get Started</Link></Button>
+              {session ? (<>
+                <Button variant="outline" onClick={() => { setOpen(false); signOut(); }}>Log out</Button>
+                <Button asChild><Link to={dash} onClick={() => setOpen(false)}>Dashboard</Link></Button>
+              </>) : (<>
+                <Button asChild variant="outline"><Link to="/login" onClick={() => setOpen(false)}>Login</Link></Button>
+                <Button asChild><Link to="/register" onClick={() => setOpen(false)}>Get Started</Link></Button>
+              </>)}
             </div>
           </div>
         </div>
