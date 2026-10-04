@@ -60,7 +60,7 @@ function Hero() {
             Find the Right Opportunity.<br /><span className="text-gradient">Hire the Right Talent.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Sundance Professionals uses AI-powered candidate discovery, skill-first matching, career intelligence, and recruiting intelligence to help technology professionals and recruiters make better hiring decisions.
+            Sundance Professionals brings AI-powered candidate discovery, skill-first matching, career intelligence, and recruiting intelligence to help technology professionals and recruiters make better hiring decisions.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-full px-6 shadow-elevated"><Link to="/register">Get Started <ArrowRight /></Link></Button>
@@ -133,7 +133,7 @@ function SkillFirst() {
     <section className="py-24">
       <div className="container-x grid items-center gap-14 lg:grid-cols-2">
         <div>
-          <SectionHeading center={false} eyebrow="Skill-first hiring" title="Beyond Resumes. Beyond Keywords." desc="Traditional platforms focus on resumes and keywords. Sundance Professionals focuses on:" />
+          <SectionHeading center={false} eyebrow="Skill-first hiring" title="Beyond Resumes. Beyond Keywords." desc="Traditional platforms focus on resumes and keywords. Sundance Professionals puts the focus on:" />
           <div className="mt-8 grid grid-cols-2 gap-3">
             {focus.map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm font-medium"><Check className="h-4 w-4 text-primary" /> {f}</div>
