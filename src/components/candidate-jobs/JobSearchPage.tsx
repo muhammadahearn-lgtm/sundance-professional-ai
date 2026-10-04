@@ -90,9 +90,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              <div className="grid items-start gap-3 md:grid-cols-2">
-                {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} />)}
-              </div>
+              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>
