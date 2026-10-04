@@ -5,9 +5,9 @@ import { AuthCard } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/unauthorized")({
   head: () => ({
-    meta: [
-      { title: "Access Denied — Sundance Professional AI" },
-      { name: "description", content: "You don't have access to this area of Sundance Professional AI." },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+      { title: "Access Denied — Sundance Professionals" },
+      { name: "description", content: "You don't have access to this area of Sundance Professionals." },
       { property: "og:title", content: "Access denied" },
       { property: "og:description", content: "This page isn't available for your account type." },
     ],

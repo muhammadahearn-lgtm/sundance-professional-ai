@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RecruiterRecommendationsPage } from "@/components/recommend/Recommend";
 
-const t = "Recommendations — Sundance Professional AI";
+const t = "Recommendations — Sundance Professionals";
 const d = "Ranked candidate, pipeline and hiring recommendations for your open roles.";
 export const Route = createFileRoute("/_authenticated/recruiter/recommendations")({
-  head: () => ({ meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] }),
+  head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] }),
   component: Page,
 });
 function Page() {

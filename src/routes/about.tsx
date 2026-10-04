@@ -4,10 +4,10 @@ import { PageHero, SectionHeading } from "@/components/site/shared";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
-    meta: [
-      { title: "About Sundance Professional AI — Mission, Vision & Principles" },
-      { name: "description", content: "Sundance Professional AI transforms hiring from keyword matching into intelligent, skill-first talent discovery." },
-      { property: "og:title", content: "About Sundance Professional AI" },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+      { title: "About Sundance Professionals — Mission, Vision & Principles" },
+      { name: "description", content: "Sundance Professionals transforms hiring from keyword matching into intelligent, skill-first talent discovery." },
+      { property: "og:title", content: "About Sundance Professionals" },
       { property: "og:description", content: "Our mission, vision and the principles behind skill-first hiring." },
     ],
     links: [{ rel: "canonical", href: "/about" }],
@@ -24,7 +24,7 @@ function About() {
   ] as const;
   return (
     <>
-      <PageHero eyebrow="About us" title="Transforming hiring into intelligent talent discovery" desc="Sundance Professional AI is an AI-powered hiring marketplace connecting technology professionals and recruiters through skill-based matching and career intelligence." />
+      <PageHero eyebrow="About us" title="Transforming hiring into intelligent talent discovery" desc="Sundance Professionals is an AI-powered hiring marketplace connecting technology professionals and recruiters through skill-based matching and career intelligence." />
       <section className="py-24">
         <div className="container-x grid gap-6 md:grid-cols-2">
           {[[Compass, "Mission", "To simplify job searching and talent acquisition through AI-powered candidate discovery, skill-based matching, and career intelligence."],
@@ -60,7 +60,7 @@ function About() {
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             {[["For Candidates", "Find the right opportunity faster through intelligent job matching."],
               ["For Recruiters", "Find the right talent faster through intelligent candidate discovery."],
-              ["For Sundance Professional AI", "Transform hiring from keyword matching into intelligent talent discovery."]].map(([t, d], i) => (
+              ["For Sundance Professionals", "Transform hiring from keyword matching into intelligent talent discovery."]].map(([t, d], i) => (
               <div key={t} className={`rounded-3xl p-8 ${i === 2 ? "bg-ink text-ink-foreground" : "border border-border bg-card shadow-soft"}`}>
                 <div className="font-display text-sm font-bold text-primary">0{i + 1}</div>
                 <h3 className="mt-3 text-xl font-bold">{t}</h3>

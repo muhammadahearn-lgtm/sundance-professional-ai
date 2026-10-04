@@ -17,11 +17,11 @@ export const Route = createFileRoute("/login")({
     reason: s["reason"] === "expired" || s["reason"] === "reset" ? s["reason"] : undefined,
   }),
   head: () => ({
-    meta: [
-      { title: "Log in — Sundance Professional AI" },
-      { name: "description", content: "Log in to your Sundance Professional AI candidate or recruiter account." },
-      { property: "og:title", content: "Log in to Sundance Professional AI" },
-      { property: "og:description", content: "Access your Sundance Professional AI dashboard." },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+      { title: "Log in — Sundance Professionals" },
+      { name: "description", content: "Log in to your Sundance Professionals candidate or recruiter account." },
+      { property: "og:title", content: "Log in to Sundance Professionals" },
+      { property: "og:description", content: "Access your Sundance Professionals dashboard." },
     ],
   }),
   component: Login,
@@ -67,7 +67,7 @@ function Login() {
   return (
     <AuthCard>
       <h1 className="text-3xl font-extrabold">Welcome Back</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Log in to continue to Sundance Professional AI.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Log in to continue to Sundance Professionals.</p>
       <form className="mt-8 space-y-5" noValidate onSubmit={submit}>
         {reason === "expired" && !error && <FormAlert>Your session has expired. Please log in again.</FormAlert>}
         {reason === "reset" && !error && <FormAlert kind="success">Password successfully updated. Log in with your new password.</FormAlert>}
@@ -87,7 +87,7 @@ function Login() {
         <Button type="submit" size="lg" className="w-full rounded-full" disabled={loading}>{loading ? "Logging in…" : "Log In"}</Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        New to Sundance Professional AI? <Link to="/register" className="font-medium text-primary hover:underline">Create Account</Link>
+        New to Sundance Professionals? <Link to="/register" className="font-medium text-primary hover:underline">Create Account</Link>
       </p>
     </AuthCard>
   );

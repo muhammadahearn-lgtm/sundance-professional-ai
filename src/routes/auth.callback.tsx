@@ -8,9 +8,9 @@ import { AuthCard, SuccessScreen } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
-    meta: [
-      { title: "Email Verified — Sundance Professional AI" },
-      { name: "description", content: "Your Sundance Professional AI email address is verified." },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+      { title: "Email Verified — Sundance Professionals" },
+      { name: "description", content: "Your Sundance Professionals email address is verified." },
       { property: "og:title", content: "Email verified" },
       { property: "og:description", content: "Your account is now active." },
     ],

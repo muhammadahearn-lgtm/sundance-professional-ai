@@ -106,7 +106,7 @@ export function CareerPage({ uid }: { uid: string }) {
           </section>
 
           <section className={card}><Head title="Market Demand" />
-            <p className="mb-2 text-xs text-muted-foreground">Based on {r.market.jobs} active job{r.market.jobs === 1 ? "" : "s"} on Sundance.</p>
+            <p className="mb-2 text-xs text-muted-foreground">Based on {r.market.jobs} active job{r.market.jobs === 1 ? "" : "s"} on Sundance Professionals.</p>
             <div className="grid gap-3 sm:grid-cols-3 text-sm">
               {([["Top skills", r.market.skills.map((x) => x.name)], ["Top technologies", r.market.technologies.map((x) => x.name)], ["Most posted roles", r.market.roles.map((x) => `${x.name} (${x.jobs})`)]] as const).map(([t, xs]) => <div key={t}><p className="text-xs font-semibold uppercase text-muted-foreground">{t}</p>{xs.length ? <ol className="mt-1 space-y-0.5">{xs.map((x, i) => <li key={x}>{i + 1}. {x}</li>)}</ol> : <p className="text-xs text-muted-foreground">No data yet</p>}</div>)}
             </div>

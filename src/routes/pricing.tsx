@@ -4,10 +4,10 @@ import { PageHero, PricingCards } from "@/components/site/shared";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
-    meta: [
-      { title: "Pricing — Sundance Professional AI" },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+      { title: "Pricing — Sundance Professionals" },
       { name: "description", content: "Free for candidates. Recruiter Professional at $99/month. Enterprise plans for talent teams." },
-      { property: "og:title", content: "Sundance Professional AI Pricing" },
+      { property: "og:title", content: "Sundance Professionals Pricing" },
       { property: "og:description", content: "Compare Candidate, Recruiter Professional and Enterprise plans." },
     ],
     links: [{ rel: "canonical", href: "/pricing" }],

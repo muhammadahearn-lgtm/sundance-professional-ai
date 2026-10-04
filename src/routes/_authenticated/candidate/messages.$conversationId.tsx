@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MessagesPage } from "@/components/messages/Messages";
 
-const t = "Conversation — Sundance Professional AI";
+const t = "Conversation — Sundance Professionals";
 const d = "A hiring conversation with job and application context.";
 export const Route = createFileRoute("/_authenticated/candidate/messages/$conversationId")({
-  head: () => ({ meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] }),
+  head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] }),
   component: Page,
 });
 function Page() {
