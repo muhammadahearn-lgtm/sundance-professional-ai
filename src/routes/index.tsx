@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowRight, ArrowDown, Briefcase, Users, Target, Brain, LineChart, Search, Gauge, Sparkles,
+  ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,6 @@ function Index() {
       <Intelligence />
       <Preview />
       <Transparency />
-      <Audience />
       <Testimonials />
       <section className="py-24">
         <div className="container-x">
@@ -270,28 +269,6 @@ function Transparency() {
             <Bar label="Skill Alignment" v={96} />
             <Bar label="Experience Alignment" v={92} />
             <Bar label="Career Readiness" v={89} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Audience() {
-  const pros = ["Software Engineers", "Data Analysts", "Data Scientists", "Data Engineers", "AI Engineers", "Machine Learning Engineers", "Cloud Engineers", "DevOps Engineers", "Cybersecurity Professionals", "Product Managers"];
-  const recs = ["In-House Recruiters", "Talent Acquisition Teams", "Staffing Agencies", "Independent Recruiters"];
-  return (
-    <section className="py-24">
-      <div className="container-x">
-        <SectionHeading eyebrow="Who it's for" title="Built for both sides of tech hiring" />
-        <div className="mt-14 grid gap-6 lg:grid-cols-5">
-          <div className="rounded-3xl border border-border bg-card p-8 shadow-soft lg:col-span-3">
-            <h3 className="flex items-center gap-2 text-lg font-bold"><Briefcase className="h-5 w-5 text-primary" /> Technology Professionals</h3>
-            <div className="mt-6 flex flex-wrap gap-2">{pros.map((p) => <span key={p} className="rounded-full border border-border bg-secondary px-3.5 py-1.5 text-sm">{p}</span>)}</div>
-          </div>
-          <div className="rounded-3xl border border-border bg-card p-8 shadow-soft lg:col-span-2">
-            <h3 className="flex items-center gap-2 text-lg font-bold"><Users className="h-5 w-5 text-primary" /> Recruiters</h3>
-            <div className="mt-6 flex flex-wrap gap-2">{recs.map((p) => <span key={p} className="rounded-full border border-border bg-secondary px-3.5 py-1.5 text-sm">{p}</span>)}</div>
           </div>
         </div>
       </div>
