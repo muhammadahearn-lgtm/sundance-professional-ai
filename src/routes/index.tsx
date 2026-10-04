@@ -233,7 +233,7 @@ function ProductPreview() {
         <div className="mt-10 overflow-hidden rounded-3xl border border-border bg-card shadow-elevated">
           <div className="flex items-center gap-2 border-b border-border bg-secondary px-5 py-3">
             <span className="h-3 w-3 rounded-full bg-destructive/70" />
-            <span className="h-3 w-3 rounded-full bg-success/80" />
+            <span className="h-3 w-3 rounded-full bg-warning" />
             <span className="h-3 w-3 rounded-full bg-success/80" />
             <span className="ml-4 text-xs text-muted-foreground">{active.path}</span>
           </div>
