@@ -107,7 +107,7 @@ export function SettingsPage({ account }: { account: Account }) {
           <form className="space-y-4" onSubmit={changePassword}>
             {pw && <FormAlert kind={pw.k}>{pw.t}</FormAlert>}
             <div className="space-y-2"><Label htmlFor="current">Current Password</Label><PasswordInput id="current" name="current" autoComplete="current-password" /></div>
-...
+<div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label htmlFor="next">New Password</Label><PasswordInput id="next" name="next" autoComplete="new-password" /></div>
               <div className="space-y-2"><Label htmlFor="confirm">Confirm New Password</Label><PasswordInput id="confirm" name="confirm" autoComplete="new-password" /></div>
             </div>
