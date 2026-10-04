@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isRole, type Role } from "./auth-rules";
+import { flushPendingAvatar } from "./avatar";
 
 export type Account = {
   userId: string;
@@ -9,6 +10,7 @@ export type Account = {
   role: Role;
   status: string;
   onboardingCompleted: boolean;
+  avatarPath: string | null;
 };
 
 /** Load the signed-in user's account + role (browser, RLS-scoped). */
@@ -22,6 +24,7 @@ export async function fetchAccount(): Promise<Account | null> {
   ]);
   const role = roleRow?.role;
   if (!isRole(role)) return null;
+  const pending = profile ? await flushPendingAvatar(user.id, !!profile.avatar_path) : null;
   return {
     userId: user.id,
     email: user.email ?? profile?.email ?? "",
@@ -30,5 +33,6 @@ export async function fetchAccount(): Promise<Account | null> {
     role,
     status: profile?.status ?? "active",
     onboardingCompleted: profile?.onboarding_completed ?? false,
+    avatarPath: pending ?? profile?.avatar_path ?? null,
   };
 }

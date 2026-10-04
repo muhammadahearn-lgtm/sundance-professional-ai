@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Briefcase, Users, ArrowLeft, Check, Mail } from "lucide-react";
+import { Briefcase, Users, ArrowLeft, Check, Mail, Camera } from "lucide-react";
+import { savePendingAvatar, toSquareDataUrl, validateAvatar } from "@/lib/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,16 @@ function Register() {
   const [agreed, setAgreed] = useState(false);
   const [email, setEmail] = useState("");
   const [resendMsg, setResendMsg] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoErr, setPhotoErr] = useState("");
+
+  async function pickPhoto(file: File | undefined) {
+    setPhotoErr("");
+    if (!file) return;
+    const err = validateAvatar(file);
+    if (err) return setPhotoErr(err);
+    try { setPhoto(await toSquareDataUrl(file)); } catch { setPhotoErr("Couldn't read that image."); }
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,6 +75,7 @@ function Register() {
     if (error) return setFormError(friendlyAuthError(error.message));
     // Existing confirmed emails come back with no identities
     if (data.user && data.user.identities?.length === 0) return setFormError(friendlyAuthError("already registered"));
+    savePendingAvatar(photo);
     setEmail(input.email.trim());
     setStep(3);
   }
@@ -110,6 +122,18 @@ function Register() {
           <h1 className="mt-8 text-2xl font-extrabold sm:text-3xl">Create your {role} account</h1>
           <form className="mt-6 space-y-4" noValidate onSubmit={submit}>
             {formError && <FormAlert>{formError}{formError.includes("already exists") && <> <Link to="/login" className="font-semibold underline">Log in</Link></>}</FormAlert>}
+            <div className="flex items-center gap-4">
+              <label className="group relative grid h-20 w-20 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full border-2 border-dashed border-border bg-muted text-muted-foreground hover:border-primary hover:text-primary">
+                {photo ? <img src={photo} alt="Your photo" className="h-full w-full object-cover" /> : <Camera className="h-6 w-6" />}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Profile photo (optional)" onChange={(e) => pickPhoto(e.target.files?.[0])} />
+              </label>
+              <div className="text-sm">
+                <div className="font-semibold">Profile Photo <span className="font-normal text-muted-foreground">(optional)</span></div>
+                <p className="text-muted-foreground">JPG, PNG or WebP, up to 5 MB. You can add or change it later.</p>
+                {photo && <button type="button" className="mt-1 text-xs font-semibold text-primary hover:underline" onClick={() => setPhoto(null)}>Remove</button>}
+                <FieldError msg={photoErr} />
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label htmlFor="firstName">First Name</Label><Input id="firstName" name="firstName" autoComplete="given-name" /><FieldError msg={errors["firstName"]} /></div>
               <div className="space-y-2"><Label htmlFor="lastName">Last Name</Label><Input id="lastName" name="lastName" autoComplete="family-name" /><FieldError msg={errors["lastName"]} /></div>

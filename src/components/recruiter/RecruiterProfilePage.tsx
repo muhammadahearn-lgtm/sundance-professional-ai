@@ -1,3 +1,4 @@
+import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +34,7 @@ type RUpdate = Partial<Omit<R, "user_id" | "created_at" | "updated_at">>;
 
 export function RecruiterProfilePage({ account }: { account: Account }) {
   const uid = account.userId;
+  const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
   const key = ["recruiter-full", uid];
   const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load(uid) });
@@ -75,7 +77,7 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
       <div className="min-w-0 space-y-6">
         <div className={`${card} p-6`}>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-gradient-primary font-display text-2xl font-extrabold text-primary-foreground">{initials(a.first_name, a.last_name)}</div>
+            <ProfilePhoto uid={uid} path={photo} initials={initials(a.first_name, a.last_name)} className="h-20 w-20 text-2xl" rounded="rounded-2xl" editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-2xl font-extrabold">{a.first_name} {a.last_name}</h1>
               <p className="font-medium">{r.title || "Add your title"}</p>

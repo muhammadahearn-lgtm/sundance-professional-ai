@@ -1034,6 +1034,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           created_at: string
           email: string
           email_verified: boolean
@@ -1045,6 +1046,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_path?: string | null
           created_at?: string
           email: string
           email_verified?: boolean
@@ -1056,6 +1058,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_path?: string | null
           created_at?: string
           email?: string
           email_verified?: boolean
