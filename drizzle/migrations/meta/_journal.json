@@ -15,6 +15,13 @@
       "when": 1791084289505,
       "tag": "0001_stage3_data_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791084643984,
+      "tag": "0002_stage4_candidate_profile_fields",
+      "breakpoints": true
     }
   ]
 }

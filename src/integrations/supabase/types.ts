@@ -140,13 +140,19 @@ export type Database = {
           created_at: string
           current_employer: string
           headline: string
+          hide_from_current_employer: boolean
           industry_experience: string[]
           job_title: string
           location: string
+          locations_of_interest: string[]
           programming_languages: string[]
+          resume_file_name: string | null
+          resume_path: string | null
+          resume_uploaded_at: string | null
           role_id: string | null
           salary_expectation: string
           summary: string
+          target_industries: string[]
           target_roles: string[]
           technical_skills: string[]
           tools: string[]
@@ -161,13 +167,19 @@ export type Database = {
           created_at?: string
           current_employer?: string
           headline?: string
+          hide_from_current_employer?: boolean
           industry_experience?: string[]
           job_title?: string
           location?: string
+          locations_of_interest?: string[]
           programming_languages?: string[]
+          resume_file_name?: string | null
+          resume_path?: string | null
+          resume_uploaded_at?: string | null
           role_id?: string | null
           salary_expectation?: string
           summary?: string
+          target_industries?: string[]
           target_roles?: string[]
           technical_skills?: string[]
           tools?: string[]
@@ -182,13 +194,19 @@ export type Database = {
           created_at?: string
           current_employer?: string
           headline?: string
+          hide_from_current_employer?: boolean
           industry_experience?: string[]
           job_title?: string
           location?: string
+          locations_of_interest?: string[]
           programming_languages?: string[]
+          resume_file_name?: string | null
+          resume_path?: string | null
+          resume_uploaded_at?: string | null
           role_id?: string | null
           salary_expectation?: string
           summary?: string
+          target_industries?: string[]
           target_roles?: string[]
           technical_skills?: string[]
           tools?: string[]
@@ -291,6 +309,7 @@ export type Database = {
           candidate_id: string
           certification_id: string
           certification_name: string
+          certification_number: string
           created_at: string
           expiration_date: string | null
           issue_date: string | null
@@ -301,6 +320,7 @@ export type Database = {
           candidate_id: string
           certification_id?: string
           certification_name: string
+          certification_number?: string
           created_at?: string
           expiration_date?: string | null
           issue_date?: string | null
@@ -311,6 +331,7 @@ export type Database = {
           candidate_id?: string
           certification_id?: string
           certification_name?: string
+          certification_number?: string
           created_at?: string
           expiration_date?: string | null
           issue_date?: string | null
@@ -1041,6 +1062,7 @@ export type Database = {
       }
       work_experience: {
         Row: {
+          achievements: string
           candidate_id: string
           company_name: string
           created_at: string
@@ -1049,12 +1071,14 @@ export type Database = {
           experience_id: string
           industry: string
           job_title: string
+          location: string
           responsibilities: string
           start_date: string | null
           technologies_used: string[]
           updated_at: string
         }
         Insert: {
+          achievements?: string
           candidate_id: string
           company_name: string
           created_at?: string
@@ -1063,12 +1087,14 @@ export type Database = {
           experience_id?: string
           industry?: string
           job_title: string
+          location?: string
           responsibilities?: string
           start_date?: string | null
           technologies_used?: string[]
           updated_at?: string
         }
         Update: {
+          achievements?: string
           candidate_id?: string
           company_name?: string
           created_at?: string
@@ -1077,6 +1103,7 @@ export type Database = {
           experience_id?: string
           industry?: string
           job_title?: string
+          location?: string
           responsibilities?: string
           start_date?: string | null
           technologies_used?: string[]
