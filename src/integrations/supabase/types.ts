@@ -1535,6 +1535,13 @@ export type Database = {
     }
     Functions: {
       applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
+      candidate_avatars: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_path: string
+          user_id: string
+        }[]
+      }
       candidate_names: {
         Args: { _ids: string[] }
         Returns: {
