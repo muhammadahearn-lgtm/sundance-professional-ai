@@ -17,6 +17,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { areaForPath } from "@/lib/auth-rules";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -129,6 +130,7 @@ function RootComponent() {
           <SiteFooter />
         </div>
       )}
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }
