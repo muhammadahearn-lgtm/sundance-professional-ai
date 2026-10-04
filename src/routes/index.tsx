@@ -31,6 +31,7 @@ function Index() {
   return (
     <>
       <Hero />
+      <ComingSoonNotice />
       <Solution />
       <SkillFirst />
       <AudienceSplit />
