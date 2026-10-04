@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NotificationDetail } from "@/components/notifications/Notifications";
 
-const t = "Notification — Sundance Professional AI";
+const t = "Notification — Sundance Professionals";
 const d = "Notification details and related actions.";
 export const Route = createFileRoute("/_authenticated/recruiter/notifications/$id")({
   head: () => ({ meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] }),

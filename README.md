@@ -1,4 +1,4 @@
-# Sundance Professional AI
+# Sundance Professionals
 
 Implement exactly the screenshot and nothing else
 

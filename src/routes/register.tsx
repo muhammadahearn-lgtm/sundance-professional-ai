@@ -14,9 +14,9 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create Account — Sundance Professional AI" },
-      { name: "description", content: "Join Sundance Professional AI as a technology professional or recruiter." },
-      { property: "og:title", content: "Join Sundance Professional AI" },
+      { title: "Create Account — Sundance Professionals" },
+      { name: "description", content: "Join Sundance Professionals as a technology professional or recruiter." },
+      { property: "og:title", content: "Join Sundance Professionals" },
       { property: "og:description", content: "Create a candidate or recruiter account in minutes." },
     ],
   }),
@@ -159,7 +159,7 @@ function Register() {
         <div className="mt-8 text-center">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"><Mail className="h-7 w-7" /></span>
           <h1 className="mt-5 text-2xl font-extrabold sm:text-3xl">Verify Your Email</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Check your inbox and click the verification link to activate your Sundance Professional AI account.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Check your inbox and click the verification link to activate your Sundance Professionals account.</p>
           <p className="mt-1 text-sm font-medium">{email}</p>
           {resendMsg && <div className="mt-4 text-left"><FormAlert kind={resendMsg.startsWith("Verification") ? "success" : "error"}>{resendMsg}</FormAlert></div>}
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">

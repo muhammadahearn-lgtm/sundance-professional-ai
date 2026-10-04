@@ -473,7 +473,7 @@ export function PlatformAnalyticsPlaceholder() {
   ];
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <PageHeader title="Platform Analytics" subtitle="Marketplace-wide reporting for Sundance administrators." />
+      <PageHeader title="Platform Analytics" subtitle="Marketplace-wide reporting for Sundance Professionals administrators." />
       <div className={`${card} mb-5 border-dashed text-center`}><p className="font-semibold">Admin access is coming soon</p><p className="mt-1 text-sm text-muted-foreground">These reports will be available once administrator accounts are introduced.</p></div>
       <div className="grid gap-4 sm:grid-cols-2">{groups.map(([t, items]) => <div key={t} className={card}><p className="mb-2 font-bold">{t}</p><ul className="space-y-1 text-sm text-muted-foreground">{items.map((i) => <li key={i}>• {i}</li>)}</ul></div>)}</div>
     </div>

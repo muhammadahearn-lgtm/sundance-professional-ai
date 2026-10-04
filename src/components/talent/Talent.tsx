@@ -286,7 +286,7 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   useEffect(() => { if (q.data) track("candidate_view", id); }, [q.data, id]);
   if (q.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
-  if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
+  if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
   const saved = lists.isSaved(id), cmp = lists.isCompared(id);
   return (
     <div className="space-y-6 pb-16">

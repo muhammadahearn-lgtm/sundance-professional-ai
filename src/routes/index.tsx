@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
 import hero from "@/assets/hero.jpg";
 
-const TITLE = "Sundance Professional AI — AI Hiring Platform for Skill-Based Technology Recruiting";
+const TITLE = "Sundance Professionals — AI Hiring Platform for Skill-Based Technology Recruiting";
 const DESC = "AI hiring platform for technology recruiting: skill-based hiring, candidate discovery, career intelligence and a recruiter marketplace in one place.";
 
 export const Route = createFileRoute("/")({
@@ -60,7 +60,7 @@ function Hero() {
             Find the Right Opportunity.<br /><span className="text-gradient">Hire the Right Talent.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Sundance Professional AI uses AI-powered candidate discovery, skill-first matching, career intelligence, and recruiting intelligence to help technology professionals and recruiters make better hiring decisions.
+            Sundance Professionals uses AI-powered candidate discovery, skill-first matching, career intelligence, and recruiting intelligence to help technology professionals and recruiters make better hiring decisions.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-full px-6 shadow-elevated"><Link to="/register">Get Started <ArrowRight /></Link></Button>
@@ -99,7 +99,7 @@ function Solution() {
   return (
     <section className="py-24">
       <div className="container-x">
-        <SectionHeading eyebrow="The solution" title={<>Meet <span className="text-gradient">Sundance Professional AI</span></>} desc="An intelligent hiring marketplace built specifically for technology professionals and recruiters." />
+        <SectionHeading eyebrow="The solution" title={<>Meet <span className="text-gradient">Sundance Professionals</span></>} desc="An intelligent hiring marketplace built specifically for technology professionals and recruiters." />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {feats.map(([I, t, d]) => (
             <div key={t} className="group rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-1 hover:shadow-elevated">
@@ -133,7 +133,7 @@ function SkillFirst() {
     <section className="py-24">
       <div className="container-x grid items-center gap-14 lg:grid-cols-2">
         <div>
-          <SectionHeading center={false} eyebrow="Skill-first hiring" title="Beyond Resumes. Beyond Keywords." desc="Traditional platforms focus on resumes and keywords. Sundance Professional AI focuses on:" />
+          <SectionHeading center={false} eyebrow="Skill-first hiring" title="Beyond Resumes. Beyond Keywords." desc="Traditional platforms focus on resumes and keywords. Sundance Professionals focuses on:" />
           <div className="mt-8 grid grid-cols-2 gap-3">
             {focus.map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm font-medium"><Check className="h-4 w-4 text-primary" /> {f}</div>
@@ -142,7 +142,7 @@ function SkillFirst() {
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Flow title="Traditional Hiring" steps={["Resume", "Keyword Search", "Manual Screening", "Interview"]} />
-          <Flow good title="Sundance Professional AI" steps={["Talent Profile", "AI Matching", "Candidate Discovery", "Hire"]} />
+          <Flow good title="Sundance Professionals" steps={["Talent Profile", "AI Matching", "Candidate Discovery", "Hire"]} />
         </div>
       </div>
     </section>
@@ -234,7 +234,7 @@ function ProductPreview() {
   return (
     <section className="py-24">
       <div className="container-x">
-        <SectionHeading eyebrow="Product preview" title="See Sundance Professional AI in Action" desc="Explore the experience for candidates and recruiters." />
+        <SectionHeading eyebrow="Product preview" title="See Sundance Professionals in Action" desc="Explore the experience for candidates and recruiters." />
         <div className="mt-12 flex flex-wrap justify-center gap-3">
           {PREVIEW_TABS.map((t) => (
             <button
@@ -456,7 +456,7 @@ function Intelligence() {
 
 function Testimonials() {
   const t = [
-    ["Sundance Professional AI helped me understand exactly which opportunities matched my skills.", "Aisha Rahman", "Data Engineer"],
+    ["Sundance Professionals helped me understand exactly which opportunities matched my skills.", "Aisha Rahman", "Data Engineer"],
     ["We reduced candidate screening time significantly.", "Jordan Ellis", "Technical Recruiter"],
     ["The match transparency made hiring decisions easier.", "Sofia Martinez", "Engineering Hiring Manager"],
   ];

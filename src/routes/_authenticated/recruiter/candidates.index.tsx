@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/recruiter/candidates/")({
     for (const [k, v] of Object.entries(full)) { const d = DEFAULT_TALENT[k as keyof TalentFilters]; if (Array.isArray(v) ? v.length : v !== d) Object.assign(o, { [k]: v }); }
     return o;
   },
-  head: () => ({ meta: [{ title: "Search Talent — Sundance Professional AI" }, { name: "description", content: "Search candidates by role, skills, technologies and experience." }, { property: "og:title", content: "Search Talent — Sundance Professional AI" }, { property: "og:description", content: "Search candidates by role, skills, technologies and experience." }] }),
+  head: () => ({ meta: [{ title: "Search Talent — Sundance Professionals" }, { name: "description", content: "Search candidates by role, skills, technologies and experience." }, { property: "og:title", content: "Search Talent — Sundance Professionals" }, { property: "og:description", content: "Search candidates by role, skills, technologies and experience." }] }),
   component: Page,
 });
 
