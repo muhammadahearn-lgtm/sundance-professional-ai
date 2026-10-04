@@ -9,6 +9,7 @@ import { BrandImg, Item } from "@/components/recruiter/shared";
 import { Markdown } from "@/components/jobs/Markdown";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
 import { CompanyLogo, CompareTray, postedAgo } from "./JobCard";
+import { ApplyButton } from "@/components/applications/Applications";
 import { shareJob, useJobLists } from "./useJobLists";
 
 const act = "inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary";
@@ -51,7 +52,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
             <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" />Posted {postedAgo(j.published_at ?? j.created_at)}</span>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button disabled title="Applications open in a future update" className="cursor-not-allowed rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground opacity-60">Apply (Coming Soon)</button>
+            <ApplyButton uid={account.userId} jobId={id} jobStatus={j.job_status} jobTitle={j.job_title} company={c?.company_name ?? ""} />
             <button onClick={() => lists.toggleSave(id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Job"}</button>
             <button onClick={() => lists.toggleCompare(id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare Job"}</button>
             <button onClick={() => shareJob(id, j.job_title)} className={act}><Share2 className="h-4 w-4" />Share</button>

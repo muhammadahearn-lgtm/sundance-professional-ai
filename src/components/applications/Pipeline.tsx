@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const q = useQuery({ queryKey: ["pipeline", uid, jobId ?? "all"], queryFn: () => listPipeline(uid, jobId) });
   const apps = useQuery({ queryKey: ["job-applications", uid], queryFn: () => listJobApplications(uid) });
   const job = useQuery({ queryKey: ["job-basic", jobId], queryFn: () => loadJob(jobId!), enabled: !!jobId });
+  const navigate = useNavigate();
   const [drag, setDrag] = useState<string | null>(null);
 
   async function move(c: PipelineCard, stage: Stage) {
@@ -49,7 +50,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{j ? `${j.job_title} Pipeline` : "Recruiting Pipeline"}</h1>
           <p className="text-sm text-muted-foreground">{j ? `${j.location} · ${lbl(ARRANGEMENT, j.work_arrangement)} · ${cards.length} candidates` : "Drag candidates between stages to update their progress."}</p></div>
         <div className="flex gap-2"><Link to="/recruiter/applications" className={btn}>Applications</Link>
-          <select value={jobId ?? ""} onChange={(e) => { window.location.href = e.target.value ? `/recruiter/pipeline/${e.target.value}` : "/recruiter/pipeline"; }} aria-label="Filter by job" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
+          <select value={jobId ?? ""} onChange={(e) => { if (e.target.value) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: e.target.value } }); else navigate({ to: "/recruiter/pipeline" }); }} aria-label="Filter by job" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
             <option value="">All jobs</option>{[...new Map((apps.data ?? []).map((a) => [a.job_id, a.jobs.job_title])).entries()].map(([id, t]) => <option key={id} value={id}>{t}</option>)}</select></div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>

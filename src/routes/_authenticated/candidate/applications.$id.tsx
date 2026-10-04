@@ -7,6 +7,6 @@ export const Route = createFileRoute("/_authenticated/candidate/applications/$id
 });
 
 function Page() {
-  const { account } = Route.useRouteContext();
+
   const { id } = Route.useParams(); return <CandidateApplicationDetail id={id} />;
 }
