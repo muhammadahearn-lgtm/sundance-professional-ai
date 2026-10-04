@@ -10,15 +10,45 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as AuthenticatedCandidateRouteImport } from './routes/_authenticated/candidate'
+import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedCandidateIndexRouteImport } from './routes/_authenticated/candidate/index'
+import { Route as AuthenticatedCandidateApplicationsRouteImport } from './routes/_authenticated/candidate/applications'
+import { Route as AuthenticatedCandidateDashboardRouteImport } from './routes/_authenticated/candidate/dashboard'
+import { Route as AuthenticatedCandidateJobsRouteImport } from './routes/_authenticated/candidate/jobs'
+import { Route as AuthenticatedCandidateMessagesRouteImport } from './routes/_authenticated/candidate/messages'
+import { Route as AuthenticatedCandidateOnboardingRouteImport } from './routes/_authenticated/candidate/onboarding'
+import { Route as AuthenticatedCandidateProfileRouteImport } from './routes/_authenticated/candidate/profile'
+import { Route as AuthenticatedCandidateSavedJobsRouteImport } from './routes/_authenticated/candidate/saved-jobs'
+import { Route as AuthenticatedCandidateSettingsRouteImport } from './routes/_authenticated/candidate/settings'
+import { Route as AuthenticatedRecruiterIndexRouteImport } from './routes/_authenticated/recruiter/index'
+import { Route as AuthenticatedRecruiterCandidatesRouteImport } from './routes/_authenticated/recruiter/candidates'
+import { Route as AuthenticatedRecruiterCompanyRouteImport } from './routes/_authenticated/recruiter/company'
+import { Route as AuthenticatedRecruiterDashboardRouteImport } from './routes/_authenticated/recruiter/dashboard'
+import { Route as AuthenticatedRecruiterJobsRouteImport } from './routes/_authenticated/recruiter/jobs'
+import { Route as AuthenticatedRecruiterMessagesRouteImport } from './routes/_authenticated/recruiter/messages'
+import { Route as AuthenticatedRecruiterOnboardingRouteImport } from './routes/_authenticated/recruiter/onboarding'
+import { Route as AuthenticatedRecruiterPipelineRouteImport } from './routes/_authenticated/recruiter/pipeline'
+import { Route as AuthenticatedRecruiterProfileRouteImport } from './routes/_authenticated/recruiter/profile'
+import { Route as AuthenticatedRecruiterSettingsRouteImport } from './routes/_authenticated/recruiter/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -29,6 +59,11 @@ const AboutRoute = AboutRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -46,54 +81,358 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCandidateRoute = AuthenticatedCandidateRouteImport.update({
+  id: '/candidate',
+  path: '/candidate',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecruiterRoute = AuthenticatedRecruiterRouteImport.update({
+  id: '/recruiter',
+  path: '/recruiter',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCandidateIndexRoute =
+  AuthenticatedCandidateIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateApplicationsRoute =
+  AuthenticatedCandidateApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateDashboardRoute =
+  AuthenticatedCandidateDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateJobsRoute =
+  AuthenticatedCandidateJobsRouteImport.update({
+    id: '/jobs',
+    path: '/jobs',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateMessagesRoute =
+  AuthenticatedCandidateMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateOnboardingRoute =
+  AuthenticatedCandidateOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateProfileRoute =
+  AuthenticatedCandidateProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateSavedJobsRoute =
+  AuthenticatedCandidateSavedJobsRouteImport.update({
+    id: '/saved-jobs',
+    path: '/saved-jobs',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedCandidateSettingsRoute =
+  AuthenticatedCandidateSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedCandidateRoute,
+  } as any)
+const AuthenticatedRecruiterIndexRoute =
+  AuthenticatedRecruiterIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterCandidatesRoute =
+  AuthenticatedRecruiterCandidatesRouteImport.update({
+    id: '/candidates',
+    path: '/candidates',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterCompanyRoute =
+  AuthenticatedRecruiterCompanyRouteImport.update({
+    id: '/company',
+    path: '/company',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterDashboardRoute =
+  AuthenticatedRecruiterDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterJobsRoute =
+  AuthenticatedRecruiterJobsRouteImport.update({
+    id: '/jobs',
+    path: '/jobs',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterMessagesRoute =
+  AuthenticatedRecruiterMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterOnboardingRoute =
+  AuthenticatedRecruiterOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterPipelineRoute =
+  AuthenticatedRecruiterPipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterProfileRoute =
+  AuthenticatedRecruiterProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterSettingsRoute =
+  AuthenticatedRecruiterSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/candidate': typeof AuthenticatedCandidateRouteWithChildren
+  '/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
+  '/candidate/applications': typeof AuthenticatedCandidateApplicationsRoute
+  '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
+  '/candidate/jobs': typeof AuthenticatedCandidateJobsRoute
+  '/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
+  '/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
+  '/candidate/profile': typeof AuthenticatedCandidateProfileRoute
+  '/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
+  '/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRoute
+  '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
+  '/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
+  '/recruiter/messages': typeof AuthenticatedRecruiterMessagesRoute
+  '/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
+  '/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineRoute
+  '/recruiter/profile': typeof AuthenticatedRecruiterProfileRoute
+  '/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
+  '/candidate/': typeof AuthenticatedCandidateIndexRoute
+  '/recruiter/': typeof AuthenticatedRecruiterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/candidate/applications': typeof AuthenticatedCandidateApplicationsRoute
+  '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
+  '/candidate/jobs': typeof AuthenticatedCandidateJobsRoute
+  '/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
+  '/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
+  '/candidate/profile': typeof AuthenticatedCandidateProfileRoute
+  '/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
+  '/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRoute
+  '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
+  '/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
+  '/recruiter/messages': typeof AuthenticatedRecruiterMessagesRoute
+  '/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
+  '/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineRoute
+  '/recruiter/profile': typeof AuthenticatedRecruiterProfileRoute
+  '/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
+  '/candidate': typeof AuthenticatedCandidateIndexRoute
+  '/recruiter': typeof AuthenticatedRecruiterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/candidate': typeof AuthenticatedCandidateRouteWithChildren
+  '/_authenticated/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/candidate/applications': typeof AuthenticatedCandidateApplicationsRoute
+  '/_authenticated/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
+  '/_authenticated/candidate/jobs': typeof AuthenticatedCandidateJobsRoute
+  '/_authenticated/candidate/messages': typeof AuthenticatedCandidateMessagesRoute
+  '/_authenticated/candidate/onboarding': typeof AuthenticatedCandidateOnboardingRoute
+  '/_authenticated/candidate/profile': typeof AuthenticatedCandidateProfileRoute
+  '/_authenticated/candidate/saved-jobs': typeof AuthenticatedCandidateSavedJobsRoute
+  '/_authenticated/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
+  '/_authenticated/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRoute
+  '/_authenticated/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/_authenticated/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
+  '/_authenticated/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
+  '/_authenticated/recruiter/messages': typeof AuthenticatedRecruiterMessagesRoute
+  '/_authenticated/recruiter/onboarding': typeof AuthenticatedRecruiterOnboardingRoute
+  '/_authenticated/recruiter/pipeline': typeof AuthenticatedRecruiterPipelineRoute
+  '/_authenticated/recruiter/profile': typeof AuthenticatedRecruiterProfileRoute
+  '/_authenticated/recruiter/settings': typeof AuthenticatedRecruiterSettingsRoute
+  '/_authenticated/candidate/': typeof AuthenticatedCandidateIndexRoute
+  '/_authenticated/recruiter/': typeof AuthenticatedRecruiterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/login' | '/pricing' | '/register'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/login' | '/pricing' | '/register'
-  id:
-    | '__root__'
+  fullPaths:
     | '/'
     | '/about'
     | '/contact'
+    | '/forgot-password'
     | '/login'
     | '/pricing'
     | '/register'
+    | '/reset-password'
+    | '/unauthorized'
+    | '/candidate'
+    | '/recruiter'
+    | '/auth/callback'
+    | '/candidate/applications'
+    | '/candidate/dashboard'
+    | '/candidate/jobs'
+    | '/candidate/messages'
+    | '/candidate/onboarding'
+    | '/candidate/profile'
+    | '/candidate/saved-jobs'
+    | '/candidate/settings'
+    | '/recruiter/candidates'
+    | '/recruiter/company'
+    | '/recruiter/dashboard'
+    | '/recruiter/jobs'
+    | '/recruiter/messages'
+    | '/recruiter/onboarding'
+    | '/recruiter/pipeline'
+    | '/recruiter/profile'
+    | '/recruiter/settings'
+    | '/candidate/'
+    | '/recruiter/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/forgot-password'
+    | '/login'
+    | '/pricing'
+    | '/register'
+    | '/reset-password'
+    | '/unauthorized'
+    | '/auth/callback'
+    | '/candidate/applications'
+    | '/candidate/dashboard'
+    | '/candidate/jobs'
+    | '/candidate/messages'
+    | '/candidate/onboarding'
+    | '/candidate/profile'
+    | '/candidate/saved-jobs'
+    | '/candidate/settings'
+    | '/recruiter/candidates'
+    | '/recruiter/company'
+    | '/recruiter/dashboard'
+    | '/recruiter/jobs'
+    | '/recruiter/messages'
+    | '/recruiter/onboarding'
+    | '/recruiter/pipeline'
+    | '/recruiter/profile'
+    | '/recruiter/settings'
+    | '/candidate'
+    | '/recruiter'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/about'
+    | '/contact'
+    | '/forgot-password'
+    | '/login'
+    | '/pricing'
+    | '/register'
+    | '/reset-password'
+    | '/unauthorized'
+    | '/_authenticated/candidate'
+    | '/_authenticated/recruiter'
+    | '/auth/callback'
+    | '/_authenticated/candidate/applications'
+    | '/_authenticated/candidate/dashboard'
+    | '/_authenticated/candidate/jobs'
+    | '/_authenticated/candidate/messages'
+    | '/_authenticated/candidate/onboarding'
+    | '/_authenticated/candidate/profile'
+    | '/_authenticated/candidate/saved-jobs'
+    | '/_authenticated/candidate/settings'
+    | '/_authenticated/recruiter/candidates'
+    | '/_authenticated/recruiter/company'
+    | '/_authenticated/recruiter/dashboard'
+    | '/_authenticated/recruiter/jobs'
+    | '/_authenticated/recruiter/messages'
+    | '/_authenticated/recruiter/onboarding'
+    | '/_authenticated/recruiter/pipeline'
+    | '/_authenticated/recruiter/profile'
+    | '/_authenticated/recruiter/settings'
+    | '/_authenticated/candidate/'
+    | '/_authenticated/recruiter/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  UnauthorizedRoute: typeof UnauthorizedRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -103,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -117,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -140,16 +493,268 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/candidate': {
+      id: '/_authenticated/candidate'
+      path: '/candidate'
+      fullPath: '/candidate'
+      preLoaderRoute: typeof AuthenticatedCandidateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recruiter': {
+      id: '/_authenticated/recruiter'
+      path: '/recruiter'
+      fullPath: '/recruiter'
+      preLoaderRoute: typeof AuthenticatedRecruiterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/candidate/': {
+      id: '/_authenticated/candidate/'
+      path: '/'
+      fullPath: '/candidate/'
+      preLoaderRoute: typeof AuthenticatedCandidateIndexRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/applications': {
+      id: '/_authenticated/candidate/applications'
+      path: '/applications'
+      fullPath: '/candidate/applications'
+      preLoaderRoute: typeof AuthenticatedCandidateApplicationsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/dashboard': {
+      id: '/_authenticated/candidate/dashboard'
+      path: '/dashboard'
+      fullPath: '/candidate/dashboard'
+      preLoaderRoute: typeof AuthenticatedCandidateDashboardRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/jobs': {
+      id: '/_authenticated/candidate/jobs'
+      path: '/jobs'
+      fullPath: '/candidate/jobs'
+      preLoaderRoute: typeof AuthenticatedCandidateJobsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/messages': {
+      id: '/_authenticated/candidate/messages'
+      path: '/messages'
+      fullPath: '/candidate/messages'
+      preLoaderRoute: typeof AuthenticatedCandidateMessagesRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/onboarding': {
+      id: '/_authenticated/candidate/onboarding'
+      path: '/onboarding'
+      fullPath: '/candidate/onboarding'
+      preLoaderRoute: typeof AuthenticatedCandidateOnboardingRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/profile': {
+      id: '/_authenticated/candidate/profile'
+      path: '/profile'
+      fullPath: '/candidate/profile'
+      preLoaderRoute: typeof AuthenticatedCandidateProfileRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/saved-jobs': {
+      id: '/_authenticated/candidate/saved-jobs'
+      path: '/saved-jobs'
+      fullPath: '/candidate/saved-jobs'
+      preLoaderRoute: typeof AuthenticatedCandidateSavedJobsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/candidate/settings': {
+      id: '/_authenticated/candidate/settings'
+      path: '/settings'
+      fullPath: '/candidate/settings'
+      preLoaderRoute: typeof AuthenticatedCandidateSettingsRouteImport
+      parentRoute: typeof AuthenticatedCandidateRoute
+    }
+    '/_authenticated/recruiter/': {
+      id: '/_authenticated/recruiter/'
+      path: '/'
+      fullPath: '/recruiter/'
+      preLoaderRoute: typeof AuthenticatedRecruiterIndexRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/candidates': {
+      id: '/_authenticated/recruiter/candidates'
+      path: '/candidates'
+      fullPath: '/recruiter/candidates'
+      preLoaderRoute: typeof AuthenticatedRecruiterCandidatesRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/company': {
+      id: '/_authenticated/recruiter/company'
+      path: '/company'
+      fullPath: '/recruiter/company'
+      preLoaderRoute: typeof AuthenticatedRecruiterCompanyRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/dashboard': {
+      id: '/_authenticated/recruiter/dashboard'
+      path: '/dashboard'
+      fullPath: '/recruiter/dashboard'
+      preLoaderRoute: typeof AuthenticatedRecruiterDashboardRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/jobs': {
+      id: '/_authenticated/recruiter/jobs'
+      path: '/jobs'
+      fullPath: '/recruiter/jobs'
+      preLoaderRoute: typeof AuthenticatedRecruiterJobsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/messages': {
+      id: '/_authenticated/recruiter/messages'
+      path: '/messages'
+      fullPath: '/recruiter/messages'
+      preLoaderRoute: typeof AuthenticatedRecruiterMessagesRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/onboarding': {
+      id: '/_authenticated/recruiter/onboarding'
+      path: '/onboarding'
+      fullPath: '/recruiter/onboarding'
+      preLoaderRoute: typeof AuthenticatedRecruiterOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/pipeline': {
+      id: '/_authenticated/recruiter/pipeline'
+      path: '/pipeline'
+      fullPath: '/recruiter/pipeline'
+      preLoaderRoute: typeof AuthenticatedRecruiterPipelineRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/profile': {
+      id: '/_authenticated/recruiter/profile'
+      path: '/profile'
+      fullPath: '/recruiter/profile'
+      preLoaderRoute: typeof AuthenticatedRecruiterProfileRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/settings': {
+      id: '/_authenticated/recruiter/settings'
+      path: '/settings'
+      fullPath: '/recruiter/settings'
+      preLoaderRoute: typeof AuthenticatedRecruiterSettingsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
   }
 }
 
+interface AuthenticatedCandidateRouteChildren {
+  AuthenticatedCandidateApplicationsRoute: typeof AuthenticatedCandidateApplicationsRoute
+  AuthenticatedCandidateDashboardRoute: typeof AuthenticatedCandidateDashboardRoute
+  AuthenticatedCandidateJobsRoute: typeof AuthenticatedCandidateJobsRoute
+  AuthenticatedCandidateMessagesRoute: typeof AuthenticatedCandidateMessagesRoute
+  AuthenticatedCandidateOnboardingRoute: typeof AuthenticatedCandidateOnboardingRoute
+  AuthenticatedCandidateProfileRoute: typeof AuthenticatedCandidateProfileRoute
+  AuthenticatedCandidateSavedJobsRoute: typeof AuthenticatedCandidateSavedJobsRoute
+  AuthenticatedCandidateSettingsRoute: typeof AuthenticatedCandidateSettingsRoute
+  AuthenticatedCandidateIndexRoute: typeof AuthenticatedCandidateIndexRoute
+}
+
+const AuthenticatedCandidateRouteChildren: AuthenticatedCandidateRouteChildren =
+  {
+    AuthenticatedCandidateApplicationsRoute:
+      AuthenticatedCandidateApplicationsRoute,
+    AuthenticatedCandidateDashboardRoute: AuthenticatedCandidateDashboardRoute,
+    AuthenticatedCandidateJobsRoute: AuthenticatedCandidateJobsRoute,
+    AuthenticatedCandidateMessagesRoute: AuthenticatedCandidateMessagesRoute,
+    AuthenticatedCandidateOnboardingRoute:
+      AuthenticatedCandidateOnboardingRoute,
+    AuthenticatedCandidateProfileRoute: AuthenticatedCandidateProfileRoute,
+    AuthenticatedCandidateSavedJobsRoute: AuthenticatedCandidateSavedJobsRoute,
+    AuthenticatedCandidateSettingsRoute: AuthenticatedCandidateSettingsRoute,
+    AuthenticatedCandidateIndexRoute: AuthenticatedCandidateIndexRoute,
+  }
+
+const AuthenticatedCandidateRouteWithChildren =
+  AuthenticatedCandidateRoute._addFileChildren(
+    AuthenticatedCandidateRouteChildren,
+  )
+
+interface AuthenticatedRecruiterRouteChildren {
+  AuthenticatedRecruiterCandidatesRoute: typeof AuthenticatedRecruiterCandidatesRoute
+  AuthenticatedRecruiterCompanyRoute: typeof AuthenticatedRecruiterCompanyRoute
+  AuthenticatedRecruiterDashboardRoute: typeof AuthenticatedRecruiterDashboardRoute
+  AuthenticatedRecruiterJobsRoute: typeof AuthenticatedRecruiterJobsRoute
+  AuthenticatedRecruiterMessagesRoute: typeof AuthenticatedRecruiterMessagesRoute
+  AuthenticatedRecruiterOnboardingRoute: typeof AuthenticatedRecruiterOnboardingRoute
+  AuthenticatedRecruiterPipelineRoute: typeof AuthenticatedRecruiterPipelineRoute
+  AuthenticatedRecruiterProfileRoute: typeof AuthenticatedRecruiterProfileRoute
+  AuthenticatedRecruiterSettingsRoute: typeof AuthenticatedRecruiterSettingsRoute
+  AuthenticatedRecruiterIndexRoute: typeof AuthenticatedRecruiterIndexRoute
+}
+
+const AuthenticatedRecruiterRouteChildren: AuthenticatedRecruiterRouteChildren =
+  {
+    AuthenticatedRecruiterCandidatesRoute:
+      AuthenticatedRecruiterCandidatesRoute,
+    AuthenticatedRecruiterCompanyRoute: AuthenticatedRecruiterCompanyRoute,
+    AuthenticatedRecruiterDashboardRoute: AuthenticatedRecruiterDashboardRoute,
+    AuthenticatedRecruiterJobsRoute: AuthenticatedRecruiterJobsRoute,
+    AuthenticatedRecruiterMessagesRoute: AuthenticatedRecruiterMessagesRoute,
+    AuthenticatedRecruiterOnboardingRoute:
+      AuthenticatedRecruiterOnboardingRoute,
+    AuthenticatedRecruiterPipelineRoute: AuthenticatedRecruiterPipelineRoute,
+    AuthenticatedRecruiterProfileRoute: AuthenticatedRecruiterProfileRoute,
+    AuthenticatedRecruiterSettingsRoute: AuthenticatedRecruiterSettingsRoute,
+    AuthenticatedRecruiterIndexRoute: AuthenticatedRecruiterIndexRoute,
+  }
+
+const AuthenticatedRecruiterRouteWithChildren =
+  AuthenticatedRecruiterRoute._addFileChildren(
+    AuthenticatedRecruiterRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCandidateRoute: typeof AuthenticatedCandidateRouteWithChildren
+  AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCandidateRoute: AuthenticatedCandidateRouteWithChildren,
+  AuthenticatedRecruiterRoute: AuthenticatedRecruiterRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  UnauthorizedRoute: UnauthorizedRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
