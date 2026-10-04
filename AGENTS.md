@@ -17,3 +17,5 @@
 - candidate_profiles.user_id and recruiter_profiles.user_id serve as candidate_id / recruiter_id in all related tables. Why: reuses Stage 2 profiles without a redesign.
 - Taxonomy lookups (roles, programming_languages, technical_skills, technologies) are the single source for matching/search; readable by everyone, written only by admins. Why: consistent search and match data.
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
+- Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
+- Only a company's creator edits it; other recruiters see it read-only and the directory comes from the `company_recruiters` RPC. Why: recruiter_profiles stay private to their owner.

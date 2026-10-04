@@ -22,6 +22,20 @@
       "when": 1791084643984,
       "tag": "0002_stage4_candidate_profile_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791085158602,
+      "tag": "0003_stage5_recruiter_company_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791085171420,
+      "tag": "0004_stage5_branding_read",
+      "breakpoints": true
     }
   ]
 }

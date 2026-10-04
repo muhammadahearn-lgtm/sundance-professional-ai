@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RecruiterProfileView } from "@/components/app/ProfileView";
+import { RecruiterProfilePage } from "@/components/recruiter/RecruiterProfilePage";
 
 export const Route = createFileRoute("/_authenticated/recruiter/profile")({
-  head: () => ({ meta: [{ title: "My Profile — Sundance Professional AI" }, { name: "description", content: "My Profile in your Sundance Professional AI account." }, { property: "og:title", content: "My Profile — Sundance Professional AI" }, { property: "og:description", content: "My Profile in your Sundance Professional AI account." }] }),
+  head: () => ({ meta: [{ title: "Recruiter Profile — Sundance Professional AI" }, { name: "description", content: "Manage your recruiter identity, specialization and hiring focus." }, { property: "og:title", content: "Recruiter Profile — Sundance Professional AI" }, { property: "og:description", content: "Manage your recruiter identity, specialization and hiring focus." }] }),
   component: Page,
 });
 
 function Page() {
   const { account } = Route.useRouteContext();
-  return <RecruiterProfileView account={account} />;
+  return <RecruiterProfilePage account={account} />;
 }
