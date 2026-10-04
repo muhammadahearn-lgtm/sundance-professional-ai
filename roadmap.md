@@ -6,4 +6,6 @@
 - [x] Stage 5: recruiter profile + company profile pages
 - [x] Stage 6: job management (create/edit/duplicate/status/preview)
 - [x] Stage 7: candidate job search, saved jobs, compare
-- [ ] Stage 8+: candidate search, applications (awaiting next spec)
+- [x] Stage 8: recruiter talent search, saved + compare candidates, candidate profile view
+- [x] Stage 9: apply to jobs, application tracking, recruiter review, kanban pipeline
+- [ ] Stage 10+: awaiting next spec

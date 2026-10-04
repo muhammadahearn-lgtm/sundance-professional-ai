@@ -22,6 +22,7 @@ const NAV = {
     { to: "/recruiter/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/recruiter/jobs", label: "Jobs", Icon: Briefcase },
     { to: "/recruiter/candidates", label: "Search Talent", Icon: Search },
+    { to: "/recruiter/applications", label: "Applications", Icon: FileText },
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare },
     { to: "/recruiter/company", label: "Company", Icon: Building2 },

@@ -22,3 +22,6 @@
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
 - Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: preserves application history.
 - Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable searches and limits users cannot bypass.
+- Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: profiles (emails) stay private.
+- Moving a pipeline card updates the linked application status via `stageToStatus` (src/lib/talent-rules.ts); pipeline writes are guarded by the `pipeline_job_guard` trigger. Why: candidate timeline mirrors recruiter progress, recruiters can't touch others' jobs.
+- Talent search loads searchable candidates once and filters client-side (`matchesTalent`); filter state lives in the URL. Why: free-text salary and array fields don't filter well in the API at this scale.
