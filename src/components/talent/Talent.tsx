@@ -4,7 +4,7 @@ import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/
 import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
