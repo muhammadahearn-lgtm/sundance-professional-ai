@@ -499,16 +499,19 @@ export type Database = {
           job_id: string
           lookup_id: string
           required_flag: boolean
+          requirement_level: string
         }
         Insert: {
           job_id: string
           lookup_id: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Update: {
           job_id?: string
           lookup_id?: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Relationships: [
           {
@@ -532,16 +535,19 @@ export type Database = {
           job_id: string
           lookup_id: string
           required_flag: boolean
+          requirement_level: string
         }
         Insert: {
           job_id: string
           lookup_id: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Update: {
           job_id?: string
           lookup_id?: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Relationships: [
           {
@@ -565,16 +571,19 @@ export type Database = {
           job_id: string
           lookup_id: string
           required_flag: boolean
+          requirement_level: string
         }
         Insert: {
           job_id: string
           lookup_id: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Update: {
           job_id?: string
           lookup_id?: string
           required_flag?: boolean
+          requirement_level?: string
         }
         Relationships: [
           {
@@ -595,9 +604,12 @@ export type Database = {
       }
       jobs: {
         Row: {
+          benefits_summary: string
+          bonus_info: string
           company_id: string | null
           created_at: string
           employment_type: Database["public"]["Enums"]["employment_type"]
+          experience_level: string
           job_description: string
           job_id: string
           job_status: Database["public"]["Enums"]["job_status"]
@@ -606,15 +618,20 @@ export type Database = {
           maximum_salary: number | null
           minimum_salary: number | null
           minimum_years_experience: number
+          published_at: string | null
           recruiter_id: string
           role_id: string | null
+          salary_currency: string
           updated_at: string
           work_arrangement: Database["public"]["Enums"]["work_arrangement"]
         }
         Insert: {
+          benefits_summary?: string
+          bonus_info?: string
           company_id?: string | null
           created_at?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
+          experience_level?: string
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]
@@ -623,15 +640,20 @@ export type Database = {
           maximum_salary?: number | null
           minimum_salary?: number | null
           minimum_years_experience?: number
+          published_at?: string | null
           recruiter_id: string
           role_id?: string | null
+          salary_currency?: string
           updated_at?: string
           work_arrangement?: Database["public"]["Enums"]["work_arrangement"]
         }
         Update: {
+          benefits_summary?: string
+          bonus_info?: string
           company_id?: string | null
           created_at?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
+          experience_level?: string
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]
@@ -640,8 +662,10 @@ export type Database = {
           maximum_salary?: number | null
           minimum_salary?: number | null
           minimum_years_experience?: number
+          published_at?: string | null
           recruiter_id?: string
           role_id?: string | null
+          salary_currency?: string
           updated_at?: string
           work_arrangement?: Database["public"]["Enums"]["work_arrangement"]
         }
