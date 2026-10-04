@@ -157,6 +157,16 @@ const PREVIEW_TABS = [
 ] as const;
 type PreviewTabId = (typeof PREVIEW_TABS)[number]["id"];
 
+function Bar({ label, v }: { label: string; v: number }) {
+  return (
+    <div>
+      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{v}%</span></div>
+      <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${v}%` }} /></div>
+    </div>
+  );
+}
+
+
 function MatchBadge({ score }: { score: number }) {
   return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${score >= 90 ? "bg-success/15 text-success" : "bg-primary-soft text-primary"}`}>{score}% match</span>;
 }
