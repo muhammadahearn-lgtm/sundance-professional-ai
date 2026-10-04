@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { track } from "@/lib/track";
 import { ContactRecruiterButton } from "@/components/messages/Messages";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
@@ -21,6 +23,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
   const lists = useJobLists(account.userId);
   const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
   const q = useQuery({ queryKey: ["candidate-job", id], queryFn: () => loadCandidateJob(id) });
+  useEffect(() => { if (q.data) track("job_view", id); }, [q.data, id]);
 
   if (q.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (q.error || tax.error) return <div className={`${card} p-8 text-center`}><p className="font-semibold">{friendlyError(q.error ?? tax.error, "Unable to load this job.")}</p><button onClick={() => { q.refetch(); tax.refetch(); }} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Try again</button></div>;

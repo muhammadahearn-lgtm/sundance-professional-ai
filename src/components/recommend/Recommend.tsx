@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Lightbulb } from "lucide-react";
@@ -59,6 +60,7 @@ function useCandidateRecs(uid: string) {
 export function CandidateRecommendationsPage({ uid }: { uid: string }) {
   const q = useCandidateRecs(uid);
   const lists = useJobLists(uid);
+  useEffect(() => { if (q.data) track("recommendation_view", q.data.jobs.slice(0, 10).map((r) => r.jobId)); }, [q.data]);
   return (
     <div className="space-y-5">
       <PageHeader title="Recommendations" subtitle="Ranked, explainable picks based on your matches, career intelligence and profile." />
@@ -67,7 +69,7 @@ export function CandidateRecommendationsPage({ uid }: { uid: string }) {
           <Section title="Recommended Jobs" empty="No new job recommendations — you've applied to every matching job, or none are open yet." items={q.data.jobs}>
             {q.data.jobs.slice(0, 10).map((r) => (
               <RecCard key={r.id} r={r} extra={<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><MatchBadge score={r.match} />{r.location && <span>{r.location}</span>}{r.salary && <span>· {r.salary}</span>}</div>}
-                actions={<><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btn}>View Job</Link><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btnP}>Apply</Link><button onClick={() => lists.toggleSave(r.jobId)} className={btn}>{lists.isSaved(r.jobId) ? "Saved" : "Save Job"}</button><ContactRecruiterButton uid={uid} jobId={r.jobId} className={btn} /></>} />
+                actions={<><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} onClick={() => track("recommendation_click", r.jobId)} className={btn}>View Job</Link><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} onClick={() => track("recommendation_click", r.jobId)} className={btnP}>Apply</Link><button onClick={() => lists.toggleSave(r.jobId)} className={btn}>{lists.isSaved(r.jobId) ? "Saved" : "Save Job"}</button><ContactRecruiterButton uid={uid} jobId={r.jobId} className={btn} /></>} />
             ))}
           </Section>
           <Section title="Recommended Skills" empty="No skill gaps found against current jobs." items={q.data.skills}>
@@ -100,7 +102,7 @@ export function CandidateRecsWidget({ uid }: { uid: string }) {
           {[...q.data.jobs.slice(0, 3).map((r) => ({ r, k: "Job", to: r.jobId })), ...q.data.skills.slice(0, 1).map((r) => ({ r, k: "Skill", to: null })), ...q.data.technologies.slice(0, 1).map((r) => ({ r, k: "Technology", to: null }))].map(({ r, k, to }) => (
             <li key={k + r.id} className="flex items-center gap-2 text-sm">
               <span className="w-20 shrink-0 text-xs text-muted-foreground">{k}</span>
-              {to ? <Link to="/candidate/jobs/$id" params={{ id: to }} className="min-w-0 flex-1 truncate font-medium hover:text-primary">{r.title}</Link> : <span className="min-w-0 flex-1 truncate font-medium">{r.title}</span>}
+              {to ? <Link to="/candidate/jobs/$id" params={{ id: to }} onClick={() => track("recommendation_click", to)} className="min-w-0 flex-1 truncate font-medium hover:text-primary">{r.title}</Link> : <span className="min-w-0 flex-1 truncate font-medium">{r.title}</span>}
               <RecScore score={r.score} />
             </li>
           ))}
@@ -128,6 +130,7 @@ export function RecruiterRecommendationsPage({ uid }: { uid: string }) {
     try { await fn(); toast.success(msg); await qc.invalidateQueries({ queryKey: ["match", "recs-rec", uid] }); } catch { toast.error("Couldn't complete that action."); } finally { setBusy(null); }
   };
   const d: RecruiterRecs | undefined = q.data;
+  useEffect(() => { if (d) track("recommendation_view", d.candidates.slice(0, 10).map((r) => r.candidateId)); }, [d]);
   return (
     <div className="space-y-5">
       <PageHeader title="Recommendations" subtitle="Ranked, explainable picks for candidates, pipeline moves and job improvements." />
@@ -137,7 +140,7 @@ export function RecruiterRecommendationsPage({ uid }: { uid: string }) {
             {d.candidates.slice(0, 10).map((r) => (
               <RecCard key={r.id} r={r} extra={<div className="space-y-1 text-xs text-muted-foreground"><div className="flex flex-wrap items-center gap-2"><MatchBadge score={r.match} /><span>for {r.jobTitle}</span>{r.availability && <span>· {r.availability}</span>}</div></div>}
                 actions={<>
-                  <Link to="/recruiter/candidates/$id" params={{ id: r.candidateId }} className={btn}>View Profile</Link>
+                  <Link to="/recruiter/candidates/$id" params={{ id: r.candidateId }} onClick={() => track("recommendation_click", r.candidateId)} className={btn}>View Profile</Link>
                   <button onClick={() => lists.toggleSave(r.candidateId)} className={btn}>{lists.isSaved(r.candidateId) ? "Saved" : "Save Candidate"}</button>
                   <button disabled={busy === r.id} onClick={() => run(r.id, () => addToPipeline(uid, r.candidateId, r.jobId), "Added to pipeline")} className={btnP}>Add To Pipeline</button>
                   <MessageButton role="recruiter" candidateId={r.candidateId} jobId={r.jobId} label="Contact Candidate" className={btn} />

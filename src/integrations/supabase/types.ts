@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          entity_id: string
+          event_date: string
+          event_id: string
+          event_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          event_date?: string
+          event_id?: string
+          event_type: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          event_date?: string
+          event_id?: string
+          event_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           application_date: string
@@ -1548,6 +1575,14 @@ export type Database = {
           recruiter_id: string
           recruiter_name: string
           unread: number
+        }[]
+      }
+      my_job_view_counts: {
+        Args: never
+        Returns: {
+          job_id: string
+          viewers: number
+          views: number
         }[]
       }
       owns_job: { Args: { _job: string }; Returns: boolean }

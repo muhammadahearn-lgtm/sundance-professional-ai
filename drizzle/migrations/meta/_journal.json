@@ -85,6 +85,13 @@
       "when": 1791090722224,
       "tag": "0011_stage16_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791091202235,
+      "tag": "0012_stage17_analytics_events",
+      "breakpoints": true
     }
   ]
 }
