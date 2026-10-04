@@ -74,6 +74,16 @@ export function CompanyProfilePage({ account }: { account: Account }) {
 
   if (preview || !canEdit) return <PublicView c={c} recruiters={data.recruiters} onBack={canEdit ? () => setPreview(false) : undefined} />;
 
+  const uploadBrand = async (file: File, kind: "logo" | "banner") => {
+    const bad = validateImageFile(file);
+    if (bad) { toast.error(bad); return; }
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${uid}/${kind}-${Date.now()}-${safe}`;
+    const { error: e } = await supabase.storage.from("company-branding").upload(path, file, { contentType: file.type });
+    if (e) { toast.error("Failed to upload image."); return; }
+    await save(kind === "logo" ? { logo_url: path } : { banner_url: path }, kind === "logo" ? "Logo uploaded" : "Banner uploaded");
+  };
+
   const filled = [c.company_name, c.industry, c.organization_type, c.description, c.company_size, c.website, c.logo_url ?? "", c.why_work_here].filter((x) => String(x).trim()).length;
   const percent = Math.round((filled / 8) * 100);
   const suggestions = [
