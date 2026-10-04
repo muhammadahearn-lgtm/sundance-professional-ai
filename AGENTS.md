@@ -19,3 +19,5 @@
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Only a company's creator edits it; other recruiters see it read-only and the directory comes from the `company_recruiters` RPC. Why: recruiter_profiles stay private to their owner.
+- Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
+- Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: preserves application history.
