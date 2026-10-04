@@ -55,6 +55,12 @@ function Stat({ Icon, n, label }: { Icon: typeof Briefcase; n: number | string; 
     </div>
   );
 }
+function DashboardAvatar({ name, path }: { name: string; path: string | null }) {
+  const url = useAvatarUrl(path);
+  const initials = name.split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  if (url) return <img src={url} alt={name} className="h-14 w-14 shrink-0 rounded-full object-cover" />;
+  return <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-lg font-bold text-primary-foreground">{initials}</span>;
+}
 function Soon() { return <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Coming Soon</span>; }
 function Empty({ text, cta }: { text: string; cta: ReactNode }) {
   return <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><p>{text}</p><div className="mt-3">{cta}</div></div>;
