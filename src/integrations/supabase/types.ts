@@ -14,16 +14,179 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      candidate_profiles: {
+        Row: {
+          availability: string
+          created_at: string
+          headline: string
+          job_title: string
+          location: string
+          programming_languages: string[]
+          salary_expectation: string
+          summary: string
+          target_roles: string[]
+          technical_skills: string[]
+          tools: string[]
+          updated_at: string
+          user_id: string
+          work_arrangement: string
+          years_experience: number
+        }
+        Insert: {
+          availability?: string
+          created_at?: string
+          headline?: string
+          job_title?: string
+          location?: string
+          programming_languages?: string[]
+          salary_expectation?: string
+          summary?: string
+          target_roles?: string[]
+          technical_skills?: string[]
+          tools?: string[]
+          updated_at?: string
+          user_id: string
+          work_arrangement?: string
+          years_experience?: number
+        }
+        Update: {
+          availability?: string
+          created_at?: string
+          headline?: string
+          job_title?: string
+          location?: string
+          programming_languages?: string[]
+          salary_expectation?: string
+          summary?: string
+          target_roles?: string[]
+          technical_skills?: string[]
+          tools?: string[]
+          updated_at?: string
+          user_id?: string
+          work_arrangement?: string
+          years_experience?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          email_verified: boolean
+          first_name: string
+          last_name: string
+          onboarding_completed: boolean
+          status: Database["public"]["Enums"]["user_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_verified?: boolean
+          first_name?: string
+          last_name?: string
+          onboarding_completed?: boolean
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_verified?: boolean
+          first_name?: string
+          last_name?: string
+          onboarding_completed?: boolean
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recruiter_profiles: {
+        Row: {
+          company_description: string
+          company_name: string
+          company_website: string
+          created_at: string
+          industry: string
+          location: string
+          organization_type: string
+          specialization: string
+          title: string
+          updated_at: string
+          user_id: string
+          years_experience: number
+        }
+        Insert: {
+          company_description?: string
+          company_name?: string
+          company_website?: string
+          created_at?: string
+          industry?: string
+          location?: string
+          organization_type?: string
+          specialization?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          years_experience?: number
+        }
+        Update: {
+          company_description?: string
+          company_name?: string
+          company_website?: string
+          created_at?: string
+          industry?: string
+          location?: string
+          organization_type?: string
+          specialization?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          years_experience?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_onboarding: { Args: never; Returns: undefined }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "candidate" | "recruiter"
+      user_status: "active" | "inactive" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +313,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["candidate", "recruiter"],
+      user_status: ["active", "inactive", "suspended"],
+    },
   },
 } as const
