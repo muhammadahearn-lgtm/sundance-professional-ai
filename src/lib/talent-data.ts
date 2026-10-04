@@ -59,8 +59,9 @@ export async function talentByIds(ids: string[]): Promise<TalentRow[]> {
 async function rowsFor(ps: Profile[]) {
   const ids = ps.map((p) => p.user_id);
   if (!ids.length) return [];
-  const [k, names] = await Promise.all([links(ids), namesFor(ids)]);
-  return ps.map((p) => toRow(p, names[p.user_id] ?? "Candidate", k));
+  const [k, names, av] = await Promise.all([links(ids), namesFor(ids), supabase.rpc("candidate_avatars", { _ids: ids })]);
+  const avatars = Object.fromEntries((av.data ?? []).map((r) => [r.user_id, r.avatar_path]));
+  return ps.map((p) => ({ ...toRow(p, names[p.user_id] ?? "Candidate", k), avatarPath: avatars[p.user_id] ?? null }));
 }
 
 export async function loadCandidateFull(id: string) {

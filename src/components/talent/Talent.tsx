@@ -1,4 +1,5 @@
 import { track } from "@/lib/track";
+import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
 import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
 import { meetsMinMatch } from "@/lib/match-engine";
@@ -27,9 +28,10 @@ export const nameOf = (opts: { id: string; name: string }[], id: string) => opts
 export const btn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
 export const primaryBtn = "inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
 
-export function Avatar({ name, size = "h-12 w-12 text-base" }: { name: string; size?: string }) {
+export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name: string; size?: string; path?: string | null | undefined }) {
+  const url = useAvatarUrl(path);
   const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
-  return <div className={`grid shrink-0 place-items-center rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{i}</div>;
+  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{url ? <img src={url} alt={`${name} photo`} className="h-full w-full object-cover" /> : i}</div>;
 }
 export function Chips({ ids, opts, max = 5 }: { ids: string[]; opts: { id: string; name: string }[]; max?: number }) {
   if (!ids.length) return <span className="text-xs text-muted-foreground">—</span>;
@@ -73,7 +75,7 @@ export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonom
   return (
     <article className={`${card} p-5`}>
       <div className="flex gap-4">
-        <Avatar name={c.name} />
+        <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
