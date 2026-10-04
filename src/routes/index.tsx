@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowRight, ArrowDown, Briefcase, Users, Target, Brain, LineChart, Search, Gauge, Sparkles,
+  ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
