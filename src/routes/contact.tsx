@@ -10,9 +10,9 @@ import { PageHero } from "@/components/site/shared";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Sundance AI — Talk to Our Team" },
-      { name: "description", content: "Get in touch with Sundance AI about recruiting, enterprise plans or partnerships." },
-      { property: "og:title", content: "Contact Sundance AI" },
+      { title: "Contact Sundance Professional AI — Talk to Our Team" },
+      { name: "description", content: "Get in touch with Sundance Professional AI about recruiting, enterprise plans or partnerships." },
+      { property: "og:title", content: "Contact Sundance Professional AI" },
       { property: "og:description", content: "Talk to our team about skill-first hiring." },
     ],
     links: [{ rel: "canonical", href: "/contact" }],

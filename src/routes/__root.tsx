@@ -64,9 +64,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sundance AI — Skill-First Hiring & Career Intelligence" },
+      { title: "Sundance Professional AI — Skill-First Hiring & Career Intelligence" },
       { name: "description", content: "AI-powered hiring marketplace for technology professionals and recruiters." },
-      { property: "og:site_name", content: "Sundance AI" },
+      { property: "og:site_name", content: "Sundance Professional AI" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

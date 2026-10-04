@@ -24,7 +24,7 @@ export function SiteFooter() {
         <FooterCol title="Legal" links={[["Privacy Policy", "/about"], ["Terms Of Service", "/about"]]} />
       </div>
       <div className="border-t border-border">
-        <div className="container-x py-6 text-sm text-muted-foreground">© {new Date().getFullYear()} Sundance AI. All rights reserved.</div>
+        <div className="container-x py-6 text-sm text-muted-foreground">© {new Date().getFullYear()} Sundance Professional AI. All rights reserved.</div>
       </div>
     </footer>
   );
