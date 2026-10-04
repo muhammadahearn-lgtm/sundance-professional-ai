@@ -59,7 +59,7 @@ function MatchInsights({ row }: { row: ScoreRow | undefined }) {
   const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies];
   const bars: [string, number][] = [["Language Match", row.language_alignment_score], ["Skill Match", row.skill_alignment_score], ["Technology Match", row.technology_alignment_score], ["Experience Match", row.experience_alignment_score], ["Career Alignment", row.preference_alignment_score]];
   return (
-    <div className="grid gap-4 rounded-xl bg-card p-4 md:grid-cols-3">
+    <div className="grid gap-3">
       <div className="space-y-2.5">
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Match Summary</p>
         {bars.map(([l, v]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l}</span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
@@ -90,12 +90,10 @@ function ReqGroup({ title, rows, names, tone }: { title: string; rows: ReqRow[] 
   if (!list.length) return null;
   const nm = (id: string) => names.find((n) => n.id === id)?.name ?? "Unknown";
   return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
-        {list.slice(0, 3).map((r) => <span key={r.lookup_id} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${BADGE[tone]}`}>{nm(r.lookup_id)}</span>)}
-        {list.length > 3 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 3} More</span>}
-      </div>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
+      {list.slice(0, 3).map((r) => <span key={r.lookup_id} className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${BADGE[tone]}`}>{nm(r.lookup_id)}</span>)}
+      {list.length > 3 && <span className="rounded-full border border-border px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">+{list.length - 3} More</span>}
     </div>
   );
 }
