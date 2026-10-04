@@ -354,25 +354,6 @@ function ProductPreview() {
                   </div>
                 </div>
               )}
-              {tab === "profile" && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-4">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft font-display text-lg font-bold text-primary">AC</span>
-                    <div>
-                      <div className="font-display text-lg font-bold">Alex Chen</div>
-                      <div className="text-sm text-muted-foreground">Full-Stack Engineer · 6 yrs</div>
-                    </div>
-                    <div className="ml-auto hidden sm:block"><MatchBadge score={89} /></div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"].map((s) => (
-                      <span key={s} className="rounded-md bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">{s}</span>
-                    ))}
-                    <span className="rounded-md border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground">Missing: Kubernetes</span>
-                  </div>
-                  <Bar label="Career Readiness" v={89} />
-                </div>
-              )}
               {tab === "jobs" && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
