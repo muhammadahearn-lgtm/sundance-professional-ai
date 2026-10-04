@@ -9,6 +9,7 @@ import { computeCompletion } from "@/lib/profile-completion";
 import { applicationMetrics, buildActivity, statusBreakdown, type AppLite } from "@/lib/candidate-dashboard";
 import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
+import { CandidateMatchWidget } from "@/components/match/Match";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -215,9 +216,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
             )}
           </Widget>
 
-          <Widget title="Match Intelligence" action={<Soon />}>
-            <div className="space-y-2 text-sm text-muted-foreground">{["Overall Match Score", "Skill Alignment", "Technology Alignment", "Experience Alignment"].map((x) => <div key={x} className="flex justify-between"><span>{x}</span><span>—</span></div>)}</div>
-          </Widget>
+          <CandidateMatchWidget uid={uid} />
 
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Career Readiness Score", "Skill Gap Analysis", "Market Demand", "Salary Intelligence", "Career Recommendations"].map((x) => <li key={x}>• {x}</li>)}</ul>

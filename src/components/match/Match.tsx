@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RefreshCw, Sparkles } from "lucide-react";
@@ -102,5 +103,86 @@ export function MatchPanel({ row, loading, onRecalc, recalculating, title = "Mat
       </details>
       <p className="mt-3 text-[11px] text-muted-foreground">Updated {new Date(row.calculated_date).toLocaleString()}</p>
     </div>
+  );
+}
+
+const linkCls = "text-xs font-semibold text-primary hover:underline";
+
+/** Candidate: top active jobs by match, with average, tier spread and most common gaps. */
+export function CandidateMatchWidget({ uid, compact = false }: { uid: string; compact?: boolean }) {
+  const r = useAutoRecalc();
+  const q = useQuery({
+    queryKey: ["match", "top-jobs", uid],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("match_scores").select("job_id, overall_match_score, details, jobs!inner(job_title, job_status, companies(company_name))").eq("candidate_id", uid).eq("jobs.job_status", "active").order("overall_match_score", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
+  const rows = q.data ?? [];
+  const avg = rows.length ? Math.round(rows.reduce((s, x) => s + Number(x.overall_match_score), 0) / rows.length) : null;
+  const tiers = [["90%+", 90], ["75–89%", 75], ["60–74%", 60], ["<60%", 0]].map(([l, min], i, arr) => ({ l: l as string, n: rows.filter((x) => Number(x.overall_match_score) >= (min as number) && (i === 0 || Number(x.overall_match_score) < (arr[i - 1]![1] as number))).length }));
+  const gapCount: Record<string, number> = {};
+  for (const x of rows) for (const g of asDetails(x.details).missing.requiredMissing) gapCount[g] = (gapCount[g] ?? 0) + 1;
+  const gaps = Object.entries(gapCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return (
+    <section className={card}>
+      <div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /><h2 className="font-bold">{compact ? "Top Matching Jobs" : "Match Intelligence"}</h2>
+        <button onClick={() => r.mutate(undefined, { onSuccess: () => toast.success("Profile Re-Evaluated") })} disabled={r.isPending} aria-label="Recalculate matches" className="ml-auto text-muted-foreground hover:text-primary disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${r.isPending ? "animate-spin" : ""}`} /></button></div>
+      {q.isLoading ? <div className="h-24 animate-pulse rounded-xl bg-muted" /> : q.error ? <p className="text-sm text-destructive">Match Score Unavailable.</p> : rows.length === 0 ? <p className="text-sm text-muted-foreground">{r.isPending ? "Calculating matches…" : "No active jobs to match yet."}</p> : (
+        <>
+          {!compact && <div className="mb-3 flex items-end gap-2"><span className="text-3xl font-extrabold">{avg}%</span><span className="pb-1 text-xs text-muted-foreground">average across {rows.length} active job{rows.length === 1 ? "" : "s"}</span></div>}
+          <ul className="space-y-2">{rows.slice(0, compact ? 5 : 3).map((x) => (
+            <li key={x.job_id} className="flex items-center justify-between gap-2 text-sm"><div className="min-w-0"><Link to="/candidate/jobs/$id" params={{ id: x.job_id }} className="block truncate font-semibold hover:text-primary">{x.jobs.job_title}</Link><span className="text-xs text-muted-foreground">{x.jobs.companies?.company_name}</span></div><MatchBadge score={x.overall_match_score} /></li>
+          ))}</ul>
+          {!compact && <>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match spread</p>
+            <div className="mt-1 grid grid-cols-4 gap-1 text-center text-xs">{tiers.map((t) => <div key={t.l} className="rounded-lg bg-muted/60 py-1.5"><div className="font-bold">{t.n}</div><div className="text-muted-foreground">{t.l}</div></div>)}</div>
+            {gaps.length > 0 && <><p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Improve your match</p><ul className="mt-1 space-y-0.5 text-sm">{gaps.map(([g, n]) => <li key={g}>→ Add {g} <span className="text-xs text-muted-foreground">(required by {n} job{n === 1 ? "" : "s"})</span></li>)}</ul></>}
+          </>}
+          <Link to="/candidate/jobs" search={{ sort: "match" }} className={`${linkCls} mt-3 inline-block`}>See all matches</Link>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Recruiter: best candidate–job pairs across their jobs. */
+export function RecruiterMatchWidget() {
+  const r = useAutoRecalc();
+  const q = useQuery({
+    queryKey: ["match", "top-candidates"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("match_scores").select("candidate_id, job_id, overall_match_score, jobs(job_title)").order("overall_match_score", { ascending: false }).limit(200);
+      if (error) throw error;
+      const rows = data ?? [];
+      const ids = [...new Set(rows.slice(0, 20).map((x) => x.candidate_id))];
+      const names: Record<string, string> = {};
+      if (ids.length) {
+        const n = await supabase.rpc("candidate_names", { _ids: ids });
+        for (const x of n.data ?? []) names[x.user_id] = `${x.first_name} ${x.last_name}`.trim();
+      }
+      return { rows, names };
+    },
+  });
+  const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
+  const rows = q.data?.rows ?? [];
+  const avg = rows.length ? Math.round(rows.reduce((s, x) => s + Number(x.overall_match_score), 0) / rows.length) : null;
+  const strong = rows.filter((x) => Number(x.overall_match_score) >= 75).length;
+  return (
+    <section className={card}>
+      <div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /><h2 className="font-bold">Candidate Match Rankings</h2>
+        <button onClick={() => r.mutate(undefined, { onSuccess: () => toast.success("Scores Calculated") })} disabled={r.isPending} aria-label="Recalculate matches" className="ml-auto text-muted-foreground hover:text-primary disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${r.isPending ? "animate-spin" : ""}`} /></button></div>
+      {q.isLoading ? <div className="h-24 animate-pulse rounded-xl bg-muted" /> : q.error ? <p className="text-sm text-destructive">Match Score Unavailable.</p> : rows.length === 0 ? <p className="text-sm text-muted-foreground">{r.isPending ? "Calculating matches…" : "Publish a job to see matching candidates."}</p> : (
+        <>
+          <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs"><div className="rounded-lg bg-muted/60 py-2"><div className="text-lg font-bold">{avg}%</div><div className="text-muted-foreground">Average match</div></div><div className="rounded-lg bg-muted/60 py-2"><div className="text-lg font-bold">{strong}</div><div className="text-muted-foreground">Strong matches (75%+)</div></div></div>
+          <ul className="space-y-2">{rows.slice(0, 5).map((x) => (
+            <li key={`${x.candidate_id}:${x.job_id}`} className="flex items-center justify-between gap-2 text-sm"><div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: x.candidate_id }} className="block truncate font-semibold hover:text-primary">{q.data?.names[x.candidate_id] ?? "Candidate"}</Link><span className="text-xs text-muted-foreground">for {x.jobs?.job_title}</span></div><MatchBadge score={x.overall_match_score} /></li>
+          ))}</ul>
+          <Link to="/recruiter/candidates" search={{ sort: "match" }} className={`${linkCls} mt-3 inline-block`}>Rank all candidates</Link>
+        </>
+      )}
+    </section>
   );
 }

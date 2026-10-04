@@ -12,6 +12,7 @@ import { computeRecruiterCompletion } from "@/lib/recruiter-completion";
 import { appStatusCounts, appWindows, countBy, jobStatusCounts, recruiterKpis, stageCounts } from "@/lib/recruiter-dashboard";
 import { APP_STATUSES, STAGES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
+import { RecruiterMatchWidget } from "@/components/match/Match";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const linkBtn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
@@ -200,6 +201,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
         </div>
 
         <div className="space-y-6">
+          <RecruiterMatchWidget />
           <Widget title="Quick Actions">
             <div className="grid grid-cols-2 gap-2">
               <Link to="/recruiter/jobs/create" className={linkBtn}><Plus className="h-4 w-4" />New Job</Link>
@@ -243,9 +245,6 @@ export function RecruiterDashboard({ account }: { account: Account }) {
           </Widget>
           <Widget title="Recommended Candidates" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Best candidate matches", "Top talent recommendations", "Role-based recommendations"].map((x) => <li key={x}>• {x}</li>)}</ul>
-          </Widget>
-          <Widget title="Match Intelligence" action={<Soon />}>
-            <div className="space-y-2 text-sm text-muted-foreground">{["Match Score", "Skill Alignment", "Technology Alignment", "Experience Alignment"].map((x) => <div key={x} className="flex justify-between"><span>{x}</span><span>—</span></div>)}</div>
           </Widget>
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Candidate Readiness", "Skill Gap Analysis", "Market Intelligence", "Salary Intelligence"].map((x) => <li key={x}>• {x}</li>)}</ul>
