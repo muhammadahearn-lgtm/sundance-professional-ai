@@ -28,7 +28,7 @@ export function parseSalary(text: string): number | null {
 }
 
 export function talentFilterCount(f: TalentFilters): number {
-  return [f.role, f.exp, f.loc].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0);
+  return [f.role, f.exp, f.loc].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
 }
 
 const all = (need: string[], have: string[]) => need.every((x) => have.includes(x));

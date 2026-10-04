@@ -139,6 +139,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
   const filters = t && (
     <div className={`${card} p-5`}>
       <div className="mb-4 flex items-center justify-between"><p className="font-display font-bold">Filters</p>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
+      <Group title="Match Score"><MatchFilter value={f.mm} onChange={(mm) => set({ mm })} /></Group>
       <Group title="Current Role"><select value={f.role} onChange={(e) => set({ role: e.target.value })} className={inputCls}><option value="">Any role</option>{t.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
       <Group title="Programming Languages"><IdToggle opts={t.languages} value={f.langs} onChange={(v) => set({ langs: v })} /></Group>
       <Group title="Technical Skills"><IdToggle opts={t.skills} value={f.skills} onChange={(v) => set({ skills: v })} /></Group>
@@ -266,6 +267,10 @@ export function SavedCandidatesPage({ uid }: { uid: string }) {
 
 export function CompareCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
+  const scoreQ = useScores({});
+  const bestRow = (id: string) => (scoreQ.data ?? []).filter((r) => r.candidate_id === id).sort((a, b) => Number(b.overall_match_score) - Number(a.overall_match_score))[0];
+  const pct = (id: string, k: "language_alignment_score" | "skill_alignment_score" | "technology_alignment_score" | "experience_alignment_score") => { const r = bestRow(id); return r ? `${Math.round(Number(r[k]))}%` : "—"; };
+  const det = (id: string) => (bestRow(id)?.details ?? {}) as { strengths?: string[]; missing?: { languages?: string[]; skills?: string[]; technologies?: string[] } };
   const tax = useTaxonomy();
   const key = lists.compareIds.join(",");
   const q = useQuery({ queryKey: ["talent-ids", key], queryFn: () => talentByIds(lists.compareIds) });
@@ -274,7 +279,11 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
     ["Current Role", (c) => c.jobTitle], ["Employer", (c) => c.employer], ["Location", (c) => c.location], ["Experience", (c) => `${c.years} yrs`],
     ["Availability", (c) => label(AVAILABILITY, c.availability)], ["Work Arrangement", (c) => label(ARRANGEMENTS, c.arrangement)], ["Salary Expectation", (c) => c.salary],
     ["Languages", (c) => <Chips ids={c.langs} opts={t.languages} max={8} />], ["Skills", (c) => <Chips ids={c.skills} opts={t.skills} max={8} />], ["Technologies", (c) => <Chips ids={c.techs} opts={t.technologies} max={8} />],
-    ["Profile Completion", (c) => `${c.completion}%`], ["Match Score", () => <span className="text-xs text-muted-foreground">Coming Soon</span>],
+    ["Profile Completion", (c) => `${c.completion}%`], ["Overall Match", (c) => { const r = bestRow(c.id); return r ? <span className="inline-flex flex-col gap-0.5"><MatchBadge score={r.overall_match_score} showLabel /><span className="text-[11px] text-muted-foreground">best across your jobs</span></span> : <MatchBadge score={null} />; }],
+    ["Language Score", (c) => pct(c.id, "language_alignment_score")], ["Skill Score", (c) => pct(c.id, "skill_alignment_score")],
+    ["Technology Score", (c) => pct(c.id, "technology_alignment_score")], ["Experience Score", (c) => pct(c.id, "experience_alignment_score")],
+    ["Strengths", (c) => <ul className="space-y-0.5 text-xs">{(det(c.id).strengths ?? []).slice(0, 4).map((x) => <li key={x}>✓ {x}</li>)}</ul>],
+    ["Weaknesses", (c) => { const m = det(c.id).missing ?? {}; const all = [...(m.languages ?? []), ...(m.skills ?? []), ...(m.technologies ?? [])]; return all.length ? <ul className="space-y-0.5 text-xs">{all.slice(0, 4).map((x) => <li key={x}>• Missing {x}</li>)}</ul> : null; }],
   ] : [];
   return (
     <div className="space-y-6 pb-16">

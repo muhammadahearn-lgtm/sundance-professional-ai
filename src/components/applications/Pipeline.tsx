@@ -8,6 +8,8 @@ import { loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
+import { MatchBadge, MatchFilter, useScores } from "@/components/match/Match";
+import { meetsMinMatch } from "@/lib/match-engine";
 import { Avatar, Chips, ErrorBox, btn, useTaxonomy } from "@/components/talent/Talent";
 
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -21,6 +23,12 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const job = useQuery({ queryKey: ["job-basic", jobId], queryFn: () => loadJob(jobId!), enabled: !!jobId });
   const navigate = useNavigate();
   const [drag, setDrag] = useState<string | null>(null);
+  const [mm, setMm] = useState(0);
+  const scores = useScores({});
+  const scoreOf = (c: PipelineCard) => {
+    const rows = (scores.data ?? []).filter((r) => r.candidate_id === c.candidate_id && (!c.job_id || r.job_id === c.job_id));
+    return rows.length ? Math.max(...rows.map((r) => Number(r.overall_match_score))) : undefined;
+  };
 
   async function move(c: PipelineCard, stage: Stage) {
     if (c.current_stage === stage) return;
@@ -55,10 +63,11 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>
 
+      <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match</span><MatchFilter value={mm} onChange={setMm} /></div>
       {q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
         <div className="-mx-4 overflow-x-auto px-4 pb-2"><div className="flex gap-4" style={{ minWidth: STAGES.length * 260 }}>
           {STAGES.map(([key, title]) => {
-            const col = cards.filter((c) => c.current_stage === key);
+            const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
             return (
               <section key={key} onDragOver={(e) => e.preventDefault()} onDrop={() => { const c = cards.find((x) => x.pipeline_id === drag); if (c) move(c, key as Stage); setDrag(null); }}
                 className={`w-64 shrink-0 rounded-2xl border border-border bg-muted/40 p-3 ${drag ? "ring-1 ring-primary/30" : ""}`} aria-label={`${title} column`}>
@@ -68,7 +77,8 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <div className="flex items-start gap-2"><Avatar name={c.name} size="h-8 w-8 text-xs" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div>
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     {!jobId && c.jobs?.job_title && <p className="mt-2 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
-                    <p className="mt-1 text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"} · Match: Coming Soon</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</p>
+                    <div className="mt-1"><MatchBadge score={scoreOf(c)} /></div>
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     <div className="mt-3 flex items-center gap-1.5">
                       {c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className="text-xs font-semibold text-primary">View</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className="text-xs font-semibold text-primary">View</Link>}

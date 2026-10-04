@@ -6,7 +6,7 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculateMatches } from "@/lib/match.functions";
-import { matchTier, type MatchDetails } from "@/lib/match-engine";
+import { MATCH_FILTERS, matchTier, type MatchDetails } from "@/lib/match-engine";
 
 export type ScoreRow = {
   candidate_id: string; job_id: string; overall_match_score: number; language_alignment_score: number; skill_alignment_score: number;
@@ -48,6 +48,12 @@ export function useAutoRecalc(enabled = true) {
     r.mutate(undefined, { onError: () => toast.error("Unable to calculate match scores") });
   }, [enabled, r]);
   return r;
+}
+
+/** 90%+ / 80%+ / 70%+ / 60%+ / All Matches. 0 = all. */
+export function MatchFilter({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const opts: [number, string][] = [...MATCH_FILTERS.map((n): [number, string] => [n, `${n}%+`]), [0, "All Matches"]];
+  return <div className="flex flex-wrap gap-1.5" role="group" aria-label="Minimum match">{opts.map(([n, l]) => <button key={n} type="button" onClick={() => onChange(n)} aria-pressed={value === n} className={`rounded-full border px-2.5 py-1 text-xs font-medium ${value === n ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}>{l}</button>)}</div>;
 }
 
 const toneCls = { success: "bg-success/15 text-success", primary: "bg-primary-soft text-primary", warning: "bg-warning/15 text-warning", muted: "bg-muted text-muted-foreground" };
