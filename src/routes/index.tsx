@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
-  Briefcase, Users, Star,
+  Briefcase, Users, Star, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
@@ -152,7 +152,7 @@ function SkillFirst() {
 const PREVIEW_TABS = [
   { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / candidate-dashboard" },
   { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter-dashboard" },
-  { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / profile" },
+  { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / candidate-profile" },
   { id: "jobs", label: "Job Search", path: "app.sundance.ai / job-search" },
   { id: "talent", label: "Talent Search", path: "app.sundance.ai / talent-search" },
 ] as const;
