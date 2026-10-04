@@ -1,3 +1,4 @@
+import { CandidateAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -222,6 +223,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
           <CareerWidget uid={uid} />
 
+          <CandidateAnalyticsSnapshot uid={uid} />
           <NotificationWidget uid={uid} role="candidate" />
         </div>
       </div>

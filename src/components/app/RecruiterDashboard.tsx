@@ -1,3 +1,4 @@
+import { RecruiterAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -251,6 +252,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Candidate Readiness", "Skill Gap Analysis", "Market Intelligence", "Salary Intelligence"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>
+          <RecruiterAnalyticsSnapshot uid={uid} />
           <NotificationWidget uid={uid} role="recruiter" />
         </div>
       </div>

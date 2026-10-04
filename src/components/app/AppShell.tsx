@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb, Bell } from "lucide-react";
+  Compass, Lightbulb, Bell, BarChart3 } from "lucide-react";
 import { NotificationBell, NotificationNavBadge, NotificationsLive } from "@/components/notifications/Notifications";
 import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
@@ -18,6 +18,7 @@ const NAV = {
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
     { to: "/candidate/career", label: "Career", Icon: Compass },
     { to: "/candidate/recommendations", label: "For You", Icon: Lightbulb },
+    { to: "/candidate/analytics", label: "Analytics", Icon: BarChart3 },
     { to: "/candidate/messages", label: "Messages", Icon: MessageSquare },
     { to: "/candidate/notifications", label: "Notifications", Icon: Bell },
     { to: "/candidate/profile", label: "Profile", Icon: UserRound },
@@ -30,6 +31,7 @@ const NAV = {
     { to: "/recruiter/applications", label: "Applications", Icon: FileText },
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
     { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
+    { to: "/recruiter/analytics", label: "Analytics", Icon: BarChart3 },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare },
     { to: "/recruiter/notifications", label: "Notifications", Icon: Bell },
     { to: "/recruiter/company", label: "Company", Icon: Building2 },
