@@ -698,10 +698,13 @@ export type Database = {
           calculated_date: string
           candidate_id: string
           career_readiness_score: number
+          details: Json
           experience_alignment_score: number
           job_id: string
+          language_alignment_score: number
           match_score_id: string
           overall_match_score: number
+          preference_alignment_score: number
           skill_alignment_score: number
           technology_alignment_score: number
         }
@@ -709,10 +712,13 @@ export type Database = {
           calculated_date?: string
           candidate_id: string
           career_readiness_score?: number
+          details?: Json
           experience_alignment_score?: number
           job_id: string
+          language_alignment_score?: number
           match_score_id?: string
           overall_match_score?: number
+          preference_alignment_score?: number
           skill_alignment_score?: number
           technology_alignment_score?: number
         }
@@ -720,10 +726,13 @@ export type Database = {
           calculated_date?: string
           candidate_id?: string
           career_readiness_score?: number
+          details?: Json
           experience_alignment_score?: number
           job_id?: string
+          language_alignment_score?: number
           match_score_id?: string
           overall_match_score?: number
+          preference_alignment_score?: number
           skill_alignment_score?: number
           technology_alignment_score?: number
         }

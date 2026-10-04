@@ -57,6 +57,13 @@
       "when": 1791086954863,
       "tag": "0007_stage8_9_talent_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791088438337,
+      "tag": "0008_stage12_match_details",
+      "breakpoints": true
     }
   ]
 }

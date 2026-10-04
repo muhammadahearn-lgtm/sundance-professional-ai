@@ -4,14 +4,14 @@ export const CANDIDATE_COMPARE_MAX = 4;
 export const TALENT_PAGE_SIZE = 10;
 export const TALENT_SALARY_MAX = 400000;
 export { EXPERIENCE_BUCKETS };
-export const TALENT_SORTS: [string, string][] = [["relevant", "Most Relevant"], ["exp_high", "Most Experience"], ["exp_low", "Least Experience"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
+export const TALENT_SORTS: [string, string][] = [["match", "Best Match"], ["relevant", "Most Relevant"], ["exp_high", "Most Experience"], ["exp_low", "Least Experience"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
 export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Services", "Insurance", "Telecommunications", "Government", "Manufacturing", "Retail", "Consulting"];
 
 export type TalentFilters = {
   q: string; role: string; langs: string[]; skills: string[]; techs: string[]; exp: string; avail: string[];
   loc: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number;
 };
-export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "relevant", page: 1 };
+export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1 };
 
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; years: number; availability: string;

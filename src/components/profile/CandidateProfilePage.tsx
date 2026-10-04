@@ -1,3 +1,4 @@
+import { CandidateMatchWidget } from "@/components/match/Match";
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -148,6 +149,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
             ))}</ul>
           ) : <p className="mt-4 text-sm text-success">Your profile is complete. Great work!</p>}
         </div>
+        <CandidateMatchWidget compact uid={uid} key={`${data.skills.length}-${data.languages.length}-${data.technologies.length}-${p.updated_at}`} />
         {missing.length > 0 && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
             <p className="text-sm font-semibold text-destructive">Required to appear in searches</p>

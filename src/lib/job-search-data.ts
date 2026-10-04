@@ -12,7 +12,7 @@ async function idsFor(table: "job_languages" | "job_skills" | "job_technologies"
   return (data ?? []).map((r) => r.job_id);
 }
 
-export async function searchJobs(s: SearchState, tax: Taxonomy) {
+export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<string, number> = {}) {
   let ids: string[] | null = null;
   if (s.langs.length) ids = intersect(ids, await idsFor("job_languages", s.langs));
   if (s.skills.length) ids = intersect(ids, await idsFor("job_skills", s.skills));
@@ -67,6 +67,12 @@ export async function searchJobs(s: SearchState, tax: Taxonomy) {
   else query = query.order("created_at", { ascending: false });
 
   const from = (Math.max(1, s.page) - 1) * PAGE_SIZE;
+  if (s.sort === "match") {
+    const { data, error, count } = await query;
+    if (error) throw error;
+    const ranked = [...(data ?? [])].sort((a, b) => (scores[b.job_id] ?? -1) - (scores[a.job_id] ?? -1));
+    return { rows: ranked.slice(from, from + PAGE_SIZE), total: count ?? ranked.length };
+  }
   const { data, error, count } = await query.range(from, from + PAGE_SIZE - 1);
   if (error) throw error;
   let rows = data ?? [];

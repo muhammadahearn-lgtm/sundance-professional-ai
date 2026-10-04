@@ -1,3 +1,4 @@
+import { MatchBadge, useAutoRecalc, useScores } from "@/components/match/Match";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
@@ -9,6 +10,15 @@ import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUS
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
 
+/** Highest score each candidate has across the recruiter's jobs. */
+export function useBestScores() {
+  const s = useScores({});
+  return useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const r of s.data ?? []) m[r.candidate_id] = Math.max(m[r.candidate_id] ?? 0, Number(r.overall_match_score));
+    return m;
+  }, [s.data]);
+}
 export const useTaxonomy = () => useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
 export const nameOf = (opts: { id: string; name: string }[], id: string) => opts.find((o) => o.id === id)?.name ?? "";
 export const btn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
@@ -55,7 +65,7 @@ export function useCandidateLists(uid: string) {
 }
 type Lists = ReturnType<typeof useCandidateLists>;
 
-export function CandidateCard({ c, t, lists }: { c: TalentRow; t: Taxonomy; lists: Lists }) {
+export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
   return (
     <article className={`${card} p-5`}>
@@ -65,7 +75,7 @@ export function CandidateCard({ c, t, lists }: { c: TalentRow; t: Taxonomy; list
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
-            {c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}
+            <div className="flex items-center gap-2"><MatchBadge score={score} />{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
           <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs experience</span></p>
           {c.headline && <p className="mt-2 text-sm font-medium">{c.headline}</p>}
@@ -102,6 +112,8 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["talent"], queryFn: listTalent });
   const lists = useCandidateLists(uid);
+  useAutoRecalc();
+  const best = useBestScores();
   const [kw, setKw] = useState(f.q);
   const [open, setOpen] = useState(false);
   const set = (p: Partial<TalentFilters>) => navigate({ to: "/recruiter/candidates", search: { ...f, page: 1, ...p } });
@@ -111,8 +123,10 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
     const low = f.q.trim().toLowerCase();
     const t = tax.data;
     const kwIds = low ? [...t.languages, ...t.skills, ...t.technologies, ...t.roles].filter((o) => o.name.toLowerCase().includes(low) || low.includes(o.name.toLowerCase())).map((o) => o.id) : [];
-    return sortTalent(q.data.filter((c) => matchesTalent(c, f, kwIds)), f.sort, f.q);
-  }, [q.data, tax.data, f]);
+    const filtered = q.data.filter((c) => matchesTalent(c, f, kwIds));
+    if (f.sort === "match") return [...filtered].sort((a, b) => (best[b.id] ?? -1) - (best[a.id] ?? -1));
+    return sortTalent(filtered, f.sort, f.q);
+  }, [q.data, tax.data, f, best]);
 
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load candidates.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   const t = tax.data;
@@ -157,7 +171,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
             <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{TALENT_SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           {q.isLoading || !t ? [0, 1, 2].map((i) => <div key={i} className={`${card} h-48 animate-pulse`} />)
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No candidates found</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p></div>
-            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} />)}
+            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
       </div>

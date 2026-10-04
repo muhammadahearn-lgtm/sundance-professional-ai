@@ -1,3 +1,4 @@
+import { MatchBadge, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -126,6 +127,9 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const qc = useQueryClient();
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["job-applications", uid], queryFn: () => listJobApplications(uid) });
+  useAutoRecalc();
+  const scores = useScores({});
+  const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
   const [f, setF] = useState({ job: "", status: "", since: "", loc: "", role: "" });
   const jobs = useMemo(() => [...new Map((q.data ?? []).map((a) => [a.job_id, a.jobs.job_title])).entries()], [q.data]);
   const rows = (q.data ?? []).filter((a) => (!f.job || a.job_id === f.job) && (!f.status || a.application_status === f.status) && (!f.since || a.application_date >= f.since) && (!f.loc || a.candLocation.toLowerCase().includes(f.loc.toLowerCase())) && (!f.role || a.jobs.role_id === f.role));
@@ -144,7 +148,7 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>
         : <div className="grid gap-4 md:grid-cols-2">{rows.map((a) => (
             <article key={a.application_id} className={`${card} p-5`}>
-              <div className="flex items-start gap-3"><Avatar name={a.name} size="h-11 w-11 text-sm" /><div className="min-w-0 flex-1"><p className="font-display font-bold">{a.name}</p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><p className="text-xs text-muted-foreground">For <strong>{a.jobs.job_title}</strong> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><AppStatusBadge s={a.application_status} /></div>
+              <div className="flex items-start gap-3"><Avatar name={a.name} size="h-11 w-11 text-sm" /><div className="min-w-0 flex-1"><p className="font-display font-bold">{a.name}</p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><p className="text-xs text-muted-foreground">For <strong>{a.jobs.job_title}</strong> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
               <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
                 <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Candidate Moved To Pipeline")} className={btn}>Move To Pipeline</button>
@@ -174,6 +178,7 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="min-w-0 space-y-6"><ProfileHeader d={cand.data} /><CandidateProfileBody d={cand.data} t={tax.data} /></div>
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <AppMatch candidateId={a.candidate_id} jobId={a.job_id} />
           <div className={`${card} space-y-3 p-5`}><p className="font-display font-bold">Application Status</p><p className="text-sm text-muted-foreground">For {a.jobs?.job_title} · applied {fmt(a.application_date)}</p>
             <select value={a.application_status} onChange={(e) => update(e.target.value as AppStatus)} className={inputCls} aria-label="Application status">{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
             <button onClick={toPipeline} className={`${primaryBtn} w-full justify-center`}>Move To Pipeline</button>
@@ -185,3 +190,10 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
   );
 }
 export { nameOf };
+
+function AppMatch({ candidateId, jobId }: { candidateId: string; jobId: string }) {
+  const r = useRecalc();
+  const q = useScores({ jobIds: [jobId] });
+  const row = q.data?.find((x) => x.candidate_id === candidateId);
+  return <MatchPanel title="Candidate Match" row={row} loading={q.isLoading} recalculating={r.isPending} onRecalc={() => r.mutate(jobId, { onSuccess: () => toast.success("Job Re-Evaluated") })} />;
+}

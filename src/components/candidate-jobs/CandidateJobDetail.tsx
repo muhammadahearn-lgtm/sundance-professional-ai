@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Bookmark, BookmarkCheck, Briefcase, Clock, DollarSign, Globe, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
@@ -9,6 +10,7 @@ import { BrandImg, Item } from "@/components/recruiter/shared";
 import { Markdown } from "@/components/jobs/Markdown";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
 import { CompanyLogo, CompareTray, postedAgo } from "./JobCard";
+import { MatchPanel, useAutoRecalc, useScores } from "@/components/match/Match";
 import { ApplyButton } from "@/components/applications/Applications";
 import { shareJob, useJobLists } from "./useJobLists";
 
@@ -87,15 +89,17 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
               {c.website && <a href={/^https?:\/\//.test(c.website) ? c.website : `https://${c.website}`} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"><Globe className="h-4 w-4" />{c.website.replace(/^https?:\/\//, "")}</a>}
             </div>
           )}
-          <div className={`${card} border-dashed p-5`}>
-            <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /><p className="font-display font-bold">Match Intelligence</p><span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">Coming Soon</span></div>
-            <ul className="mt-4 space-y-3">{["Match Score", "Skill Alignment", "Technology Alignment", "Experience Alignment", "Career Readiness"].map((l) => (
-              <li key={l}><div className="flex justify-between text-xs"><span>{l}</span><span className="text-muted-foreground">—</span></div><div className="mt-1 h-1.5 rounded-full bg-muted" /></li>
-            ))}</ul>
-          </div>
+          <JobMatch uid={account.userId} jobId={id} />
         </aside>
       </div>
       <CompareTray lists={lists} />
     </div>
   );
+}
+
+function JobMatch({ uid, jobId }: { uid: string; jobId: string }) {
+  const r = useAutoRecalc();
+  const q = useScores({ candidateId: uid });
+  const row = q.data?.find((x) => x.job_id === jobId);
+  return <MatchPanel row={row} loading={q.isLoading} recalculating={r.isPending} onRecalc={() => r.mutate(undefined, { onSuccess: () => toast.success("Match updated") })} />;
 }
