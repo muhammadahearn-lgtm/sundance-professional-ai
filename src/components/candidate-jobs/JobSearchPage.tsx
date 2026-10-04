@@ -162,6 +162,9 @@ function Filters({ tax, s, set, onApply }: { tax: Taxonomy; s: SearchState; set:
       <div className="flex items-center justify-between"><p className="font-display font-bold">Filters</p>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
       <Group title="Match Score"><MatchFilter value={s.mm} onChange={(mm) => p({ mm })} /></Group>
       <Group title="Role"><select className={inputCls} value={s.role} onChange={(e) => p({ role: e.target.value })}><option value="">All roles</option>{tax.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
+      <Group title="Programming Languages" open={false}><CheckList options={tax.languages} value={s.langs} onChange={(v) => p({ langs: v })} /></Group>
+      <Group title="Technical Skills" open={false}><CheckList options={tax.skills} value={s.skills} onChange={(v) => p({ skills: v })} /></Group>
+      <Group title="Tools & Technologies" open={false}><CheckList options={tax.technologies} value={s.techs} onChange={(v) => p({ techs: v })} /></Group>
       <Group title="Work Arrangement"><CheckList options={ARRANGEMENT.map(([id, name]) => ({ id, name }))} value={s.arr} onChange={(v) => p({ arr: v })} /></Group>
       <Group title="Employment Type"><CheckList options={EMPLOYMENT.map(([id, name]) => ({ id, name }))} value={s.emp} onChange={(v) => p({ emp: v })} /></Group>
       <Group title="Experience">
@@ -183,9 +186,6 @@ function Filters({ tax, s, set, onApply }: { tax: Taxonomy; s: SearchState; set:
         <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-primary" checked={s.arr.includes("remote")} onChange={(e) => p({ arr: e.target.checked ? [...new Set([...s.arr, "remote"])] : s.arr.filter((x) => x !== "remote") })} />Remote</label>
       </Group>
       <Group title="Company"><input className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} onBlur={() => company !== s.company && p({ company })} onKeyDown={(e) => e.key === "Enter" && p({ company })} placeholder="Company name" /></Group>
-      <Group title="Programming Languages" open={false}><CheckList options={tax.languages} value={s.langs} onChange={(v) => p({ langs: v })} /></Group>
-      <Group title="Technical Skills" open={false}><CheckList options={tax.skills} value={s.skills} onChange={(v) => p({ skills: v })} /></Group>
-      <Group title="Tools & Technologies" open={false}><CheckList options={tax.technologies} value={s.techs} onChange={(v) => p({ techs: v })} /></Group>
       <button onClick={onApply} className="mt-4 w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground lg:hidden">Show results</button>
       <Link to="/candidate/jobs/saved" className="mt-4 hidden text-center text-sm font-semibold text-primary lg:block">View saved jobs →</Link>
     </div>
