@@ -464,6 +464,80 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          application_id: string | null
+          candidate_archived: boolean
+          candidate_id: string
+          conversation_id: string
+          conversation_status: Database["public"]["Enums"]["conversation_status"]
+          created_at: string
+          job_id: string | null
+          last_message_at: string | null
+          last_message_preview: string
+          recruiter_archived: boolean
+          recruiter_id: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          candidate_archived?: boolean
+          candidate_id: string
+          conversation_id?: string
+          conversation_status?: Database["public"]["Enums"]["conversation_status"]
+          created_at?: string
+          job_id?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string
+          recruiter_archived?: boolean
+          recruiter_id: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          candidate_archived?: boolean
+          candidate_id?: string
+          conversation_id?: string
+          conversation_status?: Database["public"]["Enums"]["conversation_status"]
+          created_at?: string
+          job_id?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string
+          recruiter_archived?: boolean
+          recruiter_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["application_id"]
+          },
+          {
+            foreignKeyName: "conversations_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "conversations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "conversations_recruiter_id_fkey"
+            columns: ["recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "recruiter_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       education: {
         Row: {
           candidate_id: string
@@ -797,6 +871,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_path: string | null
+          attachment_size: number | null
+          conversation_id: string
+          created_at: string
+          message_body: string
+          message_id: string
+          message_status: Database["public"]["Enums"]["message_status"]
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["sender_type"]
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
+          conversation_id: string
+          created_at?: string
+          message_body?: string
+          message_id?: string
+          message_status?: Database["public"]["Enums"]["message_status"]
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["sender_type"]
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
+          conversation_id?: string
+          created_at?: string
+          message_body?: string
+          message_id?: string
+          message_status?: Database["public"]["Enums"]["message_status"]
+          sender_id?: string
+          sender_type?: Database["public"]["Enums"]["sender_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["conversation_id"]
           },
         ]
       }
@@ -1305,11 +1426,44 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_conversation_participant: { Args: { _conv: string }; Returns: boolean }
       job_is_active: { Args: { _job: string }; Returns: boolean }
+      mark_conversation_read: { Args: { _conv: string }; Returns: undefined }
+      mark_messages_delivered: { Args: never; Returns: undefined }
+      my_conversations: {
+        Args: never
+        Returns: {
+          application_id: string
+          application_status: Database["public"]["Enums"]["application_status"]
+          archived: boolean
+          candidate_id: string
+          candidate_name: string
+          company_name: string
+          conversation_id: string
+          conversation_status: Database["public"]["Enums"]["conversation_status"]
+          created_at: string
+          job_id: string
+          job_title: string
+          last_message_at: string
+          last_message_preview: string
+          pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
+          recruiter_id: string
+          recruiter_name: string
+          unread: number
+        }[]
+      }
       owns_job: { Args: { _job: string }; Returns: boolean }
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
+      }
+      set_conversation_archived: {
+        Args: { _archived: boolean; _conv: string }
+        Returns: undefined
+      }
+      start_conversation: {
+        Args: { _candidate: string; _job?: string }
+        Returns: string
       }
     }
     Enums: {
@@ -1322,6 +1476,7 @@ export type Database = {
         | "offer"
         | "hired"
         | "rejected"
+      conversation_status: "active" | "archived" | "closed"
       employment_type:
         | "full_time"
         | "part_time"
@@ -1329,6 +1484,7 @@ export type Database = {
         | "consulting"
         | "internship"
       job_status: "draft" | "active" | "paused" | "closed"
+      message_status: "sent" | "delivered" | "read"
       organization_type:
         | "corporate_employer"
         | "staffing_agency"
@@ -1344,6 +1500,7 @@ export type Database = {
         | "hired"
         | "rejected"
       proficiency_level: "beginner" | "intermediate" | "advanced" | "expert"
+      sender_type: "candidate" | "recruiter"
       user_status: "active" | "inactive" | "suspended"
       visibility_status: "public" | "recruiter_searchable" | "private"
       work_arrangement: "remote" | "hybrid" | "on_site"
@@ -1484,6 +1641,7 @@ export const Constants = {
         "hired",
         "rejected",
       ],
+      conversation_status: ["active", "archived", "closed"],
       employment_type: [
         "full_time",
         "part_time",
@@ -1492,6 +1650,7 @@ export const Constants = {
         "internship",
       ],
       job_status: ["draft", "active", "paused", "closed"],
+      message_status: ["sent", "delivered", "read"],
       organization_type: [
         "corporate_employer",
         "staffing_agency",
@@ -1509,6 +1668,7 @@ export const Constants = {
         "rejected",
       ],
       proficiency_level: ["beginner", "intermediate", "advanced", "expert"],
+      sender_type: ["candidate", "recruiter"],
       user_status: ["active", "inactive", "suspended"],
       visibility_status: ["public", "recruiter_searchable", "private"],
       work_arrangement: ["remote", "hybrid", "on_site"],

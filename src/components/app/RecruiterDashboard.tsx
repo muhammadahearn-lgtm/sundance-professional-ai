@@ -13,6 +13,7 @@ import { appStatusCounts, appWindows, countBy, jobStatusCounts, recruiterKpis, s
 import { APP_STATUSES, STAGES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
 import { RecruiterMatchWidget } from "@/components/match/Match";
+import { MessagesWidget } from "@/components/messages/Messages";
 import { RecruiterRecsWidget } from "@/components/recommend/Recommend";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
@@ -245,6 +246,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["New candidate matches", "Availability changes", "Profile updates", "Recently joined candidates"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>
           <RecruiterRecsWidget uid={uid} />
+          <MessagesWidget role="recruiter" />
           <Widget title="Career Intelligence" action={<Soon />}>
             <ul className="space-y-1.5 text-sm text-muted-foreground">{["Candidate Readiness", "Skill Gap Analysis", "Market Intelligence", "Salary Intelligence"].map((x) => <li key={x}>• {x}</li>)}</ul>
           </Widget>

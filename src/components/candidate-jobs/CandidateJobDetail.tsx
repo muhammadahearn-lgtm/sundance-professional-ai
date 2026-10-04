@@ -1,3 +1,4 @@
+import { ContactRecruiterButton } from "@/components/messages/Messages";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -55,6 +56,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <ApplyButton uid={account.userId} jobId={id} jobStatus={j.job_status} jobTitle={j.job_title} company={c?.company_name ?? ""} />
+            <ContactRecruiterButton uid={account.userId} jobId={id} />
             <button onClick={() => lists.toggleSave(id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Job"}</button>
             <button onClick={() => lists.toggleCompare(id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare Job"}</button>
             <button onClick={() => shareJob(id, j.job_title)} className={act}><Share2 className="h-4 w-4" />Share</button>

@@ -7,6 +7,7 @@ import { useCareer } from "@/components/career/Career";
 import { MatchBadge, useAutoRecalc } from "@/components/match/Match";
 import { useJobLists } from "@/components/candidate-jobs/useJobLists";
 import { useCandidateLists } from "@/components/talent/Talent";
+import { ContactRecruiterButton, MessageButton } from "@/components/messages/Messages";
 import { PageHeader } from "@/components/app/AppShell";
 import { loadCandidateRecs, loadRecruiterRecs, type RecruiterRecs } from "@/lib/recommend-data";
 import { recTier, type Rec } from "@/lib/recommend-engine";
@@ -66,7 +67,7 @@ export function CandidateRecommendationsPage({ uid }: { uid: string }) {
           <Section title="Recommended Jobs" empty="No new job recommendations — you've applied to every matching job, or none are open yet." items={q.data.jobs}>
             {q.data.jobs.slice(0, 10).map((r) => (
               <RecCard key={r.id} r={r} extra={<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><MatchBadge score={r.match} />{r.location && <span>{r.location}</span>}{r.salary && <span>· {r.salary}</span>}</div>}
-                actions={<><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btn}>View Job</Link><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btnP}>Apply</Link><button onClick={() => lists.toggleSave(r.jobId)} className={btn}>{lists.isSaved(r.jobId) ? "Saved" : "Save Job"}</button></>} />
+                actions={<><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btn}>View Job</Link><Link to="/candidate/jobs/$id" params={{ id: r.jobId }} className={btnP}>Apply</Link><button onClick={() => lists.toggleSave(r.jobId)} className={btn}>{lists.isSaved(r.jobId) ? "Saved" : "Save Job"}</button><ContactRecruiterButton uid={uid} jobId={r.jobId} className={btn} /></>} />
             ))}
           </Section>
           <Section title="Recommended Skills" empty="No skill gaps found against current jobs." items={q.data.skills}>
@@ -139,6 +140,7 @@ export function RecruiterRecommendationsPage({ uid }: { uid: string }) {
                   <Link to="/recruiter/candidates/$id" params={{ id: r.candidateId }} className={btn}>View Profile</Link>
                   <button onClick={() => lists.toggleSave(r.candidateId)} className={btn}>{lists.isSaved(r.candidateId) ? "Saved" : "Save Candidate"}</button>
                   <button disabled={busy === r.id} onClick={() => run(r.id, () => addToPipeline(uid, r.candidateId, r.jobId), "Added to pipeline")} className={btnP}>Add To Pipeline</button>
+                  <MessageButton role="recruiter" candidateId={r.candidateId} jobId={r.jobId} label="Contact Candidate" className={btn} />
                 </>} />
             ))}
           </Section>
@@ -146,6 +148,7 @@ export function RecruiterRecommendationsPage({ uid }: { uid: string }) {
             {d.pipeline.map((r) => (
               <RecCard key={r.id} r={r} actions={<>
                 <Link to="/recruiter/candidates/$id" params={{ id: r.candidateId }} className={btn}>View Profile</Link>
+                <MessageButton role="recruiter" candidateId={r.candidateId} label="Start Conversation" className={btn} />
                 {r.nextStage && <button disabled={busy === r.id} onClick={() => run(r.id, () => moveStage({ pipeline_id: r.pipelineId, applicationId: d.appIdByPipeline[r.pipelineId] ?? null }, r.nextStage as Stage), "Pipeline updated")} className={btnP}>{r.action}</button>}
               </>} />
             ))}
