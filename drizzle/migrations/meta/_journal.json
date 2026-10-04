@@ -8,6 +8,13 @@
       "when": 1791083386963,
       "tag": "0000_auth_roles_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791084289505,
+      "tag": "0001_stage3_data_foundation",
+      "breakpoints": true
     }
   ]
 }
