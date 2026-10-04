@@ -74,10 +74,10 @@ export async function loadRecruiterAnalytics(uid: string) {
   const a = must(apps) as App[], p = must(pipe) as Pipe[], sc = must(scores) as Score[];
   const candIds = [...new Set([...a.map((x) => x.candidate_id), ...p.map((x) => x.candidate_id)])];
   const [names, profs, cskills] = candIds.length ? await Promise.all([
-    namesFor(candIds),
+    namesFor([...new Set([...candIds, ...sc.map((x) => x.candidate_id)])]),
     supabase.from("candidate_profiles").select("user_id, availability, years_experience, job_title").in("user_id", candIds),
     supabase.from("candidate_skills").select("candidate_id, technical_skills(skill_name)").in("candidate_id", candIds),
-  ]) : [{} as Record<string, string>, { data: [], error: null }, { data: [], error: null }];
+  ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }];
   const { data: convs } = await supabase.rpc("my_conversations");
   return {
     jobs: jobs.map((j) => ({ ...toInfo(j), created_at: j.created_at })),

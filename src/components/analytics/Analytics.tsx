@@ -343,7 +343,7 @@ function recruiterMetrics(d: RecruiterAnalyticsData, f: Filters, w: DateWindow, 
   const sources = tally([...items.entries()], ([k, v]) => v.applied || appliedPairs.has(k) ? "Applied" : recClicked.has(k.split("|")[0]!) ? "Recommendation" : "Talent Search");
   const best = [...scores].sort((a, b) => Number(b.overall_match_score) - Number(a.overall_match_score));
   const seen = new Set<string>();
-  const topCands = best.filter((s) => (seen.has(s.candidate_id) ? false : (seen.add(s.candidate_id), true))).slice(0, 5)
+  const topCands = best.filter((s) => d.names[s.candidate_id]).filter((s) => (seen.has(s.candidate_id) ? false : (seen.add(s.candidate_id), true))).slice(0, 5)
     .map((s) => ({ name: d.names[s.candidate_id] ?? "Candidate", job: d.jobs.find((j) => j.job_id === s.job_id)?.job_title ?? "", score: Math.round(Number(s.overall_match_score)) }));
   const candInScope = new Set([...apps.map((a) => a.candidate_id), ...pipe.map((p) => p.candidate_id)]);
   const profs = d.profiles.filter((p) => candInScope.has(p.user_id));
