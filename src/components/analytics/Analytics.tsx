@@ -146,7 +146,7 @@ async function exportExcel(file: string, sheets: Sheet[]) {
     const { default: writeXlsxFile } = await import("write-excel-file/browser");
     const data = sheets.filter((s) => s.rows.length).map((s) => {
       const cols = Object.keys(s.rows[0]!);
-      return { sheet: s.name.slice(0, 31), data: [cols.map((c) => ({ value: c, fontWeight: "bold" as const })), ...s.rows.map((r) => cols.map((c) => ({ value: r[c] ?? null })))] };
+      return { sheet: s.name.slice(0, 31), data: [cols.map((c) => ({ value: c, fontWeight: "bold" as const })), ...s.rows.map((r) => cols.map((c) => (r[c] == null ? null : { value: r[c] as string | number })))] };
     });
     if (!data.length) { toast("No Data Available"); return; }
     await writeXlsxFile(data).toFile(`${file}.xlsx`);
