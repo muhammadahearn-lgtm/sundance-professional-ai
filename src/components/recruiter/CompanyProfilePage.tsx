@@ -16,14 +16,16 @@ async function load(uid: string) {
   if (prof.error) throw prof.error;
   const cid = prof.data?.company_id;
   if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[] };
-  const [c, rec, roles] = await Promise.all([
+  const [c, rec, roles, contact] = await Promise.all([
     supabase.from("companies").select("*").eq("company_id", cid).maybeSingle(),
     supabase.rpc("company_recruiters", { _company: cid }),
     supabase.from("roles").select("role_name").order("role_name"),
+    supabase.from("company_contacts").select("contact_email").eq("company_id", cid).maybeSingle(),
   ]);
-  const err = [c, rec, roles].find((x) => x.error)?.error;
+  const err = [c, rec, roles, contact].find((x) => x.error)?.error;
   if (err) throw err;
-  return { r: prof.data, company: c.data, recruiters: rec.data ?? [], roleNames: (roles.data ?? []).map((x) => x.role_name) };
+  const company = c.data ? { ...c.data, contact_email: contact.data?.contact_email ?? "" } : null;
+  return { r: prof.data, company, recruiters: rec.data ?? [], roleNames: (roles.data ?? []).map((x) => x.role_name) };
 }
 type Data = Awaited<ReturnType<typeof load>>;
 type Company = NonNullable<Data["company"]>;
