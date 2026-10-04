@@ -158,10 +158,10 @@ const PREVIEW_TABS = [
 ] as const;
 type PreviewTabId = (typeof PREVIEW_TABS)[number]["id"];
 
-function Bar({ label, v }: { label: string; v: number }) {
+function Bar({ label, v, strong }: { label: string; v: number; strong?: boolean }) {
   return (
     <div>
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{v}%</span></div>
+      <div className="flex justify-between text-xs"><span className={strong ? "font-medium text-foreground" : "text-muted-foreground"}>{label}</span><span className="font-semibold">{v}%</span></div>
       <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${v}%` }} /></div>
     </div>
   );
@@ -282,18 +282,6 @@ function ProductPreview() {
                     <PersonRow initials="ML" name="Marcus Lee" sub="Full-Stack Engineer · 5 yrs" score={92} />
                     <PersonRow initials="ET" name="Elena Torres" sub="Frontend Lead · 9 yrs" score={89} />
                     <PersonRow initials="DO" name="David Okafor" sub="TypeScript Engineer · 4 yrs" score={84} />
-                  </div>
-                </div>
-              )}
-              {tab === "candidate" && (
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-border p-4">
-                    <Bar label="Career Readiness" v={89} />
-                  </div>
-                  <div className="space-y-3">
-                    <PersonRow initials="S" name="Senior ML Engineer" sub="Northwind AI" score={96} />
-                    <PersonRow initials="D" name="Data Engineer" sub="Lumen Cloud" score={91} />
-                    <PersonRow initials="A" name="AI Platform Engineer" sub="Vertex Labs" score={88} />
                   </div>
                 </div>
               )}
