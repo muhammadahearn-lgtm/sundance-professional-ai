@@ -25,6 +25,16 @@ export async function toSquareDataUrl(file: Blob, size = 400): Promise<string> {
   } finally { URL.revokeObjectURL(url); }
 }
 
+/** Crop a chosen pixel area of an image URL to a square JPEG data URL. */
+export async function cropToDataUrl(src: string, area: { x: number; y: number; width: number; height: number }, size = 400): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((res, rej) => {
+    const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Could not read image")); i.src = src;
+  });
+  const c = document.createElement("canvas"); c.width = size; c.height = size;
+  c.getContext("2d")!.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, size, size);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+
 async function dataUrlToBlob(d: string) { return (await fetch(d)).blob(); }
 
 /** Upload a photo for the signed-in user and save its path on their profile. */
