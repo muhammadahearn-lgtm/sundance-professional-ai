@@ -29,7 +29,6 @@ function Index() {
     <>
       <Hero />
       <Solution />
-      <HowItWorks />
       <SkillFirst />
       <Intelligence />
       <Preview />
@@ -104,36 +103,6 @@ function Solution() {
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground"><I className="h-5 w-5" /></span>
               <h3 className="mt-5 text-lg font-bold">{t}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HowItWorks() {
-  const flows = [
-    { title: "For Candidates", icon: Briefcase, steps: ["Create Talent Profile", "Discover Relevant Opportunities", "Track Career Readiness", "Apply With Confidence", "Get Hired"] },
-    { title: "For Recruiters", icon: Users, steps: ["Create Job", "Discover Qualified Talent", "Compare Candidates", "Build Pipeline", "Hire Faster"] },
-  ];
-  return (
-    <section className="bg-secondary py-24">
-      <div className="container-x">
-        <SectionHeading eyebrow="How it works" title="Five steps to a better hire" />
-        <div className="mt-14 space-y-10">
-          {flows.map(({ title, icon: I, steps }) => (
-            <div key={title}>
-              <div className="mb-4 flex items-center gap-2 font-semibold"><I className="h-5 w-5 text-primary" /> {title}</div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                {steps.map((s, i) => (
-                  <div key={s} className="relative rounded-2xl border border-border bg-card p-5 shadow-soft">
-                    <div className="font-display text-sm font-bold text-primary">Step {i + 1}</div>
-                    <div className="mt-2 font-semibold">{s}</div>
-                    {i < steps.length - 1 && <ArrowRight className="absolute -right-3 top-1/2 z-10 hidden h-6 w-6 -translate-y-1/2 rounded-full border border-border bg-background p-1 text-primary lg:block" />}
-                  </div>
-                ))}
-              </div>
             </div>
           ))}
         </div>
