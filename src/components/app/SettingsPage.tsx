@@ -1,3 +1,4 @@
+import { NotificationPreferences } from "@/components/notifications/Notifications";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -112,11 +113,9 @@ export function SettingsPage({ account }: { account: Account }) {
             <Button type="submit" className="rounded-full">Update Password</Button>
           </form>
         </Card>
-        <Card title="Notification Preferences">
-          <Toggle label={account.role === "candidate" ? "New job matches" : "New candidate matches"} desc="Get notified when strong matches appear." defaultChecked />
-          <Toggle label="Messages" desc="Email me when I receive a new message." defaultChecked />
-          <Toggle label="Product updates" desc="Occasional news about Sundance Professional AI." />
-        </Card>
+        <div id="notification-preferences"><Card title="Notification Preferences" desc="Choose which notifications you receive. Changes save automatically.">
+          <NotificationPreferences uid={account.userId} role={account.role} />
+        </Card></div>
         <Card title="Privacy Settings">
           {account.role === "candidate" ? (<>
             <Toggle label="Visible to recruiters" desc="Let recruiters find your profile in talent search." defaultChecked />

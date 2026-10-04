@@ -78,6 +78,13 @@
       "when": 1791090168476,
       "tag": "0010_stage15_messaging",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791090722224,
+      "tag": "0011_stage16_notifications",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Bookmark, Briefcase, CheckCircle2, FileText, Gift, MapPin, Search, Sparkles, Target, Trash2, Upload, UserCheck, XCircle } from "lucide-react";
@@ -221,9 +222,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
           <CareerWidget uid={uid} />
 
-          <Widget title="Notifications" action={<Soon />}>
-            <div className="flex items-start gap-2 text-sm text-muted-foreground"><Bell className="mt-0.5 h-4 w-4 text-primary" /><span>Updates like "Application Viewed" will appear here.</span></div>
-          </Widget>
+          <NotificationWidget uid={uid} role="candidate" />
         </div>
       </div>
     </>

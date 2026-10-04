@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb } from "lucide-react";
+  Compass, Lightbulb, Bell } from "lucide-react";
+import { NotificationBell, NotificationNavBadge, NotificationsLive } from "@/components/notifications/Notifications";
 import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ const NAV = {
     { to: "/candidate/career", label: "Career", Icon: Compass },
     { to: "/candidate/recommendations", label: "For You", Icon: Lightbulb },
     { to: "/candidate/messages", label: "Messages", Icon: MessageSquare },
+    { to: "/candidate/notifications", label: "Notifications", Icon: Bell },
     { to: "/candidate/profile", label: "Profile", Icon: UserRound },
     { to: "/candidate/settings", label: "Settings", Icon: Settings },
   ],
@@ -29,6 +31,7 @@ const NAV = {
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
     { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare },
+    { to: "/recruiter/notifications", label: "Notifications", Icon: Bell },
     { to: "/recruiter/company", label: "Company", Icon: Building2 },
     { to: "/recruiter/profile", label: "Profile", Icon: UserRound },
     { to: "/recruiter/settings", label: "Settings", Icon: Settings },
@@ -62,7 +65,7 @@ export function AppShell({ account }: { account: Account }) {
         <Link key={to} to={to} onClick={() => setOpen(false)}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           activeProps={{ className: "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary" }}>
-          <Icon className="h-4 w-4" /> {label}{to.endsWith("/messages") && <UnreadBadge />}
+          <Icon className="h-4 w-4" /> {label}{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
         </Link>
       ))}
     </nav>
@@ -81,6 +84,7 @@ export function AppShell({ account }: { account: Account }) {
             <Logo />
           </div>
           <div className="flex items-center gap-3">
+            {!onboarding && <NotificationBell uid={account.userId} role={account.role} />}
             <span className="hidden rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold capitalize text-primary sm:inline">{account.role}</span>
             <div className="hidden text-right sm:block">
               <div className="text-sm font-semibold leading-tight">{name}</div>
@@ -92,6 +96,7 @@ export function AppShell({ account }: { account: Account }) {
             </button>
           </div>
         </div>
+        {!onboarding && <NotificationsLive uid={account.userId} />}
         {open && !onboarding && <div className="border-t border-border bg-background p-4 lg:hidden">{nav}</div>}
       </header>
       <div className="flex">
