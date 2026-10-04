@@ -202,7 +202,7 @@ function InfoForm({ uid, companyId, initial, onDone, submitLabel }: { uid: strin
     setSaving(true);
     const row = { company_name: f.company_name.trim(), website: f.website.trim(), industry: f.industry.trim(), description: f.description, company_size: f.company_size, organization_type: f.organization_type as OrgType, headquarters: f.headquarters.trim() };
     let err;
-    let cid = companyId;
+    let cid: string | null = companyId ?? null;
     if (cid) {
       err = (await supabase.from("companies").update(row).eq("company_id", cid)).error;
     } else {
