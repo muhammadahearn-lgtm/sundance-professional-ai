@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
   Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
@@ -32,6 +34,8 @@ function Index() {
       <SkillFirst />
       <AudienceSplit />
       <Intelligence />
+      <ProductPreview />
+
       <Testimonials />
       <section className="py-24">
         <div className="container-x">
