@@ -9,3 +9,4 @@
 - [x] Stage 8: recruiter talent search, saved + compare candidates, candidate profile view
 - [x] Stage 9: apply to jobs, application tracking, recruiter review, kanban pipeline
 - [ ] Stage 10+: awaiting next spec
+- [x] Stage 10 — Candidate Dashboard (real data)
