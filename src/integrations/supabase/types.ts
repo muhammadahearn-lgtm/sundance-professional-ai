@@ -921,6 +921,90 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          application: boolean
+          career: boolean
+          match: boolean
+          messaging: boolean
+          pipeline: boolean
+          recommendation: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application?: boolean
+          career?: boolean
+          match?: boolean
+          messaging?: boolean
+          pipeline?: boolean
+          recommendation?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application?: boolean
+          career?: boolean
+          match?: boolean
+          messaging?: boolean
+          pipeline?: boolean
+          recommendation?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string
+          category: string
+          created_at: string
+          dedupe_key: string | null
+          group_count: number
+          message: string
+          notification_id: string
+          notification_type: string
+          priority: Database["public"]["Enums"]["notification_priority"]
+          read_at: string | null
+          recipient_id: string
+          recipient_type: Database["public"]["Enums"]["app_role"]
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string
+        }
+        Insert: {
+          action_url?: string
+          category: string
+          created_at?: string
+          dedupe_key?: string | null
+          group_count?: number
+          message?: string
+          notification_id?: string
+          notification_type: string
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          read_at?: string | null
+          recipient_id: string
+          recipient_type: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["notification_status"]
+          title: string
+        }
+        Update: {
+          action_url?: string
+          category?: string
+          created_at?: string
+          dedupe_key?: string | null
+          group_count?: number
+          message?: string
+          notification_id?: string
+          notification_type?: string
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          read_at?: string | null
+          recipient_id?: string
+          recipient_type?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["notification_status"]
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1419,6 +1503,20 @@ export type Database = {
         }[]
       }
       complete_onboarding: { Args: never; Returns: undefined }
+      create_notification: {
+        Args: {
+          _category: string
+          _dedupe: string
+          _message: string
+          _priority: Database["public"]["Enums"]["notification_priority"]
+          _recipient: string
+          _rtype: Database["public"]["Enums"]["app_role"]
+          _title: string
+          _type: string
+          _url: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1453,6 +1551,7 @@ export type Database = {
         }[]
       }
       owns_job: { Args: { _job: string }; Returns: boolean }
+      person_name: { Args: { _uid: string }; Returns: string }
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
@@ -1485,6 +1584,8 @@ export type Database = {
         | "internship"
       job_status: "draft" | "active" | "paused" | "closed"
       message_status: "sent" | "delivered" | "read"
+      notification_priority: "high" | "medium" | "low"
+      notification_status: "unread" | "read" | "archived"
       organization_type:
         | "corporate_employer"
         | "staffing_agency"
@@ -1651,6 +1752,8 @@ export const Constants = {
       ],
       job_status: ["draft", "active", "paused", "closed"],
       message_status: ["sent", "delivered", "read"],
+      notification_priority: ["high", "medium", "low"],
+      notification_status: ["unread", "read", "archived"],
       organization_type: [
         "corporate_employer",
         "staffing_agency",
