@@ -21,8 +21,9 @@ const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "s
 const statusLabel = (s: string) => APP_STATUSES.find(([k]) => k === s)?.[1] ?? s;
 
 async function loadDashboard(uid: string) {
-  const [p, apps, saved, skills, langs, techs, exp, edu, certs] = await Promise.all([
+  const [p, prof, apps, saved, skills, langs, techs, exp, edu, certs] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle(),
+    supabase.from("profiles").select("avatar_path").eq("user_id", uid).maybeSingle(),
     supabase.from("applications").select("application_id, application_date, application_status, updated_at, job_id, jobs(job_title, location, work_arrangement, companies(company_name))").eq("candidate_id", uid).order("application_date", { ascending: false }),
     supabase.from("saved_jobs").select("saved_job_id, saved_date, job_id, jobs(job_title, location, companies(company_name))").eq("candidate_id", uid).order("saved_date", { ascending: false }),
     supabase.from("candidate_skills").select("created_at, technical_skills(skill_name)").eq("candidate_id", uid),
