@@ -1,0 +1,113 @@
+import { supabase } from "@/integrations/supabase/client";
+import { computeCompletion } from "./profile-completion";
+import type { TalentRow } from "./talent-rules";
+
+type Profile = { user_id: string; job_title: string; current_employer: string; location: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
+
+export async function namesFor(ids: string[]): Promise<Record<string, string>> {
+  if (!ids.length) return {};
+  const { data, error } = await supabase.rpc("candidate_names", { _ids: ids });
+  if (error) throw error;
+  return Object.fromEntries((data ?? []).map((r) => [r.user_id, `${r.first_name} ${r.last_name}`.trim() || "Candidate"]));
+}
+
+async function links(ids: string[]) {
+  const [l, s, t, e, ed, c] = await Promise.all([
+    supabase.from("candidate_languages").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
+    supabase.from("candidate_skills").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
+    supabase.from("candidate_technologies").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
+    supabase.from("work_experience").select("candidate_id").in("candidate_id", ids),
+    supabase.from("education").select("candidate_id").in("candidate_id", ids),
+    supabase.from("certifications").select("candidate_id").in("candidate_id", ids),
+  ]);
+  const err = [l, s, t, e, ed, c].find((x) => x.error)?.error;
+  if (err) throw err;
+  const by = <T extends { candidate_id: string }>(rows: T[] | null, id: string) => (rows ?? []).filter((r) => r.candidate_id === id);
+  return { l: l.data, s: s.data, t: t.data, e: e.data, ed: ed.data, c: c.data, by };
+}
+
+function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): TalentRow {
+  const langs = k.by(k.l, p.user_id), skills = k.by(k.s, p.user_id), techs = k.by(k.t, p.user_id);
+  const completion = computeCompletion({
+    jobTitle: p.job_title, headline: p.headline, location: p.location, yearsExperience: p.years_experience, summary: p.summary,
+    experienceCount: k.by(k.e, p.user_id).length, educationCount: k.by(k.ed, p.user_id).length, certificationCount: k.by(k.c, p.user_id).length,
+    skillCount: skills.length, languageCount: langs.length, technologyCount: techs.length, targetRoleCount: p.target_roles.length, salaryExpectation: p.salary_expectation, hasResume: !!p.resume_path,
+  }).percent;
+  return {
+    id: p.user_id, name, jobTitle: p.job_title, employer: p.current_employer, location: p.location, years: p.years_experience, availability: p.availability,
+    headline: p.headline, summary: p.summary, salary: p.salary_expectation, arrangement: p.work_arrangement, industries: p.industry_experience, roleId: p.role_id,
+    langs: langs.map((x) => x.lookup_id), skills: skills.map((x) => x.lookup_id), techs: techs.map((x) => x.lookup_id), updatedAt: p.updated_at, completion,
+  };
+}
+
+const COLS = "user_id, job_title, current_employer, location, years_experience, availability, headline, summary, salary_expectation, work_arrangement, industry_experience, role_id, updated_at, target_roles, resume_path";
+
+/** All recruiter-searchable candidates (filtering happens client-side). */
+export async function listTalent(): Promise<TalentRow[]> {
+  const { data, error } = await supabase.from("candidate_profiles").select(COLS).in("visibility_status", ["public", "recruiter_searchable"]).limit(500);
+  if (error) throw error;
+  return rowsFor(data ?? []);
+}
+
+export async function talentByIds(ids: string[]): Promise<TalentRow[]> {
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from("candidate_profiles").select(COLS).in("user_id", ids);
+  if (error) throw error;
+  return rowsFor(data ?? []);
+}
+
+async function rowsFor(ps: Profile[]) {
+  const ids = ps.map((p) => p.user_id);
+  if (!ids.length) return [];
+  const [k, names] = await Promise.all([links(ids), namesFor(ids)]);
+  return ps.map((p) => toRow(p, names[p.user_id] ?? "Candidate", k));
+}
+
+export async function loadCandidateFull(id: string) {
+  const [p, l, s, t, e, ed, c, names] = await Promise.all([
+    supabase.from("candidate_profiles").select("*").eq("user_id", id).maybeSingle(),
+    supabase.from("candidate_languages").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
+    supabase.from("candidate_skills").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
+    supabase.from("candidate_technologies").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
+    supabase.from("work_experience").select("*").eq("candidate_id", id).order("start_date", { ascending: false }),
+    supabase.from("education").select("*").eq("candidate_id", id).order("graduation_year", { ascending: false }),
+    supabase.from("certifications").select("*").eq("candidate_id", id),
+    namesFor([id]),
+  ]);
+  const err = [p, l, s, t, e, ed, c].find((x) => x.error)?.error;
+  if (err) throw err;
+  if (!p.data) return null;
+  const pr = p.data;
+  const completion = computeCompletion({
+    jobTitle: pr.job_title, headline: pr.headline, location: pr.location, yearsExperience: pr.years_experience, summary: pr.summary,
+    experienceCount: e.data?.length ?? 0, educationCount: ed.data?.length ?? 0, certificationCount: c.data?.length ?? 0, skillCount: s.data?.length ?? 0,
+    languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: pr.salary_expectation, hasResume: !!pr.resume_path,
+  }).percent;
+  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], completion };
+}
+export type CandidateFull = NonNullable<Awaited<ReturnType<typeof loadCandidateFull>>>;
+
+export async function resumeUrl(path: string, fileName: string | null) {
+  const { data, error } = await supabase.storage.from("resumes").createSignedUrl(path, 60, { download: fileName ?? true });
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function listSavedCandidates(uid: string) {
+  const { data, error } = await supabase.from("saved_candidates").select("candidate_id").eq("recruiter_id", uid).order("saved_date", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => r.candidate_id);
+}
+export async function listComparedCandidates(uid: string) {
+  const { data, error } = await supabase.from("candidate_comparisons").select("candidate_id").eq("recruiter_id", uid).order("comparison_date");
+  if (error) throw error;
+  return (data ?? []).map((r) => r.candidate_id);
+}
+export async function setSavedCandidate(uid: string, id: string, on: boolean) {
+  const r = on ? await supabase.from("saved_candidates").insert({ recruiter_id: uid, candidate_id: id }) : await supabase.from("saved_candidates").delete().eq("recruiter_id", uid).eq("candidate_id", id);
+  if (r.error && r.error.code !== "23505") throw r.error;
+}
+export async function setComparedCandidate(uid: string, id: string, on: boolean) {
+  const r = on ? await supabase.from("candidate_comparisons").insert({ recruiter_id: uid, candidate_id: id }) : await supabase.from("candidate_comparisons").delete().eq("recruiter_id", uid).eq("candidate_id", id);
+  if (r.error && r.error.code !== "23505") throw r.error;
+}

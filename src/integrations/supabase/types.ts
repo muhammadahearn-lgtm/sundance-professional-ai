@@ -1217,6 +1217,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
+      candidate_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          first_name: string
+          last_name: string
+          user_id: string
+        }[]
+      }
       candidate_visible_to_recruiters: {
         Args: { _candidate: string }
         Returns: boolean
@@ -1242,6 +1251,10 @@ export type Database = {
       }
       job_is_active: { Args: { _job: string }; Returns: boolean }
       owns_job: { Args: { _job: string }; Returns: boolean }
+      recruiter_can_view_candidate: {
+        Args: { _candidate: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "candidate" | "recruiter"
