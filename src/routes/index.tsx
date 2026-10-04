@@ -295,6 +295,44 @@ function ProductPreview() {
                   <PipelineCol title="Offer" n={3} people={["Priya Raman", "Marcus Lee"]} />
                 </div>
               </div>
+            ) : tab === "profile" ? (
+              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-3">
+                <div className="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center">
+                  <span className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary font-display text-2xl font-bold text-primary-foreground">PR</span>
+                  <div className="mt-4 font-display text-lg font-bold">Priya Raman</div>
+                  <div className="text-sm text-muted-foreground">Senior React Engineer</div>
+                  <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5" />Seattle, WA</div>
+                  <div className="mt-8 w-full rounded-2xl bg-primary-soft px-6 py-5">
+                    <div className="font-display text-3xl font-extrabold text-primary">84</div>
+                    <div className="mt-1 text-sm text-muted-foreground">Career readiness</div>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-8 lg:col-span-2">
+                  <h3 className="font-display text-lg font-bold">Skills</h3>
+                  <div className="mt-4 flex flex-wrap gap-2.5">
+                    {["React", "TypeScript", "Next.js", "Node.js", "GraphQL", "AWS", "Testing", "Design Systems"].map((s) => (
+                      <span key={s} className="rounded-full border border-border bg-background px-3.5 py-1.5 text-sm text-foreground">{s}</span>
+                    ))}
+                  </div>
+                  <h3 className="mt-8 font-display text-lg font-bold">Experience</h3>
+                  <div className="mt-4 space-y-4">
+                    <div className="flex gap-3">
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <div>
+                        <div className="text-sm font-semibold">Senior Engineer</div>
+                        <div className="mt-0.5 text-sm text-muted-foreground">Northwind Labs · 2021-Now</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <div>
+                        <div className="text-sm font-semibold">Frontend Engineer</div>
+                        <div className="mt-0.5 text-sm text-muted-foreground">Brightpath · 2018-2021</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
             <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 sm:p-7">
               {tab === "talent" && (
