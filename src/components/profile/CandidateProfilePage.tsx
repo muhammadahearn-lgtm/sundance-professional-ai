@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { computeCompletion, missingRequired, validateProfessional, validateResumeFile, SUMMARY_MAX } from "@/lib/profile-completion";
+import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, type LookupRow } from "./managers";
 import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 
@@ -169,12 +170,14 @@ function Item({ k, v }: { k: string; v: string }) {
 
 function Header({ account, p, percent, onEdit, onPreview }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
+  const [photo, setPhoto] = useState(account.avatarPath);
+  const qc = useQueryClient();
   return (
     <div className={`${card} overflow-hidden`}>
       <div className="h-24 bg-gradient-hero" />
       <div className="px-5 pb-6 sm:px-6">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
-          <div className="grid h-24 w-24 place-items-center rounded-full border-4 border-card bg-gradient-primary font-display text-2xl font-bold text-primary-foreground">{initials}</div>
+          <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
           <div className="flex flex-wrap gap-2">
             <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <a href="#resume" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Upload className="h-4 w-4" />Upload Resume</a>
