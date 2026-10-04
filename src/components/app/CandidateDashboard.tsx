@@ -11,6 +11,7 @@ import { computeCompletion } from "@/lib/profile-completion";
 import { applicationMetrics, buildActivity, statusBreakdown, type AppLite } from "@/lib/candidate-dashboard";
 import { APP_STATUSES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
+import { useAvatarUrl } from "./ProfilePhoto";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { CareerWidget } from "@/components/career/Career";
 import { MessagesWidget } from "@/components/messages/Messages";
@@ -21,8 +22,9 @@ const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "s
 const statusLabel = (s: string) => APP_STATUSES.find(([k]) => k === s)?.[1] ?? s;
 
 async function loadDashboard(uid: string) {
-  const [p, apps, saved, skills, langs, techs, exp, edu, certs] = await Promise.all([
+  const [p, prof, apps, saved, skills, langs, techs, exp, edu, certs] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle(),
+    supabase.from("profiles").select("avatar_path").eq("user_id", uid).maybeSingle(),
     supabase.from("applications").select("application_id, application_date, application_status, updated_at, job_id, jobs(job_title, location, work_arrangement, companies(company_name))").eq("candidate_id", uid).order("application_date", { ascending: false }),
     supabase.from("saved_jobs").select("saved_job_id, saved_date, job_id, jobs(job_title, location, companies(company_name))").eq("candidate_id", uid).order("saved_date", { ascending: false }),
     supabase.from("candidate_skills").select("created_at, technical_skills(skill_name)").eq("candidate_id", uid),
@@ -32,8 +34,8 @@ async function loadDashboard(uid: string) {
     supabase.from("education").select("education_id").eq("candidate_id", uid),
     supabase.from("certifications").select("created_at, certification_name").eq("candidate_id", uid),
   ]);
-  for (const r of [p, apps, saved, skills, langs, techs, exp, edu, certs]) if (r.error) throw r.error;
-  return { profile: p.data, apps: apps.data ?? [], saved: saved.data ?? [], skills: skills.data ?? [], langCount: langs.data?.length ?? 0, techCount: techs.data?.length ?? 0, expCount: exp.data?.length ?? 0, eduCount: edu.data?.length ?? 0, certs: certs.data ?? [] };
+  for (const r of [p, prof, apps, saved, skills, langs, techs, exp, edu, certs]) if (r.error) throw r.error;
+  return { profile: p.data, avatarPath: prof.data?.avatar_path ?? null, apps: apps.data ?? [], saved: saved.data ?? [], skills: skills.data ?? [], langCount: langs.data?.length ?? 0, techCount: techs.data?.length ?? 0, expCount: exp.data?.length ?? 0, eduCount: edu.data?.length ?? 0, certs: certs.data ?? [] };
 }
 
 function Widget({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
@@ -52,6 +54,12 @@ function Stat({ Icon, n, label }: { Icon: typeof Briefcase; n: number | string; 
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
+}
+function DashboardAvatar({ name, path }: { name: string; path: string | null }) {
+  const url = useAvatarUrl(path);
+  const initials = name.split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  if (url) return <img src={url} alt={name} className="h-14 w-14 shrink-0 rounded-full object-cover" />;
+  return <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-lg font-bold text-primary-foreground">{initials}</span>;
 }
 function Soon() { return <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Coming Soon</span>; }
 function Empty({ text, cta }: { text: string; cta: ReactNode }) {
@@ -106,7 +114,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
       <section className={`${card} flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between`}>
         <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-lg font-bold text-primary-foreground">{(account.firstName[0] ?? "") + (account.lastName[0] ?? "")}</span>
+          <DashboardAvatar name={`${account.firstName} ${account.lastName}`} path={data.avatarPath} />
           <div className="min-w-0">
             <div className="text-lg font-bold">{account.firstName} {account.lastName}</div>
             <div className="text-sm text-muted-foreground">{p?.job_title || "Add your current role"}</div>
