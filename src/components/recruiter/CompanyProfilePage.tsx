@@ -200,13 +200,19 @@ function InfoForm({ uid, companyId, initial, onDone, submitLabel }: { uid: strin
     setErrs(v);
     if (Object.keys(v).length) { toast.error("Missing required fields."); return; }
     setSaving(true);
-    const row = { company_name: f.company_name.trim(), website: f.website.trim(), industry: f.industry.trim(), description: f.description, company_size: f.company_size, organization_type: f.organization_type as OrgType, headquarters: f.headquarters.trim(), contact_email: f.contact_email.trim() };
+    const row = { company_name: f.company_name.trim(), website: f.website.trim(), industry: f.industry.trim(), description: f.description, company_size: f.company_size, organization_type: f.organization_type as OrgType, headquarters: f.headquarters.trim() };
     let err;
-    if (companyId) {
-      err = (await supabase.from("companies").update(row).eq("company_id", companyId)).error;
+    let cid = companyId;
+    if (cid) {
+      err = (await supabase.from("companies").update(row).eq("company_id", cid)).error;
     } else {
       const ins = await supabase.from("companies").insert({ ...row, created_by: uid }).select("company_id").single();
-      err = ins.error ?? (await supabase.from("recruiter_profiles").update({ company_id: ins.data!.company_id, company_name: row.company_name }).eq("user_id", uid)).error;
+      err = ins.error;
+      cid = ins.data?.company_id ?? null;
+      if (!err && cid) err = (await supabase.from("recruiter_profiles").update({ company_id: cid, company_name: row.company_name }).eq("user_id", uid)).error;
+    }
+    if (!err && cid) {
+      err = (await supabase.from("company_contacts").upsert({ company_id: cid, contact_email: f.contact_email.trim() }, { onConflict: "company_id" })).error;
     }
     setSaving(false);
     if (err) { toast.error(friendlyError(err, "Failed to save company.")); return; }
