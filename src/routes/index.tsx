@@ -32,7 +32,6 @@ function Index() {
       <SkillFirst />
       <AudienceSplit />
       <Intelligence />
-      <Preview />
       <Transparency />
       <Testimonials />
       <section className="py-24">
@@ -232,60 +231,6 @@ function Bar({ label, v }: { label: string; v: number }) {
   );
 }
 
-function Preview() {
-  return (
-    <section className="py-24">
-      <div className="container-x">
-        <SectionHeading eyebrow="Platform preview" title="Built For Modern Hiring" />
-        <div className="mt-14 grid gap-6 lg:grid-cols-2">
-          <Mock title="Candidate Dashboard" tabs={["Recommended Jobs", "Career Readiness", "Applications", "Recruiter Activity"]}>
-            {[["Senior ML Engineer", "Northwind AI", 96], ["Data Engineer", "Lumen Cloud", 91], ["AI Platform Engineer", "Vertex Labs", 88]].map(([r, c, s]) => (
-              <Row key={r as string} a={r as string} b={c as string} score={s as number} />
-            ))}
-            <div className="rounded-xl border border-border p-4"><Bar label="Career Readiness" v={89} /></div>
-          </Mock>
-          <Mock title="Recruiter Dashboard" tabs={["Recommended Candidates", "Hiring Pipeline", "Active Jobs", "Candidate Alerts"]}>
-            {[["Priya Sharma", "Full Stack · React, AWS", 96], ["Daniel Kim", "ML · Python, PyTorch", 92], ["Marcus Lee", "DevOps · Kubernetes", 88]].map(([r, c, s]) => (
-              <Row key={r as string} a={r as string} b={c as string} score={s as number} />
-            ))}
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
-              {[["Sourced", 48], ["Screen", 21], ["Interview", 9], ["Offer", 3]].map(([l, n]) => (
-                <div key={l} className="rounded-lg bg-primary-soft p-2"><div className="font-display text-lg font-bold text-primary">{n}</div><div className="text-muted-foreground">{l}</div></div>
-              ))}
-            </div>
-          </Mock>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Mock({ title, tabs, children }: { title: string; tabs: string[]; children: React.ReactNode }) {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-elevated transition hover:-translate-y-1">
-      <div className="flex items-center gap-2 border-b border-border bg-secondary px-5 py-3">
-        <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" /><span className="h-2.5 w-2.5 rounded-full bg-chart-4" /><span className="h-2.5 w-2.5 rounded-full bg-success" />
-        <span className="ml-3 text-sm font-semibold">{title}</span>
-      </div>
-      <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2">
-        {tabs.map((t, i) => <span key={t} className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium ${i === 0 ? "bg-primary-soft text-accent-foreground" : "text-muted-foreground"}`}>{t}</span>)}
-      </div>
-      <div className="space-y-3 p-5">{children}</div>
-    </div>
-  );
-}
-
-function Row({ a, b, score }: { a: string; b: string; score: number }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-border p-3.5">
-      <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-bold text-primary">{a.charAt(0)}</span>
-        <div><div className="text-sm font-semibold">{a}</div><div className="text-xs text-muted-foreground">{b}</div></div>
-      </div>
-      <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">{score}% match</span>
-    </div>
-  );
-}
 
 function Transparency() {
   const explains = ["Why you match", "Which skills align", "Which technologies align", "Missing skills", "Career readiness"];
