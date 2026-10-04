@@ -256,7 +256,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
     <div className="space-y-4">
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input className={`${inputCls} pl-9`} placeholder={`Search ${noun}s to add…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy} />
+        <input className={`${inputCls} pl-9`} placeholder={`Search ${noun === "technology" ? "technologies" : noun + "s"} to add…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy} />
       </div>
       {(q || rows.length === 0) && matches.length > 0 && (
         <div className="flex flex-wrap gap-1.5">{matches.map((o) => (
@@ -265,7 +265,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
           </button>
         ))}</div>
       )}
-      {q && !matches.length && <p className="text-xs text-muted-foreground">No matching {noun}s.</p>}
+      {q && !matches.length && <p className="text-xs text-muted-foreground">No matching results.</p>}
       {required && rows.length === 0 && <p className="text-xs font-medium text-destructive">At least one {noun} is required.</p>}
       {rows.length > 0 && (
         <ul className="divide-y divide-border rounded-xl border border-border">
