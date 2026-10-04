@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyAuthError, validateRegistration, type Role } from "@/lib/auth-rules";
 import { AuthCard, FieldError, FormAlert } from "@/components/auth/AuthCard";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
