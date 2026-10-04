@@ -20,7 +20,7 @@ const nav = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { session } = useSession();
-  const dash = useDashboardPath(session?.user.user_metadata?.role);
+  const dash = useDashboardPath(session?.user.user_metadata?.['role']);
   const signOut = () => supabase.auth.signOut();
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">

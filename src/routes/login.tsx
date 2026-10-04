@@ -9,11 +9,11 @@ import { dashboardPath, friendlyAuthError } from "@/lib/auth-rules";
 import { fetchAccount } from "@/lib/account";
 import { AuthCard, FormAlert } from "@/components/auth/AuthCard";
 
-type Search = { reason?: "expired" | "reset" };
+type Search = { reason?: "expired" | "reset" | undefined };
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    reason: s.reason === "expired" || s.reason === "reset" ? s.reason : undefined,
+    reason: s["reason"] === "expired" || s["reason"] === "reset" ? s["reason"] : undefined,
   }),
   head: () => ({
     meta: [

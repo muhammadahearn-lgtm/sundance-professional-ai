@@ -36,6 +36,6 @@ export function SuccessScreen({ title, children, actions }: { title: string; chi
   );
 }
 
-export function FieldError({ msg }: { msg?: string }) {
+export function FieldError({ msg }: { msg?: string | undefined }) {
   return msg ? <p className="text-xs text-destructive">{msg}</p> : null;
 }

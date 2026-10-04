@@ -26,11 +26,11 @@ function Card({ title, desc, children, danger }: { title: string; desc?: string;
   );
 }
 
-function Toggle({ label, desc, defaultChecked }: { label: string; desc: string; defaultChecked?: boolean }) {
+function Toggle({ label, desc, defaultChecked }: { label: string; desc: string; defaultChecked?: boolean | undefined }) {
   return (
     <label className="flex items-center justify-between gap-4 py-2">
       <span><span className="block text-sm font-medium">{label}</span><span className="block text-xs text-muted-foreground">{desc}</span></span>
-      <Switch defaultChecked={defaultChecked} />
+      <Switch defaultChecked={defaultChecked ?? false} />
     </label>
   );
 }

@@ -111,17 +111,17 @@ function Register() {
           <form className="mt-6 space-y-4" noValidate onSubmit={submit}>
             {formError && <FormAlert>{formError}{formError.includes("already exists") && <> <Link to="/login" className="font-semibold underline">Log in</Link></>}</FormAlert>}
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label htmlFor="firstName">First Name</Label><Input id="firstName" name="firstName" autoComplete="given-name" /><FieldError msg={errors.firstName} /></div>
-              <div className="space-y-2"><Label htmlFor="lastName">Last Name</Label><Input id="lastName" name="lastName" autoComplete="family-name" /><FieldError msg={errors.lastName} /></div>
+              <div className="space-y-2"><Label htmlFor="firstName">First Name</Label><Input id="firstName" name="firstName" autoComplete="given-name" /><FieldError msg={errors["firstName"]} /></div>
+              <div className="space-y-2"><Label htmlFor="lastName">Last Name</Label><Input id="lastName" name="lastName" autoComplete="family-name" /><FieldError msg={errors["lastName"]} /></div>
             </div>
-            <div className="space-y-2"><Label htmlFor="email">Email Address</Label><Input id="email" name="email" type="email" autoComplete="email" /><FieldError msg={errors.email} /></div>
-            <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" name="password" type="password" autoComplete="new-password" /><FieldError msg={errors.password} /></div>
-            <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><Input id="confirm" name="confirm" type="password" autoComplete="new-password" /><FieldError msg={errors.confirm} /></div>
+            <div className="space-y-2"><Label htmlFor="email">Email Address</Label><Input id="email" name="email" type="email" autoComplete="email" /><FieldError msg={errors["email"]} /></div>
+            <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" name="password" type="password" autoComplete="new-password" /><FieldError msg={errors["password"]} /></div>
+            <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><Input id="confirm" name="confirm" type="password" autoComplete="new-password" /><FieldError msg={errors["confirm"]} /></div>
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
               <span>I agree to the Terms of Service and Privacy Policy</span>
             </label>
-            <FieldError msg={errors.agreed} />
+            <FieldError msg={errors["agreed"]} />
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" size="lg" className="rounded-full" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4" /> Back</Button>
               <Button type="submit" size="lg" className="flex-1 rounded-full" disabled={loading}>{loading ? "Creating account…" : "Create Account"}</Button>
