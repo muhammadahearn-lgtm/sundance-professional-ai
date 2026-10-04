@@ -53,7 +53,7 @@ export function MessageButton({ role, candidateId, jobId, label: text, className
   const [busy, setBusy] = useState(false);
   async function go() {
     setBusy(true);
-    const { data, error } = await supabase.rpc("start_conversation", { _candidate: candidateId, _job: jobId ?? undefined });
+    const { data, error } = await supabase.rpc("start_conversation", jobId ? { _candidate: candidateId, _job: jobId } : { _candidate: candidateId });
     setBusy(false);
     if (error || !data) { toast.error(errMsg(error, "Unable to start conversation")); return; }
     qc.invalidateQueries({ queryKey: ["inbox"] });
@@ -96,7 +96,7 @@ export function MessagesPage({ uid, role, activeId }: { uid: string; role: Role;
       return new Set((data ?? []).map((m) => m.conversation_id));
     },
   });
-  const list = filterInbox(rows, { filter, q: search, job, person, ...(hits.data ? { textHits: hits.data } : {}) });
+  const list = filterInbox(rows, { filter, q: search, job, person, ...(hits.data ? { textHits: hits.data } : {}) }) as Conversation[];
   const jobs = [...new Map(rows.filter((r) => r.job_id).map((r) => [r.job_id!, r.job_title ?? "Job"])).entries()];
   const people = [...new Map(rows.map((r) => (role === "recruiter" ? [r.candidate_id, r.candidate_name] : [r.recruiter_id, r.recruiter_name]))).entries()];
   const active = rows.find((r) => r.conversation_id === activeId);
@@ -214,7 +214,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
     let att: { path: string; name: string; size: number } | null = null;
     if (file) {
       const path = `${c.conversation_id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]+/g, "_")}`;
-      const up = await supabase.storage.from("message-attachments").upload(path, file, { contentType: file.type || undefined });
+      const up = await supabase.storage.from("message-attachments").upload(path, file, file.type ? { contentType: file.type } : {});
       if (up.error) {
         toast.error("Attachment Upload Failed");
         qc.setQueryData<Msg[]>(key, (p = []) => p.filter((m) => m.message_id !== tempId));
