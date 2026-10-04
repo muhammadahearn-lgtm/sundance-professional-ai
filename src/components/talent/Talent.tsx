@@ -117,7 +117,7 @@ export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Tax
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated`}>
       <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="relative block aspect-[5/4] overflow-hidden bg-muted">
         <PhotoCover name={c.name} path={c.avatarPath} />
-        {score !== undefined && <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-soft backdrop-blur ${matchTone(score)} bg-card/90`}>{Math.round(score)}% Match</span>}
+        {score !== undefined && <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-soft backdrop-blur ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
         {c.availability && <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold shadow-soft"><span className={`h-2 w-2 rounded-full ${availDot(c.availability)}`} />{label(AVAILABILITY, c.availability)}</span>}
         {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
       </Link>
