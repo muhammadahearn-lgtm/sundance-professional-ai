@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { ARRANGEMENT, EMPLOYMENT } from "@/components/jobs/shared";
 import { supabase } from "@/integrations/supabase/client";
 import { CompareTray, JobCard } from "./JobCard";
+import { useAutoRecalc, useScores } from "@/components/match/Match";
 import { useJobLists } from "./useJobLists";
 
 type Props = { account: Account; search: SearchState; setSearch: (patch: Partial<SearchState>) => void };
@@ -20,7 +21,10 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const uid = account.userId;
   const lists = useJobLists(uid);
   const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
-  const results = useQuery({ queryKey: ["job-search", search], queryFn: () => searchJobs(search, tax.data!), enabled: !!tax.data, placeholderData: keepPreviousData });
+  useAutoRecalc();
+  const scoreQ = useScores({ candidateId: uid });
+  const scoreMap = Object.fromEntries((scoreQ.data ?? []).map((r) => [r.job_id, Number(r.overall_match_score)]));
+  const results = useQuery({ queryKey: ["job-search", search, scoreQ.dataUpdatedAt], queryFn: () => searchJobs(search, tax.data!, scoreMap), enabled: !!tax.data && !scoreQ.isLoading, placeholderData: keepPreviousData });
   const suggested = useQuery({ queryKey: ["candidate-suggest", uid], queryFn: async () => {
     const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title").eq("user_id", uid).maybeSingle();
     return [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4);
@@ -86,7 +90,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} />)}
+              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>

@@ -6,6 +6,7 @@ import { card } from "@/components/profile/parts";
 import { BrandImg } from "@/components/recruiter/shared";
 import { ARRANGEMENT, EMPLOYMENT, formatSalary, lbl } from "@/components/jobs/shared";
 import { shareJob, type JobLists } from "./useJobLists";
+import { MatchBadge } from "@/components/match/Match";
 
 export const postedAgo = (iso: string) => {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -18,7 +19,7 @@ export function CompanyLogo({ path, size = "h-12 w-12" }: { path: string | null 
 
 const act = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
 
-export function JobCard({ j, roleName, lists, onRemove }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void }) {
+export function JobCard({ j, roleName, lists, onRemove, score }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined }) {
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
   return (
@@ -31,7 +32,7 @@ export function JobCard({ j, roleName, lists, onRemove }: { j: JobCardRow; roleN
               <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
               <p className="text-sm font-medium">{j.companies?.company_name}</p>
             </div>
-            {salary && <span className="hidden shrink-0 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success sm:inline">{salary}</span>}
+            <div className="flex shrink-0 items-center gap-2"><MatchBadge score={score} />{salary && <span className="hidden rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success sm:inline">{salary}</span>}</div>
           </div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
