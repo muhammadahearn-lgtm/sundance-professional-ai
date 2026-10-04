@@ -108,7 +108,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
 
       <section className={`${card} flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between`}>
         <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-lg font-bold text-primary-foreground">{(account.firstName[0] ?? "") + (account.lastName[0] ?? "")}</span>
+          <DashboardAvatar name={`${account.firstName} ${account.lastName}`} path={data.avatarPath} />
           <div className="min-w-0">
             <div className="text-lg font-bold">{account.firstName} {account.lastName}</div>
             <div className="text-sm text-muted-foreground">{p?.job_title || "Add your current role"}</div>
