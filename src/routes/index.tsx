@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, ArrowDown, Briefcase, Users, Target, Brain, LineChart, Search, Gauge, Sparkles,
-  XCircle, Check, Quote, UserCircle2, Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
