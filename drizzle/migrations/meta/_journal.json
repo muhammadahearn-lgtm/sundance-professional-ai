@@ -127,6 +127,13 @@
       "when": 1791101070601,
       "tag": "0017_candidate_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791112828487,
+      "tag": "0018_scope_company_reads_to_active_jobs_or_creator",
+      "breakpoints": true
     }
   ]
 }
