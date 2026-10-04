@@ -1,0 +1,1 @@
+comment on column public.companies.contact_email is 'DEPRECATED: replaced by company_contacts.contact_email (recruiter-only). Always empty — companies_strip_contact trigger strips any write; app code no longer reads or writes this column.';
