@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Briefcase, Building2, Eye, Globe, ImagePlus, Mail, Pencil, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Building2, Camera, Eye, Globe, ImagePlus, Mail, Pencil, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { COMPANY_DESCRIPTION_MAX, validateCompany, validateImageFile } from "@/lib/recruiter-completion";
