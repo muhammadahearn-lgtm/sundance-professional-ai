@@ -88,6 +88,37 @@ function Hero() {
 }
 
 
+// TEMPORARY: remove <ComingSoonNotice /> (and this function) at official commercial launch.
+function ComingSoonNotice() {
+  return (
+    <section className="py-12">
+      <div className="container-x">
+        <div className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-card p-8 text-center shadow-elevated md:p-12">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-hero opacity-60" />
+          <div className="relative">
+            <span className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-soft">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-foreground opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-foreground" />
+              </span>
+              Early Access Preview
+            </span>
+            <h2 className="mt-5 text-4xl font-extrabold md:text-5xl">
+              Official Launch <span className="text-gradient">Coming Soon</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+              We're putting the final touches on Sundance Professionals before our official commercial release. During this preview, creating an account is free and open to all candidates and recruiters.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button asChild size="lg" className="rounded-full px-6"><Link to="/register">Join Early Access <ArrowRight /></Link></Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Solution() {
   const feats = [
     [Target, "Skill-First Matching", "Match on what people can do, not just what's on paper."],
