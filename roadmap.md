@@ -19,3 +19,5 @@
 - [x] Stage 16 – Notifications System
 - [x] Stage 17 – Analytics & Reporting
 - [x] Stage 18 — Production readiness: security pass (functions locked down, missing indexes added), data checks, regression tests. Remaining: phone/tablet pass, accessibility pass, performance tuning.
+
+- [ ] Update Sundance Professional AI branding to Sundance Professionals AI across displayed pages and metadata.
