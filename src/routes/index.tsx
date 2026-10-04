@@ -294,7 +294,7 @@ function Row({ a, b, score }: { a: string; b: string; score: number }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-border p-3.5">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-bold text-primary">{a[0]}</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-bold text-primary">{a.charAt(0)}</span>
         <div><div className="text-sm font-semibold">{a}</div><div className="text-xs text-muted-foreground">{b}</div></div>
       </div>
       <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">{score}% match</span>
@@ -377,7 +377,7 @@ function Testimonials() {
               <Quote className="h-7 w-7 text-primary" />
               <blockquote className="mt-4 text-lg font-medium">“{q}”</blockquote>
               <figcaption className="mt-6 flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-primary-foreground">{n[0]}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-primary-foreground">{n?.charAt(0)}</span>
                 <div><div className="text-sm font-semibold">{n}</div><div className="text-xs text-muted-foreground">{r}</div></div>
               </figcaption>
             </figure>
