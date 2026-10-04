@@ -136,7 +136,7 @@ export function AppShell({ account }: { account: Account }) {
       </header>
       <div className="flex">
         {!onboarding && !collapsed && (
-          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:block" style={{ width }}>
+          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:relative lg:block" style={{ width }}>
             {nav}
             <div
               role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
