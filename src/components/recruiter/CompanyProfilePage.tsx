@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Briefcase, Building2, Eye, Globe, ImagePlus, Mail, Pencil, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Building2, Camera, Eye, Globe, ImagePlus, Mail, Pencil, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { COMPANY_DESCRIPTION_MAX, validateCompany, validateImageFile } from "@/lib/recruiter-completion";
@@ -74,6 +74,16 @@ export function CompanyProfilePage({ account }: { account: Account }) {
 
   if (preview || !canEdit) return <PublicView c={c} recruiters={data.recruiters} onBack={canEdit ? () => setPreview(false) : undefined} />;
 
+  const uploadBrand = async (file: File, kind: "logo" | "banner") => {
+    const bad = validateImageFile(file);
+    if (bad) { toast.error(bad); return; }
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${uid}/${kind}-${Date.now()}-${safe}`;
+    const { error: e } = await supabase.storage.from("company-branding").upload(path, file, { contentType: file.type });
+    if (e) { toast.error("Failed to upload image."); return; }
+    await save(kind === "logo" ? { logo_url: path } : { banner_url: path }, kind === "logo" ? "Logo uploaded" : "Banner uploaded");
+  };
+
   const filled = [c.company_name, c.industry, c.organization_type, c.description, c.company_size, c.website, c.logo_url ?? "", c.why_work_here].filter((x) => String(x).trim()).length;
   const percent = Math.round((filled / 8) * 100);
   const suggestions = [
@@ -87,7 +97,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
-        <Header c={c}>
+        <Header c={c} onUploadLogo={(f) => uploadBrand(f, "logo")} onUploadBanner={(f) => uploadBrand(f, "banner")}>
           <button onClick={() => { setEdit("info"); document.getElementById("company-info")?.scrollIntoView({ behavior: "smooth" }); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Company</button>
           <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Company</button>
         </Header>
@@ -136,13 +146,34 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   );
 }
 
-function Header({ c, children }: { c: Company; children?: React.ReactNode }) {
+function HeaderUpload({ onFile, label, className }: { onFile: (f: File) => void; label: string; className: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
+        onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; setBusy(true); await onFile(f); setBusy(false); }} />
+      <button type="button" disabled={busy} onClick={() => ref.current?.click()} aria-label={label} title={label}
+        className={`absolute grid h-8 w-8 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow hover:opacity-90 disabled:opacity-60 ${className}`}>
+        <Camera className="h-4 w-4" />
+      </button>
+    </>
+  );
+}
+
+function Header({ c, children, onUploadLogo, onUploadBanner }: { c: Company; children?: React.ReactNode; onUploadLogo?: ((f: File) => Promise<void>) | undefined; onUploadBanner?: ((f: File) => Promise<void>) | undefined }) {
   return (
     <div className={`${card} overflow-hidden`}>
-      {c.banner_url ? <BrandImg path={c.banner_url} alt="Company banner" className="h-32 w-full object-cover sm:h-44" /> : <div className="h-32 bg-gradient-primary sm:h-44" />}
+      <div className="relative">
+        {c.banner_url ? <BrandImg path={c.banner_url} alt="Company banner" className="h-32 w-full object-cover sm:h-44" /> : <div className="h-32 bg-gradient-primary sm:h-44" />}
+        {onUploadBanner && <HeaderUpload onFile={onUploadBanner} label={c.banner_url ? "Change banner" : "Upload banner"} className="right-3 top-3" />}
+      </div>
       <div className="p-6 pt-0">
         <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end">
-          {c.logo_url ? <BrandImg path={c.logo_url} alt="Company logo" className="h-20 w-20 rounded-2xl border-4 border-card bg-card object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-muted"><Building2 className="h-8 w-8 text-muted-foreground" /></div>}
+          <div className="relative shrink-0 self-start">
+            {c.logo_url ? <BrandImg path={c.logo_url} alt="Company logo" className="h-20 w-20 rounded-2xl border-4 border-card bg-card object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-muted"><Building2 className="h-8 w-8 text-muted-foreground" /></div>}
+            {onUploadLogo && <HeaderUpload onFile={onUploadLogo} label={c.logo_url ? "Change logo" : "Upload logo"} className="-bottom-1 -right-1" />}
+          </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-2xl font-extrabold">{c.company_name}</h1>
             <p className="text-sm text-muted-foreground">{[c.industry, c.company_size && `${c.company_size} employees`, ORG_TYPES.find(([k]) => k === c.organization_type)?.[1]].filter(Boolean).join(" · ")}</p>
