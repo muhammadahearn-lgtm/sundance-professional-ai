@@ -250,7 +250,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
   }
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
   const kind: TaxonomyKind = table === "candidate_languages" ? "language" : table === "candidate_skills" ? "skill" : "technology";
-  const newName = newEntryName(q, options);
+  const newName = canAddTaxonomy(kind) ? newEntryName(q, options) : null;
   const createNew = async () => {
     if (!newName) return;
     setBusy(true);

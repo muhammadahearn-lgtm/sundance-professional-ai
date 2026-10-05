@@ -3,6 +3,11 @@ import { taxonomyDisplay, taxonomyKey } from "./taxonomy";
 
 export type TaxonomyKind = "language" | "skill" | "technology" | "soft_skill";
 
+/** Programming languages are a controlled master list; the other kinds are user-expandable. */
+export function canAddTaxonomy(kind: TaxonomyKind): boolean {
+  return kind !== "language";
+}
+
 /** Name shown on the "+ Add" button, or null when the typed text matches an existing option. */
 export function newEntryName(input: string, options: { name: string }[]): string | null {
   const k = taxonomyKey(input);

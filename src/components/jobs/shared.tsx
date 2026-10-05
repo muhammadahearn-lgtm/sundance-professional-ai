@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatSalaryRange } from "@/lib/salary";
 import { inputCls } from "@/components/profile/parts";
-import { addTaxonomyEntry, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 
 export const EMPLOYMENT: [string, string][] = [["full_time", "Full-Time"], ["part_time", "Part-Time"], ["contract", "Contract"], ["internship", "Internship"], ["consulting", "Consulting"]];
 export const ARRANGEMENT: [string, string][] = [["remote", "Remote"], ["hybrid", "Hybrid"], ["on_site", "On-Site"]];
@@ -37,7 +37,7 @@ export function RequirementPicker({ options: baseOptions, value, onChange, place
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
   const options = [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))];
-  const newName = kind ? newEntryName(q, options) : null;
+  const newName = kind && canAddTaxonomy(kind) ? newEntryName(q, options) : null;
   const createNew = async () => {
     if (!kind || !newName) return;
     setBusy(true);
