@@ -363,3 +363,73 @@ export function SoftSkillManager({ uid, options = [], selected = [], adding, set
     </div>
   );
 }
+
+/* ---------------- Projects ---------------- */
+type Proj = Tables<"candidate_projects">;
+
+export function ProjectManager({ uid, items, adding, setAdding }: { uid: string; items: Proj[]; adding: boolean; setAdding: (v: boolean) => void }) {
+  const [editing, setEditing] = useState<string | null>(null);
+  const refresh = useRefresh(uid);
+  async function remove(id: string) {
+    if (!window.confirm("Delete this project?")) return;
+    const { error } = await supabase.from("candidate_projects").delete().eq("project_id", id);
+    if (error) { toast.error(friendlyError(error, "Couldn't delete. Please try again.")); return; }
+    toast.success("Project deleted"); refresh();
+  }
+  return (
+    <div className="space-y-4">
+      {adding && <ProjectForm uid={uid} onDone={() => { setAdding(false); refresh(); }} onCancel={() => setAdding(false)} />}
+      {!items.length && !adding && <Empty>No projects yet. Add open-source work, side projects or case studies.</Empty>}
+      <ul className="space-y-3">
+        {items.map((x) => editing === x.project_id ? (
+          <li key={x.project_id}><ProjectForm uid={uid} item={x} onDone={() => { setEditing(null); refresh(); }} onCancel={() => setEditing(null)} /></li>
+        ) : (
+          <li key={x.project_id} className="flex items-start justify-between gap-2 rounded-xl border border-border p-4">
+            <div className="min-w-0">
+              <p className="font-semibold">{x.title}</p>
+              {x.project_url && <a href={x.project_url} target="_blank" rel="noopener noreferrer" className="block truncate text-xs text-primary hover:underline">{x.project_url.replace(/^https?:\/\//, "")}</a>}
+              {x.description && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{x.description}</p>}
+              {x.technologies.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{x.technologies.map((t) => <span key={t} className="rounded-full border border-border px-2.5 py-0.5 text-xs">{t}</span>)}</div>}
+            </div>
+            <div className="flex shrink-0">
+              <button className={iconBtn} aria-label="Edit project" onClick={() => setEditing(x.project_id)}><Pencil className="h-4 w-4" /></button>
+              <button className={iconBtn} aria-label="Delete project" onClick={() => remove(x.project_id)}><Trash2 className="h-4 w-4" /></button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ProjectForm({ uid, item, onDone, onCancel }: { uid: string; item?: Proj; onDone: () => void; onCancel: () => void }) {
+  const [f, setF] = useState({ title: item?.title ?? "", description: item?.description ?? "", project_url: item?.project_url ?? "", technologies: item?.technologies ?? [] as string[] });
+  const [err, setErr] = useState<{ title?: string; project_url?: string }>({});
+  const [saving, setSaving] = useState(false);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const { normalizeLink } = await import("@/lib/profile-links");
+    const url = normalizeLink(f.project_url);
+    const er: typeof err = {};
+    if (!f.title.trim()) er.title = "Project name is required.";
+    if (url === null) er.project_url = "Enter a valid link.";
+    setErr(er); if (Object.keys(er).length) return;
+    setSaving(true);
+    const row = { title: f.title.trim(), description: f.description.trim(), project_url: url ?? "", technologies: f.technologies };
+    const { error } = item ? await supabase.from("candidate_projects").update(row).eq("project_id", item.project_id) : await supabase.from("candidate_projects").insert({ ...row, candidate_id: uid });
+    setSaving(false);
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
+    toast.success(item ? "Project updated" : "Project added"); onDone();
+  }
+  return (
+    <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Project Name *" error={err.title}><input className={inputCls} maxLength={150} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
+        <Field label="Project Link" error={err.project_url}><input className={inputCls} maxLength={300} placeholder="github.com/you/project" value={f.project_url} onChange={(e) => setF({ ...f, project_url: e.target.value })} /></Field>
+      </div>
+      <Field label="Description"><textarea rows={3} className={inputCls} maxLength={1000} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></Field>
+      <Field label="Technologies Used"><TagInput value={f.technologies} onChange={(v) => setF({ ...f, technologies: v })} placeholder="e.g. Airflow, press Enter" /></Field>
+      <SaveBar saving={saving} onCancel={onCancel} />
+    </form>
+  );
+}
