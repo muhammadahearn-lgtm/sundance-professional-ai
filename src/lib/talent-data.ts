@@ -87,7 +87,9 @@ export async function loadCandidateFull(id: string) {
     experienceCount: e.data?.length ?? 0, educationCount: ed.data?.length ?? 0, certificationCount: c.data?.length ?? 0, skillCount: s.data?.length ?? 0,
     languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: pr.salary_expectation, hasResume: !!pr.resume_path,
   }).percent;
-  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], projects: pj.data ?? [], completion };
+  const av = await supabase.rpc("candidate_avatars", { _ids: [id] });
+  const avatarPath: string | null = av.data?.[0]?.avatar_path ?? null;
+  return { profile: pr, avatarPath, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], projects: pj.data ?? [], completion };
 }
 export type CandidateFull = NonNullable<Awaited<ReturnType<typeof loadCandidateFull>>>;
 

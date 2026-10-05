@@ -276,7 +276,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
   const p = d.profile;
   return (
     <div className={`${card} p-6`}>
-      <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} size="h-16 w-16 text-xl" />
+      <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
           <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
           <div className="mt-3"><LinkBadges p={p} /></div>

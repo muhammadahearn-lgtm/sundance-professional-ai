@@ -174,6 +174,7 @@ export type Database = {
           linkedin_url: string
           location: string
           locations_of_interest: string[]
+          photo_visible: boolean
           portfolio_url: string
           programming_languages: string[]
           resume_file_name: string | null
@@ -204,6 +205,7 @@ export type Database = {
           linkedin_url?: string
           location?: string
           locations_of_interest?: string[]
+          photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
           resume_file_name?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           linkedin_url?: string
           location?: string
           locations_of_interest?: string[]
+          photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
           resume_file_name?: string | null
