@@ -6,17 +6,23 @@ type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type Insert = Database["public"]["Tables"]["jobs"]["Insert"];
 
 export async function loadTaxonomy() {
-  const [r, l, s, t, ss] = await Promise.all([
-    supabase.from("roles").select("role_id, role_name").order("role_name"),
+  const [r, l, s, t, ss, lv] = await Promise.all([
+    supabase.from("roles").select("role_id, role_name, category, sort_order, is_active").order("sort_order"),
     supabase.from("programming_languages").select("language_id, language_name").order("language_name"),
     supabase.from("technical_skills").select("skill_id, skill_name").order("skill_name"),
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
     supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
+    supabase.from("levels").select("level_id, level_name").order("sort_order"),
   ]);
-  const err = [r, l, s, t, ss].find((x) => x.error)?.error;
+  const err = [r, l, s, t, ss, lv].find((x) => x.error)?.error;
   if (err) throw err;
+  const allRoles = (r.data ?? []).map((x) => ({ id: x.role_id, name: x.role_name, category: x.category, active: x.is_active }));
   return {
-    roles: (r.data ?? []).map((x) => ({ id: x.role_id, name: x.role_name })),
+    /** Active master list only (pickers/filters). */
+    roles: allRoles.filter((x) => x.active),
+    /** Includes retired roles, for displaying old records. */
+    allRoles,
+    levels: (lv.data ?? []).map((x) => ({ id: x.level_id, name: x.level_name })),
     languages: (l.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name })),
     skills: (s.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name })),
     technologies: (t.data ?? []).map((x) => ({ id: x.technology_id, name: x.technology_name, group: x.technology_category })),
