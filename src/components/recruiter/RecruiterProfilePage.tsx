@@ -1,3 +1,5 @@
+import { LocationFields } from "@/components/location/LocationFields";
+import { formatLocation, type LocationParts } from "@/lib/location";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
@@ -206,18 +208,20 @@ function ArrayForm<T>({ initial, onSave, onCancel, render }: { initial: T; onSav
 
 function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: NonNullable<Data["a"]>; companyName: string; onDone: (ok: boolean) => void }) {
   const [f, setF] = useState({ first_name: a.first_name, last_name: a.last_name, title: r.title, company_name: companyName, location: r.location, years: String(r.years_experience), specialization: r.specialization, summary: r.professional_summary });
+  const [loc, setLoc] = useState<LocationParts>({ country: r.location_country, state: r.location_state, city: r.location_city });
   const [errs, setErrs] = useState<ReturnType<typeof validateRecruiter>>({});
   const [saving, setSaving] = useState(false);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const v = validateRecruiter(f);
+    const v = validateRecruiter({ ...f, location: formatLocation(loc) });
+    if (!loc.country || !loc.state.trim() || !loc.city.trim()) (v as Record<string, string>).location = "Country, state / province and city are required.";
     setErrs(v);
     if (Object.keys(v).length) { toast.error("Missing required fields."); return; }
     setSaving(true);
     const [p1, p2] = await Promise.all([
       supabase.from("profiles").update({ first_name: f.first_name.trim(), last_name: f.last_name.trim() }).eq("user_id", uid),
       supabase.from("recruiter_profiles").update({
-        title: f.title.trim(), company_name: f.company_name.trim(), location: f.location.trim(), specialization: f.specialization.trim(),
+        title: f.title.trim(), company_name: f.company_name.trim(), location: formatLocation(loc), location_country: loc.country, location_state: loc.state, location_city: loc.city, specialization: f.specialization.trim(),
         years_experience: Math.max(0, Math.min(60, Number(f.years) || 0)), professional_summary: f.summary,
       }).eq("user_id", uid),
     ]);
@@ -235,7 +239,8 @@ function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: Non
       <div className="grid gap-4 sm:grid-cols-2">
         {inp("first_name", "First Name *")}{inp("last_name", "Last Name *")}
         {inp("title", "Recruiter Title *", { placeholder: "Senior Technical Recruiter" })}{inp("company_name", "Company *")}
-        {inp("location", "Location *", { placeholder: "Boston, MA" })}{inp("years", "Years Recruiting Experience", { type: "number" })}
+        <LocationFields required error={(errs as Record<string, string | undefined>).location} value={loc} onChange={setLoc} />
+        {inp("years", "Years Recruiting Experience", { type: "number" })}
         {inp("specialization", "Primary Specialization *", { placeholder: "Software Engineers" })}
       </div>
       <Field label="Professional Summary" error={errs.summary} hint={<span className={`text-xs ${f.summary.length > RECRUITER_SUMMARY_MAX ? "text-destructive" : "text-muted-foreground"}`}>{f.summary.length}/{RECRUITER_SUMMARY_MAX}</span>}>
