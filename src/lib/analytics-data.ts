@@ -3,21 +3,23 @@ import { namesFor } from "./talent-data";
 
 export type JobInfo = {
   job_id: string; job_title: string; location: string; work_arrangement: string; job_status?: string | undefined;
-  company: string; industry: string; role: string; skills: string[]; technologies: string[];
+  company: string; industry: string; role: string; skills: string[]; technologies: string[]; softSkills?: string[];
 };
 
-const JOB_SELECT = "job_id, job_title, location, work_arrangement, job_status, companies(company_name, industry), roles(role_name), job_skills(technical_skills(skill_name)), job_technologies(technologies(technology_name))";
+const JOB_SELECT = "job_id, job_title, location, work_arrangement, job_status, companies(company_name, industry), roles(role_name), job_skills(technical_skills(skill_name)), job_technologies(technologies(technology_name)), job_soft_skills(soft_skills(soft_skill_name))";
 
 type RawJob = {
   job_id: string; job_title: string; location: string; work_arrangement: string; job_status: string;
   companies: { company_name: string; industry: string } | null; roles: { role_name: string } | null;
   job_skills: { technical_skills: { skill_name: string } | null }[]; job_technologies: { technologies: { technology_name: string } | null }[];
+  job_soft_skills?: { soft_skills: { soft_skill_name: string } | null }[];
 };
 const toInfo = (j: RawJob): JobInfo => ({
   job_id: j.job_id, job_title: j.job_title, location: j.location, work_arrangement: j.work_arrangement, job_status: j.job_status,
   company: j.companies?.company_name ?? "", industry: j.companies?.industry ?? "", role: j.roles?.role_name ?? "",
   skills: j.job_skills.map((s) => s.technical_skills?.skill_name ?? "").filter(Boolean),
   technologies: j.job_technologies.map((t) => t.technologies?.technology_name ?? "").filter(Boolean),
+  softSkills: (j.job_soft_skills ?? []).map((s) => s.soft_skills?.soft_skill_name ?? "").filter(Boolean),
 });
 
 async function jobsInfo(ids: string[]): Promise<Record<string, JobInfo>> {
@@ -73,11 +75,12 @@ export async function loadRecruiterAnalytics(uid: string) {
   type Score = { candidate_id: string; job_id: string; overall_match_score: number };
   const a = must(apps) as App[], p = must(pipe) as Pipe[], sc = must(scores) as Score[];
   const candIds = [...new Set([...a.map((x) => x.candidate_id), ...p.map((x) => x.candidate_id)])];
-  const [names, profs, cskills] = candIds.length ? await Promise.all([
+  const [names, profs, cskills, csoft] = candIds.length ? await Promise.all([
     namesFor([...new Set([...candIds, ...sc.map((x) => x.candidate_id)])]),
     supabase.from("candidate_profiles").select("user_id, availability, years_experience, job_title").in("user_id", candIds),
     supabase.from("candidate_skills").select("candidate_id, technical_skills(skill_name)").in("candidate_id", candIds),
-  ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }];
+    supabase.from("candidate_soft_skills").select("candidate_id, soft_skills(soft_skill_name)").in("candidate_id", candIds),
+  ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
   const { data: convs } = await supabase.rpc("my_conversations");
   return {
     jobs: jobs.map((j) => ({ ...toInfo(j), created_at: j.created_at })),
@@ -87,6 +90,7 @@ export async function loadRecruiterAnalytics(uid: string) {
     names: names as Record<string, string>,
     profiles: must(profs) as { user_id: string; availability: string; years_experience: number; job_title: string }[],
     candidateSkills: (must(cskills) as unknown as { candidate_id: string; technical_skills: { skill_name: string } | null }[]),
+    candidateSoftSkills: (must(csoft) as unknown as { candidate_id: string; soft_skills: { soft_skill_name: string } | null }[]),
     contacted: [...new Set(((convs ?? []) as { candidate_id: string }[]).map((c) => c.candidate_id))],
   };
 }
