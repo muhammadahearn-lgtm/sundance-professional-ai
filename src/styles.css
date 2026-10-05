@@ -111,7 +111,7 @@
   img, video { max-width: 100%; }
   /* Comfortable touch targets on phones */
   @media (pointer: coarse) {
-    button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 2.25rem; }
+    select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 2.5rem; font-size: max(16px, 1em); }
     input[type="checkbox"], input[type="radio"] { min-width: 1.25rem; min-height: 1.25rem; }
   }
   /* Respect people who turn off animations */
