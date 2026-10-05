@@ -225,6 +225,13 @@
       "when": 1791228838384,
       "tag": "0031_moderation_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791229183531,
+      "tag": "0032_grant_owner_moderator",
+      "breakpoints": true
     }
   ]
 }
