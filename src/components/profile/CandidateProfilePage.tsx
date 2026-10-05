@@ -4,19 +4,20 @@ import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Sparkles, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake,
+  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Sparkles, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Globe, FolderGit2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { computeCompletion, missingRequired, validateProfessional, validateResumeFile, SUMMARY_MAX } from "@/lib/profile-completion";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
+import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } from "./links-projects";
 import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 
 type Lk = { lookup_id: string; proficiency_level: Proficiency; years_experience: number };
 
 async function loadAll(uid: string) {
-  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl] = await Promise.all([
+  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle(),
     supabase.from("work_experience").select("*").eq("candidate_id", uid),
     supabase.from("education").select("*").eq("candidate_id", uid),
@@ -30,8 +31,9 @@ async function loadAll(uid: string) {
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
     supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", uid),
     supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
+    supabase.from("candidate_projects").select("project_id, title, description, project_url, technologies").eq("candidate_id", uid).order("created_at"),
   ]);
-  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl].find((r) => r.error)?.error;
+  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj].find((r) => r.error)?.error;
   if (err) throw err;
   const langOpts = (ll.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name }));
   const skillOpts = (sl.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name }));
@@ -43,6 +45,7 @@ async function loadAll(uid: string) {
     languages: join(langs.data as Lk[] | null, langOpts), skills: join(skills.data as Lk[] | null, skillOpts), technologies: join(techs.data as Lk[] | null, techOpts),
     roleNames: (rl.data ?? []).map((r) => r.role_name), langOpts, skillOpts, techOpts,
     softSkills: (cs.data ?? []).map((x) => x.lookup_id), softOpts: (ssl.data ?? []).map((x) => ({ id: x.soft_skill_id, name: x.soft_skill_name })),
+    projects: (pj.data ?? []) as Project[],
   };
 }
 type Data = Awaited<ReturnType<typeof loadAll>>;
@@ -54,7 +57,8 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [preview, setPreview] = useState(false);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
-  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "soft" | "tech" | null>(null);
+  const [editLinks, setEditLinks] = useState(false);
+  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "soft" | "tech" | "proj" | null>(null);
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -102,6 +106,10 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           )}
         </Section>
 
+        <Section id="links" title="LinkedIn, GitHub & Portfolio" icon={<Globe className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
+          {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
+        </Section>
+
         <Section id="resume" title="Resume" icon={<FileText className="h-4 w-4" />}>
           <ResumeManager uid={uid} p={p} />
           <div className="mt-5 flex gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/40 p-5">
@@ -116,6 +124,9 @@ export function CandidateProfilePage({ account }: { account: Account }) {
 
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
           <ExperienceManager uid={uid} items={data.experience} adding={adding === "exp"} setAdding={(v) => setAdding(v ? "exp" : null)} />
+        </Section>
+        <Section id="projects" title="Projects" icon={<FolderGit2 className="h-4 w-4" />} action={adding !== "proj" && addBtn("Add Project", () => setAdding("proj"))}>
+          <ProjectsManager uid={uid} items={data.projects ?? []} adding={adding === "proj"} setAdding={(v) => setAdding(v ? "proj" : null)} />
         </Section>
         <Section id="education" title="Education" icon={<GraduationCap className="h-4 w-4" />} action={adding !== "edu" && addBtn("Add Education", () => setAdding("edu"))}>
           <EducationManager uid={uid} items={data.education} adding={adding === "edu"} setAdding={(v) => setAdding(v ? "edu" : null)} />
@@ -399,12 +410,14 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
           {!p.hide_from_current_employer && p.current_employer && <span>{p.current_employer}</span>}
           <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
         </div>
+        <div className="mt-4"><LinkBadges p={p} /></div>
         {p.summary && <p className="mt-4 whitespace-pre-line text-sm">{p.summary}</p>}
         {p.industry_experience.length > 0 && <div className="mt-4"><Chips items={p.industry_experience} /></div>}
       </section>
       {block("Experience", data.experience.length ? <ul className="space-y-4">{[...data.experience].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? "")).map((x) => (
         <li key={x.experience_id}><p className="font-semibold">{x.job_title}</p><p className="text-sm text-muted-foreground">{x.company_name}{x.location && ` · ${x.location}`}</p>{x.responsibilities && <p className="mt-1 text-sm">{x.responsibilities}</p>}</li>
       ))}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
+      {block("Projects", <ProjectList items={data.projects ?? []} />)}
       {block("Education", data.education.length ? <ul className="space-y-2">{data.education.map((x) => <li key={x.education_id} className="text-sm"><span className="font-semibold">{x.institution_name}</span> — {[x.degree, x.field_of_study].filter(Boolean).join(", ")} {x.graduation_year && `(${x.graduation_year})`}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
       {block("Certifications", data.certifications.length ? <ul className="space-y-2">{data.certifications.map((x) => <li key={x.certification_id} className="text-sm"><span className="font-semibold">{x.certification_name}</span>{x.issuing_organization && ` — ${x.issuing_organization}`}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
       {block("Languages", lk(data.languages))}
