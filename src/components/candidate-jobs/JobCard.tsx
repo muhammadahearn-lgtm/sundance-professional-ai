@@ -9,7 +9,8 @@ import { card } from "@/components/profile/parts";
 import { BrandImg } from "@/components/recruiter/shared";
 import { ARRANGEMENT, EMPLOYMENT, formatSalary, lbl } from "@/components/jobs/shared";
 import { shareJob, type JobLists } from "./useJobLists";
-import { asDetails, type ScoreRow } from "@/components/match/Match";
+import { asDetails, LocationAlignmentBadge, type ScoreRow } from "@/components/match/Match";
+import type { LocationAlignment } from "@/lib/location";
 import { Button } from "@/components/ui/button";
 
 export const postedAgo = (iso: string) => {
@@ -45,7 +46,7 @@ function MatchIntelligence({ score, row, open, onToggle }: { score: number | und
   );
 }
 
-function MatchInsights({ row, open }: { row: ScoreRow | undefined; open: boolean }) {
+function MatchInsights({ row, open, locAlign }: { row: ScoreRow | undefined; open: boolean; locAlign?: LocationAlignment | undefined }) {
   if (!row) return null;
   const d = asDetails(row.details);
   const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies];
