@@ -19,7 +19,7 @@ export function SiteFooter() {
             ))}
           </div>
         </div>
-        <FooterCol title="Company" links={[["About", "/about"], ["Contact", "/contact"], ["Careers", "/contact"]]} />
+        <FooterCol title="Company" links={[["About", "/about"], ["Contact", "/contact"], ["Help Center", "/help"]]} />
         <FooterCol title="Platform" links={[["Jobs", "/register"], ["Talent Search", "/register"], ["Pricing", "/pricing"]]} />
         <FooterCol title="Legal" links={[["Privacy Policy", "/privacy"], ["Terms Of Service", "/terms"], ["Community Guidelines", "/community-guidelines"]]} />
       </div>
@@ -30,7 +30,7 @@ export function SiteFooter() {
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: [string, "/about" | "/contact" | "/register" | "/pricing" | "/privacy" | "/terms" | "/community-guidelines"][] }) {
+function FooterCol({ title, links }: { title: string; links: [string, "/about" | "/contact" | "/help" | "/register" | "/pricing" | "/privacy" | "/terms" | "/community-guidelines"][] }) {
   return (
     <div>
       <h4 className="text-sm font-semibold">{title}</h4>

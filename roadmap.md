@@ -30,5 +30,5 @@
 - [x] 5. Account controls — password change, deletion with clear explanation, file cleanup
 - [x] 6. Empty states & error recovery — in-page error screens with Try again/Go back, offline banner, retry on failed lists, failed-save alerts
 - [x] 7. Mobile & accessibility — skip link, keyboard focus, labels, phone menu, reduced motion, phone layout fixes (candidate pages checked; recruiter pages not browser-checked)
-- [ ] 8. Launch operations
+- [x] 8. Launch operations — Help Center / FAQ at /help, contact page with support email + topic form (opens email app)
 - [ ] 9. Production verification after publishing
