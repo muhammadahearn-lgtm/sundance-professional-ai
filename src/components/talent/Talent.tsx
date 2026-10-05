@@ -1,13 +1,13 @@
 import { LocationFilter } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
-import { DEGREE_TYPES } from "@/lib/education";
+import { DEGREE_TYPES, educationAlignment, highestDegree, type EducationAlignment } from "@/lib/education";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { formatSalaryAmount } from "@/lib/salary";
 import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
 import { track } from "@/lib/track";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
-import { LocationAlignmentBadge, MatchBadge, MatchFilter, useAutoRecalc, useScores, type ScoreRow } from "@/components/match/Match";
+import { LocationAlignmentBadge, EducationAlignmentBadge, MatchBadge, MatchFilter, useAutoRecalc, useScores, type ScoreRow } from "@/components/match/Match";
 import { locationAlignment, type LocationAlignment } from "@/lib/location";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -79,7 +79,7 @@ export function useCandidateLists(uid: string) {
 }
 type Lists = ReturnType<typeof useCandidateLists>;
 
-export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined }) {
+export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
   return (
@@ -93,7 +93,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign }: {
             <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
           <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs experience</span></p>
-          {row && <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><div className="overflow-hidden"><AlignmentRow r={row} />{locAlign && <div className="mt-2 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</span><LocationAlignmentBadge value={locAlign} /></div>}</div></div>}
+          {row && <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><div className="overflow-hidden"><AlignmentRow r={row} />{locAlign && <div className="mt-2 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</span><LocationAlignmentBadge value={locAlign} /></div>}{eduAlign && <div className="mt-2 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Education Fit</span><EducationAlignmentBadge value={eduAlign} /></div>}</div></div>}
           {c.headline && <p className="mt-2 text-sm font-medium">{c.headline}</p>}
           {c.summary && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>}
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
@@ -174,7 +174,7 @@ function useJobContext(uid: string) {
     queryFn: async () => {
       const [c, j] = await Promise.all([
         supabase.from("companies").select("company_id, company_name").eq("created_by", uid).order("company_name"),
-        supabase.from("jobs").select("job_id, job_title, company_id, location_country, location_state, location_city, work_arrangement").eq("recruiter_id", uid).eq("job_status", "active").order("job_title"),
+        supabase.from("jobs").select("job_id, job_title, company_id, location_country, location_state, location_city, work_arrangement, minimum_degree").eq("recruiter_id", uid).eq("job_status", "active").order("job_title"),
       ]);
       if (c.error) throw c.error;
       if (j.error) throw j.error;
@@ -283,7 +283,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
             : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} />)}</div>
-            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} locAlign={selJob ? locationAlignment({ country: c.country ?? "", state: c.state ?? "", city: c.city ?? "" }, { country: selJob.location_country ?? "", state: selJob.location_state ?? "", city: selJob.location_city ?? "" }, selJob.work_arrangement, c.arrangement) : undefined} />)}
+            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} locAlign={selJob ? locationAlignment({ country: c.country ?? "", state: c.state ?? "", city: c.city ?? "" }, { country: selJob.location_country ?? "", state: selJob.location_state ?? "", city: selJob.location_city ?? "" }, selJob.work_arrangement, c.arrangement) : undefined} eduAlign={selJob ? educationAlignment(c.education ?? [], selJob.minimum_degree) : undefined} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
       </div>

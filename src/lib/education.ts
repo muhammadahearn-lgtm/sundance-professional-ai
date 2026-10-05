@@ -39,3 +39,19 @@ export function matchesEducation(records: EduLike[], f: EduFilter): boolean {
     (!fk || eduKey(r.field_of_study ?? "") === fk) &&
     (!f.gradAfter || (r.graduation_year ?? 0) > f.gradAfter));
 }
+
+/** Highest degree across records (by rank), or null. */
+export function highestDegree(records: EduLike[]): string | null {
+  let best: string | null = null;
+  for (const r of records) if (r.degree_type && degreeRank(r.degree_type) > degreeRank(best)) best = r.degree_type;
+  return best;
+}
+export type EducationAlignment = "meets" | "below" | "missing";
+export const EDU_ALIGNMENT_LABEL: Record<EducationAlignment, string> = { meets: "Meets Education Preference", below: "Below Preferred Degree", missing: "No Education Listed" };
+/** Informational only — never part of match scores. Null when the job has no degree preference. */
+export function educationAlignment(records: EduLike[], minDegree: string | null | undefined): EducationAlignment | null {
+  if (!minDegree) return null;
+  const top = highestDegree(records);
+  if (!top) return "missing";
+  return degreeRank(top) >= degreeRank(minDegree) ? "meets" : "below";
+}

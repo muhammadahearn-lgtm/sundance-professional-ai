@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { recalculateMatches } from "@/lib/match.functions";
 import { MATCH_FILTERS, matchTier, type MatchDetails } from "@/lib/match-engine";
 import { ALIGNMENT_LABEL, type LocationAlignment } from "@/lib/location";
+import { EDU_ALIGNMENT_LABEL, type EducationAlignment } from "@/lib/education";
 
 export type ScoreRow = {
   candidate_id: string; job_id: string; overall_match_score: number; language_alignment_score: number; skill_alignment_score: number;
@@ -205,4 +206,10 @@ export function RecruiterMatchWidget() {
       )}
     </section>
   );
+}
+
+const EDU_TONE: Record<EducationAlignment, string> = { meets: "bg-success/15 text-success", below: "bg-warning/15 text-warning", missing: "bg-muted text-muted-foreground" };
+/** Informational education fit chip — never part of the match score. */
+export function EducationAlignmentBadge({ value }: { value: EducationAlignment }) {
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${EDU_TONE[value]}`} title="Education fit is informational and never affects the match score.">{EDU_ALIGNMENT_LABEL[value]}</span>;
 }
