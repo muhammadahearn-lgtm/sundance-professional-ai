@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { MapPin, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculateMatches } from "@/lib/match.functions";
 import { MATCH_FILTERS, matchTier, type MatchDetails } from "@/lib/match-engine";
+import { ALIGNMENT_LABEL, type LocationAlignment } from "@/lib/location";
 
 export type ScoreRow = {
   candidate_id: string; job_id: string; overall_match_score: number; language_alignment_score: number; skill_alignment_score: number;
