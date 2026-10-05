@@ -140,8 +140,9 @@ export function AppShell({ account }: { account: Account }) {
             {nav}
             <div
               role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
-              title="Drag to resize"
+              title="Drag to resize, double-click to hide"
               onPointerDown={startResize}
+              onDoubleClick={toggleCollapsed}
               className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
             />
           </aside>
