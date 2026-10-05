@@ -8,7 +8,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, ChevronDown, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
@@ -75,6 +75,7 @@ type Lists = ReturnType<typeof useCandidateLists>;
 
 export function CandidateCard({ c, t, lists, score, jobTitle, row }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
+  const [open, setOpen] = useState(false);
   return (
     <article className={`${card} p-5`}>
       <div className="flex gap-4">
@@ -83,10 +84,10 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row }: { c: Talent
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
-            <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-1"><MatchBadge score={score} /><span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
+            <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
           <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs experience</span></p>
-          {row && <AlignmentRow r={row} />}
+          {row && <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><div className="overflow-hidden"><AlignmentRow r={row} /></div></div>}
           {c.headline && <p className="mt-2 text-sm font-medium">{c.headline}</p>}
           {c.summary && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>}
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
