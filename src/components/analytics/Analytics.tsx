@@ -225,6 +225,7 @@ function candidateMetrics(d: CandidateAnalyticsData, f: Filters, w: DateWindow, 
     topRoles: groupAvg(d.scores.filter((s) => ok(s.job_id)).map((s) => ({ k: [jobOf(s.job_id)?.role || jobOf(s.job_id)?.job_title || ""], v: Number(s.overall_match_score) }))),
     topIndustries: groupAvg(d.scores.filter((s) => ok(s.job_id)).map((s) => ({ k: [jobOf(s.job_id)?.industry ?? ""], v: Number(s.overall_match_score) }))),
     topTech: groupAvg(d.scores.filter((s) => ok(s.job_id)).map((s) => ({ k: jobOf(s.job_id)?.technologies ?? [], v: Number(s.overall_match_score) }))),
+    topLocations: groupAvg(d.scores.filter((s) => ok(s.job_id)).map((s) => ({ k: [jobOf(s.job_id)?.location ?? ""], v: Number(s.overall_match_score) }))),
     added: { skills: added(d.skills), technologies: added(d.technologies), certifications: added(d.certifications), experience: added(d.experience) },
     growth: byMonth([]).map((m, i) => ({
       x: m.month,
@@ -280,6 +281,7 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
               <ChartCard title="Top Matching Roles" empty={!m.topRoles.length}><Bars data={m.topRoles} unit="%" /></ChartCard>
               <ChartCard title="Top Matching Industries" empty={!m.topIndustries.length}><Bars data={m.topIndustries} unit="%" /></ChartCard>
               <ChartCard title="Top Matching Technologies" empty={!m.topTech.length}><Bars data={m.topTech} unit="%" /></ChartCard>
+              <ChartCard title="Top Matching Locations" empty={!m.topLocations.length}><Bars data={m.topLocations} unit="%" /></ChartCard>
             </div>
           </Section>
 
@@ -359,6 +361,8 @@ function recruiterMetrics(d: RecruiterAnalyticsData, f: Filters, w: DateWindow, 
     appsPerHire: hired ? Math.round((apps.length / hired) * 10) / 10 : null,
     topJobs: [...jobPerf].sort((a, b) => b.hireRate - a.hireRate || b.interviewRate - a.interviewRate || b.applications - a.applications).slice(0, 5),
     availability: tally(profs, (p) => label(p.availability || "Not set")),
+    appsByLocation: tally(apps, (a) => d.jobs.find((j) => j.job_id === a.job_id)?.location),
+    candLocations: tally(profs, (p) => p.location),
     experience: ["0–1 yrs", "2–4 yrs", "5–7 yrs", "8–11 yrs", "12+ yrs"].map((b) => ({ name: b, value: profs.filter((p) => expBucket(p.years_experience) === b).length })),
     skills: tally(d.candidateSkills.filter((s) => candInScope.has(s.candidate_id)), (s) => s.technical_skills?.skill_name),
     // Soft skills: informational only, never scored.
@@ -415,6 +419,7 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
             <div className="grid gap-4 lg:grid-cols-2">
               <ChartCard title="Applications Per Job" empty={!m.jobPerf.length}><Bars data={m.jobPerf.map((j) => ({ name: j.job, value: j.applications }))} /></ChartCard>
               <ChartCard title="Applications By Month" empty={!m.apps.length}><Trend data={m.appsByMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard>
+              <ChartCard title="Applications By Location" empty={!m.appsByLocation.length}><Bars data={m.appsByLocation} /></ChartCard>
             </div>
           </Section>
 
@@ -426,6 +431,7 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
               <ChartCard title="Match Distribution" empty={!m.distribution.some((x) => x.value)}><Bars data={m.distribution} /></ChartCard>
               <ChartCard title="Candidate Availability" empty={!m.availability.length}><Donut data={m.availability} /></ChartCard>
               <ChartCard title="Candidate Experience" empty={!m.experience.some((x) => x.value)}><Bars data={m.experience} /></ChartCard>
+              <ChartCard title="Candidate Locations" empty={!m.candLocations.length}><Bars data={m.candLocations} /></ChartCard>
               <ChartCard title="Candidate Skills" empty={!m.skills.length}><Bars data={m.skills} /></ChartCard>
               <ChartCard title="Most Requested Soft Skills" empty={!m.softRequested.length}><Bars data={m.softRequested} /></ChartCard>
               <ChartCard title="Most Common Candidate Soft Skills" empty={!m.candidateSoft.length}><Bars data={m.candidateSoft} /></ChartCard>

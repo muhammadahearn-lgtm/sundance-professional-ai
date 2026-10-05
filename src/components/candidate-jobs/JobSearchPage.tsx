@@ -1,4 +1,5 @@
 import { LocationFilter } from "@/components/location/LocationFields";
+import { locationAlignment } from "@/lib/location";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
@@ -29,8 +30,8 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const scoreMap = Object.fromEntries((scoreQ.data ?? []).map((r) => [r.job_id, Number(r.overall_match_score)]));
   const results = useQuery({ queryKey: ["job-search", search, scoreQ.dataUpdatedAt], queryFn: () => searchJobs(search, tax.data!, scoreMap), enabled: !!tax.data && !scoreQ.isLoading, placeholderData: keepPreviousData });
   const suggested = useQuery({ queryKey: ["candidate-suggest", uid], queryFn: async () => {
-    const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title").eq("user_id", uid).maybeSingle();
-    return [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4);
+    const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title, location_country, location_state, location_city, work_arrangement").eq("user_id", uid).maybeSingle();
+    return { terms: [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4), loc: data ? { country: data.location_country, state: data.location_state, city: data.location_city } : null, arrangement: data?.work_arrangement ?? "" };
   } });
   const [q, setQ] = useState(search.q);
   const [recent, setRecent] = useState<string[]>([]);
@@ -64,7 +65,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         </form>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
           {recent.length > 0 && <><Clock className="h-3.5 w-3.5 text-muted-foreground" />{recent.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
-          {(suggested.data ?? []).length > 0 && <><Sparkles className="ml-1 h-3.5 w-3.5 text-primary" />{suggested.data!.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
+          {(suggested.data?.terms ?? []).length > 0 && <><Sparkles className="ml-1 h-3.5 w-3.5 text-primary" />{suggested.data!.terms.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
           <TrendingUp className="ml-1 h-3.5 w-3.5 text-muted-foreground" />{POPULAR_SEARCHES.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}
         </div>
       </div>
@@ -97,7 +98,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} />)}
+              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>

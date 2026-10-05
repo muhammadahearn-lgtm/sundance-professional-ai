@@ -5,7 +5,7 @@ import type { Taxonomy } from "./jobs-data";
 import type { ReqItem, ReqLevel } from "./job-rules";
 import { PAGE_SIZE, experienceRange, intersect, relevance, sanitizeKeyword, type SearchState } from "./job-search";
 
-const CARD_SELECT = "job_id, job_title, role_id, location, work_arrangement, employment_type, minimum_years_experience, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level), job_soft_skills(lookup_id, requirement_level)";
+const CARD_SELECT = "job_id, job_title, role_id, location, location_country, location_state, location_city, work_arrangement, employment_type, minimum_years_experience, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level), job_soft_skills(lookup_id, requirement_level)";
 
 async function idsFor(table: "job_languages" | "job_skills" | "job_technologies", lookups: string[]) {
   if (!lookups.length) return [];

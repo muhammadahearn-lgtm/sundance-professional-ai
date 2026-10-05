@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { MapPin, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculateMatches } from "@/lib/match.functions";
 import { MATCH_FILTERS, matchTier, type MatchDetails } from "@/lib/match-engine";
+import { ALIGNMENT_LABEL, type LocationAlignment } from "@/lib/location";
 
 export type ScoreRow = {
   candidate_id: string; job_id: string; overall_match_score: number; language_alignment_score: number; skill_alignment_score: number;
@@ -62,6 +63,13 @@ export function MatchBadge({ score, showLabel = false }: { score: number | null 
   if (score == null) return <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground" title="Match Score Unavailable">— match</span>;
   const t = matchTier(Number(score));
   return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${toneCls[t.tone]}`} title={t.label}>{Math.round(Number(score))}%{showLabel && <span className="font-semibold">· {t.label}</span>}</span>;
+}
+
+const LOC_TONE: Record<LocationAlignment, string> = { strong: "bg-success/15 text-success", partial: "bg-warning/15 text-warning", conflict: "bg-destructive/10 text-destructive" };
+
+/** Informational location fit chip — never part of the match score. */
+export function LocationAlignmentBadge({ value }: { value: LocationAlignment }) {
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${LOC_TONE[value]}`} title="Location fit is informational and never affects the match score."><MapPin className="h-3 w-3" />{ALIGNMENT_LABEL[value]}</span>;
 }
 
 function Bar({ label, v, weight }: { label: string; v: number; weight: string }) {

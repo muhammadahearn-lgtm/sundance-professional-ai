@@ -9,7 +9,8 @@ import { card } from "@/components/profile/parts";
 import { BrandImg } from "@/components/recruiter/shared";
 import { ARRANGEMENT, EMPLOYMENT, formatSalary, lbl } from "@/components/jobs/shared";
 import { shareJob, type JobLists } from "./useJobLists";
-import { asDetails, type ScoreRow } from "@/components/match/Match";
+import { asDetails, LocationAlignmentBadge, type ScoreRow } from "@/components/match/Match";
+import type { LocationAlignment } from "@/lib/location";
 import { Button } from "@/components/ui/button";
 
 export const postedAgo = (iso: string) => {
@@ -45,7 +46,7 @@ function MatchIntelligence({ score, row, open, onToggle }: { score: number | und
   );
 }
 
-function MatchInsights({ row, open }: { row: ScoreRow | undefined; open: boolean }) {
+function MatchInsights({ row, open, locAlign }: { row: ScoreRow | undefined; open: boolean; locAlign?: LocationAlignment | undefined }) {
   if (!row) return null;
   const d = asDetails(row.details);
   const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies];
@@ -58,6 +59,7 @@ function MatchInsights({ row, open }: { row: ScoreRow | undefined; open: boolean
               <div className="space-y-2.5">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Match Summary</p>
                 {bars.map(([l, v]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l}</span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
+                {locAlign && <div className="pt-1"><p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</p><LocationAlignmentBadge value={locAlign} /></div>}
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-success">Why You Match</p>
@@ -98,7 +100,7 @@ function ReqGroup({ title, rows, names, tone }: { title: string; rows: ReqRow[] 
   );
 }
 
-export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined }) {
+export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, locAlign }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined }) {
   const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
@@ -133,7 +135,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
           </div>
         </div>
       </div>
-      <MatchInsights row={scoreRow} open={insightsOpen} />
+      <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} />
       <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">View Job</Link>
             {onRemove ? <button onClick={onRemove} className={act}><BookmarkCheck className="h-4 w-4" />Remove</button>

@@ -77,7 +77,7 @@ export async function loadRecruiterAnalytics(uid: string) {
   const candIds = [...new Set([...a.map((x) => x.candidate_id), ...p.map((x) => x.candidate_id)])];
   const [names, profs, cskills, csoft] = candIds.length ? await Promise.all([
     namesFor([...new Set([...candIds, ...sc.map((x) => x.candidate_id)])]),
-    supabase.from("candidate_profiles").select("user_id, availability, years_experience, job_title").in("user_id", candIds),
+    supabase.from("candidate_profiles").select("user_id, availability, years_experience, job_title, location").in("user_id", candIds),
     supabase.from("candidate_skills").select("candidate_id, technical_skills(skill_name)").in("candidate_id", candIds),
     supabase.from("candidate_soft_skills").select("candidate_id, soft_skills(soft_skill_name)").in("candidate_id", candIds),
   ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
@@ -88,7 +88,7 @@ export async function loadRecruiterAnalytics(uid: string) {
     views: (must(views) as { job_id: string; views: number; viewers: number }[]),
     messages: must(msgs), notifications: must(notifs),
     names: names as Record<string, string>,
-    profiles: must(profs) as { user_id: string; availability: string; years_experience: number; job_title: string }[],
+    profiles: must(profs) as { user_id: string; availability: string; years_experience: number; job_title: string; location: string }[],
     candidateSkills: (must(cskills) as unknown as { candidate_id: string; technical_skills: { skill_name: string } | null }[]),
     candidateSoftSkills: (must(csoft) as unknown as { candidate_id: string; soft_skills: { soft_skill_name: string } | null }[]),
     contacted: [...new Set(((convs ?? []) as { candidate_id: string }[]).map((c) => c.candidate_id))],
