@@ -33,7 +33,7 @@ const ActivityAlert = ({ title, message, actionUrl, actionLabel }: Props) => (
 
 export const template = {
   component: ActivityAlert,
-  subject: (d: Record<string, any>) => (d.title ? `${d.title} — Sundance Professionals` : 'New update on Sundance Professionals'),
+  subject: (d: Record<string, any>) => (d['title'] ? `${d['title']} — Sundance Professionals` : 'New update on Sundance Professionals'),
   displayName: 'Activity alert (applications, status updates, messages)',
   previewData: {
     title: 'New application',
