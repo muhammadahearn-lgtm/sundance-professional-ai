@@ -313,7 +313,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
 }
 
 /** Soft skills: searchable multi-select shown as badges. Display/search only — never used in scoring. */
-export function SoftSkillManager({ uid, options, selected, adding, setAdding }: { uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
+export function SoftSkillManager({ uid, options = [], selected = [], adding, setAdding }: { uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<string[]>([]);

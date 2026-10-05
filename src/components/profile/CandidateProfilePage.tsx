@@ -131,7 +131,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           <LookupManager uid={uid} table="candidate_skills" options={data.skillOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
         </Section>
         <Section id="soft-skills" title="Soft Skills" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
-          <SoftSkillManager uid={uid} options={data.softOpts} selected={data.softSkills} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
+          <SoftSkillManager uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
         </Section>
         <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
           <LookupManager uid={uid} table="candidate_technologies" options={data.techOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
@@ -409,7 +409,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
       {block("Certifications", data.certifications.length ? <ul className="space-y-2">{data.certifications.map((x) => <li key={x.certification_id} className="text-sm"><span className="font-semibold">{x.certification_name}</span>{x.issuing_organization && ` — ${x.issuing_organization}`}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
       {block("Languages", lk(data.languages))}
       {block("Skills", lk(data.skills))}
-      {block("Soft Skills", <Chips items={data.softSkills.map((id) => data.softOpts.find((o) => o.id === id)?.name ?? "").filter(Boolean)} />)}
+      {block("Soft Skills", <Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} />)}
       {block("Technologies", lk(data.technologies))}
       {block("Career Preferences", <PrefsView p={p} />)}
     </div>
