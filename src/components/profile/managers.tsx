@@ -323,17 +323,17 @@ export function SoftSkillManager({ uid, options, selected, adding, setAdding }: 
   const available = options.filter((o) => !selected.includes(o.id) && o.name.toLowerCase().includes(q.toLowerCase()));
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
   const save = async () => {
-    if (!picked.length) return close();
+    if (!picked.length) { close(); return; }
     setBusy(true);
     const { error } = await supabase.from("candidate_soft_skills").insert(picked.map((id) => ({ candidate_id: uid, lookup_id: id })));
     setBusy(false);
-    if (error) return toast.error(friendlyError(error, "Couldn't add soft skills."));
-    toast.success("Soft skills updated"); close(); refresh();
+    if (error) { toast.error(friendlyError(error, "Couldn't add soft skills.")); return; }
+    toast.success("Soft skills updated"); close(); void refresh();
   };
   const remove = async (id: string) => {
     const { error } = await supabase.from("candidate_soft_skills").delete().eq("candidate_id", uid).eq("lookup_id", id);
-    if (error) return toast.error(friendlyError(error, "Couldn't remove soft skill."));
-    toast.success("Soft skill removed"); refresh();
+    if (error) { toast.error(friendlyError(error, "Couldn't remove soft skill.")); return; }
+    toast.success("Soft skill removed"); void refresh();
   };
   return (
     <div className="space-y-4">
