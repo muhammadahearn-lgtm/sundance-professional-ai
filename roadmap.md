@@ -21,3 +21,14 @@
 - [x] Stage 18 — Production readiness: security pass (functions locked down, missing indexes added), data checks, regression tests. Remaining: phone/tablet pass, accessibility pass, performance tuning.
 
 - [x] Update Sundance Professional AI branding to Sundance Professionals across displayed pages and metadata.
+
+## MVP launch readiness
+- [ ] 1. Real user testing (needs real candidates/recruiters)
+- [ ] 2. Email delivery & notification checks
+- [ ] 3. Legal & trust pages (needs legal review)
+- [x] 4. Moderation & reporting — report buttons, review page, suspend/pause (needs a reviewer account assigned)
+- [x] 5. Account controls — password change, deletion with clear explanation, file cleanup
+- [ ] 6. Empty states & error recovery audit
+- [ ] 7. Mobile & accessibility review
+- [ ] 8. Launch operations
+- [ ] 9. Production verification after publishing

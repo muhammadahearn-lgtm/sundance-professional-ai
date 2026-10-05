@@ -37,3 +37,4 @@
 - Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
+- Reports go in `reports`; only users in `moderators` (checked by `is_moderator`) review them and restrict via `moderate_restrict`. Why: no client can grant itself review power.
