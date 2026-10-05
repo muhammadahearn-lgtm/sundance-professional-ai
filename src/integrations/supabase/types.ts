@@ -751,9 +751,12 @@ export type Database = {
           candidate_id: string
           created_at: string
           degree: string
+          degree_type: string | null
           education_id: string
           field_of_study: string
+          field_of_study_key: string
           graduation_year: number | null
+          institution_key: string
           institution_name: string
           updated_at: string
         }
@@ -761,9 +764,12 @@ export type Database = {
           candidate_id: string
           created_at?: string
           degree?: string
+          degree_type?: string | null
           education_id?: string
           field_of_study?: string
+          field_of_study_key?: string
           graduation_year?: number | null
+          institution_key?: string
           institution_name: string
           updated_at?: string
         }
@@ -771,9 +777,12 @@ export type Database = {
           candidate_id?: string
           created_at?: string
           degree?: string
+          degree_type?: string | null
           education_id?: string
           field_of_study?: string
+          field_of_study_key?: string
           graduation_year?: number | null
+          institution_key?: string
           institution_name?: string
           updated_at?: string
         }
@@ -1880,6 +1889,14 @@ export type Database = {
           _url: string
         }
         Returns: undefined
+      }
+      education_degree_from_text: { Args: { _v: string }; Returns: string }
+      education_suggestions: {
+        Args: never
+        Returns: {
+          kind: string
+          name: string
+        }[]
       }
       has_role: {
         Args: {
