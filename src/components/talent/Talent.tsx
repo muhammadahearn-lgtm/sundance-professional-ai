@@ -244,27 +244,30 @@ const prof = (rows: { lookup_id: string; proficiency_level: string; years_experi
   rows.length ? <div className="flex flex-wrap gap-1.5">{rows.map((r) => <span key={r.lookup_id} className="rounded-full border border-border px-3 py-1 text-xs"><strong className="font-semibold">{nameOf(opts, r.lookup_id)}</strong> · {cap(r.proficiency_level)}{r.years_experience ? ` · ${r.years_experience}y` : ""}</span>)}</div> : <span className="text-sm text-muted-foreground">—</span>;
 
 /** Full recruiter-facing profile body (used by talent profile and application review). */
-export function CandidateProfileBody({ d, t }: { d: CandidateFull; t: Taxonomy }) {
+export function CandidateProfileBody({ d, t, aside }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode }) {
   const p = d.profile;
   const [busy, setBusy] = useState(false);
   async function download() { if (!p.resume_path) return; setBusy(true); try { window.open(await resumeUrl(p.resume_path, p.resume_file_name), "_blank", "noopener"); } catch (e) { toast.error(friendlyError(e, "Resume not available.")); } setBusy(false); }
   return (
-    <div className="space-y-6">
-      <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Professional Information</h2>
-        {p.headline && <p className="mt-3 font-medium">{p.headline}</p>}{p.summary && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{p.summary}</p>}
-        <dl className="mt-4 grid gap-4 sm:grid-cols-3"><Item k="Current Role" v={p.job_title} /><Item k="Years Experience" v={`${p.years_experience}`} /><Item k="Industry Experience" v={p.industry_experience.join(", ")} /></dl></div>
-      <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Work Experience</h2>
-        {d.experience.length ? <ol className="mt-4 space-y-5">{d.experience.map((e) => <li key={e.experience_id} className="border-l-2 border-primary/30 pl-4"><p className="font-semibold">{e.job_title} · {e.company_name}</p><p className="text-xs text-muted-foreground">{[e.location, e.industry, `${e.start_date ?? "?"} – ${e.current_position ? "Present" : e.end_date ?? "?"}`].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{e.responsibilities}</p>}{e.achievements && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.achievements}</p>}{e.technologies_used.length > 0 && <p className="mt-1 text-xs">Tech: {e.technologies_used.join(", ")}</p>}</li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No experience listed.</p>}</div>
-      <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
-        <Item k="Programming Languages" v={prof(d.languages, t.languages)} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Technologies" v={prof(d.technologies, t.technologies)} /></div>
-      <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Projects</h2><ProjectList items={d.projects ?? []} /></div>
-      <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="min-w-0 space-y-6">
+        <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Professional Overview</h2>
+          {p.headline && <p className="mt-3 font-medium">{p.headline}</p>}{p.summary && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{p.summary}</p>}
+          <dl className="mt-4 grid gap-4 sm:grid-cols-3"><Item k="Current Role" v={p.job_title} /><Item k="Years Experience" v={`${p.years_experience}`} /><Item k="Industry Experience" v={p.industry_experience.join(", ")} /></dl></div>
+        <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Work Experience</h2>
+          {d.experience.length ? <ol className="mt-4 space-y-5">{d.experience.map((e) => <li key={e.experience_id} className="border-l-2 border-primary/30 pl-4"><p className="font-semibold">{e.job_title} · {e.company_name}</p><p className="text-xs text-muted-foreground">{[e.location, e.industry, `${e.start_date ?? "?"} – ${e.current_position ? "Present" : e.end_date ?? "?"}`].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{e.responsibilities}</p>}{e.achievements && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.achievements}</p>}{e.technologies_used.length > 0 && <p className="mt-1 text-xs">Tech: {e.technologies_used.join(", ")}</p>}</li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No experience listed.</p>}</div>
+        <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Projects</h2><ProjectList items={d.projects ?? []} /></div>
+        <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-6`}><div><h2 className="font-display text-lg font-bold">Resume</h2><p className="text-sm text-muted-foreground">{p.resume_file_name ?? "No resume uploaded"}</p></div>{p.resume_path && <button onClick={download} disabled={busy} className={btn}><Download className="h-4 w-4" />Download</button>}</div>
+      </div>
+      <div className="min-w-0 space-y-6">
+        {aside}
+        <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
+          <Item k="Programming Languages" v={prof(d.languages, t.languages)} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Technologies" v={prof(d.technologies, t.technologies)} /></div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><p className="font-semibold">{e.degree} {e.field_of_study && `· ${e.field_of_study}`}</p><p className="text-xs text-muted-foreground">{e.institution_name}{e.graduation_year && ` · ${e.graduation_year}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Certifications</h2>{d.certifications.length ? <ul className="mt-3 space-y-3">{d.certifications.map((c) => <li key={c.certification_id}><p className="font-semibold">{c.certification_name}</p><p className="text-xs text-muted-foreground">{c.issuing_organization}{c.issue_date && ` · ${c.issue_date}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
+        <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Career Preferences</h2>
+          <dl className="mt-4 grid gap-4 sm:grid-cols-2"><Item k="Target Roles" v={p.target_roles.join(", ")} /><Item k="Salary Expectation" v={p.salary_expectation} /><Item k="Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} /><Item k="Availability" v={label(AVAILABILITY, p.availability)} /><Item k="Locations Of Interest" v={p.locations_of_interest.join(", ")} /><Item k="Target Industries" v={p.target_industries.join(", ")} /></dl></div>
       </div>
-      <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Career Preferences</h2>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-3"><Item k="Target Roles" v={p.target_roles.join(", ")} /><Item k="Salary Expectation" v={p.salary_expectation} /><Item k="Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} /><Item k="Availability" v={label(AVAILABILITY, p.availability)} /><Item k="Locations Of Interest" v={p.locations_of_interest.join(", ")} /><Item k="Target Industries" v={p.target_industries.join(", ")} /></dl></div>
-      <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-6`}><div><h2 className="font-display text-lg font-bold">Resume</h2><p className="text-sm text-muted-foreground">{p.resume_file_name ?? "No resume uploaded"}</p></div>{p.resume_path && <button onClick={download} disabled={busy} className={btn}><Download className="h-4 w-4" />Download</button>}</div>
     </div>
   );
 }
@@ -295,16 +298,11 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="min-w-0 space-y-6">
-          <ProfileHeader d={q.data} actions={<>
-            <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
-            <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
-            <MessageButton role="recruiter" candidateId={id} className={btn} /></>} />
-          <CandidateProfileBody d={q.data} t={tax.data} />
-        </div>
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start"><MatchPlaceholder /></aside>
-      </div>
+      <ProfileHeader d={q.data} actions={<>
+        <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
+        <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
+        <MessageButton role="recruiter" candidateId={id} className={btn} /></>} />
+      <CandidateProfileBody d={q.data} t={tax.data} aside={<MatchPlaceholder />} />
     </div>
   );
 }
