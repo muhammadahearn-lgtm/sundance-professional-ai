@@ -1,3 +1,4 @@
+import { highestDegree } from "@/lib/education";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -363,6 +364,8 @@ function recruiterMetrics(d: RecruiterAnalyticsData, f: Filters, w: DateWindow, 
     availability: tally(profs, (p) => label(p.availability || "Not set")),
     appsByLocation: tally(apps, (a) => d.jobs.find((j) => j.job_id === a.job_id)?.location),
     candLocations: tally(profs, (p) => p.location),
+    candDegrees: tally(profs, (p) => highestDegree(d.candidateEducation.filter((e) => e.candidate_id === p.user_id)) ?? "Not Listed"),
+    candFields: tally(d.candidateEducation.filter((e) => candInScope.has(e.candidate_id) && e.field_of_study), (e) => e.field_of_study),
     experience: ["0–1 yrs", "2–4 yrs", "5–7 yrs", "8–11 yrs", "12+ yrs"].map((b) => ({ name: b, value: profs.filter((p) => expBucket(p.years_experience) === b).length })),
     skills: tally(d.candidateSkills.filter((s) => candInScope.has(s.candidate_id)), (s) => s.technical_skills?.skill_name),
     // Soft skills: informational only, never scored.
@@ -432,6 +435,8 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
               <ChartCard title="Candidate Availability" empty={!m.availability.length}><Donut data={m.availability} /></ChartCard>
               <ChartCard title="Candidate Experience" empty={!m.experience.some((x) => x.value)}><Bars data={m.experience} /></ChartCard>
               <ChartCard title="Candidate Locations" empty={!m.candLocations.length}><Bars data={m.candLocations} /></ChartCard>
+              <ChartCard title="Candidate Education Levels" empty={!m.candDegrees.length}><Bars data={m.candDegrees} /></ChartCard>
+              <ChartCard title="Candidate Fields Of Study" empty={!m.candFields.length}><Bars data={m.candFields} /></ChartCard>
               <ChartCard title="Candidate Skills" empty={!m.skills.length}><Bars data={m.skills} /></ChartCard>
               <ChartCard title="Most Requested Soft Skills" empty={!m.softRequested.length}><Bars data={m.softRequested} /></ChartCard>
               <ChartCard title="Most Common Candidate Soft Skills" empty={!m.candidateSoft.length}><Bars data={m.candidateSoft} /></ChartCard>

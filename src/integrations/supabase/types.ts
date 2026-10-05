@@ -998,6 +998,7 @@ export type Database = {
           location_state: string
           location_state_key: string
           maximum_salary: number | null
+          minimum_degree: string | null
           minimum_salary: number | null
           minimum_years_experience: number
           published_at: string | null
@@ -1028,6 +1029,7 @@ export type Database = {
           location_state?: string
           location_state_key?: string
           maximum_salary?: number | null
+          minimum_degree?: string | null
           minimum_salary?: number | null
           minimum_years_experience?: number
           published_at?: string | null
@@ -1058,6 +1060,7 @@ export type Database = {
           location_state?: string
           location_state_key?: string
           maximum_salary?: number | null
+          minimum_degree?: string | null
           minimum_salary?: number | null
           minimum_years_experience?: number
           published_at?: string | null

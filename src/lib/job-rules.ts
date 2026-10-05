@@ -8,14 +8,14 @@ export const DESCRIPTION_MAX = 10000;
 
 export type JobForm = {
   job_title: string; custom_title: string; level_id: string; role_id: string; company_id: string; employment_type: string; work_arrangement: string;
-  location: string; location_country: string; location_state: string; location_city: string; minimum_years_experience: string; experience_level: string; job_description: string;
+  location: string; location_country: string; location_state: string; location_city: string; minimum_years_experience: string; minimum_degree: string; experience_level: string; job_description: string;
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
   job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "", location_country: "", location_state: "", location_city: "",
-  minimum_years_experience: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
+  minimum_years_experience: "", minimum_degree: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
   minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "",
 });
 

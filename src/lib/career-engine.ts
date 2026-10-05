@@ -1,4 +1,5 @@
 /** Deterministic, explainable career intelligence. Same inputs always give the same output. */
+import { degreeRank } from "./education";
 import { LEVEL_WEIGHT, MATCH_WEIGHTS, type Req } from "./match-engine";
 
 export const READINESS_WEIGHTS = { completion: 20, skills: 25, technologies: 20, experience: 25, certifications: 10 } as const;
@@ -6,10 +7,13 @@ export const READINESS_WEIGHTS = { completion: 20, skills: 25, technologies: 20,
 export type CareerCandidate = {
   title: string; years: number; location: string; targetRoles: string[]; roleId: string | null;
   langs: string[]; skills: string[]; techs: string[]; certifications: string[]; completion: number;
+  /** Highest degree type, informational only — never part of readiness or match scores. */
+  degree?: string | null;
 };
 export type MarketJob = {
   id: string; title: string; roleId: string | null; minSalary: number | null; maxSalary: number | null; minYears: number;
   langs: Req[]; skills: Req[]; techs: Req[];
+  minDegree?: string | null;
 };
 export type ScoreLite = { jobId: string; overall: number; skills: number; technologies: number; experience: number };
 export type Kind = "language" | "skill" | "technology";
@@ -132,7 +136,7 @@ export function certFor(name: string): string | null {
   return k ? CERT_FOR[k]! : null;
 }
 
-export function recommendations(skillGaps: Gap[], techGaps: Gap[], langGaps: Gap[], c: CareerCandidate, techNames: string[], nJobs: number): Recommendation[] {
+export function recommendations(skillGaps: Gap[], techGaps: Gap[], langGaps: Gap[], c: CareerCandidate, techNames: string[], nJobs: number, rel: MarketJob[] = []): Recommendation[] {
   const recs: Recommendation[] = [];
   for (const g of [...skillGaps, ...techGaps, ...langGaps].sort((a, b) => b.impact - a.impact).slice(0, 6)) {
     recs.push({
@@ -145,6 +149,8 @@ export function recommendations(skillGaps: Gap[], techGaps: Gap[], langGaps: Gap
   const held = new Set(c.certifications.map((x) => x.toLowerCase()));
   const certTarget = [...techNames, ...techGaps.slice(0, 3).map((g) => g.name)].map(certFor).find((x) => x && ![...held].some((h) => h.includes(x.toLowerCase().slice(0, 12))));
   if (certTarget) recs.push({ title: `Earn ${certTarget}`, why: c.certifications.length ? "Adds proof for a high-demand technology." : "You have no certifications listed yet.", impact: `Raises the certifications part of your readiness (10% weight).`, priority: c.certifications.length ? "Medium" : "High", outcome: "Stronger credibility with recruiters." });
+  const edu = educationRec(c, rel);
+  if (edu) recs.push(edu);
   if (c.completion < 100) recs.push({ title: "Complete your profile", why: `Your profile is ${c.completion}% complete.`, impact: "Profile completeness is 20% of your readiness score.", priority: c.completion < 70 ? "High" : "Low", outcome: "Better visibility in recruiter searches." });
   if (!nJobs) recs.push({ title: "Check back as jobs are published", why: "There are no active jobs to compare against yet.", impact: "Gap analysis becomes more precise with more jobs.", priority: "Low", outcome: "More accurate guidance." });
   const order = { High: 0, Medium: 1, Low: 2 };
@@ -183,10 +189,21 @@ export function careerReport(c: CareerCandidate, jobs: MarketJob[], scores: Scor
     current: { skills: c.skills.map((id) => names[id] ?? "Unknown"), technologies: c.techs.map((id) => names[id] ?? "Unknown"), languages: c.langs.map((id) => names[id] ?? "Unknown") },
     market: { skills: topBy(skillDemand), technologies: topBy(techDemand), languages: topBy(langDemand), roles: growingRoles, jobs: jobs.length },
     salary: salaryIntel(c, rel),
-    recommendations: recommendations(skillGaps, techGaps, langGaps, c, c.techs.map((id) => names[id] ?? ""), jobs.length),
+    recommendations: recommendations(skillGaps, techGaps, langGaps, c, c.techs.map((id) => names[id] ?? ""), jobs.length, rel),
     roadmap: roadmap(c, r.score, skillGaps, techGaps),
     insights: { strengths, weaknesses, growth, risks },
     averageMatch: scores.length ? Math.round(avg(scores.map((s) => s.overall))) : null,
     topMatches: top,
   };
+}
+
+/** Education guidance from degree preferences on relevant jobs. Informational — never changes any score. */
+export function educationRec(c: CareerCandidate, rel: MarketJob[]): Recommendation | null {
+  const withPref = rel.filter((j) => j.minDegree);
+  if (!withPref.length) return null;
+  const mine = degreeRank(c.degree);
+  const above = withPref.filter((j) => degreeRank(j.minDegree) > mine);
+  if (!c.degree) return { title: "Add your education", why: `${withPref.length} job${withPref.length === 1 ? "" : "s"} for your target roles list a preferred degree.`, impact: "Informational — helps recruiters see your background; does not change scores.", priority: "Medium", outcome: "Clearer education fit on job matches." };
+  if (above.length * 2 >= withPref.length) return { title: "Consider further education or equivalent credentials", why: `${above.length} of ${withPref.length} relevant jobs prefer a degree above yours.`, impact: "Informational — does not change scores; certifications can strengthen your case.", priority: "Low", outcome: "Access to roles with higher education preferences." };
+  return null;
 }

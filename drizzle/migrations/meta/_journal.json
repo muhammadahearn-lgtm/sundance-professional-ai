@@ -211,6 +211,13 @@
       "when": 1791227032052,
       "tag": "0029_education_governance",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791227420677,
+      "tag": "0030_job_minimum_degree",
+      "breakpoints": true
     }
   ]
 }

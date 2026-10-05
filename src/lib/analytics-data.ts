@@ -75,12 +75,13 @@ export async function loadRecruiterAnalytics(uid: string) {
   type Score = { candidate_id: string; job_id: string; overall_match_score: number };
   const a = must(apps) as App[], p = must(pipe) as Pipe[], sc = must(scores) as Score[];
   const candIds = [...new Set([...a.map((x) => x.candidate_id), ...p.map((x) => x.candidate_id)])];
-  const [names, profs, cskills, csoft] = candIds.length ? await Promise.all([
+  const [names, profs, cskills, csoft, cedu] = candIds.length ? await Promise.all([
     namesFor([...new Set([...candIds, ...sc.map((x) => x.candidate_id)])]),
     supabase.from("candidate_profiles").select("user_id, availability, years_experience, job_title, location").in("user_id", candIds),
     supabase.from("candidate_skills").select("candidate_id, technical_skills(skill_name)").in("candidate_id", candIds),
     supabase.from("candidate_soft_skills").select("candidate_id, soft_skills(soft_skill_name)").in("candidate_id", candIds),
-  ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    supabase.from("education").select("candidate_id, degree_type, field_of_study").in("candidate_id", candIds),
+  ]) : [await namesFor([...new Set(sc.map((x) => x.candidate_id))]), { data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
   const { data: convs } = await supabase.rpc("my_conversations");
   return {
     jobs: jobs.map((j) => ({ ...toInfo(j), created_at: j.created_at })),
@@ -91,6 +92,7 @@ export async function loadRecruiterAnalytics(uid: string) {
     profiles: must(profs) as { user_id: string; availability: string; years_experience: number; job_title: string; location: string }[],
     candidateSkills: (must(cskills) as unknown as { candidate_id: string; technical_skills: { skill_name: string } | null }[]),
     candidateSoftSkills: (must(csoft) as unknown as { candidate_id: string; soft_skills: { soft_skill_name: string } | null }[]),
+    candidateEducation: (must(cedu) as { candidate_id: string; degree_type: string | null; field_of_study: string }[]),
     contacted: [...new Set(((convs ?? []) as { candidate_id: string }[]).map((c) => c.candidate_id))],
   };
 }
