@@ -64,7 +64,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         </form>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
           {recent.length > 0 && <><Clock className="h-3.5 w-3.5 text-muted-foreground" />{recent.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
-          {(suggested.data ?? []).length > 0 && <><Sparkles className="ml-1 h-3.5 w-3.5 text-primary" />{suggested.data!.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
+          {(suggested.data?.terms ?? []).length > 0 && <><Sparkles className="ml-1 h-3.5 w-3.5 text-primary" />{suggested.data!.terms.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}</>}
           <TrendingUp className="ml-1 h-3.5 w-3.5 text-muted-foreground" />{POPULAR_SEARCHES.map((r) => <Chip key={r} onClick={() => runSearch(r)}>{r}</Chip>)}
         </div>
       </div>
@@ -97,7 +97,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} />)}
+              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>
