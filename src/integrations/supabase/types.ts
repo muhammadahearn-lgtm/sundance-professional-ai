@@ -939,6 +939,7 @@ export type Database = {
           benefits_summary: string
           bonus_info: string
           company_id: string | null
+          completion_percent: number
           created_at: string
           custom_title: string
           employment_type: Database["public"]["Enums"]["employment_type"]
@@ -963,6 +964,7 @@ export type Database = {
           benefits_summary?: string
           bonus_info?: string
           company_id?: string | null
+          completion_percent?: number
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
@@ -987,6 +989,7 @@ export type Database = {
           benefits_summary?: string
           bonus_info?: string
           company_id?: string | null
+          completion_percent?: number
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]

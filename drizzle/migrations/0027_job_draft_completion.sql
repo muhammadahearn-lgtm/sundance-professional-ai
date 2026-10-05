@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS completion_percent integer NOT NULL DEFAULT 0;

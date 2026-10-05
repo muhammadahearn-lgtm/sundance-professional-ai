@@ -190,6 +190,13 @@
       "when": 1791223285174,
       "tag": "0026_role_level_taxonomy",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791224335158,
+      "tag": "0027_job_draft_completion",
+      "breakpoints": true
     }
   ]
 }
