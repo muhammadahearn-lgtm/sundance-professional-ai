@@ -119,7 +119,7 @@ const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? 
 
 function PhotoCover({ name, path }: { name: string; path?: string | null | undefined }) {
   const url = useAvatarUrl(path);
-  const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  const i = (name ?? "").trim().split(/\s+/).filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
   return url ? <img src={url} alt={`${name} photo`} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
     : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
 }
