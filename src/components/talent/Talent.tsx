@@ -8,7 +8,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listComparedCandidates, listSavedCandidates, listTalent, loadCandidateFull, resumeUrl, setComparedCandidate, setSavedCandidate, talentByIds, type CandidateFull } from "@/lib/talent-data";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, TALENT_SORTS, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
@@ -167,6 +168,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
   const [kw, setKw] = useState(f.q);
   const [open, setOpen] = useState(false);
   const [view, setView] = useViewMode();
+  const [hidden, setHidden] = useFiltersHidden("talent-filters-hidden");
   const set = (p: Partial<TalentFilters>) => navigate({ to: "/recruiter/candidates", search: { ...f, page: 1, ...p } });
 
   const results = useMemo(() => {
@@ -188,7 +190,7 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
 
   const filters = t && (
     <div className={`${card} p-5`}>
-      <div className="mb-4 flex items-center justify-between"><p className="font-display font-bold">Filters</p>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
+      <div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={() => setHidden(true)} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
       <Group title="Match Score"><MatchFilter value={f.mm} onChange={(mm) => set({ mm })} /></Group>
       <Group title="Current Role"><select value={f.role} onChange={(e) => set({ role: e.target.value })} className={inputCls}><option value="">Any role</option>{t.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
       <Group title="Programming Languages"><IdToggle opts={t.languages} value={f.langs} onChange={(v) => set({ langs: v })} /></Group>
@@ -216,11 +218,11 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
         <button className={primaryBtn}>Search</button>
         <button type="button" onClick={() => setOpen(true)} className={`${btn} lg:hidden`}><SlidersHorizontal className="h-4 w-4" />{count || ""}</button>
       </form>
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        <aside className="hidden lg:block">{filters}</aside>
+      <div className={`grid gap-6 ${hidden ? "" : "lg:grid-cols-[300px_1fr]"}`}>
+        <aside className={hidden ? "hidden" : "hidden lg:block"}>{filters}</aside>
         {open && <div className="fixed inset-0 z-40 overflow-y-auto bg-background p-4 lg:hidden"><div className="mb-3 flex justify-between"><p className="font-display text-lg font-bold">Filters</p><button onClick={() => setOpen(false)} aria-label="Close filters"><X className="h-5 w-5" /></button></div>{filters}<button onClick={() => setOpen(false)} className={`${primaryBtn} mt-4 w-full justify-center`}>Show {results.length} candidates</button></div>}
         <div className="min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-3">{hidden && <button type="button" onClick={() => setHidden(false)} className={`${btn} hidden lg:inline-flex`}><PanelLeftOpen className="h-4 w-4" />Show Filters{count > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{count}</span>}</button>}<p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p></div>
             <div className="flex items-center gap-2">
               <div role="group" aria-label="Results view" className="inline-flex rounded-xl border border-input p-0.5">
                 {(["list", "grid"] as const).map((m) => <button key={m} type="button" aria-pressed={view === m} onClick={() => setView(m)} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${view === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}>{m === "list" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}<span className="hidden sm:inline">{m === "list" ? "List View" : "Grid View"}</span></button>)}

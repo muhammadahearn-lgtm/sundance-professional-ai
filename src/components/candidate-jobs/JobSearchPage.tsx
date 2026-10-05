@@ -2,7 +2,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, Clock, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
+import { ChevronDown, Clock, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
+import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import type { Account } from "@/lib/account";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { searchJobs } from "@/lib/job-search-data";
@@ -32,6 +33,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const [q, setQ] = useState(search.q);
   const [recent, setRecent] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersHidden, setFiltersHidden] = useFiltersHidden("job-filters-hidden");
   useEffect(() => setRecent(readRecent()), []);
   useEffect(() => setQ(search.q), [search.q]);
 
@@ -65,15 +67,18 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <aside className={`${filtersOpen ? "block" : "hidden"} lg:block`}>
-          {tax.data ? <Filters tax={tax.data} s={search} set={setSearch} onApply={() => { setFiltersOpen(false); toast.success("Filters applied"); }} /> : <div className={`${card} h-96 animate-pulse`} />}
+      <div className={`grid gap-6 ${filtersHidden ? "" : "lg:grid-cols-[280px_1fr]"}`}>
+        <aside className={`${filtersOpen ? "block" : "hidden"} ${filtersHidden ? "lg:hidden" : "lg:block"}`}>
+          {tax.data ? <Filters tax={tax.data} s={search} set={setSearch} onHide={() => setFiltersHidden(true)} onApply={() => { setFiltersOpen(false); toast.success("Filters applied"); }} /> : <div className={`${card} h-96 animate-pulse`} />}
         </aside>
 
         <section className="min-w-0 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm"><span className="font-bold">{total}</span> <span className="text-muted-foreground">active {total === 1 ? "job" : "jobs"}{search.q && <> for “{search.q}”</>}</span></p>
-            <select aria-label="Sort" className={`${inputCls} w-48`} value={search.sort} onChange={(e) => setSearch({ sort: e.target.value, page: 1 })}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            <div className="flex items-center gap-3">
+              {filtersHidden && <button type="button" onClick={() => setFiltersHidden(false)} className="hidden items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary lg:inline-flex"><PanelLeftOpen className="h-4 w-4" />Show Filters{nFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{nFilters}</span>}</button>}
+              <p className="text-sm"><span className="font-bold">{total}</span> <span className="text-muted-foreground">active {total === 1 ? "job" : "jobs"}{search.q && <> for “{search.q}”</>}</span></p>
+            </div>
+            <div className="w-48"><select aria-label="Sort" className={inputCls} value={search.sort} onChange={(e) => setSearch({ sort: e.target.value, page: 1 })}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           </div>
 
           {results.error || tax.error ? (
@@ -150,7 +155,7 @@ function CheckList({ options, value, onChange, limit = 8 }: { options: { id: str
   );
 }
 
-function Filters({ tax, s, set, onApply }: { tax: Taxonomy; s: SearchState; set: (p: Partial<SearchState>) => void; onApply: () => void }) {
+function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchState; set: (p: Partial<SearchState>) => void; onApply: () => void; onHide: () => void }) {
   const p = (patch: Partial<SearchState>) => set({ ...patch, page: 1 });
   const [loc, setLoc] = useState(s.loc), [company, setCompany] = useState(s.company);
   const [sal, setSal] = useState<[number, number]>([s.smin, s.smax || SALARY_MAX]);
@@ -159,7 +164,7 @@ function Filters({ tax, s, set, onApply }: { tax: Taxonomy; s: SearchState; set:
   const n = activeFilterCount(s);
   return (
     <div className={`${card} p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto`}>
-      <div className="flex items-center justify-between"><p className="font-display font-bold">Filters</p>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
+      <div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={onHide} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
       <Group title="Match Score"><MatchFilter value={s.mm} onChange={(mm) => p({ mm })} /></Group>
       <Group title="Role"><select className={inputCls} value={s.role} onChange={(e) => p({ role: e.target.value })}><option value="">All roles</option>{tax.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
       <Group title="Programming Languages" open={false}><CheckList options={tax.languages} value={s.langs} onChange={(v) => p({ langs: v })} /></Group>
