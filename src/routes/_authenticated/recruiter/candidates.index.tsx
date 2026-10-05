@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/recruiter/candidates/")({
   validateSearch: (s: Record<string, unknown>): Partial<TalentFilters> => {
     const full: TalentFilters = {
       q: str(s["q"]), role: str(s["role"]), exp: str(s["exp"]), loc: str(s["loc"]), sort: str(s["sort"]) || "match",
-      langs: arr(s["langs"]), skills: arr(s["skills"]), techs: arr(s["techs"]), avail: arr(s["avail"]), arr: arr(s["arr"]), ind: arr(s["ind"]),
+      langs: arr(s["langs"]), skills: arr(s["skills"]), soft: arr(s["soft"]), techs: arr(s["techs"]), avail: arr(s["avail"]), arr: arr(s["arr"]), ind: arr(s["ind"]),
       smin: num(s["smin"]), smax: num(s["smax"]), page: num(s["page"]) || 1, mm: num(s["mm"]), remote: s["remote"] === true || s["remote"] === "true",
     };
     const o: Partial<TalentFilters> = {};
