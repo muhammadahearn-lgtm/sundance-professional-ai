@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { namesFor } from "./talent-data";
+import { sendActivityEmail } from "./activity-email.functions";
 import { stageToStatus, type AppStatus, type Stage } from "./talent-rules";
 
 const JOB = "job_id, job_title, location, work_arrangement, job_status, role_id, companies(company_name, logo_url)";
@@ -17,7 +18,13 @@ export async function applyToJob(uid: string, jobId: string) {
     if (error.code === "42501") throw new Error("This job is no longer accepting applications.");
     throw error;
   }
+  notifyByEmail("application", data.application_id);
   return data;
+}
+
+/** Email the other person about this event; never blocks or breaks the action. */
+export function notifyByEmail(kind: "application" | "message", id: string) {
+  void sendActivityEmail({ data: { kind, id } }).catch(() => {});
 }
 
 export async function listMyApplications(uid: string) {
@@ -72,6 +79,7 @@ export async function loadJobApplication(id: string) {
 export async function setApplicationStatus(id: string, status: AppStatus) {
   const { error } = await supabase.from("applications").update({ application_status: status }).eq("application_id", id);
   if (error) throw error;
+  notifyByEmail("application", id);
 }
 
 /** Mark as viewed the first time a recruiter opens a fresh application. */

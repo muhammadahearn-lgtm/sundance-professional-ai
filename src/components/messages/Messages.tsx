@@ -1,3 +1,4 @@
+import { notifyByEmail } from "@/lib/applications-data";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -229,6 +230,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
     } else {
       qc.setQueryData<Msg[]>(key, (p = []) => { const rest = p.filter((m) => m.message_id !== tempId && m.message_id !== data.message_id); return [...rest, data as Msg]; });
       setFile(null);
+      notifyByEmail("message", data.message_id);
       qc.invalidateQueries({ queryKey: ["inbox"] });
     }
     setSending(false);
