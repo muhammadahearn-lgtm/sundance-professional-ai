@@ -126,12 +126,17 @@ export function SettingsPage({ account }: { account: Account }) {
           </>)}
         </Card>
         <Card title="Delete Account" desc="Permanently delete your account and all associated data. This cannot be undone." danger>
+          <ul className="mb-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            <li>Removed: your sign-in, profile, photo, {account.role === "candidate" ? "resume, skills, experience, projects, saved jobs and applications" : "recruiter profile, company images, jobs and saved candidates"}, and reports you sent.</li>
+            <li>Your conversations and messages are also deleted for both sides.</li>
+            <li>{account.role === "candidate" ? "Recruiters will no longer find you in search." : "Candidates will no longer see your jobs."}</li>
+          </ul>
           <AlertDialog>
             <AlertDialogTrigger asChild><Button variant="destructive" className="rounded-full">Delete account</Button></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                <AlertDialogDescription>This permanently removes your account and profile. You can't undo this.</AlertDialogDescription>
+                <AlertDialogDescription>This permanently removes your account, profile and uploaded files. You can't undo this.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>

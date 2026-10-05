@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, ArchiveRestore, ArrowLeft, Check, CheckCheck, Download, Eye, FileText, Loader2, MessageSquare, Paperclip, Search, Send } from "lucide-react";
 import { toast } from "sonner";
+import { ReportButton } from "@/components/moderation/ReportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { filterInbox, linkify, MESSAGE_MAX, unreadConversations, validateAttachment, validateMessage, type InboxFilter, type InboxRow } from "@/lib/messaging";
 import { AppStatusBadge } from "@/components/applications/Applications";
@@ -247,7 +248,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
         <div className="flex items-start gap-3">
           <Link to={back} className="mt-1 md:hidden" aria-label="Back to inbox"><ArrowLeft className="h-5 w-5" /></Link>
           <div className="min-w-0 flex-1">
-            <p className="font-display font-bold">{role === "recruiter" ? c.candidate_name : c.recruiter_name}</p>
+            <div className="flex items-center gap-2"><p className="font-display font-bold">{role === "recruiter" ? c.candidate_name : c.recruiter_name}</p><ReportButton type="message" targetId={c.conversation_id} compact className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" /></div>
             <div className="mt-1 grid gap-x-4 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2">
               <span><b className="text-foreground">Job:</b> {c.job_title ?? "General conversation"}</span>
               <span><b className="text-foreground">Company:</b> {c.company_name || "—"}</span>

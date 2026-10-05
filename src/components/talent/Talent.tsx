@@ -7,6 +7,7 @@ import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
 import { track } from "@/lib/track";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
+import { ReportButton } from "@/components/moderation/ReportButton";
 import { LocationAlignmentBadge, EducationAlignmentBadge, MatchBadge, MatchFilter, useAutoRecalc, useScores, type ScoreRow } from "@/components/match/Match";
 import { locationAlignment, type LocationAlignment } from "@/lib/location";
 import { meetsMinMatch } from "@/lib/match-engine";
@@ -353,7 +354,8 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
       <ProfileHeader d={q.data} actions={<>
         <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
-        <MessageButton role="recruiter" candidateId={id} className={btn} /></>} />
+        <MessageButton role="recruiter" candidateId={id} className={btn} />
+        <ReportButton type="user" targetId={id} /></>} />
       <CandidateProfileBody d={q.data} t={tax.data} aside={<MatchPlaceholder />} />
     </div>
   );
