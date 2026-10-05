@@ -1,3 +1,4 @@
+import { formatSalaryAmount } from "@/lib/salary";
 import { MessageButton } from "@/components/messages/Messages";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { MatchBadge, MatchFilter, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
@@ -62,7 +63,7 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
                       <div className="mt-2"><strong>Skills:</strong> <Chips ids={me.data.skills.map((s) => s.lookup_id)} opts={tax.data.skills} max={6} /></div>
                       <div className="mt-2"><strong>Languages:</strong> <Chips ids={me.data.languages.map((s) => s.lookup_id)} opts={tax.data.languages} max={6} /></div>
                       <div className="mt-2"><strong>Technologies:</strong> <Chips ids={me.data.technologies.map((s) => s.lookup_id)} opts={tax.data.technologies} max={6} /></div>
-                      <p className="mt-2"><strong>Preferences:</strong> {[p.target_roles.join(", "), p.salary_expectation, label(AVAILABILITY, p.availability)].filter(Boolean).join(" · ") || "—"}</p>
+                      <p className="mt-2"><strong>Preferences:</strong> {[p.target_roles.join(", "), formatSalaryAmount(p.salary_amount, p.salary_currency), label(AVAILABILITY, p.availability)].filter(Boolean).join(" · ") || "—"}</p>
                       <p className="mt-2"><strong>Resume:</strong> {p.resume_file_name ?? "None uploaded"}</p></div>
                     <fieldset><legend className="mb-2 font-semibold">Submit using</legend>
                       <label className="flex items-center gap-2"><input type="radio" checked={mode === "profile"} onChange={() => setMode("profile")} />Structured Profile</label>

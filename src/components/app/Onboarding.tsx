@@ -1,3 +1,4 @@
+import { CURRENCIES, digitsOnly, parseSalaryInput } from "@/lib/salary";
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { X } from "lucide-react";
@@ -77,7 +78,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
   const [f, setF] = useState({
     job_title: "", years_experience: "", location: "", headline: "", summary: "",
     programming_languages: [] as string[], technical_skills: [] as string[], tools: [] as string[],
-    target_roles: [] as string[], salary_expectation: "", availability: "open", work_arrangement: "remote",
+    target_roles: [] as string[], salary_amount: "", salary_currency: "USD", availability: "open", work_arrangement: "remote",
     linkedin_url: "", github_url: "", portfolio_url: "",
   });
   const [proj, setProj] = useState({ title: "", project_url: "", description: "" });
@@ -96,12 +97,14 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     if (f.target_roles.length === 0) return setError("Add at least one target role.");
     const links = validateLinks(f);
     if (!links.ok) return setError(links.error);
+    const amt = parseSalaryInput(f.salary_amount);
+    if (!amt.ok) return setError(amt.error);
     const projUrl = normalizeUrl(proj.project_url);
     if (projUrl === null) return setError("Enter a valid project link.");
     if (!proj.title.trim() && (proj.project_url.trim() || proj.description.trim())) return setError("Give your project a title.");
     setSaving(true);
     const { error: e1 } = await supabase.from("candidate_profiles").upsert({
-      user_id: account.userId, ...f, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
+      user_id: account.userId, ...f, salary_amount: amt.value, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
     });
     let e2 = e1 ? e1.message : null;
     if (!e2 && proj.title.trim()) {
@@ -143,7 +146,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
         </>)}
         {step === 3 && (<>
           <Field label="Target Roles"><MultiSelect value={f.target_roles} onChange={(v) => set("target_roles", v)} suggestions={["Data Engineer", "ML Engineer", "Software Engineer", "Data Scientist", "AI Engineer"]} /></Field>
-          <Field label="Salary Expectations"><Input value={f.salary_expectation} onChange={(e) => set("salary_expectation", e.target.value)} placeholder="$150k – $180k" maxLength={60} /></Field>
+          <Field label="Desired Minimum Salary"><div className="flex gap-2"><Input type="text" inputMode="numeric" pattern="[0-9]*" value={f.salary_amount} onChange={(e) => set("salary_amount", digitsOnly(e.target.value))} placeholder="60000" /><select aria-label="Currency" className="h-10 w-28 rounded-md border border-input bg-background px-3 text-sm" value={f.salary_currency} onChange={(e) => set("salary_currency", e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div></Field>
           <Field label="Availability"><Choice value={f.availability} onChange={(v) => set("availability", v)} options={[["active", "Actively Looking"], ["open", "Open To Opportunities"], ["not_looking", "Not Looking"]] as const} /></Field>
           <Field label="Preferred Work Arrangement"><Choice value={f.work_arrangement} onChange={(v) => set("work_arrangement", v)} options={[["remote", "Remote"], ["hybrid", "Hybrid"], ["onsite", "On-Site"]] as const} /></Field>
           <div className="space-y-3 rounded-2xl border border-border p-4">

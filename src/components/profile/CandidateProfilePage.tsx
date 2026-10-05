@@ -1,3 +1,4 @@
+import { CURRENCIES, digitsOnly, formatSalaryAmount, parseSalaryInput } from "@/lib/salary";
 import { Link } from "@tanstack/react-router";
 import { CandidateMatchWidget } from "@/components/match/Match";
 import { useRef, useState, type FormEvent } from "react";
@@ -74,7 +75,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     jobTitle: p.job_title, headline: p.headline, location: p.location, yearsExperience: p.years_experience, summary: p.summary,
     experienceCount: data.experience.length, educationCount: data.education.length, certificationCount: data.certifications.length,
     skillCount: data.skills.length, languageCount: data.languages.length, technologyCount: data.technologies.length,
-    targetRoleCount: p.target_roles.length, salaryExpectation: p.salary_expectation, hasResume: !!p.resume_path,
+    targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path,
   });
   const missing = missingRequired({ jobTitle: p.job_title, headline: p.headline, location: p.location, skillCount: data.skills.length, technologyCount: data.technologies.length, targetRoleCount: p.target_roles.length });
 
@@ -264,7 +265,7 @@ function PrefsView({ p }: { p: Profile }) {
   return (
     <dl className="grid gap-5 sm:grid-cols-2">
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target Roles</dt><Chips items={p.target_roles} /></div>
-      <Item k="Salary Expectations" v={p.salary_expectation} />
+      <Item k="Desired Minimum Salary" v={formatSalaryAmount(p.salary_amount, p.salary_currency)} />
       <Item k="Availability" v={label(AVAILABILITY, p.availability)} />
       <Item k="Preferred Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} />
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Locations Of Interest</dt><Chips items={p.locations_of_interest} /></div>
@@ -275,8 +276,9 @@ function PrefsView({ p }: { p: Profile }) {
 
 function PreferencesForm({ p, uid, roleNames, onDone }: { p: Profile; uid: string; roleNames: string[]; onDone: () => void }) {
   const save = useSaveProfile(uid);
-  const [f, setF] = useState({ target_roles: p.target_roles, salary_expectation: p.salary_expectation, availability: p.availability, work_arrangement: p.work_arrangement, locations_of_interest: p.locations_of_interest, target_industries: p.target_industries });
+  const [f, setF] = useState({ target_roles: p.target_roles, salary_amount: p.salary_amount?.toString() ?? "", salary_currency: p.salary_currency || "USD", availability: p.availability, work_arrangement: p.work_arrangement, locations_of_interest: p.locations_of_interest, target_industries: p.target_industries });
   const [err, setErr] = useState("");
+  const [salErr, setSalErr] = useState("");
   const [saving, setSaving] = useState(false);
   const choice = (opts: [string, string][], v: string, on: (v: string) => void) => (
     <div className="flex flex-wrap gap-2">{opts.map(([k, l]) => (
@@ -286,15 +288,17 @@ function PreferencesForm({ p, uid, roleNames, onDone }: { p: Profile; uid: strin
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!f.target_roles.length) { setErr("Select at least one target role."); toast.error("Missing required fields."); return; }
-    setErr(""); setSaving(true);
-    const ok = await save({ ...f, salary_expectation: f.salary_expectation.trim().slice(0, 100) }, "Career preferences saved");
+    const amt = parseSalaryInput(f.salary_amount);
+    if (!amt.ok) { setErr(""); setSalErr(amt.error); return; }
+    setErr(""); setSalErr(""); setSaving(true);
+    const ok = await save({ ...f, salary_amount: amt.value, salary_currency: f.salary_currency }, "Career preferences saved");
     setSaving(false);
     if (ok) onDone();
   }
   return (
     <form onSubmit={submit} className="space-y-5">
       <Field label="Target Roles *" error={err}><TagInput value={f.target_roles} onChange={(v) => setF({ ...f, target_roles: v })} options={roleNames} placeholder="Search roles…" /></Field>
-      <Field label="Salary Expectations"><input className={inputCls} maxLength={100} placeholder="e.g. $140k–$170k" value={f.salary_expectation} onChange={(e) => setF({ ...f, salary_expectation: e.target.value })} /></Field>
+      <Field label="Desired Minimum Salary" error={salErr}><div className="flex gap-2"><input className={inputCls} type="text" inputMode="numeric" pattern="[0-9]*" placeholder="60000" value={f.salary_amount} onChange={(e) => setF({ ...f, salary_amount: digitsOnly(e.target.value) })} /><select aria-label="Currency" className={`${inputCls} w-28`} value={f.salary_currency} onChange={(e) => setF({ ...f, salary_currency: e.target.value })}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div></Field>
       <div className="space-y-1.5"><p className="text-sm font-medium">Availability</p>{choice(AVAILABILITY, f.availability, (v) => setF({ ...f, availability: v }))}</div>
       <div className="space-y-1.5"><p className="text-sm font-medium">Preferred Work Arrangement</p>{choice(ARRANGEMENTS, f.work_arrangement, (v) => setF({ ...f, work_arrangement: v }))}</div>
       <Field label="Locations Of Interest"><TagInput value={f.locations_of_interest} onChange={(v) => setF({ ...f, locations_of_interest: v })} placeholder="e.g. Boston, MA — press Enter" /></Field>

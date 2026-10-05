@@ -1,3 +1,4 @@
+import { formatSalaryAmount } from "@/lib/salary";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
@@ -28,7 +29,7 @@ export function CandidateProfileView({ account }: { account: Account }) {
           <Chips items={[...(p?.programming_languages ?? []), ...(p?.technical_skills ?? []), ...(p?.tools ?? [])]} />
         </section>
         <section className={card}><h2 className="mb-4 font-bold">Career Preferences</h2><dl className="grid gap-5 sm:grid-cols-3">
-          <Item label="Target Roles" value={(p?.target_roles ?? []).join(", ")} /><Item label="Salary" value={p?.salary_expectation ?? ""} /><Item label="Work Arrangement" value={p?.work_arrangement ?? ""} />
+          <Item label="Target Roles" value={(p?.target_roles ?? []).join(", ")} /><Item label="Salary" value={formatSalaryAmount(p?.salary_amount, p?.salary_currency)} /><Item label="Work Arrangement" value={p?.work_arrangement ?? ""} />
         </dl></section>
       </div>
     </>

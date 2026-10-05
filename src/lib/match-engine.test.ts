@@ -28,8 +28,8 @@ describe("match engine", () => {
     expect(preferenceScore({ ...cand, availability: "not_looking" }, { ...job, workArrangement: "on_site", location: "Boston, MA" }).score).toBe(40);
   });
   it("salary: $200k expectation vs $190k max loses 20 points; $150k fits", () => {
-    expect(preferenceScore({ ...cand, salaryExpectation: "$200k" }, { ...job, maxSalary: 190000 }).score).toBe(80);
-    expect(preferenceScore({ ...cand, salaryExpectation: "150,000" }, { ...job, maxSalary: 190000 }).score).toBe(100);
+    expect(preferenceScore({ ...cand, salaryAmount: 200000 }, { ...job, maxSalary: 190000 }).score).toBe(80);
+    expect(preferenceScore({ ...cand, salaryAmount: 150000 }, { ...job, maxSalary: 190000 }).score).toBe(100);
     expect(salaryNumber("$120k-150k")).toBe(120000);
   });
   it("match filter: 80%+ keeps 85, drops 79 and unscored", () => {

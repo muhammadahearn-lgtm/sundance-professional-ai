@@ -1,3 +1,5 @@
+import { parseSalaryInput } from "./salary";
+
 export type JobStatus = "draft" | "active" | "paused" | "closed";
 export type ReqLevel = "required" | "preferred" | "optional";
 export type ReqItem = { id: string; level: ReqLevel };
@@ -36,10 +38,10 @@ export function validateInfo(f: JobForm): Errs {
 
 export function validateSalary(f: Pick<JobForm, "minimum_salary" | "maximum_salary">): Errs {
   const e: Errs = {};
-  const min = f.minimum_salary.trim() === "" ? null : Number(f.minimum_salary);
-  const max = f.maximum_salary.trim() === "" ? null : Number(f.maximum_salary);
-  if (min !== null && (!Number.isFinite(min) || min < 0)) e.minimum_salary = "Enter a valid amount.";
-  if (max !== null && (!Number.isFinite(max) || max < 0)) e.maximum_salary = "Enter a valid amount.";
+  const a = parseSalaryInput(f.minimum_salary), b = parseSalaryInput(f.maximum_salary);
+  if (!a.ok) e.minimum_salary = a.error;
+  if (!b.ok) e.maximum_salary = b.error;
+  const min = a.ok ? a.value : null, max = b.ok ? b.value : null;
   if (min !== null && max !== null && !e.minimum_salary && !e.maximum_salary && max <= min) e.maximum_salary = "Maximum salary must be greater than minimum salary.";
   return e;
 }

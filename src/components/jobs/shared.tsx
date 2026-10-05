@@ -3,13 +3,14 @@ import { X } from "lucide-react";
 import type { JobStatus, ReqItem, ReqLevel } from "@/lib/job-rules";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { formatSalaryRange } from "@/lib/salary";
 import { inputCls } from "@/components/profile/parts";
 import { addTaxonomyEntry, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 
 export const EMPLOYMENT: [string, string][] = [["full_time", "Full-Time"], ["part_time", "Part-Time"], ["contract", "Contract"], ["internship", "Internship"], ["consulting", "Consulting"]];
 export const ARRANGEMENT: [string, string][] = [["remote", "Remote"], ["hybrid", "Hybrid"], ["on_site", "On-Site"]];
 export const LEVELS = ["Entry-Level", "Mid-Level", "Senior-Level", "Lead", "Principal", "Manager", "Director"];
-export const CURRENCIES = ["USD", "CAD", "EUR", "GBP", "AUD", "INR"];
+export { CURRENCIES } from "@/lib/salary";
 export const REQ_LEVELS: [ReqLevel, string][] = [["required", "Required"], ["preferred", "Preferred"], ["optional", "Optional"]];
 export const lbl = (opts: [string, string][], v: string) => opts.find(([k]) => k === v)?.[1] ?? v;
 
@@ -24,11 +25,7 @@ export function StatusBadge({ s }: { s: JobStatus }) {
 }
 
 export function formatSalary(min: number | null, max: number | null, cur: string) {
-  const f = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: cur || "USD", maximumFractionDigits: 0 }).format(n);
-  if (min !== null && max !== null) return `${f(min)} – ${f(max)}`;
-  if (min !== null) return `From ${f(min)}`;
-  if (max !== null) return `Up to ${f(max)}`;
-  return "";
+  return formatSalaryRange(min, max, cur);
 }
 
 type Opt = { id: string; name: string; group?: string };
