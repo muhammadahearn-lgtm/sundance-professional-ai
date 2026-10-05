@@ -9,7 +9,7 @@ export const SORTS: [string, string][] = [["match", "Highest Match"], ["match_lo
 export const POPULAR_SEARCHES = ["Python", "Remote Data Engineer", "AWS Snowflake", "Machine Learning Engineer", "Kubernetes", "TypeScript"];
 
 export type SearchState = {
-  q: string; role: string; langs: string[]; skills: string[]; techs: string[]; arr: string[]; emp: string[];
+  q: string; role: string; level?: string; langs: string[]; skills: string[]; techs: string[]; arr: string[]; emp: string[];
   exp: string; smin: number; smax: number; loc: string; company: string; sort: string; page: number; mm: number;
 };
 export const DEFAULT_SEARCH: SearchState = { q: "", role: "", langs: [], skills: [], techs: [], arr: [], emp: [], exp: "", smin: 0, smax: 0, loc: "", company: "", sort: "match", page: 1, mm: 0 };
@@ -32,7 +32,7 @@ export function intersect(a: string[] | null, b: string[]): string[] {
 }
 
 export function activeFilterCount(s: SearchState): number {
-  return [s.role, s.exp, s.loc, s.company].filter(Boolean).length + s.langs.length + s.skills.length + s.techs.length + s.arr.length + s.emp.length + (s.smin || s.smax ? 1 : 0) + (s.mm ? 1 : 0);
+  return [s.role, s.level, s.exp, s.loc, s.company].filter(Boolean).length + s.langs.length + s.skills.length + s.techs.length + s.arr.length + s.emp.length + (s.smin || s.smax ? 1 : 0) + (s.mm ? 1 : 0);
 }
 
 export function canAddToCompare(current: number): boolean {

@@ -7,14 +7,14 @@ export type ReqItem = { id: string; level: ReqLevel };
 export const DESCRIPTION_MAX = 10000;
 
 export type JobForm = {
-  job_title: string; role_id: string; company_id: string; employment_type: string; work_arrangement: string;
+  job_title: string; custom_title: string; level_id: string; role_id: string; company_id: string; employment_type: string; work_arrangement: string;
   location: string; minimum_years_experience: string; experience_level: string; job_description: string;
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
-  job_title: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "",
+  job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "",
   minimum_years_experience: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
   minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "",
 });
@@ -23,8 +23,9 @@ type Errs = Partial<Record<keyof JobForm, string>>;
 
 export function validateInfo(f: JobForm): Errs {
   const e: Errs = {};
-  if (!f.job_title.trim()) e.job_title = "Job title is required.";
   if (!f.role_id) e.role_id = "Role is required.";
+  if (!f.level_id) e.level_id = "Level is required.";
+  if (f.custom_title.trim().length > 120) e.custom_title = "Keep the custom title under 120 characters.";
   if (!f.company_id) e.company_id = "Company is required. Set up your company profile first.";
   if (!f.employment_type) e.employment_type = "Employment type is required.";
   if (!f.work_arrangement) e.work_arrangement = "Work arrangement is required.";

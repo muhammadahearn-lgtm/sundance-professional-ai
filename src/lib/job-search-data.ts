@@ -53,6 +53,7 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
   if (companyIds !== null) query = query.in("company_id", companyIds);
   if (or.length) query = query.or(or.join(","));
   if (s.role) query = query.eq("role_id", s.role);
+  if (s.level) query = query.eq("level_id", s.level);
   if (s.arr.length) query = query.in("work_arrangement", s.arr as ("remote" | "hybrid" | "on_site")[]);
   if (s.emp.length) query = query.in("employment_type", s.emp as ("full_time" | "part_time" | "contract" | "consulting" | "internship")[]);
   const exp = experienceRange(s.exp);

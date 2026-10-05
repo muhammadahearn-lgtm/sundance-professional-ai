@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { allowedActions, canDelete, canEdit, emptyJob, jobQuality, validateAll, validateSalary } from "./job-rules";
 
 describe("job validation", () => {
-  it("requires title, role, company, type, arrangement, location, years, description, a skill and a technology", () => {
+  it("requires role, level, company, type, arrangement, location, years, description, a skill and a technology", () => {
     const e = validateAll({ ...emptyJob(), employment_type: "", work_arrangement: "" });
-    for (const k of ["job_title", "role_id", "company_id", "employment_type", "work_arrangement", "location", "minimum_years_experience", "job_description", "skills", "technologies"]) expect(e).toHaveProperty(k);
+    for (const k of ["level_id", "role_id", "company_id", "employment_type", "work_arrangement", "location", "minimum_years_experience", "job_description", "skills", "technologies"]) expect(e).toHaveProperty(k);
   });
   it("rejects max salary not greater than min", () => {
     expect(validateSalary({ minimum_salary: "100000", maximum_salary: "100000" }).maximum_salary).toBeDefined();

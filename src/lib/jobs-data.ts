@@ -6,17 +6,23 @@ type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type Insert = Database["public"]["Tables"]["jobs"]["Insert"];
 
 export async function loadTaxonomy() {
-  const [r, l, s, t, ss] = await Promise.all([
-    supabase.from("roles").select("role_id, role_name").order("role_name"),
+  const [r, l, s, t, ss, lv] = await Promise.all([
+    supabase.from("roles").select("role_id, role_name, category, sort_order, is_active").order("sort_order"),
     supabase.from("programming_languages").select("language_id, language_name").order("language_name"),
     supabase.from("technical_skills").select("skill_id, skill_name").order("skill_name"),
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
     supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
+    supabase.from("levels").select("level_id, level_name").order("sort_order"),
   ]);
-  const err = [r, l, s, t, ss].find((x) => x.error)?.error;
+  const err = [r, l, s, t, ss, lv].find((x) => x.error)?.error;
   if (err) throw err;
+  const allRoles = (r.data ?? []).map((x) => ({ id: x.role_id, name: x.role_name, category: x.category, active: x.is_active }));
   return {
-    roles: (r.data ?? []).map((x) => ({ id: x.role_id, name: x.role_name })),
+    /** Active master list only (pickers/filters). */
+    roles: allRoles.filter((x) => x.active),
+    /** Includes retired roles, for displaying old records. */
+    allRoles,
+    levels: (lv.data ?? []).map((x) => ({ id: x.level_id, name: x.level_name })),
     languages: (l.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name })),
     skills: (s.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name })),
     technologies: (t.data ?? []).map((x) => ({ id: x.technology_id, name: x.technology_name, group: x.technology_category })),
@@ -74,7 +80,7 @@ export type LoadedJob = NonNullable<Awaited<ReturnType<typeof loadJob>>>;
 export function toForm(d: LoadedJob): JobForm {
   const j = d.job;
   return {
-    job_title: j.job_title, role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
+    job_title: j.job_title, custom_title: j.custom_title ?? "", level_id: j.level_id ?? "", role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
     location: j.location, minimum_years_experience: String(j.minimum_years_experience), experience_level: j.experience_level, job_description: j.job_description,
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
@@ -85,7 +91,7 @@ export function toForm(d: LoadedJob): JobForm {
 function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
   const num = (v: string) => (v.trim() === "" ? null : Math.round(Number(v)));
   return {
-    job_title: f.job_title.trim(), role_id: f.role_id || null, company_id: f.company_id || null,
+    job_title: f.job_title.trim(), custom_title: f.custom_title.trim(), level_id: f.level_id || null, role_id: f.role_id || null, company_id: f.company_id || null,
     employment_type: f.employment_type as JobRow["employment_type"], work_arrangement: f.work_arrangement as JobRow["work_arrangement"],
     location: f.location.trim(), minimum_years_experience: Number(f.minimum_years_experience) || 0, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),

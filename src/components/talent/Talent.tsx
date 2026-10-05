@@ -1,3 +1,4 @@
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { formatSalaryAmount } from "@/lib/salary";
 import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
 import { track } from "@/lib/track";
@@ -233,7 +234,8 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
         {!hasJob && <p className="mt-2 text-[11px] text-muted-foreground">Select a job to see match scores and rankings.</p>}
       </div>
       {hasJob && <Group title="Match Score"><MatchFilter value={f.mm} onChange={(mm) => set({ mm })} /></Group>}
-      <Group title="Current Role"><select value={f.role} onChange={(e) => set({ role: e.target.value })} className={inputCls}><option value="">Any role</option>{t.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
+      <Group title="Current Role"><SearchPicker ariaLabel="Role filter" grouped options={t.roles} value={f.role} onChange={(v) => set({ role: v })} placeholder="Search role" emptyLabel="Any role" /></Group>
+      <Group title="Current Level"><SearchPicker ariaLabel="Level filter" options={t.levels} value={f.level ?? ""} onChange={(v) => set({ level: v })} placeholder="Search level" emptyLabel="Any level" /></Group>
       <Group title="Programming Languages"><IdToggle opts={t.languages} value={f.langs} onChange={(v) => set({ langs: v })} /></Group>
       <Group title="Technical Skills"><IdToggle opts={t.skills} value={f.skills} onChange={(v) => set({ skills: v })} /></Group>
       <Group title="Soft Skills"><IdToggle opts={t.softSkills} value={f.soft ?? []} onChange={(v) => set({ soft: v })} /></Group>

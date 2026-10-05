@@ -1,3 +1,4 @@
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -45,7 +46,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const submit = (e: FormEvent) => { e.preventDefault(); runSearch(q); };
   const total = results.data?.total ?? 0, pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const nFilters = activeFilterCount(search);
-  const roleName = (id: string | null) => tax.data?.roles.find((r) => r.id === id)?.name;
+  const roleName = (id: string | null) => tax.data?.allRoles.find((r) => r.id === id)?.name;
 
   return (
     <div className="space-y-5 pb-16">
@@ -166,7 +167,8 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
     <div className={`${card} p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto`}>
       <div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={onHide} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
       <Group title="Match Score"><MatchFilter value={s.mm} onChange={(mm) => p({ mm })} /></Group>
-      <Group title="Role"><select className={inputCls} value={s.role} onChange={(e) => p({ role: e.target.value })}><option value="">All roles</option>{tax.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
+      <Group title="Role"><SearchPicker ariaLabel="Role filter" grouped options={tax.roles} value={s.role} onChange={(v) => p({ role: v })} placeholder="Search role" emptyLabel="All roles" /></Group>
+      <Group title="Level"><SearchPicker ariaLabel="Level filter" options={tax.levels} value={s.level ?? ""} onChange={(v) => p({ level: v })} placeholder="Search level" emptyLabel="All levels" /></Group>
       <Group title="Programming Languages" open={false}><CheckList options={tax.languages} value={s.langs} onChange={(v) => p({ langs: v })} /></Group>
       <Group title="Technical Skills" open={false}><CheckList options={tax.skills} value={s.skills} onChange={(v) => p({ skills: v })} /></Group>
       <Group title="Tools & Technologies" open={false}><CheckList options={tax.technologies} value={s.techs} onChange={(v) => p({ techs: v })} /></Group>
