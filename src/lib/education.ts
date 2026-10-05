@@ -28,7 +28,7 @@ export function educationLines(e: EduLike): string[] {
   return [e.degree_type || e.degree || "", e.field_of_study ?? "", e.institution_name ?? "", e.graduation_year ? String(e.graduation_year) : ""].filter(Boolean);
 }
 
-export type EduFilter = { minDegree?: string; field?: string; gradAfter?: number };
+export type EduFilter = { minDegree?: string | undefined; field?: string | undefined; gradAfter?: number | undefined };
 /** True when any one education record satisfies all set filters. */
 export function matchesEducation(records: EduLike[], f: EduFilter): boolean {
   if (!f.minDegree && !f.field && !f.gradAfter) return true;

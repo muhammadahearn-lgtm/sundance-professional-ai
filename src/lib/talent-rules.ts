@@ -24,7 +24,7 @@ export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Service
 export type TalentFilters = {
   q: string; role: string; level?: string; langs: string[]; skills: string[]; soft?: string[]; techs: string[]; exp: string; avail: string[];
   loc: string; country?: string; state?: string; city?: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
-  co?: string; job?: string; deg?: string; fos?: string; grad?: number;
+  co?: string; job?: string; deg?: string; fos?: string; grad?: number | undefined;
 };
 export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1, mm: 0 };
 
