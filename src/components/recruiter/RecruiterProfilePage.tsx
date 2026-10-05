@@ -71,7 +71,7 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
   if (preview) return <Preview data={data} onBack={() => setPreview(false)} />;
 
   const editBtn = (k: NonNullable<typeof edit>) => edit !== k && (
-    <button onClick={() => setEdit(k)} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary"><Pencil className="h-4 w-4" /><span className="hidden sm:inline">Edit</span></button>
+    <button onClick={() => setEdit(k)} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary"><Pencil className="h-4 w-4" aria-hidden /><span className="sr-only sm:not-sr-only">Edit</span></button>
   );
 
   return (

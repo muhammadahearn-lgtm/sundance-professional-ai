@@ -32,7 +32,7 @@ function Toggle({ label, desc, defaultChecked }: { label: string; desc: string; 
   return (
     <label className="flex items-center justify-between gap-4 py-2">
       <span><span className="block text-sm font-medium">{label}</span><span className="block text-xs text-muted-foreground">{desc}</span></span>
-      <Switch defaultChecked={defaultChecked ?? false} />
+      <Switch aria-label={label} defaultChecked={defaultChecked ?? false} />
     </label>
   );
 }
