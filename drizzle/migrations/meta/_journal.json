@@ -176,6 +176,13 @@
       "when": 1791220730624,
       "tag": "0024_salary_normalization",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791221957413,
+      "tag": "0025_languages_controlled_list",
+      "breakpoints": true
     }
   ]
 }
