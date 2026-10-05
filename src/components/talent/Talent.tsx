@@ -38,10 +38,12 @@ export const nameOf = (opts: { id: string; name: string }[], id: string) => opts
 export const btn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
 export const primaryBtn = "inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
 
-export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name: string; size?: string; path?: string | null | undefined }) {
+export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name?: string | null | undefined; size?: string; path?: string | null | undefined }) {
   const url = useAvatarUrl(path);
-  const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
-  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{url ? <img src={url} alt={`${name} photo`} className="h-full w-full object-cover" /> : i}</div>;
+  // Name can be missing (e.g. a deleted account or a name not loaded yet) — never crash.
+  const safe = (name ?? "").trim();
+  const i = safe.split(/\s+/).filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`} aria-hidden={url ? undefined : true}>{url ? <img src={url} alt={safe ? `${safe} photo` : "Profile photo"} className="h-full w-full object-cover" /> : i}</div>;
 }
 export function Chips({ ids, opts, max = 5, soft = false }: { ids: string[]; opts: { id: string; name: string }[]; max?: number; soft?: boolean }) {
   if (!ids.length) return <span className="text-xs text-muted-foreground">—</span>;
