@@ -3,7 +3,7 @@ import { recommendationsFor, splitRecommended, type RecKind } from "@/lib/role-r
 
 /** Renders picker options with a "Recommended For <Role>" group first when the role has a mapping and no search is typed. */
 export function RecGroups<T extends { id: string; name: string }>({ items, roleName, kind, query, render, className }: {
-  items: T[]; roleName?: string | null; kind: RecKind; query: string; render: (o: T) => ReactNode; className: string;
+  items: T[]; roleName?: string | null | undefined; kind: RecKind; query: string; render: (o: T) => ReactNode; className: string;
 }) {
   const recNames = query.trim() ? [] : recommendationsFor(roleName, kind);
   const { rec, rest } = splitRecommended(items, recNames);

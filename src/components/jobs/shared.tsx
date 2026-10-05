@@ -33,7 +33,7 @@ export function formatSalary(min: number | null, max: number | null, cur: string
 type Opt = { id: string; name: string; group?: string };
 
 /** Searchable multi-select where every selection carries Required / Preferred / Optional. */
-export function RequirementPicker({ options: baseOptions, value, onChange, placeholder, kind, roleName }: { options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string; kind?: TaxonomyKind; roleName?: string | null }) {
+export function RequirementPicker({ options: baseOptions, value, onChange, placeholder, kind, roleName }: { options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string; kind?: TaxonomyKind; roleName?: string | null | undefined }) {
   const [q, setQ] = useState("");
   const [extra, setExtra] = useState<Opt[]>([]);
   const [busy, setBusy] = useState(false);

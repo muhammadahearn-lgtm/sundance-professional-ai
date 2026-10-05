@@ -231,7 +231,7 @@ export type LookupRow = { lookup_id: string; name: string; proficiency_level: Pr
 type LookupTable = "candidate_languages" | "candidate_skills" | "candidate_technologies";
 
 export function LookupManager({ uid, table, options, rows, noun, required, successMsg, adding, setAdding, roleName }: {
-  roleName?: string | null; uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
+  roleName?: string | null | undefined; uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
   adding: boolean; setAdding: (v: boolean) => void;
 }) {
   const refresh = useRefresh(uid);
@@ -334,7 +334,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
 }
 
 /** Soft skills: searchable multi-select shown as badges. Display/search only — never used in scoring. */
-export function SoftSkillManager({ uid, options = [], selected = [], adding, setAdding, roleName }: { roleName?: string | null; uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
+export function SoftSkillManager({ uid, options = [], selected = [], adding, setAdding, roleName }: { roleName?: string | null | undefined; uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
