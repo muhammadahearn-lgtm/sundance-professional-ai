@@ -144,7 +144,7 @@ function Register() {
             <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><PasswordInput id="confirm" name="confirm" autoComplete="new-password" /><FieldError msg={errors["confirm"]} /></div>
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
-              <span>I agree to the Terms of Service and Privacy Policy</span>
+              <span>I agree to the <Link to="/terms" target="_blank" className="font-medium text-primary underline-offset-2 hover:underline">Terms of Service</Link>, <Link to="/privacy" target="_blank" className="font-medium text-primary underline-offset-2 hover:underline">Privacy Policy</Link> and <Link to="/community-guidelines" target="_blank" className="font-medium text-primary underline-offset-2 hover:underline">Community Guidelines</Link></span>
             </label>
             <FieldError msg={errors["agreed"]} />
             <div className="flex gap-3 pt-2">
