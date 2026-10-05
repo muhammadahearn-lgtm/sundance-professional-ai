@@ -21,7 +21,7 @@ export function SiteFooter() {
         </div>
         <FooterCol title="Company" links={[["About", "/about"], ["Contact", "/contact"], ["Careers", "/contact"]]} />
         <FooterCol title="Platform" links={[["Jobs", "/register"], ["Talent Search", "/register"], ["Pricing", "/pricing"]]} />
-        <FooterCol title="Legal" links={[["Privacy Policy", "/about"], ["Terms Of Service", "/about"]]} />
+        <FooterCol title="Legal" links={[["Privacy Policy", "/privacy"], ["Terms Of Service", "/terms"], ["Community Guidelines", "/community-guidelines"]]} />
       </div>
       <div className="border-t border-border">
         <div className="container-x py-6 text-sm text-muted-foreground">© {new Date().getFullYear()} Sundance Professionals. All rights reserved.</div>
@@ -30,7 +30,7 @@ export function SiteFooter() {
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: [string, "/about" | "/contact" | "/register" | "/pricing"][] }) {
+function FooterCol({ title, links }: { title: string; links: [string, "/about" | "/contact" | "/register" | "/pricing" | "/privacy" | "/terms" | "/community-guidelines"][] }) {
   return (
     <div>
       <h4 className="text-sm font-semibold">{title}</h4>
