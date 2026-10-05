@@ -118,7 +118,7 @@ export function MessagesPage({ uid, role, activeId }: { uid: string; role: Role;
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {q.isLoading ? <div className="space-y-2 p-3">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />)}</div>
-              : q.error ? <p className="p-4 text-sm text-destructive">{errMsg(q.error, "Unable to load conversations")}</p>
+              : q.error ? <div className="p-4 text-sm" role="alert"><p className="text-destructive">{errMsg(q.error, "Unable to load conversations")}</p><button type="button" onClick={() => void q.refetch()} className="mt-2 font-semibold text-primary underline-offset-2 hover:underline">Try again</button></div>
               : !list.length ? <div className="p-6 text-center text-sm text-muted-foreground">{rows.length ? "No conversations match." : role === "recruiter" ? "No conversations yet. Use “Message Candidate” on a profile, application or pipeline card." : "No conversations yet. You can message a recruiter after applying to their job."}</div>
               : list.map((r) => {
                 const other = role === "recruiter" ? r.candidate_name : r.recruiter_name;

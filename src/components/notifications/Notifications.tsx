@@ -257,7 +257,7 @@ export function NotificationDetail({ uid, role, id }: { uid: string; role: Role;
   }, [n?.notification_id]);
   const back = role === "candidate" ? "/candidate/notifications" : "/recruiter/notifications";
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (q.isError) return <p className="text-sm text-destructive">Unable To Load Notifications</p>;
+  if (q.isError) return <div className={`${card} mx-auto max-w-2xl p-10 text-center`} role="alert"><p className="font-semibold text-destructive">Unable To Load Notifications</p><button className={`${btn} mt-3`} onClick={() => void q.refetch()}>Try again</button></div>;
   if (!n) return (
     <div className={`${card} mx-auto max-w-2xl p-10 text-center`}><p className="font-semibold">Notification Not Found</p>
       <p className="text-sm text-muted-foreground">It may have been removed, or it belongs to another account.</p>
