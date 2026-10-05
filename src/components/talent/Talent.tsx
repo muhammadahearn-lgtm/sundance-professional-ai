@@ -171,7 +171,7 @@ function useJobContext(uid: string) {
     queryFn: async () => {
       const [c, j] = await Promise.all([
         supabase.from("companies").select("company_id, company_name").eq("created_by", uid).order("company_name"),
-        supabase.from("jobs").select("job_id, job_title, company_id").eq("recruiter_id", uid).eq("job_status", "active").order("job_title"),
+        supabase.from("jobs").select("job_id, job_title, company_id, location_country, location_state, location_city, work_arrangement").eq("recruiter_id", uid).eq("job_status", "active").order("job_title"),
       ]);
       if (c.error) throw c.error;
       if (j.error) throw j.error;
