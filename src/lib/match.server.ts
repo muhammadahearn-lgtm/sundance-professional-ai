@@ -12,7 +12,7 @@ const group = <T extends { lookup_id: string }>(rows: T[], key: (r: T) => string
 export async function recalcPairs(admin: Admin, candidateIds: string[], jobIds: string[]) {
   if (!candidateIds.length || !jobIds.length) return 0;
   const [jobs, jl, js, jt, cps, cl, cs, ct, l, s, t] = await Promise.all([
-    admin.from("jobs").select("job_id, minimum_years_experience, work_arrangement, location, role_id, job_title, maximum_salary").in("job_id", jobIds),
+    admin.from("jobs").select("job_id, minimum_years_experience, work_arrangement, location, role_id, job_title, maximum_salary, salary_currency").in("job_id", jobIds),
     admin.from("job_languages").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
     admin.from("job_skills").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
     admin.from("job_technologies").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
