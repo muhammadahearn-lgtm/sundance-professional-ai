@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BarChart3, ChevronDown, Download, FileSpreadsheet, FileText, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PageHeader } from "@/components/app/AppShell";
 import {
   RANGES, avg, avgDaysToHire, byMonth, conversions, funnel, inWindow, matchDistribution, matchStats, messagingStats, notificationStats, pct, tally, toCsv, windowFor,
@@ -35,8 +36,8 @@ function FilterBar({ f, set, options, onRefresh, onCsv, onExcel, refreshing }: {
           {(Object.keys(RANGES) as RangeKey[]).map((r) => <option key={r} value={r}>{RANGES[r]}</option>)}
         </select>
         {f.range === "custom" && <>
-          <input type="date" className={`${sel} sm:w-40`} value={f.from} onChange={(e) => set({ ...f, from: e.target.value })} aria-label="From date" />
-          <input type="date" className={`${sel} sm:w-40`} value={f.to} onChange={(e) => set({ ...f, to: e.target.value })} aria-label="To date" />
+          <DatePicker className="w-full sm:w-44" value={f.from} max={f.to || undefined} onChange={(v) => set({ ...f, from: v })} aria-label="From date" placeholder="From" />
+          <DatePicker className="w-full sm:w-44" value={f.to} min={f.from || undefined} onChange={(v) => set({ ...f, to: v })} aria-label="To date" placeholder="To" />
         </>}
         <button className={btn} onClick={() => setOpen(!open)} aria-expanded={open}><SlidersHorizontal className="h-3.5 w-3.5" />Filters{active ? ` (${active})` : ""}<ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} /></button>
         <div className="ml-auto flex flex-wrap gap-2">

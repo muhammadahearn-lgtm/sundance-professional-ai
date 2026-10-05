@@ -11,6 +11,7 @@ import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loa
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
 import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components/profile/parts";
+import { DatePicker } from "@/components/ui/date-picker";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { Avatar, CandidateProfileBody, Chips, ErrorBox, MatchPlaceholder, ProfileHeader, btn, nameOf, primaryBtn, useTaxonomy } from "@/components/talent/Talent";
 
@@ -143,7 +144,7 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
       <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5`}>
         <select value={f.job} onChange={(e) => setF({ ...f, job: e.target.value })} className={inputCls} aria-label="Job"><option value="">All jobs</option>{jobs.map(([id, t]) => <option key={id} value={id}>{t}</option>)}</select>
         <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className={inputCls} aria-label="Status"><option value="">All statuses</option>{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-        <input type="date" value={f.since} onChange={(e) => setF({ ...f, since: e.target.value })} className={inputCls} aria-label="Applied since" />
+        <DatePicker value={f.since} onChange={(v) => setF({ ...f, since: v })} aria-label="Applied since" placeholder="Applied since" />
         <input value={f.loc} onChange={(e) => setF({ ...f, loc: e.target.value })} placeholder="Location" className={inputCls} />
         <select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} className={inputCls} aria-label="Role"><option value="">All roles</option>{tax.data?.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
         <div className="sm:col-span-2 lg:col-span-5"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
