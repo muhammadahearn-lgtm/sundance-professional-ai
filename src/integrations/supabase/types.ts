@@ -1224,16 +1224,19 @@ export type Database = {
           created_at: string
           language_id: string
           language_name: string
+          normalized_name: string | null
         }
         Insert: {
           created_at?: string
           language_id?: string
           language_name: string
+          normalized_name?: string | null
         }
         Update: {
           created_at?: string
           language_id?: string
           language_name?: string
+          normalized_name?: string | null
         }
         Relationships: []
       }
@@ -1515,16 +1518,19 @@ export type Database = {
       soft_skills: {
         Row: {
           created_at: string
+          normalized_name: string | null
           soft_skill_id: string
           soft_skill_name: string
         }
         Insert: {
           created_at?: string
+          normalized_name?: string | null
           soft_skill_id?: string
           soft_skill_name: string
         }
         Update: {
           created_at?: string
+          normalized_name?: string | null
           soft_skill_id?: string
           soft_skill_name?: string
         }
@@ -1533,16 +1539,19 @@ export type Database = {
       technical_skills: {
         Row: {
           created_at: string
+          normalized_name: string | null
           skill_id: string
           skill_name: string
         }
         Insert: {
           created_at?: string
+          normalized_name?: string | null
           skill_id?: string
           skill_name: string
         }
         Update: {
           created_at?: string
+          normalized_name?: string | null
           skill_id?: string
           skill_name?: string
         }
@@ -1551,18 +1560,21 @@ export type Database = {
       technologies: {
         Row: {
           created_at: string
+          normalized_name: string | null
           technology_category: string
           technology_id: string
           technology_name: string
         }
         Insert: {
           created_at?: string
+          normalized_name?: string | null
           technology_category: string
           technology_id?: string
           technology_name: string
         }
         Update: {
           created_at?: string
+          normalized_name?: string | null
           technology_category?: string
           technology_id?: string
           technology_name?: string
@@ -1775,6 +1787,8 @@ export type Database = {
         Args: { _candidate: string; _job?: string }
         Returns: string
       }
+      taxonomy_display: { Args: { _v: string }; Returns: string }
+      taxonomy_key: { Args: { _v: string }; Returns: string }
     }
     Enums: {
       app_role: "candidate" | "recruiter"

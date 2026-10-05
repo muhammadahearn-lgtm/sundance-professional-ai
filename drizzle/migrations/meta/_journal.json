@@ -155,6 +155,13 @@
       "when": 1791208702579,
       "tag": "0021_candidate_avatars_always_visible",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791218799452,
+      "tag": "0022_taxonomy_normalization",
+      "breakpoints": true
     }
   ]
 }
