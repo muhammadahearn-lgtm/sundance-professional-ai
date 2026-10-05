@@ -25,7 +25,7 @@
 ## MVP launch readiness
 - [ ] 1. Real user testing (needs real candidates/recruiters)
 - [ ] 2. Email delivery & notification checks
-- [ ] 3. Legal & trust pages (needs legal review)
+- [x] 3. Legal & trust pages (needs legal review)
 - [x] 4. Moderation & reporting — report buttons, review page, suspend/pause (needs a reviewer account assigned)
 - [x] 5. Account controls — password change, deletion with clear explanation, file cleanup
 - [x] 6. Empty states & error recovery — in-page error screens with Try again/Go back, offline banner, retry on failed lists, failed-save alerts
