@@ -81,7 +81,7 @@ function MatchInsights({ row, open }: { row: ScoreRow | undefined; open: boolean
 
 type ReqRow = { lookup_id: string; requirement_level: string };
 const LEVEL_ORDER: Record<string, number> = { required: 0, preferred: 1, optional: 2 };
-const BADGE = { primary: "bg-primary-soft text-primary border-primary/20", violet: "bg-violet/10 text-violet border-violet/20", teal: "bg-teal/10 text-teal border-teal/20" };
+const BADGE = { primary: "bg-primary-soft text-primary border-primary/20", violet: "bg-violet/10 text-violet border-violet/20", teal: "bg-teal/10 text-teal border-teal/20", indigo: "bg-indigo/10 text-indigo border-indigo/20" };
 
 function ReqGroup({ title, rows, names, tone }: { title: string; rows: ReqRow[] | null | undefined; names: { id: string; name: string }[]; tone: keyof typeof BADGE }) {
   const list = [...(rows ?? [])].sort((a, b) => (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3));
@@ -118,9 +118,10 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
           </div>
           <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{plainPreview(j.job_description)}</p>
           {tax && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <ReqGroup title="Programming Languages" rows={j.job_languages} names={tax.languages} tone="primary" />
               <ReqGroup title="Technical Skills" rows={j.job_skills} names={tax.skills} tone="violet" />
+              <ReqGroup title="Soft Skills Required" rows={j.job_soft_skills} names={tax.softSkills} tone="indigo" />
               <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} tone="teal" />
             </div>
           )}

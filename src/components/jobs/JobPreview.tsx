@@ -42,6 +42,7 @@ export function JobPreview({ id }: { id: string }) {
                 <h2 className="font-display font-bold">Requirements</h2>
                 <Item k="Languages" v={<RequirementList items={d.languages} options={d.tax.languages} />} />
                 <Item k="Skills" v={<RequirementList items={d.skills} options={d.tax.skills} />} />
+                <Item k="Soft Skills" v={<RequirementList items={d.softSkills} options={d.tax.softSkills} />} />
                 <Item k="Technologies" v={<RequirementList items={d.technologies} options={d.tax.technologies} />} />
               </div>
               {c && <div className={`${card} p-5`}><h2 className="font-display font-bold">About {c.company_name}</h2><p className="mt-1 text-xs text-muted-foreground">{[c.industry, c.company_size && `${c.company_size} employees`].filter(Boolean).join(" · ")}</p>
