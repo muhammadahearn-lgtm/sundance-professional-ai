@@ -204,6 +204,13 @@
       "when": 1791226427083,
       "tag": "0028_location_governance",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791227032052,
+      "tag": "0029_education_governance",
+      "breakpoints": true
     }
   ]
 }

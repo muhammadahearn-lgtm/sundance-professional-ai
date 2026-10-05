@@ -1,3 +1,4 @@
+import { matchesEducation, type EduLike } from "./education";
 import { locationKey } from "./location";
 import { EXPERIENCE_BUCKETS, experienceRange } from "./job-search";
 
@@ -23,14 +24,14 @@ export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Service
 export type TalentFilters = {
   q: string; role: string; level?: string; langs: string[]; skills: string[]; soft?: string[]; techs: string[]; exp: string; avail: string[];
   loc: string; country?: string; state?: string; city?: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
-  co?: string; job?: string;
+  co?: string; job?: string; deg?: string; fos?: string; grad?: number | undefined;
 };
 export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1, mm: 0 };
 
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; country?: string; state?: string; city?: string; years: number; availability: string;
   headline: string; summary: string; salary: string; salaryAmount?: number | null; salaryCurrency?: string; arrangement: string; industries: string[]; roleId: string | null; levelId?: string | null;
-  langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
+  langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null; education?: EduLike[];
 };
 
 /** First number in free text, "k" = thousands. "$120k-150k" -> 120000. */
@@ -42,7 +43,7 @@ export function parseSalary(text: string): number | null {
 }
 
 export function talentFilterCount(f: TalentFilters): number {
-  return [f.role, f.level, f.exp, f.loc, f.country, f.state, f.city].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + (f.soft?.length ?? 0) + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
+  return [f.role, f.level, f.deg, f.fos, f.grad, f.exp, f.loc, f.country, f.state, f.city].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + (f.soft?.length ?? 0) + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
 }
 
 const all = (need: string[], have: string[]) => need.every((x) => have.includes(x));
@@ -50,6 +51,7 @@ const all = (need: string[], have: string[]) => need.every((x) => have.includes(
 export function matchesTalent(c: TalentRow, f: TalentFilters, keywordIds: string[] = []): boolean {
   if (f.role && c.roleId !== f.role) return false;
   if (f.level && c.levelId !== f.level) return false;
+  if (!matchesEducation(c.education ?? [], { minDegree: f.deg, field: f.fos, gradAfter: f.grad })) return false;
   if (!all(f.langs, c.langs) || !all(f.skills, c.skills) || !all(f.techs, c.techs)) return false;
   // Soft skills are a display/search filter only — never part of match scoring.
   if (!all(f.soft ?? [], c.softSkills ?? [])) return false;

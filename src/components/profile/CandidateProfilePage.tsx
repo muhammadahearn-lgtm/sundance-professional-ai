@@ -1,4 +1,5 @@
 import { LocationFields } from "@/components/location/LocationFields";
+import { EducationLines } from "@/components/profile/EducationLines";
 import { formatLocation, type LocationParts } from "@/lib/location";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { loadTaxonomy } from "@/lib/jobs-data";
@@ -449,7 +450,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technologies</p>{lk(data.technologies)}</div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} /></div>
           </section>
-          {block("Education", data.education.length ? <ul className="space-y-3">{data.education.map((x) => <li key={x.education_id}><p className="font-semibold">{[x.degree, x.field_of_study].filter(Boolean).join(" · ")}</p><p className="text-xs text-muted-foreground">{x.institution_name}{x.graduation_year && ` · ${x.graduation_year}`}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
+          {block("Education", data.education.length ? <ul className="space-y-3">{data.education.map((x) => <li key={x.education_id}><EducationLines e={x} /></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
           {block("Certifications", data.certifications.length ? <ul className="space-y-3">{data.certifications.map((x) => <li key={x.certification_id}><p className="font-semibold">{x.certification_name}</p><p className="text-xs text-muted-foreground">{x.issuing_organization}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
           {block("Career Preferences", <PrefsView p={p} />)}
         </div>
