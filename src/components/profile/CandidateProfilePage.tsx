@@ -1,3 +1,5 @@
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
+import { loadTaxonomy } from "@/lib/jobs-data";
 import { CURRENCIES, digitsOnly, formatSalaryAmount, parseSalaryInput } from "@/lib/salary";
 import { Link } from "@tanstack/react-router";
 import { CandidateMatchWidget } from "@/components/match/Match";
@@ -26,7 +28,7 @@ async function loadAll(uid: string) {
     supabase.from("candidate_languages").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", uid),
     supabase.from("candidate_skills").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", uid),
     supabase.from("candidate_technologies").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", uid),
-    supabase.from("roles").select("role_id, role_name").order("role_name"),
+    supabase.from("roles").select("role_id, role_name").eq("is_active", true).order("role_name"),
     supabase.from("programming_languages").select("language_id, language_name").order("language_name"),
     supabase.from("technical_skills").select("skill_id, skill_name").order("skill_name"),
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
@@ -229,6 +231,8 @@ function useSaveProfile(uid: string) {
 
 function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone: () => void }) {
   const save = useSaveProfile(uid);
+  const tax = useQuery({ queryKey: ["role-level-tax"], queryFn: loadTaxonomy, staleTime: 300_000 });
+  const [rl, setRl] = useState({ role_id: p.role_id ?? "", current_level_id: p.current_level_id ?? "", target_role_id: p.target_role_id ?? "", target_level_id: p.target_level_id ?? "" });
   const [f, setF] = useState({ jobTitle: p.job_title, headline: p.headline, employer: p.current_employer, location: p.location, yearsExperience: String(p.years_experience), industries: p.industry_experience, summary: p.summary });
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
@@ -238,14 +242,18 @@ function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone:
     setErr(er);
     if (Object.keys(er).length) { toast.error("Missing required fields. Please fix the highlighted fields."); return; }
     setSaving(true);
-    const ok = await save({ job_title: f.jobTitle.trim(), headline: f.headline.trim(), current_employer: f.employer.trim(), location: f.location.trim(), years_experience: Number(f.yearsExperience), industry_experience: f.industries, summary: f.summary.trim() }, "Profile updated");
+    const ok = await save({ role_id: rl.role_id || null, current_level_id: rl.current_level_id || null, target_role_id: rl.target_role_id || null, target_level_id: rl.target_level_id || null, job_title: f.jobTitle.trim(), headline: f.headline.trim(), current_employer: f.employer.trim(), location: f.location.trim(), years_experience: Number(f.yearsExperience), industry_experience: f.industries, summary: f.summary.trim() }, "Profile updated");
     setSaving(false);
     if (ok) onDone();
   }
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Current Role *" error={err.jobTitle}><input className={inputCls} maxLength={120} value={f.jobTitle} onChange={(e) => setF({ ...f, jobTitle: e.target.value })} /></Field>
+        <Field label="Current Role"><SearchPicker ariaLabel="Current role" grouped options={tax.data?.roles ?? []} value={rl.role_id} onChange={(v) => setRl({ ...rl, role_id: v })} placeholder="Search role" /></Field>
+        <Field label="Current Level"><SearchPicker ariaLabel="Current level" options={tax.data?.levels ?? []} value={rl.current_level_id} onChange={(v) => setRl({ ...rl, current_level_id: v })} placeholder="Search level" /></Field>
+        <Field label="Target Role"><SearchPicker ariaLabel="Target role" grouped options={tax.data?.roles ?? []} value={rl.target_role_id} onChange={(v) => setRl({ ...rl, target_role_id: v })} placeholder="Search role" /></Field>
+        <Field label="Target Level"><SearchPicker ariaLabel="Target level" options={tax.data?.levels ?? []} value={rl.target_level_id} onChange={(v) => setRl({ ...rl, target_level_id: v })} placeholder="Search level" /></Field>
+        <Field label="Current Job Title *" error={err.jobTitle}><input className={inputCls} maxLength={120} value={f.jobTitle} onChange={(e) => setF({ ...f, jobTitle: e.target.value })} /></Field>
         <Field label="Professional Headline *" error={err.headline}><input className={inputCls} maxLength={160} value={f.headline} onChange={(e) => setF({ ...f, headline: e.target.value })} /></Field>
         <Field label="Current Employer"><input className={inputCls} maxLength={120} value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} /></Field>
         <Field label="Current Location *" error={err.location}><input className={inputCls} maxLength={120} value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} /></Field>
