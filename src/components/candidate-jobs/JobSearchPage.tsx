@@ -78,7 +78,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
               {filtersHidden && <button type="button" onClick={() => setFiltersHidden(false)} className="hidden items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary lg:inline-flex"><PanelLeftOpen className="h-4 w-4" />Show Filters{nFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{nFilters}</span>}</button>}
               <p className="text-sm"><span className="font-bold">{total}</span> <span className="text-muted-foreground">active {total === 1 ? "job" : "jobs"}{search.q && <> for “{search.q}”</>}</span></p>
             </div>
-            <select aria-label="Sort" className={`${inputCls} w-48`} value={search.sort} onChange={(e) => setSearch({ sort: e.target.value, page: 1 })}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            <div className="w-48"><select aria-label="Sort" className={inputCls} value={search.sort} onChange={(e) => setSearch({ sort: e.target.value, page: 1 })}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           </div>
 
           {results.error || tax.error ? (
