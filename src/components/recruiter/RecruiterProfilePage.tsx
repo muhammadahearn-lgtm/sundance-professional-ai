@@ -214,7 +214,7 @@ function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: Non
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const v = validateRecruiter({ ...f, location: formatLocation(loc) });
-    if (!loc.country || !loc.state.trim() || !loc.city.trim()) (v as Record<string, string>).location = "Country, state / province and city are required.";
+    if (!loc.country || !loc.state.trim() || !loc.city.trim()) (v as Record<string, string>)["location"] = "Country, state / province and city are required.";
     setErrs(v);
     if (Object.keys(v).length) { toast.error("Missing required fields."); return; }
     setSaving(true);
@@ -239,7 +239,7 @@ function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: Non
       <div className="grid gap-4 sm:grid-cols-2">
         {inp("first_name", "First Name *")}{inp("last_name", "Last Name *")}
         {inp("title", "Recruiter Title *", { placeholder: "Senior Technical Recruiter" })}{inp("company_name", "Company *")}
-        <LocationFields required error={(errs as Record<string, string | undefined>).location} value={loc} onChange={setLoc} />
+        <LocationFields required error={(errs as Record<string, string | undefined>)["location"]} value={loc} onChange={setLoc} />
         {inp("years", "Years Recruiting Experience", { type: "number" })}
         {inp("specialization", "Primary Specialization *", { placeholder: "Software Engineers" })}
       </div>
