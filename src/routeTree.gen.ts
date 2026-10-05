@@ -80,6 +80,8 @@ import { Route as AuthenticatedRecruiterNotificationsIndexRouteImport } from './
 import { Route as AuthenticatedRecruiterNotificationsIdRouteImport } from './routes/_authenticated/recruiter/notifications.$id'
 import { Route as AuthenticatedRecruiterPipelineIndexRouteImport } from './routes/_authenticated/recruiter/pipeline.index'
 import { Route as AuthenticatedRecruiterPipelineJobIdRouteImport } from './routes/_authenticated/recruiter/pipeline.$jobId'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as AuthenticatedRecruiterJobsIdIndexRouteImport } from './routes/_authenticated/recruiter/jobs.$id.index'
 import { Route as AuthenticatedRecruiterJobsIdEditRouteImport } from './routes/_authenticated/recruiter/jobs.$id.edit'
 import { Route as AuthenticatedRecruiterJobsIdPreviewRouteImport } from './routes/_authenticated/recruiter/jobs.$id.preview'
@@ -493,6 +495,16 @@ const AuthenticatedRecruiterPipelineJobIdRoute =
     path: '/$jobId',
     getParentRoute: () => AuthenticatedRecruiterPipelineRoute,
   } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRecruiterJobsIdIndexRoute =
   AuthenticatedRecruiterJobsIdIndexRouteImport.update({
     id: '/$id/',
@@ -573,6 +585,8 @@ export interface FileRoutesByFullPath {
   '/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
   '/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/candidate/applications/': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/candidate/jobs/': typeof AuthenticatedCandidateJobsIndexRoute
   '/candidate/messages/': typeof AuthenticatedCandidateMessagesIndexRoute
@@ -636,6 +650,8 @@ export interface FileRoutesByTo {
   '/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
   '/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/candidate/applications': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/candidate/jobs': typeof AuthenticatedCandidateJobsIndexRoute
   '/candidate/messages': typeof AuthenticatedCandidateMessagesIndexRoute
@@ -713,6 +729,8 @@ export interface FileRoutesById {
   '/_authenticated/recruiter/messages/$conversationId': typeof AuthenticatedRecruiterMessagesConversationIdRoute
   '/_authenticated/recruiter/notifications/$id': typeof AuthenticatedRecruiterNotificationsIdRoute
   '/_authenticated/recruiter/pipeline/$jobId': typeof AuthenticatedRecruiterPipelineJobIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/_authenticated/candidate/applications/': typeof AuthenticatedCandidateApplicationsIndexRoute
   '/_authenticated/candidate/jobs/': typeof AuthenticatedCandidateJobsIndexRoute
   '/_authenticated/candidate/messages/': typeof AuthenticatedCandidateMessagesIndexRoute
@@ -790,6 +808,8 @@ export interface FileRouteTypes {
     | '/recruiter/messages/$conversationId'
     | '/recruiter/notifications/$id'
     | '/recruiter/pipeline/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/candidate/applications/'
     | '/candidate/jobs/'
     | '/candidate/messages/'
@@ -853,6 +873,8 @@ export interface FileRouteTypes {
     | '/recruiter/messages/$conversationId'
     | '/recruiter/notifications/$id'
     | '/recruiter/pipeline/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/candidate/applications'
     | '/candidate/jobs'
     | '/candidate/messages'
@@ -929,6 +951,8 @@ export interface FileRouteTypes {
     | '/_authenticated/recruiter/messages/$conversationId'
     | '/_authenticated/recruiter/notifications/$id'
     | '/_authenticated/recruiter/pipeline/$jobId'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/_authenticated/candidate/applications/'
     | '/_authenticated/candidate/jobs/'
     | '/_authenticated/candidate/messages/'
@@ -959,6 +983,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1460,6 +1486,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecruiterPipelineJobIdRouteImport
       parentRoute: typeof AuthenticatedRecruiterPipelineRoute
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/recruiter/jobs/$id/': {
       id: '/_authenticated/recruiter/jobs/$id/'
       path: '/$id'
@@ -1809,6 +1849,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
