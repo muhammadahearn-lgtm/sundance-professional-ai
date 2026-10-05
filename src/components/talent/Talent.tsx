@@ -2,17 +2,18 @@ import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
 import { track } from "@/lib/track";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
-import { MatchBadge, MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
+import { MatchBadge, MatchFilter, useAutoRecalc, useScores, type ScoreRow } from "@/components/match/Match";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Bookmark, BookmarkCheck, Briefcase, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listComparedCandidates, listSavedCandidates, listTalent, loadCandidateFull, resumeUrl, setComparedCandidate, setSavedCandidate, talentByIds, type CandidateFull } from "@/lib/talent-data";
-import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, TALENT_SORTS, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
+import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
 
@@ -72,7 +73,7 @@ export function useCandidateLists(uid: string) {
 }
 type Lists = ReturnType<typeof useCandidateLists>;
 
-export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
+export function CandidateCard({ c, t, lists, score, jobTitle, row }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
   return (
     <article className={`${card} p-5`}>
@@ -82,9 +83,10 @@ export function CandidateCard({ c, t, lists, score }: { c: TalentRow; t: Taxonom
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
-            <div className="flex items-center gap-2"><MatchBadge score={score} />{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
+            <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-1"><MatchBadge score={score} /><span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
           <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs experience</span></p>
+          {row && <AlignmentRow r={row} />}
           {c.headline && <p className="mt-2 text-sm font-medium">{c.headline}</p>}
           {c.summary && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>}
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
@@ -158,13 +160,41 @@ function IdToggle({ opts, value, onChange }: { opts: { id: string; name: string 
   return <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">{opts.map((o) => { const on = value.includes(o.id); return <button key={o.id} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== o.id) : [...value, o.id])} className={`rounded-full border px-2.5 py-1 text-xs font-medium ${on ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}>{o.name}</button>; })}</div>;
 }
 
-export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) {
+/** Recruiter-owned companies and active jobs for the Job Context filter. */
+function useJobContext(uid: string) {
+  return useQuery({
+    queryKey: ["job-context", uid],
+    queryFn: async () => {
+      const [c, j] = await Promise.all([
+        supabase.from("companies").select("company_id, company_name").eq("created_by", uid).order("company_name"),
+        supabase.from("jobs").select("job_id, job_title, company_id").eq("recruiter_id", uid).eq("job_status", "active").order("job_title"),
+      ]);
+      if (c.error) throw c.error;
+      if (j.error) throw j.error;
+      return { companies: c.data ?? [], jobs: j.data ?? [] };
+    },
+  });
+}
+
+function AlignmentRow({ r }: { r: ScoreRow }) {
+  const items: [string, number][] = [["Languages", r.language_alignment_score], ["Skills", r.skill_alignment_score], ["Tools & Tech", r.technology_alignment_score], ["Experience", r.experience_alignment_score], ["Preferences", r.preference_alignment_score]];
+  return <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-xl bg-muted/50 p-3 sm:grid-cols-5">{items.map(([l, v]) => <div key={l}><div className="flex justify-between text-[11px]"><span className="text-muted-foreground">{l}</span><span className="font-semibold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1 rounded-full bg-muted"><div className="h-1 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}</div>;
+}
+
+export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilters }) {
   const navigate = useNavigate();
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["talent"], queryFn: listTalent });
   const lists = useCandidateLists(uid);
   useAutoRecalc();
-  const best = useBestScores();
+  const ctx = useJobContext(uid);
+  const selJob = ctx.data?.jobs.find((j) => j.job_id === raw.job);
+  const hasJob = !!selJob;
+  const selCo = ctx.data?.companies.find((c) => c.company_id === (raw.co || selJob?.company_id));
+  const f: TalentFilters = { ...raw, sort: effectiveTalentSort(raw.sort, hasJob), mm: hasJob ? raw.mm : 0 };
+  const scoreQ = useScores({ jobIds: selJob ? [selJob.job_id] : [] });
+  const rowsBy = useMemo(() => { const m: Record<string, ScoreRow> = {}; for (const r of scoreQ.data ?? []) m[r.candidate_id] = r; return m; }, [scoreQ.data]);
+  const best = useMemo(() => { const m: Record<string, number> = {}; for (const [k, r] of Object.entries(rowsBy)) m[k] = Number(r.overall_match_score); return m; }, [rowsBy]);
   const [kw, setKw] = useState(f.q);
   const [open, setOpen] = useState(false);
   const [view, setView] = useViewMode();
@@ -177,9 +207,9 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
     const t = tax.data;
     const kwIds = low ? [...t.languages, ...t.skills, ...t.technologies, ...t.roles].filter((o) => o.name.toLowerCase().includes(low) || low.includes(o.name.toLowerCase())).map((o) => o.id) : [];
     const filtered = q.data.filter((c) => matchesTalent(c, f, kwIds) && meetsMinMatch(best[c.id], f.mm));
-    if (f.sort === "match") return [...filtered].sort((a, b) => (best[b.id] ?? -1) - (best[a.id] ?? -1));
+    if (hasJob && isMatchSort(f.sort)) { const dir = f.sort === "match_low" ? -1 : 1; return [...filtered].sort((a, b) => dir * ((best[b.id] ?? -1) - (best[a.id] ?? -1))); }
     return sortTalent(filtered, f.sort, f.q);
-  }, [q.data, tax.data, f, best]);
+  }, [q.data, tax.data, f, best, hasJob]);
 
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load candidates.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   const t = tax.data;
@@ -191,7 +221,16 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
   const filters = t && (
     <div className={`${card} p-5`}>
       <div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={() => setHidden(true)} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
-      <Group title="Match Score"><MatchFilter value={f.mm} onChange={(mm) => set({ mm })} /></Group>
+      <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/40 p-3">
+        <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Job Context</p>
+        <label className="text-xs font-semibold text-muted-foreground">Company</label>
+        <select aria-label="Company" value={raw.co ?? ""} onChange={(e) => set({ co: e.target.value, job: "" })} className={`${inputCls} mt-1`}><option value="">All my companies</option>{ctx.data?.companies.map((c) => <option key={c.company_id} value={c.company_id}>{c.company_name}</option>)}</select>
+        <label className="mt-2 block text-xs font-semibold text-muted-foreground">Job</label>
+        <select aria-label="Job" value={selJob?.job_id ?? ""} onChange={(e) => { const j = ctx.data?.jobs.find((x) => x.job_id === e.target.value); set({ job: e.target.value, co: j?.company_id ?? raw.co ?? "", sort: "match" }); }} className={`${inputCls} mt-1`}><option value="">Select Job</option>{ctx.data?.jobs.filter((j) => !raw.co || j.company_id === raw.co).map((j) => <option key={j.job_id} value={j.job_id}>{j.job_title}</option>)}</select>
+        {ctx.data && !ctx.data.jobs.length && <p className="mt-2 text-xs text-muted-foreground">You have no active jobs yet. <Link to="/recruiter/jobs/create" className="font-semibold text-primary">Post a job</Link> to see match scores.</p>}
+        {!hasJob && <p className="mt-2 text-[11px] text-muted-foreground">Select a job to see match scores and rankings.</p>}
+      </div>
+      {hasJob && <Group title="Match Score"><MatchFilter value={f.mm} onChange={(mm) => set({ mm })} /></Group>}
       <Group title="Current Role"><select value={f.role} onChange={(e) => set({ role: e.target.value })} className={inputCls}><option value="">Any role</option>{t.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Group>
       <Group title="Programming Languages"><IdToggle opts={t.languages} value={f.langs} onChange={(v) => set({ langs: v })} /></Group>
       <Group title="Technical Skills"><IdToggle opts={t.skills} value={f.skills} onChange={(v) => set({ skills: v })} /></Group>
@@ -227,13 +266,15 @@ export function TalentSearchPage({ uid, f }: { uid: string; f: TalentFilters }) 
               <div role="group" aria-label="Results view" className="inline-flex rounded-xl border border-input p-0.5">
                 {(["list", "grid"] as const).map((m) => <button key={m} type="button" aria-pressed={view === m} onClick={() => setView(m)} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${view === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}>{m === "list" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}<span className="hidden sm:inline">{m === "list" ? "List View" : "Grid View"}</span></button>)}
               </div>
-              <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{TALENT_SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+              <select value={f.sort} onChange={(e) => set({ sort: e.target.value })} aria-label="Sort" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">{talentSortOptions(hasJob).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
             </div></div>
+{hasJob ? <div className={`${card} flex flex-wrap items-center gap-3 border-primary/40 bg-primary-soft/40 p-4`}><Sparkles className="h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase text-muted-foreground">Matching Candidates For</p><p className="font-display text-lg font-bold">{selJob.job_title}</p>{selCo && <p className="text-sm text-muted-foreground">{selCo.company_name}</p>}</div><button type="button" onClick={() => set({ job: "", mm: 0 })} className={btn}><X className="h-4 w-4" />Clear Job</button></div>
+            : <div className={`${card} p-3 text-sm text-muted-foreground`}><span className="font-semibold text-foreground">General Talent Search</span> — select a job under Job Context to see match scores.</div>}
 {q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 3xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
-            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}</div>
-            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={best[c.id]} />)}
+            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} />)}</div>
+            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
       </div>
