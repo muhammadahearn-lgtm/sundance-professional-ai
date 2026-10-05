@@ -48,7 +48,7 @@ export function Chips({ ids, opts, max = 5, soft = false }: { ids: string[]; opt
   return <div className="flex flex-wrap gap-1.5">{ids.slice(0, max).map((id) => <span key={id} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${soft ? "bg-indigo/10 text-indigo" : "bg-primary-soft text-primary"}`}>{nameOf(opts, id)}</span>)}{ids.length > max && <span className="text-xs text-muted-foreground">+{ids.length - max}</span>}</div>;
 }
 export function ErrorBox({ msg, retry }: { msg: string; retry: () => void }) {
-  return <div className={`${card} p-8 text-center`}><p className="font-semibold">{msg}</p><button onClick={retry} className={`${primaryBtn} mt-4`}>Try again</button></div>;
+  return <div className={`${card} p-8 text-center`} role="alert"><p className="font-semibold">{msg}</p><button onClick={retry} className={`${primaryBtn} mt-4`}>Try again</button></div>;
 }
 export function MatchPlaceholder({ items = ["Overall Match Score", "Skill Alignment", "Technology Alignment", "Experience Alignment"] }: { items?: string[] }) {
   return (
