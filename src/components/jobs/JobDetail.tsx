@@ -72,6 +72,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
               <h2 className="font-display text-lg font-bold">Structured Requirements</h2>
               <Item k="Programming Languages" v={<RequirementList items={d.languages} options={d.tax.languages} />} />
               <Item k="Technical Skills" v={<RequirementList items={d.skills} options={d.tax.skills} />} />
+              <Item k="Soft Skills Required" v={<RequirementList items={d.softSkills} options={d.tax.softSkills} />} />
               <Item k="Tools & Technologies" v={<RequirementList items={d.technologies} options={d.tax.technologies} />} />
             </div>
             <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Description</h2><Markdown text={j.job_description} />

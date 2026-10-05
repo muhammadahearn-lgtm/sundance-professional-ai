@@ -75,6 +75,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
             <h2 className="font-display text-lg font-bold">Technical Requirements</h2>
             <Item k="Programming Languages" v={<RequirementList items={q.data.languages} options={t.languages} />} />
             <Item k="Technical Skills" v={<RequirementList items={q.data.skills} options={t.skills} />} />
+            <Item k="Soft Skills Required" v={<RequirementList items={q.data.softSkills} options={t.softSkills} />} />
           </div>
           <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Technology Stack</h2><RequirementList items={q.data.technologies} options={t.technologies} /></div>
         </div>

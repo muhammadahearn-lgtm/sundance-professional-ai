@@ -292,6 +292,39 @@ export type Database = {
           },
         ]
       }
+      candidate_soft_skills: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          lookup_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          lookup_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          lookup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_soft_skills_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "candidate_soft_skills_lookup_id_fkey"
+            columns: ["lookup_id"]
+            isOneToOne: false
+            referencedRelation: "soft_skills"
+            referencedColumns: ["soft_skill_id"]
+          },
+        ]
+      }
       candidate_technologies: {
         Row: {
           candidate_id: string
@@ -737,6 +770,42 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "technical_skills"
             referencedColumns: ["skill_id"]
+          },
+        ]
+      }
+      job_soft_skills: {
+        Row: {
+          job_id: string
+          lookup_id: string
+          required_flag: boolean
+          requirement_level: string
+        }
+        Insert: {
+          job_id: string
+          lookup_id: string
+          required_flag?: boolean
+          requirement_level?: string
+        }
+        Update: {
+          job_id?: string
+          lookup_id?: string
+          required_flag?: boolean
+          requirement_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_soft_skills_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_soft_skills_lookup_id_fkey"
+            columns: ["lookup_id"]
+            isOneToOne: false
+            referencedRelation: "soft_skills"
+            referencedColumns: ["soft_skill_id"]
           },
         ]
       }
@@ -1389,6 +1458,24 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      soft_skills: {
+        Row: {
+          created_at: string
+          soft_skill_id: string
+          soft_skill_name: string
+        }
+        Insert: {
+          created_at?: string
+          soft_skill_id?: string
+          soft_skill_name: string
+        }
+        Update: {
+          created_at?: string
+          soft_skill_id?: string
+          soft_skill_name?: string
+        }
+        Relationships: []
       }
       technical_skills: {
         Row: {

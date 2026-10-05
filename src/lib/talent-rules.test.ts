@@ -26,3 +26,11 @@ describe("applications", () => {
     expect(t.map((s) => s.state).slice(0, 4)).toEqual(["done", "done", "current", "pending"]);
   });
 });
+
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+import { matchesTalent as mt, DEFAULT_TALENT as DT } from "./talent-rules";
+d2("soft skills filter", () => {
+  const c = { id: "1", name: "A", jobTitle: "", employer: "", location: "", years: 3, availability: "", headline: "", summary: "", salary: "", arrangement: "", industries: [], roleId: null, langs: [], skills: [], techs: [], updatedAt: "", completion: 50, softSkills: ["comm", "lead"] };
+  i2("keeps candidates having every selected soft skill", () => { e2(mt(c, { ...DT, soft: ["comm"] })).toBe(true); });
+  i2("hides candidates missing a selected soft skill", () => { e2(mt(c, { ...DT, soft: ["teamwork"] })).toBe(false); });
+});

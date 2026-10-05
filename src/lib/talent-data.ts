@@ -12,18 +12,19 @@ export async function namesFor(ids: string[]): Promise<Record<string, string>> {
 }
 
 async function links(ids: string[]) {
-  const [l, s, t, e, ed, c] = await Promise.all([
+  const [l, s, t, e, ed, c, ss] = await Promise.all([
     supabase.from("candidate_languages").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
     supabase.from("candidate_skills").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
     supabase.from("candidate_technologies").select("candidate_id, lookup_id, proficiency_level, years_experience").in("candidate_id", ids),
     supabase.from("work_experience").select("candidate_id").in("candidate_id", ids),
     supabase.from("education").select("candidate_id").in("candidate_id", ids),
     supabase.from("certifications").select("candidate_id").in("candidate_id", ids),
+    supabase.from("candidate_soft_skills").select("candidate_id, lookup_id").in("candidate_id", ids),
   ]);
   const err = [l, s, t, e, ed, c].find((x) => x.error)?.error;
   if (err) throw err;
   const by = <T extends { candidate_id: string }>(rows: T[] | null, id: string) => (rows ?? []).filter((r) => r.candidate_id === id);
-  return { l: l.data, s: s.data, t: t.data, e: e.data, ed: ed.data, c: c.data, by };
+  return { ss: ss.data, l: l.data, s: s.data, t: t.data, e: e.data, ed: ed.data, c: c.data, by };
 }
 
 function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): TalentRow {
@@ -36,7 +37,7 @@ function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): 
   return {
     id: p.user_id, name, jobTitle: p.job_title, employer: p.current_employer, location: p.location, years: p.years_experience, availability: p.availability,
     headline: p.headline, summary: p.summary, salary: p.salary_expectation, arrangement: p.work_arrangement, industries: p.industry_experience, roleId: p.role_id,
-    langs: langs.map((x) => x.lookup_id), skills: skills.map((x) => x.lookup_id), techs: techs.map((x) => x.lookup_id), updatedAt: p.updated_at, completion,
+    langs: langs.map((x) => x.lookup_id), skills: skills.map((x) => x.lookup_id), softSkills: k.by(k.ss, p.user_id).map((x) => x.lookup_id), techs: techs.map((x) => x.lookup_id), updatedAt: p.updated_at, completion,
   };
 }
 
@@ -65,7 +66,7 @@ async function rowsFor(ps: Profile[]) {
 }
 
 export async function loadCandidateFull(id: string) {
-  const [p, l, s, t, e, ed, c, names] = await Promise.all([
+  const [p, l, s, t, e, ed, c, names, ss] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", id).maybeSingle(),
     supabase.from("candidate_languages").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
     supabase.from("candidate_skills").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
@@ -74,6 +75,7 @@ export async function loadCandidateFull(id: string) {
     supabase.from("education").select("*").eq("candidate_id", id).order("graduation_year", { ascending: false }),
     supabase.from("certifications").select("*").eq("candidate_id", id),
     namesFor([id]),
+    supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", id),
   ]);
   const err = [p, l, s, t, e, ed, c].find((x) => x.error)?.error;
   if (err) throw err;
@@ -84,7 +86,7 @@ export async function loadCandidateFull(id: string) {
     experienceCount: e.data?.length ?? 0, educationCount: ed.data?.length ?? 0, certificationCount: c.data?.length ?? 0, skillCount: s.data?.length ?? 0,
     languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: pr.salary_expectation, hasResume: !!pr.resume_path,
   }).percent;
-  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], completion };
+  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], completion };
 }
 export type CandidateFull = NonNullable<Awaited<ReturnType<typeof loadCandidateFull>>>;
 

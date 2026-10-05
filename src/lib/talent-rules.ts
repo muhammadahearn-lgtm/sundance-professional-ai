@@ -8,7 +8,7 @@ export const TALENT_SORTS: [string, string][] = [["match", "Best Match"], ["rele
 export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Services", "Insurance", "Telecommunications", "Government", "Manufacturing", "Retail", "Consulting"];
 
 export type TalentFilters = {
-  q: string; role: string; langs: string[]; skills: string[]; techs: string[]; exp: string; avail: string[];
+  q: string; role: string; langs: string[]; skills: string[]; soft?: string[]; techs: string[]; exp: string; avail: string[];
   loc: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
 };
 export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1, mm: 0 };
@@ -16,7 +16,7 @@ export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skill
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; years: number; availability: string;
   headline: string; summary: string; salary: string; arrangement: string; industries: string[]; roleId: string | null;
-  langs: string[]; skills: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
+  langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
 };
 
 /** First number in free text, "k" = thousands. "$120k-150k" -> 120000. */
@@ -28,7 +28,7 @@ export function parseSalary(text: string): number | null {
 }
 
 export function talentFilterCount(f: TalentFilters): number {
-  return [f.role, f.exp, f.loc].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
+  return [f.role, f.exp, f.loc].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + (f.soft?.length ?? 0) + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
 }
 
 const all = (need: string[], have: string[]) => need.every((x) => have.includes(x));
@@ -36,6 +36,8 @@ const all = (need: string[], have: string[]) => need.every((x) => have.includes(
 export function matchesTalent(c: TalentRow, f: TalentFilters, keywordIds: string[] = []): boolean {
   if (f.role && c.roleId !== f.role) return false;
   if (!all(f.langs, c.langs) || !all(f.skills, c.skills) || !all(f.techs, c.techs)) return false;
+  // Soft skills are a display/search filter only — never part of match scoring.
+  if (!all(f.soft ?? [], c.softSkills ?? [])) return false;
   const r = experienceRange(f.exp);
   if (r && (c.years < r.min || (r.max !== null && c.years > r.max))) return false;
   if (f.avail.length && !f.avail.includes(c.availability)) return false;

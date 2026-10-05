@@ -4,7 +4,7 @@ import type { Taxonomy } from "./jobs-data";
 import type { ReqItem, ReqLevel } from "./job-rules";
 import { PAGE_SIZE, experienceRange, intersect, relevance, sanitizeKeyword, type SearchState } from "./job-search";
 
-const CARD_SELECT = "job_id, job_title, role_id, location, work_arrangement, employment_type, minimum_years_experience, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level)";
+const CARD_SELECT = "job_id, job_title, role_id, location, work_arrangement, employment_type, minimum_years_experience, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level), job_soft_skills(lookup_id, requirement_level)";
 
 async function idsFor(table: "job_languages" | "job_skills" | "job_technologies", lookups: string[]) {
   if (!lookups.length) return [];
@@ -93,17 +93,18 @@ export async function loadCardsByIds(ids: string[]) {
 }
 
 export async function loadCandidateJob(id: string) {
-  const [j, l, s, t] = await Promise.all([
+  const [j, l, s, t, ss] = await Promise.all([
     supabase.from("jobs").select("*, companies(*)").eq("job_id", id).eq("job_status", "active").maybeSingle(),
     supabase.from("job_languages").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_skills").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_technologies").select("lookup_id, requirement_level").eq("job_id", id),
+    supabase.from("job_soft_skills").select("lookup_id, requirement_level").eq("job_id", id),
   ]);
-  const err = [j, l, s, t].find((x) => x.error)?.error;
+  const err = [j, l, s, t, ss].find((x) => x.error)?.error;
   if (err) throw err;
   if (!j.data) return null;
   const map = (rows: { lookup_id: string; requirement_level: string }[] | null): ReqItem[] => (rows ?? []).map((r) => ({ id: r.lookup_id, level: r.requirement_level as ReqLevel }));
-  return { job: j.data, company: j.data.companies, languages: map(l.data), skills: map(s.data), technologies: map(t.data) };
+  return { job: j.data, company: j.data.companies, languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data) };
 }
 export type CandidateJob = NonNullable<Awaited<ReturnType<typeof loadCandidateJob>>>;
 
