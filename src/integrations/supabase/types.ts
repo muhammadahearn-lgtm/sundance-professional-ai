@@ -1229,6 +1229,21 @@ export type Database = {
           },
         ]
       }
+      moderators: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           application: boolean
@@ -1540,6 +1555,48 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          details: string
+          reason: string
+          report_id: string
+          reporter_id: string
+          resolution_note: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string
+          reason: string
+          report_id?: string
+          reporter_id?: string
+          resolution_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          reason?: string
+          report_id?: string
+          reporter_id?: string
+          resolution_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
       }
       roles: {
         Row: {
@@ -1909,11 +1966,16 @@ export type Database = {
         Returns: boolean
       }
       is_conversation_participant: { Args: { _conv: string }; Returns: boolean }
+      is_moderator: { Args: { _uid: string }; Returns: boolean }
       job_is_active: { Args: { _job: string }; Returns: boolean }
       location_key: { Args: { _v: string }; Returns: string }
       location_title: { Args: { _v: string }; Returns: string }
       mark_conversation_read: { Args: { _conv: string }; Returns: undefined }
       mark_messages_delivered: { Args: never; Returns: undefined }
+      moderate_restrict: {
+        Args: { _restrict: boolean; _target: string; _type: string }
+        Returns: undefined
+      }
       my_conversations: {
         Args: never
         Returns: {
