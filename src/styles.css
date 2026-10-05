@@ -101,4 +101,21 @@
   /* Gentle highlight for clickable cards/rows that lack their own hover style */
   [role="button"]:not(button):hover, tr[role="link"]:hover, [data-clickable]:hover { background-color: color-mix(in oklab, var(--color-accent) 60%, transparent); }
   [role="separator"][aria-orientation="vertical"] { cursor: col-resize; }
+  /* Visible keyboard focus everywhere (mouse clicks stay clean) */
+  :where(a[href], button, input, select, textarea, summary, [tabindex], [role="button"], [role="tab"], [role="link"]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+  img, video { max-width: 100%; }
+  /* Comfortable touch targets on phones */
+  @media (pointer: coarse) {
+    button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 2.25rem; }
+    input[type="checkbox"], input[type="radio"] { min-width: 1.25rem; min-height: 1.25rem; }
+  }
+  /* Respect people who turn off animations */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
 }
