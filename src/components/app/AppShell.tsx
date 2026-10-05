@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
   Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NotificationBell, NotificationNavBadge, NotificationsLive } from "@/components/notifications/Notifications";
 import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
