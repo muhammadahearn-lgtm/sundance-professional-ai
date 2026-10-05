@@ -15,7 +15,7 @@
 - Role areas (`/candidate/*`, `/recruiter/*`) sit under `_authenticated` and use `roleGuard` (src/lib/role-guard.ts) for cross-role blocking and onboarding redirects. Why: one gate per area.
 - Onboarding completion goes only through the `complete_onboarding` RPC. Why: it checks the role's profile exists first.
 - candidate_profiles.user_id and recruiter_profiles.user_id serve as candidate_id / recruiter_id in all related tables. Why: reuses Stage 2 profiles without a redesign.
-- Taxonomy lookups are the single source for matching/search, readable by all, admin-written; names are canonicalized by the `taxonomy_normalize` trigger (unique `normalized_name`), mirrored by `src/lib/taxonomy.ts`. Why: consistent data, no duplicates.
+- Taxonomy lookups are the single source for matching/search, readable by all; signed-in users add entries only via the `add_taxonomy_entry` RPC (reuses existing by `normalized_name`, new tools go to category "Other"); names are canonicalized by the `taxonomy_normalize` trigger, mirrored by `src/lib/taxonomy.ts`. Why: consistent data, no duplicates.
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Only a company's creator edits it; other recruiters see it read-only and the directory comes from the `company_recruiters` RPC. Why: recruiter_profiles stay private to their owner.
