@@ -93,4 +93,10 @@
   * { border-color: var(--color-border); }
   body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.025em; }
+  /* Hand cursor on every clickable element site-wide */
+  a[href], button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [role="combobox"], [role="link"], summary, label[for], select, input[type="checkbox"], input[type="radio"], input[type="file"], input[type="range"], input[type="submit"], input[type="button"], [onclick] { cursor: pointer; }
+  button:disabled, [aria-disabled="true"], [data-disabled], input:disabled, select:disabled { cursor: not-allowed; }
+  /* Gentle highlight for clickable cards/rows that lack their own hover style */
+  [role="button"]:not(button):hover, tr[role="link"]:hover, [data-clickable]:hover { background-color: color-mix(in oklab, var(--color-accent) 60%, transparent); }
+  [role="separator"][aria-orientation="vertical"] { cursor: col-resize; }
 }
