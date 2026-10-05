@@ -208,7 +208,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
           {isDraft && <button type="button" disabled={!!saving} onClick={() => void saveDraft(true)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">Save Draft</button>}
           {jobId && !isDraft && <button type="button" disabled={!!saving} onClick={() => submit("save")} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">{saving === "save" ? "Saving…" : "Save Changes"}</button>}
           {step < 5 && <button type="button" onClick={next} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">Next<ArrowRight className="h-4 w-4" /></button>}
-          {status !== "active" && <button type="button" disabled={!!saving} onClick={() => submit("active")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{saving === "active" ? "Publishing…" : "Publish Job"}</button>}
+          {step === 5 && status !== "active" && <button type="button" disabled={!!saving} onClick={() => submit("active")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{saving === "active" ? "Publishing…" : "Publish Job"}</button>}
         </div>
       </div>
     </div>
