@@ -9,7 +9,7 @@ const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && 
 export const Route = createFileRoute("/_authenticated/candidate/jobs/")({
   validateSearch: (s: Record<string, unknown>): Partial<SearchState> => {
     const out: Partial<SearchState> = {};
-    for (const k of ["q", "role", "exp", "loc", "company", "sort"] as const) { const v = str(s[k]); if (v) out[k] = v; }
+    for (const k of ["q", "role", "level", "exp", "loc", "company", "sort"] as const) { const v = str(s[k]); if (v) out[k] = v; }
     for (const k of ["langs", "skills", "techs", "arr", "emp"] as const) { const v = arr(s[k]); if (v.length) out[k] = v; }
     for (const k of ["smin", "smax", "page", "mm"] as const) { const v = num(s[k]); if (v) out[k] = v; }
     return out;
