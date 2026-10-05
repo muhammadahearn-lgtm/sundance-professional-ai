@@ -1,3 +1,4 @@
+import { formatSalaryAmount } from "@/lib/salary";
 import { CandidateAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link } from "@tanstack/react-router";
@@ -90,7 +91,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
     jobTitle: p.job_title, headline: p.headline, location: p.location, yearsExperience: p.years_experience, summary: p.summary,
     experienceCount: data.expCount, educationCount: data.eduCount, certificationCount: data.certs.length,
     skillCount: data.skills.length, languageCount: data.langCount, technologyCount: data.techCount,
-    targetRoleCount: p.target_roles.length, salaryExpectation: p.salary_expectation, hasResume: !!p.resume_path,
+    targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path,
   }) : { percent: 0, recommendations: ["Finish setting up your profile."] };
   const recruiterEvents = apps.filter((a) => a.application_status !== "applied").sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   const activity = buildActivity({
