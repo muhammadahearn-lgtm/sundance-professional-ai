@@ -5,6 +5,7 @@ import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
 
 type Exp = Tables<"work_experience">;
@@ -229,8 +230,8 @@ function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; o
 export type LookupRow = { lookup_id: string; name: string; proficiency_level: Proficiency; years_experience: number };
 type LookupTable = "candidate_languages" | "candidate_skills" | "candidate_technologies";
 
-export function LookupManager({ uid, table, options, rows, noun, required, successMsg, adding, setAdding }: {
-  uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
+export function LookupManager({ uid, table, options, rows, noun, required, successMsg, adding, setAdding, roleName }: {
+  roleName?: string | null | undefined; uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
   adding: boolean; setAdding: (v: boolean) => void;
 }) {
   const refresh = useRefresh(uid);
@@ -285,7 +286,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
           </div>
           <p className="text-xs text-muted-foreground">Select as many {plural} as you like. {picked.length > 0 && <span className="font-semibold text-primary">{picked.length} selected</span>}</p>
           {matches.length > 0 ? (
-            <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto">{matches.map((o) => {
+            <div className="max-h-72 overflow-y-auto"><RecGroups items={matches} roleName={roleName} kind={kind} query={q} className="flex flex-wrap gap-1.5" render={(o) => {
               const on = picked.includes(o.id);
               return (
                 <button key={o.id} type="button" aria-pressed={on} onClick={() => toggle(o.id)} disabled={busy}
@@ -293,7 +294,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
                   {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}{o.name}{o.group && <span className={on ? "opacity-80" : "text-muted-foreground"}>· {o.group}</span>}
                 </button>
               );
-            })}</div>
+            }} /></div>
           ) : !newName && <p className="text-xs text-muted-foreground">No matching results.</p>}
           {newName && (
             <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">
@@ -333,7 +334,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
 }
 
 /** Soft skills: searchable multi-select shown as badges. Display/search only — never used in scoring. */
-export function SoftSkillManager({ uid, options = [], selected = [], adding, setAdding }: { uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
+export function SoftSkillManager({ uid, options = [], selected = [], adding, setAdding, roleName }: { roleName?: string | null | undefined; uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
@@ -375,11 +376,11 @@ export function SoftSkillManager({ uid, options = [], selected = [], adding, set
             <input autoFocus className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search or add soft skills (Communication, Leadership…)"
               onKeyDown={(e) => { if (e.key === "Enter" && newName) { e.preventDefault(); createNew(); } }} /></div>
           <div className="flex flex-wrap gap-1.5">
-            {available.length ? available.map((o) => {
+            {available.length ? <RecGroups items={available} roleName={roleName} kind="soft_skill" query={q} className="flex flex-wrap gap-1.5" render={(o) => {
               const on = picked.includes(o.id);
               return <button type="button" key={o.id} aria-pressed={on} onClick={() => setPicked(on ? picked.filter((x) => x !== o.id) : [...picked, o.id])}
                 className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${on ? "border-indigo bg-indigo/10 text-indigo" : "border-border hover:border-indigo hover:text-indigo"}`}>{on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}{o.name}</button>;
-            }) : !newName && <span className="text-sm text-muted-foreground">No more soft skills to add.</span>}
+            }} /> : !newName && <span className="text-sm text-muted-foreground">No more soft skills to add.</span>}
             {newName && <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-indigo px-3 py-1 text-xs font-semibold text-indigo hover:bg-indigo/10"><Plus className="h-3 w-3" />Add “{newName}”</button>}
           </div>
           <div className="flex justify-end gap-2">
