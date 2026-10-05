@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
+import { EducationLines } from "./EducationLines";
+import { DEGREE_TYPES, gradYearError, isDegreeType, normalizeEduText } from "@/lib/education";
 import { toast } from "sonner";
 import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,7 +126,7 @@ export function EducationManager({ uid, items, adding, setAdding }: { uid: strin
           <div key={x.education_id} className="sm:col-span-2"><EducationForm uid={uid} item={x} onDone={() => { setEditing(null); refresh(); }} onCancel={() => setEditing(null)} /></div>
         ) : (
           <div key={x.education_id} className="flex items-start justify-between gap-2 rounded-xl border border-border p-4">
-            <div><p className="font-semibold">{x.institution_name}</p><p className="text-sm text-muted-foreground">{[x.degree, x.field_of_study].filter(Boolean).join(", ")}</p>{x.graduation_year && <p className="text-xs text-muted-foreground">Class of {x.graduation_year}</p>}</div>
+            <EducationLines e={x} />
             <div className="flex shrink-0">
               <button className={iconBtn} aria-label="Edit education" onClick={() => setEditing(x.education_id)}><Pencil className="h-4 w-4" /></button>
               <button className={iconBtn} aria-label="Delete education" onClick={async () => { if (await confirmDelete("education", "education_id", x.education_id)) { toast.success("Education deleted"); refresh(); } }}><Trash2 className="h-4 w-4" /></button>
@@ -135,19 +138,24 @@ export function EducationManager({ uid, items, adding, setAdding }: { uid: strin
   );
 }
 
+const DEGREE_OPTS = DEGREE_TYPES.map((d) => ({ id: d, name: d }));
 function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Edu; onDone: () => void; onCancel: () => void }) {
-  const [f, setF] = useState({ institution_name: item?.institution_name ?? "", degree: item?.degree ?? "", field_of_study: item?.field_of_study ?? "", graduation_year: item?.graduation_year?.toString() ?? "" });
+  const [f, setF] = useState({ institution_name: item?.institution_name ?? "", degree_type: item?.degree_type ?? "", field_of_study: item?.field_of_study ?? "", graduation_year: item?.graduation_year?.toString() ?? "" });
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
+  const sugg = useQuery({ queryKey: ["education-suggestions"], queryFn: async () => { const { data } = await supabase.rpc("education_suggestions"); return data ?? []; } });
+  const fields = [...new Set([...COMMON_FIELDS, ...(sugg.data ?? []).filter((s) => s.kind === "field").map((s) => s.name)])].sort();
+  const schools = [...new Set((sugg.data ?? []).filter((s) => s.kind === "institution").map((s) => s.name))].sort();
   async function submit(e: FormEvent) {
     e.preventDefault();
     const er: Partial<Record<keyof typeof f, string>> = {};
+    if (!f.degree_type || !isDegreeType(f.degree_type)) er.degree_type = "Pick a degree type.";
+    if (!f.field_of_study.trim()) er.field_of_study = "Field of study is required.";
     if (!f.institution_name.trim()) er.institution_name = "Institution is required.";
-    const y = Number(f.graduation_year);
-    if (f.graduation_year && (!Number.isInteger(y) || y < 1950 || y > 2040)) er.graduation_year = "Enter a valid year.";
+    const ye = gradYearError(f.graduation_year.trim()); if (ye) er.graduation_year = ye;
     setErr(er); if (Object.keys(er).length) return;
     setSaving(true);
-    const row = { institution_name: f.institution_name.trim(), degree: f.degree.trim(), field_of_study: f.field_of_study.trim(), graduation_year: f.graduation_year ? y : null };
+    const row = { institution_name: normalizeEduText(f.institution_name), degree_type: f.degree_type, degree: f.degree_type, field_of_study: normalizeEduText(f.field_of_study), graduation_year: f.graduation_year ? Number(f.graduation_year) : null };
     const { error } = item ? await supabase.from("education").update(row).eq("education_id", item.education_id) : await supabase.from("education").insert({ ...row, candidate_id: uid });
     setSaving(false);
     if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
@@ -156,15 +164,16 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Institution Name *" error={err.institution_name}><input className={inputCls} maxLength={150} value={f.institution_name} onChange={(e) => setF({ ...f, institution_name: e.target.value })} /></Field>
-        <Field label="Degree"><input className={inputCls} maxLength={100} value={f.degree} onChange={(e) => setF({ ...f, degree: e.target.value })} /></Field>
-        <Field label="Field Of Study"><input className={inputCls} maxLength={100} value={f.field_of_study} onChange={(e) => setF({ ...f, field_of_study: e.target.value })} /></Field>
-        <Field label="Graduation Year" error={err.graduation_year}><input inputMode="numeric" className={inputCls} value={f.graduation_year} onChange={(e) => setF({ ...f, graduation_year: e.target.value })} /></Field>
+        <Field label="Degree Type *" error={err.degree_type}><SearchPicker ariaLabel="Degree type" options={DEGREE_OPTS} value={f.degree_type} onChange={(v) => setF({ ...f, degree_type: v })} placeholder="Select degree type" />{!item?.degree_type && item?.degree && <p className="mt-1 text-xs text-muted-foreground">Previously entered: {item.degree}</p>}</Field>
+        <Field label="Field Of Study *" error={err.field_of_study}><input list="edu-fields" className={inputCls} maxLength={100} value={f.field_of_study} placeholder="e.g. Computer Science" onChange={(e) => setF({ ...f, field_of_study: e.target.value })} /><datalist id="edu-fields">{fields.map((x) => <option key={x} value={x} />)}</datalist></Field>
+        <Field label="Institution *" error={err.institution_name}><input list="edu-schools" className={inputCls} maxLength={150} value={f.institution_name} placeholder="e.g. University Of New Hampshire" onChange={(e) => setF({ ...f, institution_name: e.target.value })} /><datalist id="edu-schools">{schools.map((x) => <option key={x} value={x} />)}</datalist></Field>
+        <Field label="Graduation Year" error={err.graduation_year}><input inputMode="numeric" maxLength={4} placeholder="2024" className={inputCls} value={f.graduation_year} onChange={(e) => setF({ ...f, graduation_year: e.target.value.replace(/\D/g, "").slice(0, 4) })} /></Field>
       </div>
       <SaveBar saving={saving} onCancel={onCancel} />
     </form>
   );
 }
+const COMMON_FIELDS = ["Computer Science", "Information Technology", "Information Systems", "Data Science", "Statistics", "Mathematics", "Economics", "Business Administration", "Cybersecurity", "Software Engineering", "Electrical Engineering", "Artificial Intelligence", "Data Analytics"];
 
 /* ---------------- Certifications ---------------- */
 export function CertificationManager({ uid, items, adding, setAdding }: { uid: string; items: Cert[]; adding: boolean; setAdding: (v: boolean) => void }) {

@@ -1,4 +1,5 @@
 import { LocationFilter } from "@/components/location/LocationFields";
+import { EducationLines } from "@/components/profile/EducationLines";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { formatSalaryAmount } from "@/lib/salary";
 import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
@@ -312,7 +313,7 @@ export function CandidateProfileBody({ d, t, aside }: { d: CandidateFull; t: Tax
         {aside}
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
           <Item k="Programming Languages" v={prof(d.languages, t.languages)} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Technologies" v={prof(d.technologies, t.technologies)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /></div>
-        <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><p className="font-semibold">{e.degree} {e.field_of_study && `· ${e.field_of_study}`}</p><p className="text-xs text-muted-foreground">{e.institution_name}{e.graduation_year && ` · ${e.graduation_year}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
+        <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><EducationLines e={e} /></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Certifications</h2>{d.certifications.length ? <ul className="mt-3 space-y-3">{d.certifications.map((c) => <li key={c.certification_id}><p className="font-semibold">{c.certification_name}</p><p className="text-xs text-muted-foreground">{c.issuing_organization}{c.issue_date && ` · ${c.issue_date}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Career Preferences</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2"><Item k="Target Roles" v={p.target_roles.join(", ")} /><Item k="Desired Minimum Salary" v={formatSalaryAmount(p.salary_amount, p.salary_currency)} /><Item k="Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} /><Item k="Availability" v={label(AVAILABILITY, p.availability)} /><Item k="Locations Of Interest" v={p.locations_of_interest.join(", ")} /><Item k="Target Industries" v={p.target_industries.join(", ")} /></dl></div>
