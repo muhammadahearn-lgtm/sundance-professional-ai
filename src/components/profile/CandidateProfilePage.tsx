@@ -396,35 +396,47 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
   const lk = (rows: LookupRow[]) => <div className="flex flex-wrap gap-1.5">{rows.length ? rows.map((r) => <span key={r.lookup_id} className="rounded-full border border-border px-3 py-1 text-xs font-medium">{r.name} · {cap(r.proficiency_level)} · {r.years_experience}y</span>) : <span className="text-sm text-muted-foreground">—</span>}</div>;
   const block = (title: string, body: React.ReactNode) => <section className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">{title}</h2>{body}</section>;
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-primary-soft p-4">
         <p className="text-sm font-medium text-primary"><Eye className="mr-1.5 inline h-4 w-4" />This is how recruiters see your profile.</p>
         <button onClick={onBack} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground"><ArrowLeft className="h-4 w-4" />Back to editing</button>
       </div>
       <section className={`${card} p-6`}>
         <h1 className="font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
-        <p className="font-medium">{p.job_title}</p><p className="text-sm text-muted-foreground">{p.headline}</p>
-        <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <p className="font-medium">{p.job_title}{!p.hide_from_current_employer && p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
+        <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
-          {!p.hide_from_current_employer && p.current_employer && <span>{p.current_employer}</span>}
           <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
         </div>
         <div className="mt-4"><LinkBadges p={p} /></div>
-        {p.summary && <p className="mt-4 whitespace-pre-line text-sm">{p.summary}</p>}
-        {p.industry_experience.length > 0 && <div className="mt-4"><Chips items={p.industry_experience} /></div>}
       </section>
-      {block("Experience", data.experience.length ? <ul className="space-y-4">{[...data.experience].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? "")).map((x) => (
-        <li key={x.experience_id}><p className="font-semibold">{x.job_title}</p><p className="text-sm text-muted-foreground">{x.company_name}{x.location && ` · ${x.location}`}</p>{x.responsibilities && <p className="mt-1 text-sm">{x.responsibilities}</p>}</li>
-      ))}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
-      {block("Projects", <ProjectList items={data.projects ?? []} />)}
-      {block("Education", data.education.length ? <ul className="space-y-2">{data.education.map((x) => <li key={x.education_id} className="text-sm"><span className="font-semibold">{x.institution_name}</span> — {[x.degree, x.field_of_study].filter(Boolean).join(", ")} {x.graduation_year && `(${x.graduation_year})`}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
-      {block("Certifications", data.certifications.length ? <ul className="space-y-2">{data.certifications.map((x) => <li key={x.certification_id} className="text-sm"><span className="font-semibold">{x.certification_name}</span>{x.issuing_organization && ` — ${x.issuing_organization}`}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
-      {block("Languages", lk(data.languages))}
-      {block("Skills", lk(data.skills))}
-      {block("Soft Skills", <Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} />)}
-      {block("Technologies", lk(data.technologies))}
-      {block("Career Preferences", <PrefsView p={p} />)}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0 space-y-6">
+          {block("Professional Overview", <>
+            {p.headline && <p className="font-medium">{p.headline}</p>}
+            {p.summary && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{p.summary}</p>}
+            {p.industry_experience.length > 0 && <div className="mt-4"><Chips items={p.industry_experience} /></div>}
+          </>)}
+          {block("Work Experience", data.experience.length ? <ol className="space-y-5">{[...data.experience].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? "")).map((x) => (
+            <li key={x.experience_id} className="border-l-2 border-primary/30 pl-4"><p className="font-semibold">{x.job_title} · {x.company_name}</p><p className="text-xs text-muted-foreground">{x.location}</p>{x.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{x.responsibilities}</p>}</li>
+          ))}</ol> : <p className="text-sm text-muted-foreground">—</p>)}
+          {block("Projects", <ProjectList items={data.projects ?? []} />)}
+          {block("Resume", <p className="text-sm text-muted-foreground">{p.resume_file_name ?? "No resume uploaded"}</p>)}
+        </div>
+        <div className="min-w-0 space-y-6">
+          <section className={`${card} space-y-5 p-6`}>
+            <h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Programming Languages</p>{lk(data.languages)}</div>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technical Skills</p>{lk(data.skills)}</div>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} /></div>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technologies</p>{lk(data.technologies)}</div>
+          </section>
+          {block("Education", data.education.length ? <ul className="space-y-3">{data.education.map((x) => <li key={x.education_id}><p className="font-semibold">{[x.degree, x.field_of_study].filter(Boolean).join(" · ")}</p><p className="text-xs text-muted-foreground">{x.institution_name}{x.graduation_year && ` · ${x.graduation_year}`}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
+          {block("Certifications", data.certifications.length ? <ul className="space-y-3">{data.certifications.map((x) => <li key={x.certification_id}><p className="font-semibold">{x.certification_name}</p><p className="text-xs text-muted-foreground">{x.issuing_organization}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
+          {block("Career Preferences", <PrefsView p={p} />)}
+        </div>
+      </div>
     </div>
   );
 }
