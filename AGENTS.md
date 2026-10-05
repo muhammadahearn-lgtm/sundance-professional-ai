@@ -30,8 +30,8 @@
 - Notifications are created only by DB triggers via `create_notification` (honors preferences, dedupes by `dedupe_key`); users only read/archive/delete their own. Why: unfakeable, no duplicates.
 - Analytics are pure client-side helpers; only `analytics_events` (one view/click per item per day) is stored; recruiters see job views as counts via `my_job_view_counts`. Why: unfakeable; viewers private.
 - Database helper functions are not callable by signed-out visitors, and trigger-only functions are not callable by anyone directly. Why: less exposure.
-- Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. A photo picked at sign-up stays in the browser and uploads on first sign-in Why: no session before email confirmation.
-- Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule — informational recruiting context only.
+- Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. Sign-up photos upload on first sign-in. Why: no session before confirmation.
+- Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule.
 - Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
 - Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format.
 - Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
