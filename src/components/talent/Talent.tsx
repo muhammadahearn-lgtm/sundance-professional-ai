@@ -1,3 +1,4 @@
+import { LinkBadges, ProjectList } from "@/components/profile/links-projects";
 import { track } from "@/lib/track";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { MessageButton } from "@/components/messages/Messages";
@@ -256,6 +257,7 @@ export function CandidateProfileBody({ d, t }: { d: CandidateFull; t: Taxonomy }
         {d.experience.length ? <ol className="mt-4 space-y-5">{d.experience.map((e) => <li key={e.experience_id} className="border-l-2 border-primary/30 pl-4"><p className="font-semibold">{e.job_title} · {e.company_name}</p><p className="text-xs text-muted-foreground">{[e.location, e.industry, `${e.start_date ?? "?"} – ${e.current_position ? "Present" : e.end_date ?? "?"}`].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{e.responsibilities}</p>}{e.achievements && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.achievements}</p>}{e.technologies_used.length > 0 && <p className="mt-1 text-xs">Tech: {e.technologies_used.join(", ")}</p>}</li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No experience listed.</p>}</div>
       <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
         <Item k="Programming Languages" v={prof(d.languages, t.languages)} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Technologies" v={prof(d.technologies, t.technologies)} /></div>
+      <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Projects</h2><ProjectList items={d.projects ?? []} /></div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><p className="font-semibold">{e.degree} {e.field_of_study && `· ${e.field_of_study}`}</p><p className="text-xs text-muted-foreground">{e.institution_name}{e.graduation_year && ` · ${e.graduation_year}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Certifications</h2>{d.certifications.length ? <ul className="mt-3 space-y-3">{d.certifications.map((c) => <li key={c.certification_id}><p className="font-semibold">{c.certification_name}</p><p className="text-xs text-muted-foreground">{c.issuing_organization}{c.issue_date && ` · ${c.issue_date}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
@@ -274,6 +276,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
           <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
+          <div className="mt-3"><LinkBadges p={p} /></div>
           <div className="mt-3 flex items-center gap-2 text-xs"><span className="text-muted-foreground">Profile Completion</span><div className="h-1.5 w-32 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${d.completion}%` }} /></div><span className="font-semibold">{d.completion}%</span></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
     </div>

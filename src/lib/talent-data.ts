@@ -66,7 +66,7 @@ async function rowsFor(ps: Profile[]) {
 }
 
 export async function loadCandidateFull(id: string) {
-  const [p, l, s, t, e, ed, c, names, ss] = await Promise.all([
+  const [p, l, s, t, e, ed, c, names, ss, pj] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", id).maybeSingle(),
     supabase.from("candidate_languages").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
     supabase.from("candidate_skills").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
@@ -76,6 +76,7 @@ export async function loadCandidateFull(id: string) {
     supabase.from("certifications").select("*").eq("candidate_id", id),
     namesFor([id]),
     supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", id),
+    supabase.from("candidate_projects").select("project_id, title, description, project_url, technologies").eq("candidate_id", id).order("created_at"),
   ]);
   const err = [p, l, s, t, e, ed, c].find((x) => x.error)?.error;
   if (err) throw err;
@@ -86,7 +87,7 @@ export async function loadCandidateFull(id: string) {
     experienceCount: e.data?.length ?? 0, educationCount: ed.data?.length ?? 0, certificationCount: c.data?.length ?? 0, skillCount: s.data?.length ?? 0,
     languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: pr.salary_expectation, hasResume: !!pr.resume_path,
   }).percent;
-  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], completion };
+  return { profile: pr, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], projects: pj.data ?? [], completion };
 }
 export type CandidateFull = NonNullable<Awaited<ReturnType<typeof loadCandidateFull>>>;
 
