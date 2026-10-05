@@ -20,7 +20,7 @@ export const Route = createFileRoute("/contact")({
   component: Contact,
 });
 
-const SUPPORT_EMAIL = "muhammad@sundanceprofessionals.com";
+const SUPPORT_EMAIL = "support@sundanceprofessionals.com";
 
 function Contact() {
   const [sent, setSent] = useState(false);
