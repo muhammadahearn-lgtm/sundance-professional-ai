@@ -92,3 +92,15 @@ export function nextStatus(a: JobAction): JobStatus {
 }
 export const canEdit = (s: JobStatus) => s !== "closed";
 export const canDelete = (applicationCount: number) => applicationCount === 0;
+
+/** Draft completion: role 15, level 10, description 20, location 10, skills 15, technologies 15, salary 10, languages 5. */
+export function draftCompletion(f: Pick<JobForm, "role_id" | "level_id" | "job_description" | "location" | "skills" | "technologies" | "languages" | "minimum_salary" | "maximum_salary">) {
+  const parts: [boolean, number][] = [
+    [!!f.role_id, 15], [!!f.level_id, 10], [!!f.job_description.trim(), 20], [!!f.location.trim(), 10],
+    [f.skills.length > 0, 15], [f.technologies.length > 0, 15], [!!(f.minimum_salary.trim() || f.maximum_salary.trim()), 10], [f.languages.length > 0, 5],
+  ];
+  return parts.reduce((s, [ok, w]) => s + (ok ? w : 0), 0);
+}
+
+/** Drafts can be saved with anything; only publishing validates. */
+export const canPublish = (f: JobForm) => Object.keys(validateAll(f)).length === 0;

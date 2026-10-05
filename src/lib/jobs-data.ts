@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import type { JobForm, JobStatus, ReqItem, ReqLevel } from "./job-rules";
+import { draftCompletion, type JobForm, type JobStatus, type ReqItem, type ReqLevel } from "./job-rules";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type Insert = Database["public"]["Tables"]["jobs"]["Insert"];
@@ -91,7 +91,7 @@ export function toForm(d: LoadedJob): JobForm {
 function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
   const num = (v: string) => (v.trim() === "" ? null : Math.round(Number(v)));
   return {
-    job_title: f.job_title.trim(), custom_title: f.custom_title.trim(), level_id: f.level_id || null, role_id: f.role_id || null, company_id: f.company_id || null,
+    job_title: f.job_title.trim() || "Untitled Draft", completion_percent: draftCompletion(f), custom_title: f.custom_title.trim(), level_id: f.level_id || null, role_id: f.role_id || null, company_id: f.company_id || null,
     employment_type: f.employment_type as JobRow["employment_type"], work_arrangement: f.work_arrangement as JobRow["work_arrangement"],
     location: f.location.trim(), minimum_years_experience: Number(f.minimum_years_experience) || 0, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
