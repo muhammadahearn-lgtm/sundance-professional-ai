@@ -148,6 +148,13 @@
       "when": 1791207860198,
       "tag": "0020_candidate_photo_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791208702579,
+      "tag": "0021_candidate_avatars_always_visible",
+      "breakpoints": true
     }
   ]
 }
