@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { computeCompletion } from "./profile-completion";
 import type { TalentRow } from "./talent-rules";
 
-type Profile = { user_id: string; job_title: string; current_employer: string; location: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; current_level_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
+type Profile = { user_id: string; job_title: string; current_employer: string; location: string; location_country?: string; location_state?: string; location_city?: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; current_level_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
 
 export async function namesFor(ids: string[]): Promise<Record<string, string>> {
   if (!ids.length) return {};
@@ -36,13 +36,13 @@ function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): 
     skillCount: skills.length, languageCount: langs.length, technologyCount: techs.length, targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path,
   }).percent;
   return {
-    id: p.user_id, name, jobTitle: p.job_title, employer: p.current_employer, location: p.location, years: p.years_experience, availability: p.availability,
+    id: p.user_id, name, jobTitle: p.job_title, employer: p.current_employer, location: p.location, country: p.location_country ?? "", state: p.location_state ?? "", city: p.location_city ?? "", years: p.years_experience, availability: p.availability,
     headline: p.headline, summary: p.summary, salary: formatSalaryAmount(p.salary_amount, p.salary_currency), salaryAmount: p.salary_amount, salaryCurrency: p.salary_currency, arrangement: p.work_arrangement, industries: p.industry_experience, roleId: p.role_id, levelId: p.current_level_id,
     langs: langs.map((x) => x.lookup_id), skills: skills.map((x) => x.lookup_id), softSkills: k.by(k.ss, p.user_id).map((x) => x.lookup_id), techs: techs.map((x) => x.lookup_id), updatedAt: p.updated_at, completion,
   };
 }
 
-const COLS = "user_id, job_title, current_employer, location, years_experience, availability, headline, summary, salary_expectation, salary_amount, salary_currency, work_arrangement, industry_experience, role_id, current_level_id, updated_at, target_roles, resume_path";
+const COLS = "user_id, job_title, current_employer, location, location_country, location_state, location_city, years_experience, availability, headline, summary, salary_expectation, salary_amount, salary_currency, work_arrangement, industry_experience, role_id, current_level_id, updated_at, target_roles, resume_path";
 
 /** All recruiter-searchable candidates (filtering happens client-side). */
 export async function listTalent(): Promise<TalentRow[]> {

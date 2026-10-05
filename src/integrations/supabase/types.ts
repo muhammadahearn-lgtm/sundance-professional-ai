@@ -174,6 +174,11 @@ export type Database = {
           job_title: string
           linkedin_url: string
           location: string
+          location_city: string
+          location_city_key: string
+          location_country: string
+          location_state: string
+          location_state_key: string
           locations_of_interest: string[]
           photo_visible: boolean
           portfolio_url: string
@@ -210,6 +215,11 @@ export type Database = {
           job_title?: string
           linkedin_url?: string
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           locations_of_interest?: string[]
           photo_visible?: boolean
           portfolio_url?: string
@@ -246,6 +256,11 @@ export type Database = {
           job_title?: string
           linkedin_url?: string
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           locations_of_interest?: string[]
           photo_visible?: boolean
           portfolio_url?: string
@@ -713,6 +728,24 @@ export type Database = {
           },
         ]
       }
+      countries: {
+        Row: {
+          country_name: string
+          normalized_name: string
+          sort_order: number
+        }
+        Insert: {
+          country_name: string
+          normalized_name: string
+          sort_order?: number
+        }
+        Update: {
+          country_name?: string
+          normalized_name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       education: {
         Row: {
           candidate_id: string
@@ -950,6 +983,11 @@ export type Database = {
           job_title: string
           level_id: string | null
           location: string
+          location_city: string
+          location_city_key: string
+          location_country: string
+          location_state: string
+          location_state_key: string
           maximum_salary: number | null
           minimum_salary: number | null
           minimum_years_experience: number
@@ -975,6 +1013,11 @@ export type Database = {
           job_title: string
           level_id?: string | null
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           maximum_salary?: number | null
           minimum_salary?: number | null
           minimum_years_experience?: number
@@ -1000,6 +1043,11 @@ export type Database = {
           job_title?: string
           level_id?: string | null
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           maximum_salary?: number | null
           minimum_salary?: number | null
           minimum_years_experience?: number
@@ -1325,6 +1373,11 @@ export type Database = {
           industry: string
           industry_specializations: string[]
           location: string
+          location_city: string
+          location_city_key: string
+          location_country: string
+          location_state: string
+          location_state_key: string
           notify_applications: boolean
           notify_candidates: boolean
           notify_email: boolean
@@ -1354,6 +1407,11 @@ export type Database = {
           industry?: string
           industry_specializations?: string[]
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           notify_applications?: boolean
           notify_candidates?: boolean
           notify_email?: boolean
@@ -1383,6 +1441,11 @@ export type Database = {
           industry?: string
           industry_specializations?: string[]
           location?: string
+          location_city?: string
+          location_city_key?: string
+          location_country?: string
+          location_state?: string
+          location_state_key?: string
           notify_applications?: boolean
           notify_candidates?: boolean
           notify_email?: boolean
@@ -1827,6 +1890,8 @@ export type Database = {
       }
       is_conversation_participant: { Args: { _conv: string }; Returns: boolean }
       job_is_active: { Args: { _job: string }; Returns: boolean }
+      location_key: { Args: { _v: string }; Returns: string }
+      location_title: { Args: { _v: string }; Returns: string }
       mark_conversation_read: { Args: { _conv: string }; Returns: undefined }
       mark_messages_delivered: { Args: never; Returns: undefined }
       my_conversations: {

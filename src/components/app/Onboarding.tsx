@@ -1,3 +1,5 @@
+import { LocationFields } from "@/components/location/LocationFields";
+import { formatLocation } from "@/lib/location";
 import { CURRENCIES, digitsOnly, parseSalaryInput } from "@/lib/salary";
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
@@ -76,7 +78,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [f, setF] = useState({
-    job_title: "", years_experience: "", location: "", headline: "", summary: "",
+    job_title: "", years_experience: "", location: "", location_country: "", location_state: "", location_city: "", headline: "", summary: "",
     programming_languages: [] as string[], technical_skills: [] as string[], tools: [] as string[],
     target_roles: [] as string[], salary_amount: "", salary_currency: "USD", availability: "open", work_arrangement: "remote",
     linkedin_url: "", github_url: "", portfolio_url: "",
@@ -86,7 +88,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
 
   function next() {
     setError("");
-    if (step === 1 && (!f.job_title.trim() || !f.location.trim() || !f.headline.trim() || f.years_experience === "")) return setError("Please fill in your role, experience, location, and headline.");
+    if (step === 1 && (!f.job_title.trim() || !f.location_country || !f.location_state.trim() || !f.location_city.trim() || !f.headline.trim() || f.years_experience === "")) return setError("Please fill in your role, experience, location, and headline.");
     if (step === 1) { const r = validateLinks(f); if (!r.ok) return setError(r.error); }
     if (step === 2 && f.programming_languages.length + f.technical_skills.length + f.tools.length === 0) return setError("Add at least one skill or technology.");
     setStep(step + 1);
@@ -130,7 +132,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
             <Field label="Current Role"><Input value={f.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="Senior Data Engineer" maxLength={100} /></Field>
             <Field label="Years of Experience"><Input type="number" min={0} max={60} value={f.years_experience} onChange={(e) => set("years_experience", e.target.value)} /></Field>
           </div>
-          <Field label="Location"><Input value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Seattle, WA" maxLength={100} /></Field>
+          <LocationFields required value={{ country: f.location_country, state: f.location_state, city: f.location_city }} onChange={(v) => setF((p) => ({ ...p, location_country: v.country, location_state: v.state, location_city: v.city, location: formatLocation(v) }))} />
           <Field label="Professional Headline"><Input value={f.headline} onChange={(e) => set("headline", e.target.value)} placeholder="Data engineer building reliable pipelines at scale" maxLength={140} /></Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="LinkedIn (optional)"><Input value={f.linkedin_url} onChange={(e) => set("linkedin_url", e.target.value)} placeholder="linkedin.com/in/you" maxLength={300} /></Field>
@@ -174,14 +176,14 @@ export function RecruiterOnboarding({ account }: { account: Account }) {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [f, setF] = useState({
-    title: "", specialization: "", years_experience: "", location: "",
+    title: "", specialization: "", years_experience: "", location: "", location_country: "", location_state: "", location_city: "",
     company_name: "", company_website: "", industry: "", company_description: "", organization_type: "corporate",
   });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
 
   function next() {
     setError("");
-    if (!f.title.trim() || !f.specialization.trim() || !f.location.trim() || f.years_experience === "") return setError("Please fill in all recruiter fields.");
+    if (!f.title.trim() || !f.specialization.trim() || !f.location_country || !f.location_state.trim() || !f.location_city.trim() || f.years_experience === "") return setError("Please fill in all recruiter fields.");
     setStep(2);
   }
 
@@ -212,8 +214,8 @@ export function RecruiterOnboarding({ account }: { account: Account }) {
           <Field label="Recruiting Specialization"><Input value={f.specialization} onChange={(e) => set("specialization", e.target.value)} placeholder="Data & AI engineering" maxLength={100} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Years of Experience"><Input type="number" min={0} max={60} value={f.years_experience} onChange={(e) => set("years_experience", e.target.value)} /></Field>
-            <Field label="Location"><Input value={f.location} onChange={(e) => set("location", e.target.value)} maxLength={100} /></Field>
           </div>
+          <LocationFields required value={{ country: f.location_country, state: f.location_state, city: f.location_city }} onChange={(v) => setF((p) => ({ ...p, location_country: v.country, location_state: v.state, location_city: v.city, location: formatLocation(v) }))} />
         </>) : (<>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Company Name"><Input value={f.company_name} onChange={(e) => set("company_name", e.target.value)} maxLength={120} /></Field>

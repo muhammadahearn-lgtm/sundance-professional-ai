@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { formatLocation, normalizeLocationPart } from "./location";
 import { draftCompletion, type JobForm, type JobStatus, type ReqItem, type ReqLevel } from "./job-rules";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -81,7 +82,7 @@ export function toForm(d: LoadedJob): JobForm {
   const j = d.job;
   return {
     job_title: j.job_title, custom_title: j.custom_title ?? "", level_id: j.level_id ?? "", role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
-    location: j.location, minimum_years_experience: String(j.minimum_years_experience), experience_level: j.experience_level, job_description: j.job_description,
+    location: j.location, location_country: j.location_country, location_state: j.location_state, location_city: j.location_city, minimum_years_experience: String(j.minimum_years_experience), experience_level: j.experience_level, job_description: j.job_description,
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
     bonus_info: j.bonus_info, benefits_summary: j.benefits_summary,
@@ -93,7 +94,7 @@ function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
   return {
     job_title: f.job_title.trim() || "Untitled Draft", completion_percent: draftCompletion(f), custom_title: f.custom_title.trim(), level_id: f.level_id || null, role_id: f.role_id || null, company_id: f.company_id || null,
     employment_type: f.employment_type as JobRow["employment_type"], work_arrangement: f.work_arrangement as JobRow["work_arrangement"],
-    location: f.location.trim(), minimum_years_experience: Number(f.minimum_years_experience) || 0, experience_level: f.experience_level,
+    location: formatLocation({ country: f.location_country, state: f.location_state, city: f.location_city }) || f.location.trim(), location_country: f.location_country, location_state: normalizeLocationPart(f.location_state), location_city: normalizeLocationPart(f.location_city), minimum_years_experience: Number(f.minimum_years_experience) || 0, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
     salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(),
   };

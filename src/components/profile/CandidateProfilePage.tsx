@@ -1,3 +1,5 @@
+import { LocationFields } from "@/components/location/LocationFields";
+import { formatLocation, type LocationParts } from "@/lib/location";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { loadTaxonomy } from "@/lib/jobs-data";
 import { CURRENCIES, digitsOnly, formatSalaryAmount, parseSalaryInput } from "@/lib/salary";
@@ -234,15 +236,17 @@ function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone:
   const tax = useQuery({ queryKey: ["role-level-tax"], queryFn: loadTaxonomy, staleTime: 300_000 });
   const [rl, setRl] = useState({ role_id: p.role_id ?? "", current_level_id: p.current_level_id ?? "", target_role_id: p.target_role_id ?? "", target_level_id: p.target_level_id ?? "" });
   const [f, setF] = useState({ jobTitle: p.job_title, headline: p.headline, employer: p.current_employer, location: p.location, yearsExperience: String(p.years_experience), industries: p.industry_experience, summary: p.summary });
+  const [loc, setLoc] = useState<LocationParts>({ country: p.location_country, state: p.location_state, city: p.location_city });
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
     const er = validateProfessional(f);
+    if (!loc.country || !loc.state.trim() || !loc.city.trim()) er.location = "Country, state / province and city are required.";
     setErr(er);
     if (Object.keys(er).length) { toast.error("Missing required fields. Please fix the highlighted fields."); return; }
     setSaving(true);
-    const ok = await save({ role_id: rl.role_id || null, current_level_id: rl.current_level_id || null, target_role_id: rl.target_role_id || null, target_level_id: rl.target_level_id || null, job_title: f.jobTitle.trim(), headline: f.headline.trim(), current_employer: f.employer.trim(), location: f.location.trim(), years_experience: Number(f.yearsExperience), industry_experience: f.industries, summary: f.summary.trim() }, "Profile updated");
+    const ok = await save({ role_id: rl.role_id || null, current_level_id: rl.current_level_id || null, target_role_id: rl.target_role_id || null, target_level_id: rl.target_level_id || null, job_title: f.jobTitle.trim(), headline: f.headline.trim(), current_employer: f.employer.trim(), location: formatLocation(loc), location_country: loc.country, location_state: loc.state, location_city: loc.city, years_experience: Number(f.yearsExperience), industry_experience: f.industries, summary: f.summary.trim() }, "Profile updated");
     setSaving(false);
     if (ok) onDone();
   }
@@ -256,7 +260,7 @@ function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone:
         <Field label="Current Job Title *" error={err.jobTitle}><input className={inputCls} maxLength={120} value={f.jobTitle} onChange={(e) => setF({ ...f, jobTitle: e.target.value })} /></Field>
         <Field label="Professional Headline *" error={err.headline}><input className={inputCls} maxLength={160} value={f.headline} onChange={(e) => setF({ ...f, headline: e.target.value })} /></Field>
         <Field label="Current Employer"><input className={inputCls} maxLength={120} value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} /></Field>
-        <Field label="Current Location *" error={err.location}><input className={inputCls} maxLength={120} value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} /></Field>
+        <LocationFields required error={err.location} value={loc} onChange={(v) => { setLoc(v); setF((x) => ({ ...x, location: formatLocation(v) })); }} />
         <Field label="Years Of Experience *" error={err.yearsExperience}><input inputMode="numeric" className={inputCls} value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} /></Field>
         <Field label="Industry Experience"><TagInput value={f.industries} onChange={(v) => setF({ ...f, industries: v })} placeholder="e.g. Fintech, press Enter" /></Field>
       </div>

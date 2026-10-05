@@ -1,3 +1,4 @@
+import { locationKey } from "./location";
 import { meetsMinMatch } from "./match-engine";
 import { supabase } from "@/integrations/supabase/client";
 import type { Taxonomy } from "./jobs-data";
@@ -62,6 +63,9 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
   if (s.smax) query = query.lte("minimum_salary", s.smax);
   const loc = sanitizeKeyword(s.loc);
   if (loc) query = query.ilike("location", `%${loc}%`);
+  if (s.country) query = query.eq("location_country", s.country);
+  if (s.state) query = query.eq("location_state_key", locationKey(s.state));
+  if (s.city) query = query.eq("location_city_key", locationKey(s.city));
 
   if (s.sort === "oldest") query = query.order("created_at", { ascending: true });
   else if (s.sort === "salary_high") query = query.order("maximum_salary", { ascending: false, nullsFirst: false });

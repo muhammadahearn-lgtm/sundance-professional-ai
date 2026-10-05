@@ -1,3 +1,5 @@
+import { LocationFields } from "@/components/location/LocationFields";
+import { formatLocation } from "@/lib/location";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -176,7 +178,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
               <Field label="Work Arrangement *" error={errs.work_arrangement}>
                 <select className={inputCls} value={f.work_arrangement} onChange={(e) => set("work_arrangement", e.target.value)}>{ARRANGEMENT.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
               </Field>
-              <Field label="Location *" error={errs.location}><input className={inputCls} value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Austin, TX or Remote (US)" /></Field>
+              <LocationFields required error={errs.location} value={{ country: f.location_country, state: f.location_state, city: f.location_city }} onChange={(v) => { dirty.current = true; setF((p) => ({ ...p, location_country: v.country, location_state: v.state, location_city: v.city, location: formatLocation(v) })); }} />
               <Field label="Minimum Years Experience *" error={errs.minimum_years_experience}><input type="number" min={0} max={50} className={inputCls} value={f.minimum_years_experience} onChange={(e) => set("minimum_years_experience", e.target.value)} /></Field>
             </div>
             <Field label="Job Description *" error={errs.job_description} hint={<span className={`text-xs ${f.job_description.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground"}`}>{f.job_description.length}/{DESCRIPTION_MAX}</span>}>

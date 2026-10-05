@@ -1,3 +1,4 @@
+import { locationKey } from "./location";
 import { EXPERIENCE_BUCKETS, experienceRange } from "./job-search";
 
 export const CANDIDATE_COMPARE_MAX = 4;
@@ -21,13 +22,13 @@ export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Service
 
 export type TalentFilters = {
   q: string; role: string; level?: string; langs: string[]; skills: string[]; soft?: string[]; techs: string[]; exp: string; avail: string[];
-  loc: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
+  loc: string; country?: string; state?: string; city?: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
   co?: string; job?: string;
 };
 export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1, mm: 0 };
 
 export type TalentRow = {
-  id: string; name: string; jobTitle: string; employer: string; location: string; years: number; availability: string;
+  id: string; name: string; jobTitle: string; employer: string; location: string; country?: string; state?: string; city?: string; years: number; availability: string;
   headline: string; summary: string; salary: string; salaryAmount?: number | null; salaryCurrency?: string; arrangement: string; industries: string[]; roleId: string | null; levelId?: string | null;
   langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
 };
@@ -41,7 +42,7 @@ export function parseSalary(text: string): number | null {
 }
 
 export function talentFilterCount(f: TalentFilters): number {
-  return [f.role, f.level, f.exp, f.loc].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + (f.soft?.length ?? 0) + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
+  return [f.role, f.level, f.exp, f.loc, f.country, f.state, f.city].filter(Boolean).length + (f.remote ? 1 : 0) + f.langs.length + f.skills.length + (f.soft?.length ?? 0) + f.techs.length + f.avail.length + f.arr.length + f.ind.length + (f.smin || f.smax ? 1 : 0) + (f.mm ? 1 : 0);
 }
 
 const all = (need: string[], have: string[]) => need.every((x) => have.includes(x));
@@ -58,6 +59,9 @@ export function matchesTalent(c: TalentRow, f: TalentFilters, keywordIds: string
   if (f.arr.length && !f.arr.includes(c.arrangement)) return false;
   if (f.remote && c.arrangement !== "remote") return false;
   if (f.loc && !c.location.toLowerCase().includes(f.loc.toLowerCase())) return false;
+  if (f.country && c.country !== f.country) return false;
+  if (f.state && locationKey(c.state ?? "") !== locationKey(f.state)) return false;
+  if (f.city && locationKey(c.city ?? "") !== locationKey(f.city)) return false;
   if (f.ind.length && !f.ind.some((i) => c.industries.includes(i))) return false;
   if (f.smin || f.smax) {
     const s = c.salaryAmount ?? null;
