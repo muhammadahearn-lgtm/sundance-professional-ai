@@ -34,4 +34,4 @@
 - Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. A photo picked at sign-up stays in the browser and uploads on first sign-in (no session exists before email confirmation). Why: upload needs a signed-in user.
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule — informational recruiting context only.
 - Candidate links/projects validate via `profile-links.ts`, render via `links-projects.tsx`. Why: one path for all views.
-- Salaries are stored as whole-number amounts plus a currency code (candidate_profiles.salary_amount/salary_currency, jobs.minimum_salary/maximum_salary/salary_currency); all input validation and display go through src/lib/salary.ts. Why: one format everywhere, scoring never parses text.
+- Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format, scoring never parses text.
