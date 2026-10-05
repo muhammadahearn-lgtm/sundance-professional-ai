@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newEntryName } from "./taxonomy-add";
+import { canAddTaxonomy, newEntryName } from "./taxonomy-add";
 
 const opts = [{ name: "Python" }, { name: "Machine Learning" }];
 describe("newEntryName", () => {
@@ -8,5 +8,14 @@ describe("newEntryName", () => {
   it("rejects empty and over-60-character names", () => {
     expect(newEntryName("   ", opts)).toBeNull();
     expect(newEntryName("a".repeat(61), opts)).toBeNull();
+  });
+});
+
+describe("canAddTaxonomy", () => {
+  it("blocks custom programming languages", () => expect(canAddTaxonomy("language")).toBe(false));
+  it("allows custom skills, technologies and soft skills", () => {
+    expect(canAddTaxonomy("skill")).toBe(true);
+    expect(canAddTaxonomy("technology")).toBe(true);
+    expect(canAddTaxonomy("soft_skill")).toBe(true);
   });
 });

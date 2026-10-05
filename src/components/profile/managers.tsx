@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { addTaxonomyEntry, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
 
 type Exp = Tables<"work_experience">;
@@ -250,7 +250,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
   }
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
   const kind: TaxonomyKind = table === "candidate_languages" ? "language" : table === "candidate_skills" ? "skill" : "technology";
-  const newName = newEntryName(q, options);
+  const newName = canAddTaxonomy(kind) ? newEntryName(q, options) : null;
   const createNew = async () => {
     if (!newName) return;
     setBusy(true);
@@ -280,7 +280,7 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
         <div className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input autoFocus className={`${inputCls} pl-9`} placeholder={`Search or add ${plural}…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy}
+            <input autoFocus className={`${inputCls} pl-9`} placeholder={`${canAddTaxonomy(kind) ? "Search or add" : "Search"} ${plural}…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy}
               onKeyDown={(e) => { if (e.key === "Enter" && newName) { e.preventDefault(); createNew(); } }} />
           </div>
           <p className="text-xs text-muted-foreground">Select as many {plural} as you like. {picked.length > 0 && <span className="font-semibold text-primary">{picked.length} selected</span>}</p>
