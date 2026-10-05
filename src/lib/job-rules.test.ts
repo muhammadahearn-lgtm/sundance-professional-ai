@@ -36,6 +36,6 @@ describe("job drafts", () => {
   });
   it("a fully filled draft is 100%", async () => {
     const { draftCompletion } = await import("./job-rules");
-    expect(draftCompletion({ ...emptyJob(), role_id: "r", level_id: "l", job_description: "d", location: "Austin", skills: [{ id: "s", level: "required" }], technologies: [{ id: "t", level: "required" }], languages: [{ id: "p", level: "required" }], minimum_salary: "100000" })).toBe(100);
+    expect(draftCompletion({ ...emptyJob(), role_id: "r", level_id: "l", job_description: "d", location: "Austin", location_country: "United States", location_state: "Texas", location_city: "Austin", skills: [{ id: "s", level: "required" }], technologies: [{ id: "t", level: "required" }], languages: [{ id: "p", level: "required" }], minimum_salary: "100000" })).toBe(100);
   });
 });
