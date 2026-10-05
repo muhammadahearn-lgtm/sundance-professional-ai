@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TALENT, canApply, matchesTalent, parseSalary, stageToStatus, timeline, type TalentRow } from "./talent-rules";
 
-const row: TalentRow = { id: "1", name: "Cara Lee", jobTitle: "Data Engineer", employer: "Acme", location: "Austin, TX", years: 6, availability: "active", headline: "", summary: "", salary: "$150k", arrangement: "remote", industries: ["Technology"], roleId: "r1", langs: ["py"], skills: [], techs: ["aws"], updatedAt: "2026-01-01", completion: 50 };
+const row: TalentRow = { id: "1", name: "Cara Lee", jobTitle: "Data Engineer", employer: "Acme", location: "Austin, TX", years: 6, availability: "active", headline: "", summary: "", salary: "$150,000 USD", salaryAmount: 150000, arrangement: "remote", industries: ["Technology"], roleId: "r1", langs: ["py"], skills: [], techs: ["aws"], updatedAt: "2026-01-01", completion: 50 };
 
 describe("talent search", () => {
   it("parses salary text", () => { expect(parseSalary("$120k-150k")).toBe(120000); expect(parseSalary("140,000")).toBe(140000); expect(parseSalary("n/a")).toBeNull(); });
