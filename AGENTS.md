@@ -20,9 +20,9 @@
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Only a company's creator edits it; other recruiters see it read-only and the directory comes from the `company_recruiters` RPC. Why: recruiter_profiles stay private to their owner.
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
-- Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: preserves application history.
-- Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable searches and limits users cannot bypass.
-- Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: profiles (emails) stay private.
+- Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: keeps history.
+- Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable, unbypassable.
+- Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: emails stay private.
 - Moving a pipeline card updates the linked application status via `stageToStatus` (src/lib/talent-rules.ts); pipeline writes are guarded by the `pipeline_job_guard` trigger. Why: timeline mirrors pipeline; no cross-recruiter writes.
 - Talent search loads searchable candidates once and filters client-side (`matchesTalent`); filter state in the URL. Why: array fields filter poorly in the API at this scale.
 - Career intelligence (`career-engine`) and recommendations (`recommend-engine`) are pure client-side computations; only daily `career_snapshots` are stored. Why: explainable, unfakeable.
@@ -37,4 +37,4 @@
 - Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
-- Reports go in `reports`; only users in `moderators` (checked by `is_moderator`) review them and restrict via `moderate_restrict`. Why: no client can grant itself review power.
+- Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
