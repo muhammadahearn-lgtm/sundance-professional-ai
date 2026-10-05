@@ -51,7 +51,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [preview, setPreview] = useState(false);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
-  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | null>(null);
+  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "tech" | null>(null);
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -121,14 +121,14 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           <CertificationManager uid={uid} items={data.certifications} adding={adding === "cert"} setAdding={(v) => setAdding(v ? "cert" : null)} />
         </Section>
 
-        <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />}>
-          <LookupManager uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" />
+        <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
+          <LookupManager uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
         </Section>
-        <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />}>
-          <LookupManager uid={uid} table="candidate_skills" options={data.skillOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" />
+        <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
+          <LookupManager uid={uid} table="candidate_skills" options={data.skillOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
         </Section>
-        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />}>
-          <LookupManager uid={uid} table="candidate_technologies" options={data.techOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" />
+        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
+          <LookupManager uid={uid} table="candidate_technologies" options={data.techOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
         </Section>
 
         <Section id="preferences" title="Career Preferences" icon={<Target className="h-4 w-4" />} action={!editPrefs && editBtn(() => setEditPrefs(true))}>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Search } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
@@ -228,23 +228,31 @@ function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; o
 export type LookupRow = { lookup_id: string; name: string; proficiency_level: Proficiency; years_experience: number };
 type LookupTable = "candidate_languages" | "candidate_skills" | "candidate_technologies";
 
-export function LookupManager({ uid, table, options, rows, noun, required, successMsg }: {
+export function LookupManager({ uid, table, options, rows, noun, required, successMsg, adding, setAdding }: {
   uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
+  adding: boolean; setAdding: (v: boolean) => void;
 }) {
   const refresh = useRefresh(uid);
   const [q, setQ] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const plural = noun === "technology" ? "technologies" : noun + "s";
   const chosen = new Set(rows.map((r) => r.lookup_id));
-  const matches = options.filter((o) => !chosen.has(o.id) && o.name.toLowerCase().includes(q.toLowerCase())).slice(0, 12);
+  const matches = options.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q.toLowerCase()) || (o.group ?? "").toLowerCase().includes(q.toLowerCase())));
 
   async function run(p: PromiseLike<{ error: unknown }>, ok: string) {
     setBusy(true);
     const { error } = await p;
     setBusy(false);
-    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
-    toast.success(ok); refresh();
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return false; }
+    toast.success(ok); refresh(); return true;
   }
-  const add = (id: string) => { setQ(""); run(supabase.from(table).insert({ candidate_id: uid, lookup_id: id }), successMsg); };
+  const close = () => { setPicked([]); setQ(""); setAdding(false); };
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const addSelected = async () => {
+    if (!picked.length) return;
+    if (await run(supabase.from(table).insert(picked.map((id) => ({ candidate_id: uid, lookup_id: id }))), successMsg)) close();
+  };
   const update = (id: string, patch: { proficiency_level?: Proficiency; years_experience?: number }) =>
     run(supabase.from(table).update(patch).eq("candidate_id", uid).eq("lookup_id", id), successMsg);
   const remove = (id: string) => {
@@ -254,18 +262,33 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input className={`${inputCls} pl-9`} placeholder={`Search ${noun === "technology" ? "technologies" : noun + "s"} to add…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy} />
-      </div>
-      {(q || rows.length === 0) && matches.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">{matches.map((o) => (
-          <button key={o.id} type="button" onClick={() => add(o.id)} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium hover:border-primary hover:text-primary">
-            <Plus className="h-3 w-3" />{o.name}{o.group && <span className="text-muted-foreground">· {o.group}</span>}
-          </button>
-        ))}</div>
+      {adding && (
+        <div className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input autoFocus className={`${inputCls} pl-9`} placeholder={`Search ${plural}…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy} />
+          </div>
+          <p className="text-xs text-muted-foreground">Select as many {plural} as you like. {picked.length > 0 && <span className="font-semibold text-primary">{picked.length} selected</span>}</p>
+          {matches.length > 0 ? (
+            <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto">{matches.map((o) => {
+              const on = picked.includes(o.id);
+              return (
+                <button key={o.id} type="button" aria-pressed={on} onClick={() => toggle(o.id)} disabled={busy}
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary hover:text-primary"}`}>
+                  {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}{o.name}{o.group && <span className={on ? "opacity-80" : "text-muted-foreground"}>· {o.group}</span>}
+                </button>
+              );
+            })}</div>
+          ) : <p className="text-xs text-muted-foreground">No matching results.</p>}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
+            <button type="button" onClick={addSelected} disabled={busy || !picked.length} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
+              {busy ? "Saving…" : `Add Selected${picked.length ? ` (${picked.length})` : ""}`}
+            </button>
+          </div>
+        </div>
       )}
-      {q && !matches.length && <p className="text-xs text-muted-foreground">No matching results.</p>}
+      {!rows.length && !adding && <Empty>No {plural} added yet. Click “Add” to pick one or more.</Empty>}
       {required && rows.length === 0 && <p className="text-xs font-medium text-destructive">At least one {noun} is required.</p>}
       {rows.length > 0 && (
         <ul className="divide-y divide-border rounded-xl border border-border">
