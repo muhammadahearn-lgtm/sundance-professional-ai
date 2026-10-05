@@ -39,7 +39,7 @@ export function useJobActions(uid: string) {
       catch (e) { toast.error(friendlyError(e, "Couldn't duplicate this job.")); }
     },
     remove: async (id: string, after?: () => void) => {
-      try { await deleteJob(id); toast.success("Draft deleted"); await refresh(); after?.(); }
+      try { await deleteJob(id); toast.success("Job deleted"); await refresh(); after?.(); }
       catch (e) { toast.error(e instanceof Error && /applications/.test(e.message) ? e.message : friendlyError(e, "Couldn't delete this job.")); }
     },
   };
