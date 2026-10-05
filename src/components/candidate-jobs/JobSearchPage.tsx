@@ -1,3 +1,4 @@
+import { LocationFilter } from "@/components/location/LocationFields";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
@@ -189,7 +190,7 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
         </div>
       </Group>
       <Group title="Location">
-        <input className={inputCls} value={loc} onChange={(e) => setLoc(e.target.value)} onBlur={() => loc !== s.loc && p({ loc })} onKeyDown={(e) => e.key === "Enter" && p({ loc })} placeholder="City, state or country" />
+        <LocationFilter country={s.country ?? ""} state={s.state ?? ""} city={s.city ?? ""} onChange={(v) => p({ ...v, loc: "" })} />
         <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-primary" checked={s.arr.includes("remote")} onChange={(e) => p({ arr: e.target.checked ? [...new Set([...s.arr, "remote"])] : s.arr.filter((x) => x !== "remote") })} />Remote</label>
       </Group>
       <Group title="Company"><input className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} onBlur={() => company !== s.company && p({ company })} onKeyDown={(e) => e.key === "Enter" && p({ company })} placeholder="Company name" /></Group>

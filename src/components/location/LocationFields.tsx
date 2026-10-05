@@ -42,3 +42,18 @@ export function LocationFields({ value, onChange, required, error, showPreview =
     </div>
   );
 }
+
+/** Search filter: Country (controlled) + State / City (normalized text, committed on blur/Enter). */
+export function LocationFilter({ country, state, city, onChange }: { country: string; state: string; city: string; onChange: (v: { country: string; state: string; city: string }) => void }) {
+  const countries = useCountries().data ?? [];
+  const commit = (patch: Partial<{ country: string; state: string; city: string }>) => onChange({ country, state, city, ...patch });
+  return (
+    <div className="space-y-2">
+      <SearchPicker ariaLabel="Country filter" options={countries.map((c) => ({ id: c, name: c }))} value={country} onChange={(c) => commit({ country: c })} placeholder="Search countries…" emptyLabel="All countries" />
+      <input key={`s-${state}`} aria-label="State or province filter" className={inputCls} defaultValue={state} placeholder="State / Province"
+        onBlur={(e) => { const v = normalizeLocationPart(e.target.value); if (v !== state) commit({ state: v }); }} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+      <input key={`c-${city}`} aria-label="City filter" className={inputCls} defaultValue={city} placeholder="City"
+        onBlur={(e) => { const v = normalizeLocationPart(e.target.value); if (v !== city) commit({ city: v }); }} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+    </div>
+  );
+}
