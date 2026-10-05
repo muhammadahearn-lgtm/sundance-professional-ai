@@ -1,8 +1,9 @@
+import { formatSalaryAmount } from "./salary";
 import { supabase } from "@/integrations/supabase/client";
 import { computeCompletion } from "./profile-completion";
 import type { TalentRow } from "./talent-rules";
 
-type Profile = { user_id: string; job_title: string; current_employer: string; location: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
+type Profile = { user_id: string; job_title: string; current_employer: string; location: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
 
 export async function namesFor(ids: string[]): Promise<Record<string, string>> {
   if (!ids.length) return {};
@@ -32,16 +33,16 @@ function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): 
   const completion = computeCompletion({
     jobTitle: p.job_title, headline: p.headline, location: p.location, yearsExperience: p.years_experience, summary: p.summary,
     experienceCount: k.by(k.e, p.user_id).length, educationCount: k.by(k.ed, p.user_id).length, certificationCount: k.by(k.c, p.user_id).length,
-    skillCount: skills.length, languageCount: langs.length, technologyCount: techs.length, targetRoleCount: p.target_roles.length, salaryExpectation: p.salary_expectation, hasResume: !!p.resume_path,
+    skillCount: skills.length, languageCount: langs.length, technologyCount: techs.length, targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path,
   }).percent;
   return {
     id: p.user_id, name, jobTitle: p.job_title, employer: p.current_employer, location: p.location, years: p.years_experience, availability: p.availability,
-    headline: p.headline, summary: p.summary, salary: p.salary_expectation, arrangement: p.work_arrangement, industries: p.industry_experience, roleId: p.role_id,
+    headline: p.headline, summary: p.summary, salary: formatSalaryAmount(p.salary_amount, p.salary_currency), salaryAmount: p.salary_amount, salaryCurrency: p.salary_currency, arrangement: p.work_arrangement, industries: p.industry_experience, roleId: p.role_id,
     langs: langs.map((x) => x.lookup_id), skills: skills.map((x) => x.lookup_id), softSkills: k.by(k.ss, p.user_id).map((x) => x.lookup_id), techs: techs.map((x) => x.lookup_id), updatedAt: p.updated_at, completion,
   };
 }
 
-const COLS = "user_id, job_title, current_employer, location, years_experience, availability, headline, summary, salary_expectation, work_arrangement, industry_experience, role_id, updated_at, target_roles, resume_path";
+const COLS = "user_id, job_title, current_employer, location, years_experience, availability, headline, summary, salary_expectation, salary_amount, salary_currency, work_arrangement, industry_experience, role_id, updated_at, target_roles, resume_path";
 
 /** All recruiter-searchable candidates (filtering happens client-side). */
 export async function listTalent(): Promise<TalentRow[]> {
@@ -85,7 +86,7 @@ export async function loadCandidateFull(id: string) {
   const completion = computeCompletion({
     jobTitle: pr.job_title, headline: pr.headline, location: pr.location, yearsExperience: pr.years_experience, summary: pr.summary,
     experienceCount: e.data?.length ?? 0, educationCount: ed.data?.length ?? 0, certificationCount: c.data?.length ?? 0, skillCount: s.data?.length ?? 0,
-    languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: pr.salary_expectation, hasResume: !!pr.resume_path,
+    languageCount: l.data?.length ?? 0, technologyCount: t.data?.length ?? 0, targetRoleCount: pr.target_roles.length, salaryExpectation: formatSalaryAmount(pr.salary_amount, pr.salary_currency), hasResume: !!pr.resume_path,
   }).percent;
   const av = await supabase.rpc("candidate_avatars", { _ids: [id] });
   const avatarPath: string | null = av.data?.[0]?.avatar_path ?? null;

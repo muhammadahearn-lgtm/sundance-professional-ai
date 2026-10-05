@@ -16,7 +16,7 @@ export async function recalcPairs(admin: Admin, candidateIds: string[], jobIds: 
     admin.from("job_languages").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
     admin.from("job_skills").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
     admin.from("job_technologies").select("job_id, lookup_id, requirement_level").in("job_id", jobIds),
-    admin.from("candidate_profiles").select("user_id, years_experience, work_arrangement, location, locations_of_interest, target_roles, role_id, availability, salary_expectation").in("user_id", candidateIds),
+    admin.from("candidate_profiles").select("user_id, years_experience, work_arrangement, location, locations_of_interest, target_roles, role_id, availability, salary_amount, salary_currency").in("user_id", candidateIds),
     admin.from("candidate_languages").select("candidate_id, lookup_id").in("candidate_id", candidateIds),
     admin.from("candidate_skills").select("candidate_id, lookup_id").in("candidate_id", candidateIds),
     admin.from("candidate_technologies").select("candidate_id, lookup_id").in("candidate_id", candidateIds),
@@ -42,12 +42,12 @@ export async function recalcPairs(admin: Admin, candidateIds: string[], jobIds: 
     const c: MatchCandidate = {
       langs: (CL[p.user_id] ?? []) as string[], skills: (CS[p.user_id] ?? []) as string[], techs: (CT[p.user_id] ?? []) as string[],
       years: p.years_experience, workArrangement: p.work_arrangement, location: p.location, locationsOfInterest: p.locations_of_interest,
-      targetRoles: p.target_roles, roleId: p.role_id, availability: p.availability, salaryExpectation: p.salary_expectation,
+      targetRoles: p.target_roles, roleId: p.role_id, availability: p.availability, salaryAmount: p.salary_amount, salaryCurrency: p.salary_currency,
     };
     for (const j of jobs.data ?? []) {
       const job: MatchJob = {
         langs: (JL[j.job_id] ?? []) as Req[], skills: (JS[j.job_id] ?? []) as Req[], techs: (JT[j.job_id] ?? []) as Req[],
-        minYears: j.minimum_years_experience, workArrangement: j.work_arrangement, location: j.location, roleId: j.role_id, title: j.job_title, maxSalary: j.maximum_salary,
+        minYears: j.minimum_years_experience, workArrangement: j.work_arrangement, location: j.location, roleId: j.role_id, title: j.job_title, maxSalary: j.maximum_salary, salaryCurrency: j.salary_currency,
       };
       const m = computeMatch(c, job, names);
       rows.push({

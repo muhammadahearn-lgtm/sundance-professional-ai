@@ -28,7 +28,7 @@ export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skill
 
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; years: number; availability: string;
-  headline: string; summary: string; salary: string; arrangement: string; industries: string[]; roleId: string | null;
+  headline: string; summary: string; salary: string; salaryAmount?: number | null; salaryCurrency?: string; arrangement: string; industries: string[]; roleId: string | null;
   langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null;
 };
 
@@ -59,7 +59,7 @@ export function matchesTalent(c: TalentRow, f: TalentFilters, keywordIds: string
   if (f.loc && !c.location.toLowerCase().includes(f.loc.toLowerCase())) return false;
   if (f.ind.length && !f.ind.some((i) => c.industries.includes(i))) return false;
   if (f.smin || f.smax) {
-    const s = parseSalary(c.salary);
+    const s = c.salaryAmount ?? null;
     if (s === null) return false;
     if (f.smin && s < f.smin) return false;
     if (f.smax && s > f.smax) return false;
