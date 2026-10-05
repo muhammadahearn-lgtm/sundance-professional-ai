@@ -51,7 +51,7 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={selected}
-          defaultMonth={selected ?? minD ?? maxD}
+          defaultMonth={selected ?? minD ?? maxD ?? new Date()}
           onSelect={(d) => { onChange(d ? format(d, "yyyy-MM-dd") : ""); setOpen(false); }}
           captionLayout="dropdown"
           startMonth={new Date(1950, 0)}
