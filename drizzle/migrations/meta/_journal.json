@@ -141,6 +141,13 @@
       "when": 1791200905134,
       "tag": "0019_soft_skills",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791203122986,
+      "tag": "0020_candidate_links_projects",
+      "breakpoints": true
     }
   ]
 }

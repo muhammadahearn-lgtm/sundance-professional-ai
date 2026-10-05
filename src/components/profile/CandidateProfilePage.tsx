@@ -4,19 +4,20 @@ import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Sparkles, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake,
+  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Sparkles, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Link2, FolderGit2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { computeCompletion, missingRequired, validateProfessional, validateResumeFile, SUMMARY_MAX } from "@/lib/profile-completion";
+import { displayLink, validateLinks, type LinkFields } from "@/lib/profile-links";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
-import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
+import { CertificationManager, EducationManager, ExperienceManager, LookupManager, ProjectManager, SoftSkillManager, type LookupRow } from "./managers";
 import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 
 type Lk = { lookup_id: string; proficiency_level: Proficiency; years_experience: number };
 
 async function loadAll(uid: string) {
-  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl] = await Promise.all([
+  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle(),
     supabase.from("work_experience").select("*").eq("candidate_id", uid),
     supabase.from("education").select("*").eq("candidate_id", uid),
@@ -30,8 +31,9 @@ async function loadAll(uid: string) {
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
     supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", uid),
     supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
+    supabase.from("candidate_projects").select("*").eq("candidate_id", uid).order("created_at", { ascending: false }),
   ]);
-  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl].find((r) => r.error)?.error;
+  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj].find((r) => r.error)?.error;
   if (err) throw err;
   const langOpts = (ll.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name }));
   const skillOpts = (sl.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name }));
@@ -43,6 +45,7 @@ async function loadAll(uid: string) {
     languages: join(langs.data as Lk[] | null, langOpts), skills: join(skills.data as Lk[] | null, skillOpts), technologies: join(techs.data as Lk[] | null, techOpts),
     roleNames: (rl.data ?? []).map((r) => r.role_name), langOpts, skillOpts, techOpts,
     softSkills: (cs.data ?? []).map((x) => x.lookup_id), softOpts: (ssl.data ?? []).map((x) => ({ id: x.soft_skill_id, name: x.soft_skill_name })),
+    projects: pj.data ?? [],
   };
 }
 type Data = Awaited<ReturnType<typeof loadAll>>;
@@ -54,7 +57,8 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [preview, setPreview] = useState(false);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
-  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "soft" | "tech" | null>(null);
+  const [editLinks, setEditLinks] = useState(false);
+  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "soft" | "tech" | "proj" | null>(null);
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -83,90 +87,144 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     <button onClick={onClick} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary"><Pencil className="h-4 w-4" /><span className="hidden sm:inline">Edit</span></button>
   );
 
+  const colLabel = (text: string, dot: string) => (
+    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground"><span className={`h-2 w-2 rounded-full ${dot}`} />{text}</p>
+  );
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <div className="min-w-0 space-y-6">
-        <Header account={account} p={p} percent={completion.percent}
-          onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
-          onPreview={() => setPreview(true)} />
+    <div className="space-y-6">
+      <Header account={account} p={p} percent={completion.percent}
+        onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
+        onPreview={() => setPreview(true)} />
 
-        <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
-          {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
-            <div className="space-y-5">
-              <dl className="grid gap-5 sm:grid-cols-3">
-                <Item k="Current Role" v={p.job_title} /><Item k="Headline" v={p.headline} /><Item k="Current Employer" v={p.current_employer} />
-                <Item k="Location" v={p.location} /><Item k="Years Of Experience" v={`${p.years_experience}`} /><Item k="Industry Experience" v={p.industry_experience.join(", ")} />
-              </dl>
-              <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Professional Summary</dt><p className="mt-1 whitespace-pre-line text-sm">{p.summary || "—"}</p></div>
-            </div>
-          )}
-        </Section>
-
-        <Section id="resume" title="Resume" icon={<FileText className="h-4 w-4" />}>
-          <ResumeManager uid={uid} p={p} />
-          <div className="mt-5 flex gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/40 p-5">
-            <Sparkles className="h-6 w-6 shrink-0 text-primary" />
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2"><p className="font-semibold">AI Resume Parsing</p><span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Future AI Feature</span></div>
-              <p className="text-sm text-muted-foreground">Soon you'll be able to fill your profile from your resume. We'll pull out your work experience, programming languages, technical skills, technologies and certifications.</p>
-              <button disabled className="cursor-not-allowed rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-semibold text-muted-foreground">Parse Resume</button>
-            </div>
-          </div>
-        </Section>
-
-        <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
-          <ExperienceManager uid={uid} items={data.experience} adding={adding === "exp"} setAdding={(v) => setAdding(v ? "exp" : null)} />
-        </Section>
-        <Section id="education" title="Education" icon={<GraduationCap className="h-4 w-4" />} action={adding !== "edu" && addBtn("Add Education", () => setAdding("edu"))}>
-          <EducationManager uid={uid} items={data.education} adding={adding === "edu"} setAdding={(v) => setAdding(v ? "edu" : null)} />
-        </Section>
-        <Section id="certifications" title="Certifications" icon={<Award className="h-4 w-4" />} action={adding !== "cert" && addBtn("Add Certification", () => setAdding("cert"))}>
-          <CertificationManager uid={uid} items={data.certifications} adding={adding === "cert"} setAdding={(v) => setAdding(v ? "cert" : null)} />
-        </Section>
-
-        <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
-          <LookupManager uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
-        </Section>
-        <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
-          <LookupManager uid={uid} table="candidate_skills" options={data.skillOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
-        </Section>
-        <Section id="soft-skills" title="Soft Skills" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
-          <SoftSkillManager uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
-        </Section>
-        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
-          <LookupManager uid={uid} table="candidate_technologies" options={data.techOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
-        </Section>
-
-        <Section id="preferences" title="Career Preferences" icon={<Target className="h-4 w-4" />} action={!editPrefs && editBtn(() => setEditPrefs(true))}>
-          {editPrefs ? <PreferencesForm p={p} uid={uid} roleNames={data.roleNames} onDone={() => setEditPrefs(false)} /> : <PrefsView p={p} />}
-        </Section>
-
-        <Section id="visibility" title="Profile Visibility" icon={<ShieldCheck className="h-4 w-4" />}>
-          <VisibilityControls uid={uid} p={p} />
-        </Section>
-      </div>
-
-      <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-        <div className={`${card} p-6`}>
-          <p className="text-sm font-semibold text-muted-foreground">Profile Completion</p>
-          <p className="mt-1 font-display text-4xl font-extrabold text-primary">{completion.percent}%</p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${completion.percent}%` }} /></div>
-          {completion.recommendations.length > 0 ? (
-            <ul className="mt-5 space-y-2.5">{completion.recommendations.map((r) => (
-              <li key={r} className="flex gap-2 text-sm"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{r}</li>
-            ))}</ul>
-          ) : <p className="mt-4 text-sm text-success">Your profile is complete. Great work!</p>}
+      {missing.length > 0 && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
+          <p className="text-sm font-semibold text-destructive">Required to appear in searches</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{missing.map((m) => <li key={m}>{m}</li>)}</ul>
         </div>
-        <Link to="/candidate/career" className="block rounded-2xl border border-primary/30 bg-primary-soft/40 p-4 text-sm font-semibold text-primary hover:bg-primary-soft">Career Intelligence → readiness, gaps, salary & roadmap</Link>
-        <CandidateMatchWidget compact uid={uid} key={`${data.skills.length}-${data.languages.length}-${data.technologies.length}-${p.updated_at}`} />
-        {missing.length > 0 && (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
-            <p className="text-sm font-semibold text-destructive">Required to appear in searches</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{missing.map((m) => <li key={m}>{m}</li>)}</ul>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        {/* Match data column */}
+        <div className="min-w-0 space-y-6">
+          {colLabel("Match Data — Drives Career Fit", "bg-primary")}
+          <CandidateMatchWidget compact uid={uid} key={`${data.skills.length}-${data.languages.length}-${data.technologies.length}-${p.updated_at}`} />
+          <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
+            <LookupManager uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
+          </Section>
+          <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
+            <LookupManager uid={uid} table="candidate_skills" options={data.skillOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
+          </Section>
+          <Section id="technologies" title="Tools & Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
+            <LookupManager uid={uid} table="candidate_technologies" options={data.techOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
+          </Section>
+          <Section id="certifications" title="Certifications" icon={<Award className="h-4 w-4" />} action={adding !== "cert" && addBtn("Add Certification", () => setAdding("cert"))}>
+            <CertificationManager uid={uid} items={data.certifications} adding={adding === "cert"} setAdding={(v) => setAdding(v ? "cert" : null)} />
+          </Section>
+          <div className={`${card} p-6`}>
+            <p className="text-sm font-semibold text-muted-foreground">Profile Completion</p>
+            <p className="mt-1 font-display text-4xl font-extrabold text-primary">{completion.percent}%</p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${completion.percent}%` }} /></div>
+            {completion.recommendations.length > 0 ? (
+              <ul className="mt-5 space-y-2.5">{completion.recommendations.map((r) => (
+                <li key={r} className="flex gap-2 text-sm"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{r}</li>
+              ))}</ul>
+            ) : <p className="mt-4 text-sm text-success">Your profile is complete. Great work!</p>}
+            <Link to="/candidate/career" className="mt-5 block rounded-xl border border-primary/30 bg-primary-soft/40 p-3 text-sm font-semibold text-primary hover:bg-primary-soft">Career Intelligence → readiness, gaps, salary & roadmap</Link>
           </div>
-        )}
-      </aside>
+        </div>
+
+        {/* Profile data column */}
+        <div className="min-w-0 space-y-6">
+          {colLabel("Profile Data — For Evaluation Only", "bg-muted-foreground")}
+          <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
+            {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
+              <div className="space-y-5">
+                <dl className="grid gap-5 sm:grid-cols-2">
+                  <Item k="Current Role" v={p.job_title} /><Item k="Current Employer" v={p.current_employer} />
+                  <Item k="Location" v={p.location} /><Item k="Years Of Experience" v={`${p.years_experience}`} />
+                  <Item k="Headline" v={p.headline} /><Item k="Industry Experience" v={p.industry_experience.join(", ")} />
+                </dl>
+                <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Professional Summary</dt><p className="mt-1 whitespace-pre-line text-sm">{p.summary || "—"}</p></div>
+              </div>
+            )}
+          </Section>
+          <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
+            <ExperienceManager uid={uid} items={data.experience} adding={adding === "exp"} setAdding={(v) => setAdding(v ? "exp" : null)} />
+          </Section>
+          <Section id="links" title="Overview & Links" icon={<Link2 className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
+            {editLinks ? <LinksForm p={p} uid={uid} onDone={() => setEditLinks(false)} /> : (
+              <dl className="grid gap-5 sm:grid-cols-2">
+                <Item k="Education" v={data.education[0] ? [data.education[0].degree, data.education[0].field_of_study].filter(Boolean).join(", ") + (data.education[0].institution_name ? `, ${data.education[0].institution_name}` : "") : ""} />
+                <Item k="Salary Expectations" v={p.salary_expectation} />
+                <Item k="Availability" v={label(AVAILABILITY, p.availability)} />
+                <Item k="Career Interests" v={p.target_roles.join(", ")} />
+                <LinkItem k="LinkedIn" url={p.linkedin_url} />
+                <LinkItem k="GitHub" url={p.github_url} />
+                <LinkItem k="Portfolio" url={p.portfolio_url} />
+                <Item k="Resume" v={p.resume_file_name ?? "Not uploaded"} />
+              </dl>
+            )}
+          </Section>
+          <Section id="soft-skills" title="Professional Strengths" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
+            <SoftSkillManager uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
+          </Section>
+          <Section id="projects" title="Projects" icon={<FolderGit2 className="h-4 w-4" />} action={adding !== "proj" && addBtn("Add Project", () => setAdding("proj"))}>
+            <ProjectManager uid={uid} items={data.projects ?? []} adding={adding === "proj"} setAdding={(v) => setAdding(v ? "proj" : null)} />
+          </Section>
+          <Section id="education" title="Education" icon={<GraduationCap className="h-4 w-4" />} action={adding !== "edu" && addBtn("Add Education", () => setAdding("edu"))}>
+            <EducationManager uid={uid} items={data.education} adding={adding === "edu"} setAdding={(v) => setAdding(v ? "edu" : null)} />
+          </Section>
+          <Section id="resume" title="Resume" icon={<FileText className="h-4 w-4" />}>
+            <ResumeManager uid={uid} p={p} />
+            <div className="mt-5 flex gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/40 p-5">
+              <Sparkles className="h-6 w-6 shrink-0 text-primary" />
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2"><p className="font-semibold">AI Resume Parsing</p><span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Future AI Feature</span></div>
+                <p className="text-sm text-muted-foreground">Soon you'll be able to fill your profile from your resume.</p>
+                <button disabled className="cursor-not-allowed rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-semibold text-muted-foreground">Parse Resume</button>
+              </div>
+            </div>
+          </Section>
+          <Section id="preferences" title="Career Preferences" icon={<Target className="h-4 w-4" />} action={!editPrefs && editBtn(() => setEditPrefs(true))}>
+            {editPrefs ? <PreferencesForm p={p} uid={uid} roleNames={data.roleNames} onDone={() => setEditPrefs(false)} /> : <PrefsView p={p} />}
+          </Section>
+          <Section id="visibility" title="Profile Visibility" icon={<ShieldCheck className="h-4 w-4" />}>
+            <VisibilityControls uid={uid} p={p} />
+          </Section>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function LinkItem({ k, url }: { k: string; url: string }) {
+  return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 truncate text-sm">{url ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{displayLink(url)}</a> : "—"}</dd></div>;
+}
+
+function LinksForm({ p, uid, onDone }: { p: Profile; uid: string; onDone: () => void }) {
+  const save = useSaveProfile(uid);
+  const [f, setF] = useState<LinkFields>({ linkedin_url: p.linkedin_url, github_url: p.github_url, portfolio_url: p.portfolio_url });
+  const [err, setErr] = useState<Partial<Record<keyof LinkFields, string>>>({});
+  const [saving, setSaving] = useState(false);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const { values, errors } = validateLinks(f);
+    setErr(errors);
+    if (Object.keys(errors).length) return;
+    setSaving(true);
+    const ok = await save(values, "Links updated");
+    setSaving(false);
+    if (ok) onDone();
+  }
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <p className="text-sm text-muted-foreground">Education, salary, availability and career interests come from their own sections below.</p>
+      <Field label="LinkedIn" error={err.linkedin_url}><input className={inputCls} maxLength={300} placeholder="linkedin.com/in/yourname" value={f.linkedin_url} onChange={(e) => setF({ ...f, linkedin_url: e.target.value })} /></Field>
+      <Field label="GitHub" error={err.github_url}><input className={inputCls} maxLength={300} placeholder="github.com/yourname" value={f.github_url} onChange={(e) => setF({ ...f, github_url: e.target.value })} /></Field>
+      <Field label="Portfolio" error={err.portfolio_url}><input className={inputCls} maxLength={300} placeholder="yourname.dev" value={f.portfolio_url} onChange={(e) => setF({ ...f, portfolio_url: e.target.value })} /></Field>
+      <SaveBar saving={saving} onCancel={onDone} />
+    </form>
   );
 }
 
@@ -401,6 +459,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         </div>
         {p.summary && <p className="mt-4 whitespace-pre-line text-sm">{p.summary}</p>}
         {p.industry_experience.length > 0 && <div className="mt-4"><Chips items={p.industry_experience} /></div>}
+        {(p.linkedin_url || p.github_url || p.portfolio_url) && <dl className="mt-4 grid gap-4 sm:grid-cols-3"><LinkItem k="LinkedIn" url={p.linkedin_url} /><LinkItem k="GitHub" url={p.github_url} /><LinkItem k="Portfolio" url={p.portfolio_url} /></dl>}
       </section>
       {block("Experience", data.experience.length ? <ul className="space-y-4">{[...data.experience].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? "")).map((x) => (
         <li key={x.experience_id}><p className="font-semibold">{x.job_title}</p><p className="text-sm text-muted-foreground">{x.company_name}{x.location && ` · ${x.location}`}</p>{x.responsibilities && <p className="mt-1 text-sm">{x.responsibilities}</p>}</li>
@@ -411,6 +470,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
       {block("Skills", lk(data.skills))}
       {block("Soft Skills", <Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} />)}
       {block("Technologies", lk(data.technologies))}
+      {block("Projects", (data.projects ?? []).length ? <ul className="space-y-3">{data.projects.map((x) => <li key={x.project_id} className="text-sm"><span className="font-semibold">{x.title}</span>{x.description && <span className="text-muted-foreground"> — {x.description}</span>}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
       {block("Career Preferences", <PrefsView p={p} />)}
     </div>
   );
