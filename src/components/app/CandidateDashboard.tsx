@@ -41,7 +41,7 @@ async function loadDashboard(uid: string) {
 
 function Widget({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className={card}>
+    <section className={`${card} min-w-0`}>
       <div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-bold">{title}</h2>{action}</div>
       {children}
     </section>

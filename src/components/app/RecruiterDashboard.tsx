@@ -133,7 +133,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
         <Stat Icon={CheckCircle2} n={k.hires} label="Hires" />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <DraftJobsWidget uid={uid} jobs={jobs} onChange={refresh} />
           <Widget title="Your Jobs" action={<div className="flex flex-wrap gap-1.5">{jobStatusCounts(jobs).map((s) => <span key={s.key} className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold capitalize">{s.n} {s.key}</span>)}</div>}>
