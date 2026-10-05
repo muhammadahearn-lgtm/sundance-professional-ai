@@ -30,8 +30,8 @@
 - Conversations are created only through the `start_conversation` RPC; archive/read/delivered go through RPCs, the inbox comes from `my_conversations`, and attachments live in the private `message-attachments` bucket under `<conversation_id>/`. Why: rules enforced in the database.
 - Notifications are created only by database triggers through `create_notification` (respects `notification_preferences`, dedupes via `dedupe_key`; unread message notifications group per conversation); users can only read, mark read/archive or delete their own. Why: notifications can't be faked and never duplicate.
 - Analytics are computed client-side by the pure `analytics` helpers from existing tables; the only new storage is `analytics_events` (own job/candidate views and recommendation views/clicks, one per item per day), and recruiters see job views only as counts via `my_job_view_counts`. Why: unfakeable; viewers stay private.
-- Database helper functions are not callable by signed-out visitors, and trigger-only functions are not callable by anyone directly. Why: smaller attack surface.
+- Database helper functions are not callable by signed-out visitors, and trigger-only functions are not callable by anyone directly. Why: less exposure.
 - Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. A photo picked at sign-up stays in the browser and uploads on first sign-in Why: no session before email confirmation.
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule — informational recruiting context only.
-- Candidate links/projects validate via `profile-links.ts`, render via `links-projects.tsx`. Why: one path for all views.
+- Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
 - Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format, scoring never parses text.
