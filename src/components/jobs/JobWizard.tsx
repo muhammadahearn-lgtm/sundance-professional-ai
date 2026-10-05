@@ -9,6 +9,7 @@ import { useRecalc } from "@/components/match/Match";
 import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/jobs-data";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
+import { digitsOnly } from "@/lib/salary";
 import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, LEVELS, RequirementPicker } from "./shared";
 
 const STEPS = ["Job Information", "Programming Languages", "Technical Skills", "Tools & Technologies", "Compensation"];
@@ -135,8 +136,8 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
         {step === 5 && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Minimum Salary" error={errs.minimum_salary}><input type="number" min={0} className={inputCls} value={f.minimum_salary} onChange={(e) => set("minimum_salary", e.target.value)} placeholder="120000" /></Field>
-              <Field label="Maximum Salary" error={errs.maximum_salary}><input type="number" min={0} className={inputCls} value={f.maximum_salary} onChange={(e) => set("maximum_salary", e.target.value)} placeholder="160000" /></Field>
+              <Field label="Minimum Salary" error={errs.minimum_salary}><input type="text" inputMode="numeric" pattern="[0-9]*" className={inputCls} value={f.minimum_salary} onChange={(e) => set("minimum_salary", digitsOnly(e.target.value))} placeholder="120000" /></Field>
+              <Field label="Maximum Salary" error={errs.maximum_salary}><input type="text" inputMode="numeric" pattern="[0-9]*" className={inputCls} value={f.maximum_salary} onChange={(e) => set("maximum_salary", digitsOnly(e.target.value))} placeholder="160000" /></Field>
               <Field label="Currency"><select className={inputCls} value={f.salary_currency} onChange={(e) => set("salary_currency", e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
             </div>
             <Field label="Bonus Information"><input className={inputCls} value={f.bonus_info} onChange={(e) => set("bonus_info", e.target.value)} placeholder="Up to 15% annual bonus + equity" /></Field>
