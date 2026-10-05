@@ -10,7 +10,9 @@ import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/job
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
 import { digitsOnly } from "@/lib/salary";
-import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, LEVELS, RequirementPicker } from "./shared";
+import { displayJobTitle } from "@/lib/role-taxonomy";
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
+import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, RequirementPicker } from "./shared";
 
 const STEPS = ["Job Information", "Programming Languages", "Technical Skills", "Tools & Technologies", "Compensation"];
 
@@ -70,7 +72,9 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
     }
     setSaving(target);
     try {
-      const id = await saveJob(uid, f, { id: jobId, status: target === "save" ? undefined : target });
+      const title = displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name);
+      const lvl = tax.levels.find((l) => l.id === f.level_id)?.name ?? "";
+      const id = await saveJob(uid, { ...f, job_title: title, experience_level: lvl }, { id: jobId, status: target === "save" ? undefined : target });
       recalc.mutate(id);
       await qc.invalidateQueries({ queryKey: ["jobs"] });
       await qc.invalidateQueries({ queryKey: ["job", id] });
@@ -107,11 +111,11 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Job Title *" error={errs.job_title}><input className={inputCls} value={f.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="Senior Data Engineer" /></Field>
+              <Field label="Role *" error={errs.role_id}><SearchPicker ariaLabel="Role" grouped options={tax.roles} value={f.role_id} onChange={(v) => set("role_id", v)} placeholder="Search role (data, cloud, security…)" /></Field>
+              <Field label="Level *" error={errs.level_id}><SearchPicker ariaLabel="Level" options={tax.levels} value={f.level_id} onChange={(v) => set("level_id", v)} placeholder="Search level" /></Field>
+              <Field label="Custom Job Title (optional)" error={errs.custom_title} hint={<span className="text-xs text-muted-foreground">Display only</span>}><input className={inputCls} value={f.custom_title} onChange={(e) => set("custom_title", e.target.value)} placeholder={displayJobTitle("", tax.levels.find((l) => l.id === f.level_id)?.name ?? "Senior", tax.allRoles.find((r) => r.id === f.role_id)?.name ?? "Data Engineer") + " – AI Platform"} /></Field>
+              <Field label="Shown To Candidates As"><input readOnly className={`${inputCls} bg-muted/50`} value={displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name) || "Pick a role and level"} /></Field>
               <Field label="Company *" error={errs.company_id}><input className={`${inputCls} bg-muted/50`} value={companyName || "Your company"} readOnly /></Field>
-              <Field label="Role *" error={errs.role_id}>
-                <select className={inputCls} value={f.role_id} onChange={(e) => set("role_id", e.target.value)}><option value="">Select a role…</option>{tax.roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
-              </Field>
               <Field label="Employment Type *" error={errs.employment_type}>
                 <select className={inputCls} value={f.employment_type} onChange={(e) => set("employment_type", e.target.value)}>{EMPLOYMENT.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
               </Field>
@@ -120,9 +124,6 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
               </Field>
               <Field label="Location *" error={errs.location}><input className={inputCls} value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Austin, TX or Remote (US)" /></Field>
               <Field label="Minimum Years Experience *" error={errs.minimum_years_experience}><input type="number" min={0} max={50} className={inputCls} value={f.minimum_years_experience} onChange={(e) => set("minimum_years_experience", e.target.value)} /></Field>
-              <Field label="Experience Level">
-                <select className={inputCls} value={f.experience_level} onChange={(e) => set("experience_level", e.target.value)}><option value="">Select…</option>{LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}</select>
-              </Field>
             </div>
             <Field label="Job Description *" error={errs.job_description} hint={<span className={`text-xs ${f.job_description.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground"}`}>{f.job_description.length}/{DESCRIPTION_MAX}</span>}>
               <span className="block" onClick={(e) => e.preventDefault()}><MarkdownEditor value={f.job_description} onChange={(v) => set("job_description", v)} placeholder="Describe the role, responsibilities, qualifications and benefits…" /></span>
