@@ -80,6 +80,14 @@ export function AppShell({ account }: { account: Account }) {
     window.addEventListener("pointerup", onUp);
   }
   const onboarding = pathname.endsWith("/onboarding");
+  // Close the phone menu when the page changes or Escape is pressed.
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   const name = `${account.firstName} ${account.lastName}`.trim() || account.email;
   const initials = (account.firstName[0] ?? account.email[0] ?? "?").toUpperCase() + (account.lastName[0] ?? "").toUpperCase();
 
@@ -91,12 +99,12 @@ export function AppShell({ account }: { account: Account }) {
   }
 
   const nav = (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-1" aria-label="Main">
       {NAV[account.role].map(({ to, label, Icon }) => (
         <Link key={to} to={to} onClick={() => setOpen(false)}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          activeProps={{ className: "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary" }}>
-          <Icon className="h-4 w-4" /> {label}{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
+          activeProps={{ className: "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary", "aria-current": "page" }}>
+          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
         </Link>
       ))}
     </nav>
@@ -105,30 +113,31 @@ export function AppShell({ account }: { account: Account }) {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-        <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-2">
+        <div className="flex h-16 items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             {!onboarding && (
-              <button className="rounded-lg p-2 lg:hidden" aria-label="Toggle menu" onClick={() => setOpen(!open)}>
+              <button type="button" className="shrink-0 rounded-lg p-2.5 hover:bg-muted lg:hidden" aria-label={open ? "Close menu" : "Open menu"}
+                aria-expanded={open} aria-controls="mobile-nav" onClick={() => setOpen(!open)}>
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             )}
             {!onboarding && (
-              <button className="hidden rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex"
+              <button type="button" className="hidden rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex"
                 aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}
                 aria-expanded={!collapsed} onClick={toggleCollapsed}>
                 {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
               </button>
             )}
-            <Logo />
+            <div className="min-w-0"><Logo /></div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {!onboarding && <NotificationBell uid={account.userId} role={account.role} />}
             <span className="hidden rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold capitalize text-primary sm:inline">{account.role}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label="Open account menu"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   data-testid="account-avatar"
                 >
                   {initials}
@@ -155,22 +164,29 @@ export function AppShell({ account }: { account: Account }) {
           </div>
         </div>
         {!onboarding && <NotificationsLive uid={account.userId} />}
-        {open && !onboarding && <div className="border-t border-border bg-background p-4 lg:hidden">{nav}</div>}
+        {open && !onboarding && <div id="mobile-nav" className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-border bg-background p-4 lg:hidden">{nav}</div>}
       </header>
       <div className="flex">
         {!onboarding && !collapsed && (
-          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:relative lg:block" style={{ width }}>
+          <aside aria-label="Sidebar" className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:relative lg:block" style={{ width }}>
             {nav}
             <div
-              role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
+              role="separator" aria-orientation="vertical" aria-label="Resize sidebar" aria-valuemin={200} aria-valuemax={360} aria-valuenow={width}
+              tabIndex={0}
               title="Drag to resize, double-click to hide"
               onPointerDown={startResize}
               onDoubleClick={toggleCollapsed}
-              className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
+              onKeyDown={(e) => {
+                if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+                e.preventDefault();
+                const w = Math.min(360, Math.max(200, width + (e.key === "ArrowRight" ? 16 : -16)));
+                setWidth(w); localStorage.setItem("sundance.sidebarWidth", String(w));
+              }}
+              className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 focus-visible:bg-primary/50"
             />
           </aside>
         )}
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"><Outlet /></main>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 p-4 outline-none sm:p-6 lg:p-8"><Outlet /></main>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>
 
       <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match</span><MatchFilter value={mm} onChange={setMm} /></div>
-      {q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
+      {tax.error ? <ErrorBox msg="Unable To Load Pipeline" retry={() => tax.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
         <div className="-mx-4 overflow-x-auto px-4 pb-2"><div className="flex gap-4" style={{ minWidth: STAGES.length * 260 }}>
           {STAGES.map(([key, title]) => {
             const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));

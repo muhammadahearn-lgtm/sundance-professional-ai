@@ -38,17 +38,19 @@ export const nameOf = (opts: { id: string; name: string }[], id: string) => opts
 export const btn = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
 export const primaryBtn = "inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
 
-export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name: string; size?: string; path?: string | null | undefined }) {
+export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name?: string | null | undefined; size?: string; path?: string | null | undefined }) {
   const url = useAvatarUrl(path);
-  const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
-  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`}>{url ? <img src={url} alt={`${name} photo`} className="h-full w-full object-cover" /> : i}</div>;
+  // Name can be missing (e.g. a deleted account or a name not loaded yet) — never crash.
+  const safe = (name ?? "").trim();
+  const i = safe.split(/\s+/).filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`} aria-hidden={url ? undefined : true}>{url ? <img src={url} alt={safe ? `${safe} photo` : "Profile photo"} className="h-full w-full object-cover" /> : i}</div>;
 }
 export function Chips({ ids, opts, max = 5, soft = false }: { ids: string[]; opts: { id: string; name: string }[]; max?: number; soft?: boolean }) {
   if (!ids.length) return <span className="text-xs text-muted-foreground">—</span>;
   return <div className="flex flex-wrap gap-1.5">{ids.slice(0, max).map((id) => <span key={id} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${soft ? "bg-indigo/10 text-indigo" : "bg-primary-soft text-primary"}`}>{nameOf(opts, id)}</span>)}{ids.length > max && <span className="text-xs text-muted-foreground">+{ids.length - max}</span>}</div>;
 }
 export function ErrorBox({ msg, retry }: { msg: string; retry: () => void }) {
-  return <div className={`${card} p-8 text-center`}><p className="font-semibold">{msg}</p><button onClick={retry} className={`${primaryBtn} mt-4`}>Try again</button></div>;
+  return <div className={`${card} p-8 text-center`} role="alert"><p className="font-semibold">{msg}</p><button onClick={retry} className={`${primaryBtn} mt-4`}>Try again</button></div>;
 }
 export function MatchPlaceholder({ items = ["Overall Match Score", "Skill Alignment", "Technology Alignment", "Experience Alignment"] }: { items?: string[] }) {
   return (
@@ -117,7 +119,7 @@ const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? 
 
 function PhotoCover({ name, path }: { name: string; path?: string | null | undefined }) {
   const url = useAvatarUrl(path);
-  const i = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
+  const i = (name ?? "").trim().split(/\s+/).filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
   return url ? <img src={url} alt={`${name} photo`} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
     : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
 }
@@ -280,7 +282,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
             </div></div>
 {hasJob ? <div className={`${card} flex flex-wrap items-center gap-3 border-primary/40 bg-primary-soft/40 p-4`}><Sparkles className="h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase text-muted-foreground">Matching Candidates For</p><p className="font-display text-lg font-bold">{selJob.job_title}</p>{selCo && <p className="text-sm text-muted-foreground">{selCo.company_name}</p>}</div><button type="button" onClick={() => set({ job: "", mm: 0 })} className={btn}><X className="h-4 w-4" />Clear Job</button></div>
             : <div className={`${card} p-3 text-sm text-muted-foreground`}><span className="font-semibold text-foreground">General Talent Search</span> — select a job under Job Context to see match scores.</div>}
-{q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 3xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
+{q.error || tax.error ? <ErrorBox msg="Unable To Load Candidates" retry={() => { void tax.refetch(); void q.refetch(); }} /> : q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 3xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
             : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} />)}</div>

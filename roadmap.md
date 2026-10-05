@@ -28,7 +28,7 @@
 - [ ] 3. Legal & trust pages (needs legal review)
 - [x] 4. Moderation & reporting — report buttons, review page, suspend/pause (needs a reviewer account assigned)
 - [x] 5. Account controls — password change, deletion with clear explanation, file cleanup
-- [ ] 6. Empty states & error recovery audit
-- [ ] 7. Mobile & accessibility review
+- [x] 6. Empty states & error recovery — in-page error screens with Try again/Go back, offline banner, retry on failed lists, failed-save alerts
+- [x] 7. Mobile & accessibility — skip link, keyboard focus, labels, phone menu, reduced motion, phone layout fixes (candidate pages checked; recruiter pages not browser-checked)
 - [ ] 8. Launch operations
 - [ ] 9. Production verification after publishing

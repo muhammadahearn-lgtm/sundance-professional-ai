@@ -41,7 +41,7 @@ async function loadDashboard(uid: string) {
 
 function Widget({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className={card}>
+    <section className={`${card} min-w-0`}>
       <div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-bold">{title}</h2>{action}</div>
       {children}
     </section>
@@ -143,15 +143,15 @@ export function CandidateDashboard({ account }: { account: Account }) {
         <Stat Icon={XCircle} n={m.rejected} label="Rejected" />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Widget title="Application Status">
             <div className="space-y-2.5">
               {breakdown.map((b) => (
                 <div key={b.key} className="flex items-center gap-3 text-sm">
-                  <span className="w-36 shrink-0 font-medium">{b.label}</span>
-                  <div className="h-2 flex-1 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${(b.n / maxN) * 100}%` }} /></div>
-                  <span className="w-6 text-right text-muted-foreground">{b.n}</span>
+                  <span className="w-28 shrink-0 font-medium sm:w-36">{b.label}</span>
+                  <div className="h-2 min-w-0 flex-1 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${(b.n / maxN) * 100}%` }} /></div>
+                  <span className="w-6 shrink-0 text-right text-muted-foreground">{b.n}</span>
                 </div>
               ))}
             </div>

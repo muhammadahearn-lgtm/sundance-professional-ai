@@ -18,6 +18,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { areaForPath } from "@/lib/auth-rules";
 import { Toaster } from "@/components/ui/sonner";
+import { OfflineBanner } from "@/components/app/RouteStates";
 
 function NotFoundComponent() {
   return (
@@ -119,18 +120,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground">Skip to main content</a>
+      <OfflineBanner />
       {inApp ? (
         <Outlet />
       ) : (
         <div className="flex min-h-screen flex-col">
           <SiteHeader />
-          <main className="flex-1">
+          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
             <Outlet />
           </main>
           <SiteFooter />
         </div>
       )}
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" closeButton />
     </QueryClientProvider>
   );
 }
