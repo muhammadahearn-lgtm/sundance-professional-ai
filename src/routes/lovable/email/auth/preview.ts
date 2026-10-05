@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Sundance Professional AI"
+const SITE_NAME = "Sundance Professionals"
 const ROOT_DOMAIN = "sundanceprofessionals.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).

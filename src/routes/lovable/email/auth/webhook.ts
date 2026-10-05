@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Sundance Professional AI"
+const SITE_NAME = "Sundance Professionals"
 const SENDER_DOMAIN = "notify.sundanceprofessionals.com"
 const ROOT_DOMAIN = "sundanceprofessionals.com"
 const FROM_DOMAIN = "sundanceprofessionals.com"
