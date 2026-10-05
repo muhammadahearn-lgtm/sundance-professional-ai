@@ -33,7 +33,7 @@
 - Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. A photo picked at sign-up stays in the browser and uploads on first sign-in Why: no session before email confirmation.
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule — informational recruiting context only.
 - Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
-- Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format, scoring never parses text.
+- Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format.
 - Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
