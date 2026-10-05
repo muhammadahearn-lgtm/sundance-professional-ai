@@ -166,6 +166,7 @@ export type Database = {
           availability: string
           created_at: string
           current_employer: string
+          current_level_id: string | null
           github_url: string
           headline: string
           hide_from_current_employer: boolean
@@ -186,6 +187,8 @@ export type Database = {
           salary_expectation: string
           summary: string
           target_industries: string[]
+          target_level_id: string | null
+          target_role_id: string | null
           target_roles: string[]
           technical_skills: string[]
           tools: string[]
@@ -199,6 +202,7 @@ export type Database = {
           availability?: string
           created_at?: string
           current_employer?: string
+          current_level_id?: string | null
           github_url?: string
           headline?: string
           hide_from_current_employer?: boolean
@@ -219,6 +223,8 @@ export type Database = {
           salary_expectation?: string
           summary?: string
           target_industries?: string[]
+          target_level_id?: string | null
+          target_role_id?: string | null
           target_roles?: string[]
           technical_skills?: string[]
           tools?: string[]
@@ -232,6 +238,7 @@ export type Database = {
           availability?: string
           created_at?: string
           current_employer?: string
+          current_level_id?: string | null
           github_url?: string
           headline?: string
           hide_from_current_employer?: boolean
@@ -252,6 +259,8 @@ export type Database = {
           salary_expectation?: string
           summary?: string
           target_industries?: string[]
+          target_level_id?: string | null
+          target_role_id?: string | null
           target_roles?: string[]
           technical_skills?: string[]
           tools?: string[]
@@ -263,8 +272,29 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "candidate_profiles_current_level_id_fkey"
+            columns: ["current_level_id"]
+            isOneToOne: false
+            referencedRelation: "levels"
+            referencedColumns: ["level_id"]
+          },
+          {
             foreignKeyName: "candidate_profiles_role_id_fkey"
             columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["role_id"]
+          },
+          {
+            foreignKeyName: "candidate_profiles_target_level_id_fkey"
+            columns: ["target_level_id"]
+            isOneToOne: false
+            referencedRelation: "levels"
+            referencedColumns: ["level_id"]
+          },
+          {
+            foreignKeyName: "candidate_profiles_target_role_id_fkey"
+            columns: ["target_role_id"]
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["role_id"]
@@ -910,12 +940,14 @@ export type Database = {
           bonus_info: string
           company_id: string | null
           created_at: string
+          custom_title: string
           employment_type: Database["public"]["Enums"]["employment_type"]
           experience_level: string
           job_description: string
           job_id: string
           job_status: Database["public"]["Enums"]["job_status"]
           job_title: string
+          level_id: string | null
           location: string
           maximum_salary: number | null
           minimum_salary: number | null
@@ -932,12 +964,14 @@ export type Database = {
           bonus_info?: string
           company_id?: string | null
           created_at?: string
+          custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
           experience_level?: string
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]
           job_title: string
+          level_id?: string | null
           location?: string
           maximum_salary?: number | null
           minimum_salary?: number | null
@@ -954,12 +988,14 @@ export type Database = {
           bonus_info?: string
           company_id?: string | null
           created_at?: string
+          custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
           experience_level?: string
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]
           job_title?: string
+          level_id?: string | null
           location?: string
           maximum_salary?: number | null
           minimum_salary?: number | null
@@ -980,6 +1016,13 @@ export type Database = {
             referencedColumns: ["company_id"]
           },
           {
+            foreignKeyName: "jobs_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "levels"
+            referencedColumns: ["level_id"]
+          },
+          {
             foreignKeyName: "jobs_recruiter_id_fkey"
             columns: ["recruiter_id"]
             isOneToOne: false
@@ -994,6 +1037,27 @@ export type Database = {
             referencedColumns: ["role_id"]
           },
         ]
+      }
+      levels: {
+        Row: {
+          created_at: string
+          level_id: string
+          level_name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          level_id?: string
+          level_name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          level_id?: string
+          level_name?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       match_scores: {
         Row: {
@@ -1401,19 +1465,28 @@ export type Database = {
       }
       roles: {
         Row: {
+          category: string
           created_at: string
+          is_active: boolean
           role_id: string
           role_name: string
+          sort_order: number
         }
         Insert: {
+          category?: string
           created_at?: string
+          is_active?: boolean
           role_id?: string
           role_name: string
+          sort_order?: number
         }
         Update: {
+          category?: string
           created_at?: string
+          is_active?: boolean
           role_id?: string
           role_name?: string
+          sort_order?: number
         }
         Relationships: []
       }
