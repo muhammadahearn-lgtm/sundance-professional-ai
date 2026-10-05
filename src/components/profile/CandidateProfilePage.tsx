@@ -418,6 +418,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         <button onClick={onBack} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground"><ArrowLeft className="h-4 w-4" />Back to editing</button>
       </div>
       <section className={`${card} p-6`}>
+        <div className="mb-3"><ProfilePhoto uid={account.userId} path={p.photo_visible ? account.avatarPath : null} initials={`${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?"} className="h-16 w-16 text-xl" /></div>
         <h1 className="font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
         <p className="font-medium">{p.job_title}{!p.hide_from_current_employer && p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
