@@ -5,7 +5,8 @@ import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, GitCompa
 import type { JobCardRow } from "@/lib/job-search-data";
 import type { Taxonomy } from "@/lib/jobs-data";
 import { plainPreview } from "@/lib/job-search";
-import { matchTier } from "@/lib/match-engine";
+import { MATCH_WEIGHTS, matchTier } from "@/lib/match-engine";
+import { matchSummary, nextSteps } from "@/lib/match-explain";
 import { card } from "@/components/profile/parts";
 import { BrandImg } from "@/components/recruiter/shared";
 import { ARRANGEMENT, EMPLOYMENT, formatSalary, lbl } from "@/components/jobs/shared";
@@ -50,33 +51,38 @@ function MatchIntelligence({ score, row, open, onToggle }: { score: number | und
 function MatchInsights({ row, open, locAlign, eduAlign }: { row: ScoreRow | undefined; open: boolean; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   if (!row) return null;
   const d = asDetails(row.details);
-  const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies];
-  const bars: [string, number][] = [["Language Match", row.language_alignment_score], ["Skill Match", row.skill_alignment_score], ["Technology Match", row.technology_alignment_score], ["Experience Match", row.experience_alignment_score], ["Career Alignment", row.preference_alignment_score]];
+  const req = new Set(d.missing.requiredMissing);
+  const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies].sort((a, b) => Number(req.has(b)) - Number(req.has(a)));
+  const steps = nextSteps(d);
+  const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Programming Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Tools & Technologies", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
   return (
     <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
       <div className="overflow-hidden">
-        <div className="mt-3 border-t border-border pt-3">
+        <div className="mt-3 space-y-4 border-t border-border pt-3">
+          <p className="rounded-xl bg-primary-soft px-3 py-2 text-sm font-medium text-foreground"><Sparkles className="mr-1.5 inline h-4 w-4 text-primary" />{matchSummary(Math.round(Number(row.overall_match_score)), d)}</p>
           <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2.5">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Match Summary</p>
-                {bars.map(([l, v]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l}</span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
-                {locAlign && <div className="pt-1"><p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</p><LocationAlignmentBadge value={locAlign} /></div>}
-                {eduAlign && <div className="pt-1"><p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Education Fit</p><EducationAlignmentBadge value={eduAlign} /></div>}
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-success">Why You Match</p>
-                {d.strengths.length ? <ul className="mt-2 space-y-1 text-sm">{d.strengths.slice(0, 6).map((x) => <li key={x} className="flex gap-1.5"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />{x}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No strengths recorded yet.</p>}
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-destructive">Match Gaps</p>
-                {missing.length || d.experienceGap ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {missing.map((x) => <span key={x} className="rounded-full border border-destructive/30 bg-destructive/5 px-2.5 py-0.5 text-xs font-semibold text-destructive">{x}{d.missing.requiredMissing.includes(x) ? " · required" : ""}</span>)}
-                    {d.experienceGap > 0 && <span className="rounded-full border border-destructive/30 bg-destructive/5 px-2.5 py-0.5 text-xs font-semibold text-destructive">{d.experienceGap} more yr{d.experienceGap === 1 ? "" : "s"} experience</span>}
-                  </div>
-                ) : <p className="mt-2 text-sm text-muted-foreground">No gaps — you cover every requirement.</p>}
-              </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-success">Why This Matches</p>
+              {d.strengths.length ? <ul className="mt-2 space-y-1 text-sm">{d.strengths.slice(0, 6).map((x) => <li key={x} className="flex gap-1.5"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />{x}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No strengths recorded yet.</p>}
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-destructive">Areas To Improve</p>
+              {missing.length || d.experienceGap ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {missing.map((x) => <span key={x} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${req.has(x) ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-border bg-muted text-muted-foreground"}`}>{x} · {req.has(x) ? "Required" : "Preferred/Optional"}</span>)}
+                  {d.experienceGap > 0 && <span className="rounded-full border border-destructive/30 bg-destructive/5 px-2.5 py-0.5 text-xs font-semibold text-destructive">{d.experienceGap} more yr{d.experienceGap === 1 ? "" : "s"} experience</span>}
+                </div>
+              ) : <p className="mt-2 text-sm text-muted-foreground">No gaps — you cover every requirement.</p>}
+              {steps.length > 0 && <><p className="mt-3 text-xs font-bold uppercase tracking-wide text-primary">Next Steps</p><ul className="mt-1 space-y-1 text-sm">{steps.map((s) => <li key={s} className="flex gap-1.5"><span className="text-primary">→</span>{s}</li>)}</ul></>}
+            </div>
+            <div className="space-y-2.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Score Breakdown</p>
+              {bars.map(([l, v, w]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l} <span className="text-muted-foreground">· {w}% of score</span></span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
+              {locAlign && <div className="pt-1"><p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</p><LocationAlignmentBadge value={locAlign} /></div>}
+              {eduAlign && <div className="pt-1"><p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Education Fit</p><EducationAlignmentBadge value={eduAlign} /></div>}
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">Education, soft skills, certifications and location fit are shown for context and don't change this score.</p>
         </div>
       </div>
     </div>
