@@ -101,7 +101,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
             <div className="space-y-5">
               <dl className="grid gap-5 sm:grid-cols-3">
-                <Item k="Current Role" v={p.job_title} /><Item k="Headline" v={p.headline} /><Item k="Current Employer" v={p.current_employer} />
+                <RoleLevelItems p={p} /><Item k="Current Job Title" v={p.job_title} /><Item k="Headline" v={p.headline} /><Item k="Current Employer" v={p.current_employer} />
                 <Item k="Location" v={p.location} /><Item k="Years Of Experience" v={`${p.years_experience}`} /><Item k="Industry Experience" v={p.industry_experience.join(", ")} />
               </dl>
               <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Professional Summary</dt><p className="mt-1 whitespace-pre-line text-sm">{p.summary || "—"}</p></div>
@@ -452,4 +452,14 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
       </div>
     </div>
   );
+}
+
+function RoleLevelItems({ p }: { p: Profile }) {
+  const tax = useQuery({ queryKey: ["role-level-tax"], queryFn: loadTaxonomy, staleTime: 300_000 });
+  const rn = (id: string | null) => tax.data?.allRoles.find((r) => r.id === id)?.name ?? "";
+  const ln = (id: string | null) => tax.data?.levels.find((l) => l.id === id)?.name ?? "";
+  return (<>
+    <Item k="Current Role" v={[ln(p.current_level_id), rn(p.role_id)].filter(Boolean).join(" · ")} />
+    <Item k="Target Role" v={[ln(p.target_level_id), rn(p.target_role_id)].filter(Boolean).join(" · ")} />
+  </>);
 }
