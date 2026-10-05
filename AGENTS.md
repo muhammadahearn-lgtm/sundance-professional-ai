@@ -36,3 +36,4 @@
 - Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format, scoring never parses text.
 - Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
+- Education: `degree_type` from a fixed list (DB CHECK); field of study/institution normalized by `education_normalize` trigger; display/filters via `src/lib/education.ts`. Why: structured, deduped records.
