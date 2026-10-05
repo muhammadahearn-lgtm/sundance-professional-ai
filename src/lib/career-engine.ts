@@ -189,7 +189,7 @@ export function careerReport(c: CareerCandidate, jobs: MarketJob[], scores: Scor
     current: { skills: c.skills.map((id) => names[id] ?? "Unknown"), technologies: c.techs.map((id) => names[id] ?? "Unknown"), languages: c.langs.map((id) => names[id] ?? "Unknown") },
     market: { skills: topBy(skillDemand), technologies: topBy(techDemand), languages: topBy(langDemand), roles: growingRoles, jobs: jobs.length },
     salary: salaryIntel(c, rel),
-    recommendations: recommendations(skillGaps, techGaps, langGaps, c, c.techs.map((id) => names[id] ?? ""), jobs.length),
+    recommendations: recommendations(skillGaps, techGaps, langGaps, c, c.techs.map((id) => names[id] ?? ""), jobs.length, rel),
     roadmap: roadmap(c, r.score, skillGaps, techGaps),
     insights: { strengths, weaknesses, growth, risks },
     averageMatch: scores.length ? Math.round(avg(scores.map((s) => s.overall))) : null,

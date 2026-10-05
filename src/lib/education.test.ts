@@ -24,3 +24,19 @@ describe("education governance", () => {
     expect(matchesEducation(recs, { gradAfter: 2022 })).toBe(false);
   });
 });
+
+import { educationAlignment, highestDegree } from "./education";
+import { educationRec } from "./career-engine";
+describe("education alignment", () => {
+  it("no preference gives no label", () => expect(educationAlignment([{ degree_type: "Bachelor's Degree" }], null)).toBeNull());
+  it("meets when highest degree reaches preference", () => expect(educationAlignment([{ degree_type: "Bootcamp" }, { degree_type: "Master's Degree" }], "Bachelor's Degree")).toBe("meets"));
+  it("below when under preference", () => expect(educationAlignment([{ degree_type: "Associate Degree" }], "Bachelor's Degree")).toBe("below"));
+  it("missing when no education", () => expect(educationAlignment([], "Bachelor's Degree")).toBe("missing"));
+  it("highest degree picks top rank", () => expect(highestDegree([{ degree_type: "Bachelor's Degree" }, { degree_type: "Doctorate (PhD)" }])).toBe("Doctorate (PhD)"));
+  it("career advice asks to add education when jobs prefer a degree", () => {
+    const c = { title: "", years: 0, location: "", targetRoles: [], roleId: null, langs: [], skills: [], techs: [], certifications: [], completion: 100, degree: null };
+    const j = { id: "1", title: "x", roleId: null, minSalary: null, maxSalary: null, minYears: 0, langs: [], skills: [], techs: [], minDegree: "Bachelor's Degree" };
+    expect(educationRec(c, [j])?.title).toBe("Add your education");
+    expect(educationRec({ ...c, degree: "Master's Degree" }, [j])).toBeNull();
+  });
+});

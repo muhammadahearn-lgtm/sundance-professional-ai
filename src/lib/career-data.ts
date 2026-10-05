@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { highestDegree } from "./education";
 import { loadTaxonomy } from "./jobs-data";
 import { loadCandidateFull } from "./talent-data";
 import { careerReport, type MarketJob, type ScoreLite } from "./career-engine";
@@ -8,7 +9,7 @@ export async function loadCareer(uid: string) {
   const [me, tax, jobsQ, jl, js, jt, sc] = await Promise.all([
     loadCandidateFull(uid),
     loadTaxonomy(),
-    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience").eq("job_status", "active"),
+    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience, minimum_degree").eq("job_status", "active"),
     supabase.from("job_languages").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_skills").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_technologies").select("job_id, lookup_id, requirement_level"),
@@ -28,7 +29,7 @@ export async function loadCareer(uid: string) {
   const L = by(jl.data ?? []), S = by(js.data ?? []), T = by(jt.data ?? []);
   const jobs: MarketJob[] = (jobsQ.data ?? []).map((j) => ({
     id: j.job_id, title: j.job_title, roleId: j.role_id, minSalary: j.minimum_salary, maxSalary: j.maximum_salary, minYears: j.minimum_years_experience,
-    langs: L[j.job_id] ?? [], skills: S[j.job_id] ?? [], techs: T[j.job_id] ?? [],
+    langs: L[j.job_id] ?? [], skills: S[j.job_id] ?? [], techs: T[j.job_id] ?? [], minDegree: j.minimum_degree,
   }));
   const scoreRows = sc.data ?? [];
   const scores: ScoreLite[] = scoreRows.map((r) => ({ jobId: r.job_id, overall: Number(r.overall_match_score), skills: Number(r.skill_alignment_score), technologies: Number(r.technology_alignment_score), experience: Number(r.experience_alignment_score) }));
@@ -38,7 +39,7 @@ export async function loadCareer(uid: string) {
   const report = careerReport({
     title: p.job_title, years: p.years_experience, location: p.location, targetRoles: p.target_roles, roleId: p.role_id,
     langs: me.languages.map((x) => x.lookup_id), skills: me.skills.map((x) => x.lookup_id), techs: me.technologies.map((x) => x.lookup_id),
-    certifications: me.certifications.map((x) => x.certification_name), completion: me.completion,
+    certifications: me.certifications.map((x) => x.certification_name), completion: me.completion, degree: highestDegree(me.education),
   }, jobs, scores, names);
 
   await supabase.from("career_snapshots").upsert({
