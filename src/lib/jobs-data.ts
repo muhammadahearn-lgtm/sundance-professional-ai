@@ -80,7 +80,7 @@ export type LoadedJob = NonNullable<Awaited<ReturnType<typeof loadJob>>>;
 export function toForm(d: LoadedJob): JobForm {
   const j = d.job;
   return {
-    job_title: j.job_title, role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
+    job_title: j.job_title, custom_title: j.custom_title ?? "", level_id: j.level_id ?? "", role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
     location: j.location, minimum_years_experience: String(j.minimum_years_experience), experience_level: j.experience_level, job_description: j.job_description,
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
@@ -91,7 +91,7 @@ export function toForm(d: LoadedJob): JobForm {
 function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
   const num = (v: string) => (v.trim() === "" ? null : Math.round(Number(v)));
   return {
-    job_title: f.job_title.trim(), role_id: f.role_id || null, company_id: f.company_id || null,
+    job_title: f.job_title.trim(), custom_title: f.custom_title.trim(), level_id: f.level_id || null, role_id: f.role_id || null, company_id: f.company_id || null,
     employment_type: f.employment_type as JobRow["employment_type"], work_arrangement: f.work_arrangement as JobRow["work_arrangement"],
     location: f.location.trim(), minimum_years_experience: Number(f.minimum_years_experience) || 0, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
