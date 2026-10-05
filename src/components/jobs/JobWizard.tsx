@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Building2, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, CloudUpload } from "lucide-react";
 import type { Account } from "@/lib/account";
-import { DESCRIPTION_MAX, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
+import { DESCRIPTION_MAX, draftCompletion, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
 import { useRecalc } from "@/components/match/Match";
 import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/jobs-data";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
@@ -51,9 +51,52 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
   const [f, setF] = useState(initial);
   const [errs, setErrs] = useState<ReturnType<typeof validateStep>>({});
   const [saving, setSaving] = useState<JobStatus | "save" | null>(null);
+  const [draftId, setDraftId] = useState<string | undefined>(jobId);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [autoState, setAutoState] = useState<"idle" | "saving" | "failed">("idle");
+  const dirty = useRef(false);
+  const latest = useRef(f);
+  latest.current = f;
+  const isDraft = status === "draft";
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const set = <K extends keyof JobForm>(k: K, v: JobForm[K]) => setF((p) => ({ ...p, [k]: v }));
+  const set = <K extends keyof JobForm>(k: K, v: JobForm[K]) => { dirty.current = true; setF((p) => ({ ...p, [k]: v })); };
+  const withTitle = (x: JobForm) => {
+    const lvl = tax.levels.find((l) => l.id === x.level_id)?.name ?? "";
+    return { ...x, job_title: displayJobTitle(x.custom_title, lvl, tax.allRoles.find((r) => r.id === x.role_id)?.name), experience_level: lvl };
+  };
+
+  /** Save a draft without validation. Used by the Save Draft button, auto-save every 30s, and when leaving the page. */
+  const idRef = useRef(draftId);
+  idRef.current = draftId;
+  const busy = useRef(false);
+  const saveDraft = useCallback(async (manual: boolean) => {
+    if (!isDraft || busy.current) return;
+    if (!manual && !dirty.current) return;
+    busy.current = true; dirty.current = false;
+    if (!manual) setAutoState("saving");
+    try {
+      const id = await saveJob(uid, withTitle(latest.current), { id: idRef.current, status: "draft" });
+      idRef.current = id; setDraftId(id); setSavedAt(new Date()); setAutoState("idle");
+      qc.invalidateQueries({ queryKey: ["jobs"] });
+      qc.invalidateQueries({ queryKey: ["recruiter-dashboard"] });
+      if (manual) toast.success(jobId || draftId ? "Draft updated" : "Draft saved");
+    } catch (err) {
+      dirty.current = true; setAutoState("failed");
+      toast.error(manual ? friendlyError(err, "Unable to save draft.") : "Auto-save failed. Your changes are still on this page.");
+    } finally { busy.current = false; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraft, uid]);
+
+  useEffect(() => {
+    if (!isDraft) return;
+    const t = setInterval(() => void saveDraft(false), 30000);
+    const onHide = () => { if (document.visibilityState === "hidden") void saveDraft(false); };
+    const onUnload = (e: BeforeUnloadEvent) => { if (dirty.current) { void saveDraft(false); e.preventDefault(); } };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("beforeunload", onUnload);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onHide); window.removeEventListener("beforeunload", onUnload); void saveDraft(false); };
+  }, [isDraft, saveDraft]);
 
   const next = () => {
     const e = validateStep(step, f); setErrs(e);
@@ -67,20 +110,20 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
     if (Object.keys(e).length) {
       const firstBad = [1, 2, 3, 4, 5].find((s) => Object.keys(validateStep(s, f)).length) ?? step;
       setStep(firstBad);
-      toast.error(e.maximum_salary?.includes("greater") ? "Invalid salary range." : "Missing required fields.");
+      toast.error(e.maximum_salary?.includes("greater") ? "Invalid salary range." : "Publish validation failed. Fill in the required fields.");
       return;
     }
     setSaving(target);
     try {
-      const title = displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name);
-      const lvl = tax.levels.find((l) => l.id === f.level_id)?.name ?? "";
-      const id = await saveJob(uid, { ...f, job_title: title, experience_level: lvl }, { id: jobId, status: target === "save" ? undefined : target });
+      dirty.current = false;
+      const id = await saveJob(uid, withTitle(f), { id: idRef.current, status: target === "save" ? undefined : target });
       recalc.mutate(id);
       await qc.invalidateQueries({ queryKey: ["jobs"] });
       await qc.invalidateQueries({ queryKey: ["job", id] });
-      toast.success(target === "active" && status !== "active" ? "Job published" : jobId ? "Job updated" : "Job created");
+      toast.success(target === "active" && status !== "active" ? (isDraft ? "Draft published" : "Job published") : jobId ? "Job updated" : "Job created");
       navigate({ to: "/recruiter/jobs/$id", params: { id } });
     } catch (err) {
+      dirty.current = true;
       toast.error(friendlyError(err, jobId ? "Unable to save changes." : "Job creation failed."));
     } finally { setSaving(null); }
   };
@@ -90,8 +133,19 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link to={jobId ? "/recruiter/jobs/$id" : "/recruiter/jobs"} params={jobId ? { id: jobId } : {}} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"><ArrowLeft className="h-4 w-4" />{jobId ? "Back to job" : "All jobs"}</Link>
-          <h1 className="mt-1 font-display text-2xl font-extrabold">{jobId ? "Edit Job" : "Create Job"}</h1>
+          <h1 className="mt-1 font-display text-2xl font-extrabold">{jobId ? (isDraft ? "Continue Draft" : "Edit Job") : "Create Job"}</h1>
         </div>
+        {isDraft && (
+          <div className="text-right text-sm" aria-live="polite">
+            <div className="font-semibold">{draftCompletion(f)}% Complete</div>
+            <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+              {autoState === "failed" ? <><CloudOff className="h-3.5 w-3.5 text-destructive" /><span className="text-destructive">Auto-save failed</span></>
+                : autoState === "saving" ? <><CloudUpload className="h-3.5 w-3.5" />Saving…</>
+                : savedAt ? <><Check className="h-3.5 w-3.5 text-success" />Draft Saved {savedAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</>
+                : <>Auto-saves every 30 seconds</>}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={`${card} p-5`}>
@@ -99,7 +153,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(step / 5) * 100}%` }} /></div>
         <ol className="mt-4 hidden grid-cols-5 gap-2 sm:grid">
           {STEPS.map((s, i) => (
-            <li key={s}><button type="button" onClick={() => (i + 1 < step || jobId) && setStep(i + 1)} className={`flex w-full items-center gap-2 text-left text-xs font-medium ${i + 1 === step ? "text-primary" : "text-muted-foreground"}`}>
+            <li key={s}><button type="button" onClick={() => (i + 1 < step || jobId || isDraft) && setStep(i + 1)} className={`flex w-full items-center gap-2 text-left text-xs font-medium ${i + 1 === step ? "text-primary" : "text-muted-foreground"}`}>
               <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold ${i + 1 < step ? "bg-primary text-primary-foreground" : i + 1 === step ? "border-2 border-primary" : "border border-border"}`}>{i + 1 < step ? <Check className="h-3.5 w-3.5" /> : i + 1}</span>{s}
             </button></li>
           ))}
@@ -150,13 +204,11 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
       <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:bg-card">
         <button type="button" disabled={step === 1} onClick={() => setStep(step - 1)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-40"><ArrowLeft className="h-4 w-4" />Back</button>
         <div className="flex flex-wrap gap-2">
-          {jobId && <button type="button" disabled={!!saving} onClick={() => submit("save")} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">{saving === "save" ? "Saving…" : "Save Changes"}</button>}
-          {step < 5 ? (
-            <button type="button" onClick={next} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">Next<ArrowRight className="h-4 w-4" /></button>
-          ) : (<>
-            {!jobId && <button type="button" disabled={!!saving} onClick={() => submit("draft")} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">{saving === "draft" ? "Saving…" : "Save as Draft"}</button>}
-            {status !== "active" && <button type="button" disabled={!!saving} onClick={() => submit("active")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{saving === "active" ? "Publishing…" : "Publish Job"}</button>}
-          </>)}
+          <button type="button" onClick={() => navigate({ to: "/recruiter/jobs" })} className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">Cancel</button>
+          {isDraft && <button type="button" disabled={!!saving} onClick={() => void saveDraft(true)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">Save Draft</button>}
+          {jobId && !isDraft && <button type="button" disabled={!!saving} onClick={() => submit("save")} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-60">{saving === "save" ? "Saving…" : "Save Changes"}</button>}
+          {step < 5 && <button type="button" onClick={next} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">Next<ArrowRight className="h-4 w-4" /></button>}
+          {status !== "active" && <button type="button" disabled={!!saving} onClick={() => submit("active")} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{saving === "active" ? "Publishing…" : "Publish Job"}</button>}
         </div>
       </div>
     </div>

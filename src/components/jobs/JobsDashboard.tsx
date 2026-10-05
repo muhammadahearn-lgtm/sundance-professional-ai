@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { Briefcase, MapPin, Plus, Search, Users } from "lucide-react";
 import type { Account } from "@/lib/account";
 import type { JobStatus } from "@/lib/job-rules";
 import { listJobs } from "@/lib/jobs-data";
@@ -9,7 +9,7 @@ import { Empty, card, friendlyError, inputCls } from "@/components/profile/parts
 import { ARRANGEMENT, StatusBadge, lbl } from "./shared";
 import { JobActionBar } from "./JobActions";
 
-const FILTERS: [JobStatus | "all", string][] = [["active", "Active"], ["draft", "Draft"], ["paused", "Paused"], ["closed", "Closed"], ["all", "All Jobs"]];
+const FILTERS: [JobStatus | "all", string][] = [["all", "All Jobs"], ["active", "Published"], ["draft", "Drafts"], ["paused", "Paused"], ["closed", "Closed"]];
 const SORTS: [string, string][] = [["newest", "Newest"], ["oldest", "Oldest"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
 const date = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
@@ -18,15 +18,17 @@ export function JobsDashboard({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [sort, setSort] = useState("newest");
+  const [q, setQ] = useState("");
 
   const rows = useMemo(() => {
-    const list = (data ?? []).filter((j) => filter === "all" || j.job_status === filter);
+    const term = q.trim().toLowerCase();
+    const list = (data ?? []).filter((j) => (filter === "all" || j.job_status === filter) && (!term || j.job_title.toLowerCase().includes(term)));
     const cmp: Record<string, (a: (typeof list)[number], b: (typeof list)[number]) => number> = {
       newest: (a, b) => b.created_at.localeCompare(a.created_at), oldest: (a, b) => a.created_at.localeCompare(b.created_at),
       updated: (a, b) => b.updated_at.localeCompare(a.updated_at), alpha: (a, b) => a.job_title.localeCompare(b.job_title),
     };
     return [...list].sort(cmp[sort]);
-  }, [data, filter, sort]);
+  }, [data, filter, sort, q]);
   const count = (s: JobStatus | "all") => (data ?? []).filter((j) => s === "all" || j.job_status === s).length;
 
   return (
@@ -41,7 +43,10 @@ export function JobsDashboard({ account }: { account: Account }) {
             <button key={k} onClick={() => setFilter(k)} className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ${filter === k ? "bg-primary text-primary-foreground" : "border border-border hover:border-primary hover:text-primary"}`}>{l} <span className="opacity-70">{count(k)}</span></button>
           ))}
         </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+        <label className="relative sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input aria-label="Search jobs" className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs and drafts" /></label>
         <select aria-label="Sort jobs" className={`${inputCls} sm:w-48`} value={sort} onChange={(e) => setSort(e.target.value)}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        </div>
       </div>
       {isLoading ? <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-32 animate-pulse`} />)}</div>
         : error ? <div className={`${card} p-8 text-center`}><p className="font-semibold">{friendlyError(error, "We couldn't load your jobs.")}</p><button onClick={() => refetch()} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Try again</button></div>
@@ -58,7 +63,13 @@ export function JobsDashboard({ account }: { account: Account }) {
                       <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
                       <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" />{j.applications} applications</span>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">Created {date(j.created_at)} · Updated {date(j.updated_at)}</p>
+                    {j.job_status === "draft" ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{j.completion_percent}% Complete</span>
+                        <span className="h-1.5 w-28 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-primary" style={{ width: `${j.completion_percent}%` }} /></span>
+                        <span>Last modified {new Date(j.updated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                      </div>
+                    ) : <p className="mt-1 text-xs text-muted-foreground">Created {date(j.created_at)} · Updated {date(j.updated_at)}</p>}
                   </div>
                   <JobActionBar uid={uid} id={j.job_id} status={j.job_status} applications={j.applications} compact />
                 </div>

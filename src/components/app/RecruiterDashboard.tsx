@@ -14,6 +14,7 @@ import { computeRecruiterCompletion } from "@/lib/recruiter-completion";
 import { appStatusCounts, appWindows, countBy, jobStatusCounts, recruiterKpis, stageCounts } from "@/lib/recruiter-dashboard";
 import { APP_STATUSES, STAGES } from "@/lib/talent-rules";
 import { PageHeader } from "./AppShell";
+import { DraftJobsWidget } from "@/components/jobs/DraftJobsWidget";
 import { RecruiterMatchWidget } from "@/components/match/Match";
 import { MessagesWidget } from "@/components/messages/Messages";
 import { RecruiterRecsWidget } from "@/components/recommend/Recommend";
@@ -134,6 +135,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          <DraftJobsWidget uid={uid} jobs={jobs} onChange={refresh} />
           <Widget title="Your Jobs" action={<div className="flex flex-wrap gap-1.5">{jobStatusCounts(jobs).map((s) => <span key={s.key} className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold capitalize">{s.n} {s.key}</span>)}</div>}>
             {jobs.length === 0 ? <Empty text="No jobs yet." cta={<Link to="/recruiter/jobs/create" className={linkBtn}>Create Job</Link>} /> : (
               <div className="space-y-2">{sortedJobs.slice(0, 6).map((j) => (

@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Copy, Eye, Pause, Pencil, Play, Rocket, Trash2, XCircle } from "lucide-react";
 import { allowedActions, canDelete, canEdit, nextStatus, type JobAction, type JobStatus } from "@/lib/job-rules";
-import { deleteJob, duplicateJob, setJobStatus } from "@/lib/jobs-data";
+import { deleteJob, duplicateJob, loadJob, setJobStatus, toForm } from "@/lib/jobs-data";
+import { canPublish } from "@/lib/job-rules";
 import { useRecalc } from "@/components/match/Match";
 import { friendlyError } from "@/components/profile/parts";
 import {
@@ -25,7 +26,12 @@ export function useJobActions(uid: string) {
   const refresh = (id?: string) => Promise.all([qc.invalidateQueries({ queryKey: ["jobs"] }), id ? qc.invalidateQueries({ queryKey: ["job", id] }) : null]);
   return {
     status: async (id: string, a: JobAction) => {
-      try { await setJobStatus(id, nextStatus(a)); toast.success(META[a].ok); if (a === "publish" || a === "resume") recalc.mutate(id); await refresh(id); }
+      try {
+        if (a === "publish") {
+          const d = await loadJob(id);
+          if (!d || !canPublish(toForm(d))) { toast.error("Publish validation failed. Finish the required fields first."); navigate({ to: "/recruiter/jobs/$id/edit", params: { id } }); return; }
+        }
+        await setJobStatus(id, nextStatus(a)); toast.success(META[a].ok); if (a === "publish" || a === "resume") recalc.mutate(id); await refresh(id); }
       catch (e) { toast.error(friendlyError(e, "Unable to save changes.")); }
     },
     duplicate: async (id: string) => {

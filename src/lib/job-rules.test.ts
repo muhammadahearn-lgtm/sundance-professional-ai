@@ -27,3 +27,15 @@ describe("job status", () => {
   it("drafts can be published", () => expect(allowedActions("draft")).toContain("publish"));
   it("cannot delete jobs with applications", () => { expect(canDelete(1)).toBe(false); expect(canDelete(0)).toBe(true); });
 });
+
+describe("job drafts", () => {
+  it("an empty draft is 0% and cannot be published", async () => {
+    const { draftCompletion, canPublish } = await import("./job-rules");
+    expect(draftCompletion(emptyJob())).toBe(0);
+    expect(canPublish(emptyJob("c1"))).toBe(false);
+  });
+  it("a fully filled draft is 100%", async () => {
+    const { draftCompletion } = await import("./job-rules");
+    expect(draftCompletion({ ...emptyJob(), role_id: "r", level_id: "l", job_description: "d", location: "Austin", skills: [{ id: "s", level: "required" }], technologies: [{ id: "t", level: "required" }], languages: [{ id: "p", level: "required" }], minimum_salary: "100000" })).toBe(100);
+  });
+});
