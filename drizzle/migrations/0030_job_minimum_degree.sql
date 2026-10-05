@@ -1,0 +1,3 @@
+ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS minimum_degree text;
+ALTER TABLE public.jobs ADD CONSTRAINT jobs_minimum_degree_check CHECK (minimum_degree IS NULL OR minimum_degree IN ('High School Diploma','Certificate Program','Bootcamp','Associate Degree','Bachelor''s Degree','Master''s Degree','Professional Degree','Doctorate (PhD)'));
+COMMENT ON COLUMN public.jobs.minimum_degree IS 'Optional preferred minimum degree; informational only, never part of match scores.';
