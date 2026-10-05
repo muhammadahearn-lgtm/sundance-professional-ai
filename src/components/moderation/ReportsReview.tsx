@@ -37,13 +37,13 @@ export function ReportsReview() {
   async function setStatus(id: string, status: ReportStatus) {
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("reports").update({ status, resolution_note: (notes[id] ?? "").slice(0, 1000), reviewed_by: u.user?.id ?? null, reviewed_at: new Date().toISOString() }).eq("report_id", id);
-    if (error) return toast.error("Couldn't update the report.");
+    if (error) { toast.error("Couldn't update the report."); return; }
     toast.success(`Report marked ${status}.`);
     qc.invalidateQueries({ queryKey: ["moderation-reports"] });
   }
   async function restrict(type: ReportTarget, target: string, on: boolean) {
     const { error } = await supabase.rpc("moderate_restrict", { _type: type, _target: target, _restrict: on });
-    if (error) return toast.error("Couldn't change the restriction.");
+    if (error) { toast.error("Couldn't change the restriction."); return; }
     toast.success(type === "user" ? (on ? "Account suspended." : "Account restored.") : (on ? "Job paused." : "Job reactivated."));
   }
 
