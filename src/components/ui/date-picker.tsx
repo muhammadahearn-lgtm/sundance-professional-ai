@@ -15,8 +15,8 @@ const toDate = (s?: string | null) => {
 export function DatePicker({
   value, onChange, placeholder = "Pick a date", disabled, min, max, className, "aria-label": ariaLabel, clearable = true,
 }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean;
-  min?: string; max?: string; className?: string; "aria-label"?: string; clearable?: boolean;
+  value: string; onChange: (v: string) => void; placeholder?: string | undefined; disabled?: boolean | undefined;
+  min?: string | undefined; max?: string | undefined; className?: string | undefined; "aria-label"?: string | undefined; clearable?: boolean | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const selected = toDate(value);
