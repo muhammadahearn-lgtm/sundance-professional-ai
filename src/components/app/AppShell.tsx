@@ -121,14 +121,34 @@ export function AppShell({ account }: { account: Account }) {
           <div className="flex items-center gap-3">
             {!onboarding && <NotificationBell uid={account.userId} role={account.role} />}
             <span className="hidden rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold capitalize text-primary sm:inline">{account.role}</span>
-            <div className="hidden text-right sm:block">
-              <div className="text-sm font-semibold leading-tight">{name}</div>
-              <div className="text-xs text-muted-foreground">{account.email}</div>
-            </div>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">{initials}</span>
-            <button onClick={signOut} className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Log out">
-              <LogOut className="h-4 w-4" /><span className="hidden md:inline">Log out</span>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  aria-label="Open account menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  data-testid="account-avatar"
+                >
+                  {initials}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="text-sm font-semibold leading-tight">{name}</div>
+                  <div className="text-xs font-normal capitalize text-muted-foreground">{account.role}</div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={`/${account.role}/profile`}><UserRound className="h-4 w-4" />Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={`/${account.role}/settings`}><Settings className="h-4 w-4" />Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={signOut} className="text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4" />Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         {!onboarding && <NotificationsLive uid={account.userId} />}
