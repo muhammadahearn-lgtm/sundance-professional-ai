@@ -61,7 +61,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             <input aria-label="Search jobs" className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Job title, skill, technology, language or company" />
           </div>
           <button className="rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90">Search</button>
-          <button type="button" onClick={() => setFiltersOpen(!filtersOpen)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-semibold lg:hidden" aria-expanded={filtersOpen}>
+          <button type="button" onClick={() => setFiltersOpen(!filtersOpen)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-semibold lg:hidden" aria-expanded={filtersOpen} aria-label={filtersOpen ? "Hide filters" : "Show filters"}>
             <SlidersHorizontal className="h-4 w-4" />{nFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{nFilters}</span>}
           </button>
         </form>
