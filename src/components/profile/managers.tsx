@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
 
 type Exp = Tables<"work_experience">;
@@ -96,8 +97,8 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
         <Field label="Job Title *" error={err.job_title}><input className={inputCls} maxLength={150} value={f.job_title} onChange={(e) => set("job_title", e.target.value)} /></Field>
         <Field label="Industry"><input className={inputCls} maxLength={100} value={f.industry} onChange={(e) => set("industry", e.target.value)} /></Field>
         <Field label="Location"><input className={inputCls} maxLength={100} value={f.location} onChange={(e) => set("location", e.target.value)} /></Field>
-        <Field label="Start Date *" error={err.start_date}><input type="date" className={inputCls} value={f.start_date} onChange={(e) => set("start_date", e.target.value)} /></Field>
-        <Field label="End Date" error={err.end_date}><input type="date" disabled={f.current_position} className={`${inputCls} disabled:opacity-50`} value={f.current_position ? "" : f.end_date} onChange={(e) => set("end_date", e.target.value)} /></Field>
+        <Field label="Start Date *" error={err.start_date}><DatePicker aria-label="Start date" value={f.start_date} max={f.end_date || undefined} onChange={(v) => set("start_date", v)} placeholder="Select start date" /></Field>
+        <Field label="End Date" error={err.end_date}><DatePicker aria-label="End date" disabled={f.current_position} value={f.current_position ? "" : f.end_date} min={f.start_date || undefined} onChange={(v) => set("end_date", v)} placeholder={f.current_position ? "Present" : "Select end date"} /></Field>
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.current_position} onChange={(e) => set("current_position", e.target.checked)} className="h-4 w-4 accent-primary" /> I currently work here</label>
       <Field label="Responsibilities"><textarea rows={3} maxLength={2000} className={inputCls} value={f.responsibilities} onChange={(e) => set("responsibilities", e.target.value)} /></Field>
@@ -217,8 +218,8 @@ function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; o
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Certification Name *" error={err.certification_name}><input className={inputCls} maxLength={150} value={f.certification_name} onChange={(e) => setF({ ...f, certification_name: e.target.value })} /></Field>
         <Field label="Issuing Organization"><input className={inputCls} maxLength={150} value={f.issuing_organization} onChange={(e) => setF({ ...f, issuing_organization: e.target.value })} /></Field>
-        <Field label="Issue Date"><input type="date" className={inputCls} value={f.issue_date} onChange={(e) => setF({ ...f, issue_date: e.target.value })} /></Field>
-        <Field label="Expiration Date" error={err.expiration_date}><input type="date" className={inputCls} value={f.expiration_date} onChange={(e) => setF({ ...f, expiration_date: e.target.value })} /></Field>
+        <Field label="Issue Date"><DatePicker aria-label="Issue date" value={f.issue_date} max={f.expiration_date || undefined} onChange={(v) => setF({ ...f, issue_date: v })} placeholder="Select issue date" /></Field>
+        <Field label="Expiration Date" error={err.expiration_date}><DatePicker aria-label="Expiration date" value={f.expiration_date} min={f.issue_date || undefined} onChange={(v) => setF({ ...f, expiration_date: v })} placeholder="Select expiration date" /></Field>
         <Field label="Certification Number (Optional)"><input className={inputCls} maxLength={100} value={f.certification_number} onChange={(e) => setF({ ...f, certification_number: e.target.value })} /></Field>
       </div>
       <SaveBar saving={saving} onCancel={onCancel} />
