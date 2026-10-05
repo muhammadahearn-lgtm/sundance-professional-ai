@@ -166,15 +166,12 @@ export type Database = {
           availability: string
           created_at: string
           current_employer: string
-          github_url: string
           headline: string
           hide_from_current_employer: boolean
           industry_experience: string[]
           job_title: string
-          linkedin_url: string
           location: string
           locations_of_interest: string[]
-          portfolio_url: string
           programming_languages: string[]
           resume_file_name: string | null
           resume_path: string | null
@@ -196,15 +193,12 @@ export type Database = {
           availability?: string
           created_at?: string
           current_employer?: string
-          github_url?: string
           headline?: string
           hide_from_current_employer?: boolean
           industry_experience?: string[]
           job_title?: string
-          linkedin_url?: string
           location?: string
           locations_of_interest?: string[]
-          portfolio_url?: string
           programming_languages?: string[]
           resume_file_name?: string | null
           resume_path?: string | null
@@ -226,15 +220,12 @@ export type Database = {
           availability?: string
           created_at?: string
           current_employer?: string
-          github_url?: string
           headline?: string
           hide_from_current_employer?: boolean
           industry_experience?: string[]
           job_title?: string
-          linkedin_url?: string
           location?: string
           locations_of_interest?: string[]
-          portfolio_url?: string
           programming_languages?: string[]
           resume_file_name?: string | null
           resume_path?: string | null
@@ -259,47 +250,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["role_id"]
-          },
-        ]
-      }
-      candidate_projects: {
-        Row: {
-          candidate_id: string
-          created_at: string
-          description: string
-          project_id: string
-          project_url: string
-          technologies: string[]
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          candidate_id: string
-          created_at?: string
-          description?: string
-          project_id?: string
-          project_url?: string
-          technologies?: string[]
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          candidate_id?: string
-          created_at?: string
-          description?: string
-          project_id?: string
-          project_url?: string
-          technologies?: string[]
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "candidate_projects_candidate_id_fkey"
-            columns: ["candidate_id"]
-            isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["user_id"]
           },
         ]
       }

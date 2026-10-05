@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { FormAlert, SuccessScreen } from "@/components/auth/AuthCard";
-import { normalizeLink, validateLinks } from "@/lib/profile-links";
 
 const TECH_SUGGESTIONS = ["Python", "SQL", "Java", "JavaScript", "TypeScript", "AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "React", "Go", "Spark"];
 
@@ -78,9 +77,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     job_title: "", years_experience: "", location: "", headline: "", summary: "",
     programming_languages: [] as string[], technical_skills: [] as string[], tools: [] as string[],
     target_roles: [] as string[], salary_expectation: "", availability: "open", work_arrangement: "remote",
-    linkedin_url: "", github_url: "", portfolio_url: "",
   });
-  const [proj, setProj] = useState({ title: "", description: "", project_url: "" });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
 
   function next() {
@@ -93,15 +90,10 @@ export function CandidateOnboarding({ account }: { account: Account }) {
   async function submit() {
     setError("");
     if (f.target_roles.length === 0) return setError("Add at least one target role.");
-    const { values: links, errors } = validateLinks({ linkedin_url: f.linkedin_url, github_url: f.github_url, portfolio_url: f.portfolio_url });
-    if (Object.keys(errors).length) return setError("Please check your LinkedIn, GitHub or Portfolio link.");
-    const projUrl = normalizeLink(proj.project_url);
-    if (projUrl === null) return setError("Please check your project link.");
     setSaving(true);
     const { error: e1 } = await supabase.from("candidate_profiles").upsert({
-      user_id: account.userId, ...f, ...links, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
+      user_id: account.userId, ...f, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
     });
-    if (!e1 && proj.title.trim()) await supabase.from("candidate_projects").insert({ candidate_id: account.userId, title: proj.title.trim(), description: proj.description.trim(), project_url: projUrl });
     const e2 = e1 ? e1.message : await finish();
     setSaving(false);
     if (e2) return setError("We couldn't save your profile. Please try again.");
@@ -124,11 +116,6 @@ export function CandidateOnboarding({ account }: { account: Account }) {
           <Field label="Location"><Input value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Seattle, WA" maxLength={100} /></Field>
           <Field label="Professional Headline"><Input value={f.headline} onChange={(e) => set("headline", e.target.value)} placeholder="Data engineer building reliable pipelines at scale" maxLength={140} /></Field>
           <Field label="Professional Summary"><Textarea rows={4} value={f.summary} onChange={(e) => set("summary", e.target.value)} maxLength={2000} /></Field>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="LinkedIn (optional)"><Input value={f.linkedin_url} onChange={(e) => set("linkedin_url", e.target.value)} placeholder="linkedin.com/in/you" maxLength={300} /></Field>
-            <Field label="GitHub (optional)"><Input value={f.github_url} onChange={(e) => set("github_url", e.target.value)} placeholder="github.com/you" maxLength={300} /></Field>
-            <Field label="Portfolio (optional)"><Input value={f.portfolio_url} onChange={(e) => set("portfolio_url", e.target.value)} placeholder="you.dev" maxLength={300} /></Field>
-          </div>
         </>)}
         {step === 2 && (<>
           <Field label="Programming Languages"><MultiSelect value={f.programming_languages} onChange={(v) => set("programming_languages", v)} suggestions={["Python", "SQL", "Java", "JavaScript", "TypeScript", "Go", "Scala", "C#"]} /></Field>
@@ -139,14 +126,6 @@ export function CandidateOnboarding({ account }: { account: Account }) {
           <Field label="Target Roles"><MultiSelect value={f.target_roles} onChange={(v) => set("target_roles", v)} suggestions={["Data Engineer", "ML Engineer", "Software Engineer", "Data Scientist", "AI Engineer"]} /></Field>
           <Field label="Salary Expectations"><Input value={f.salary_expectation} onChange={(e) => set("salary_expectation", e.target.value)} placeholder="$150k – $180k" maxLength={60} /></Field>
           <Field label="Availability"><Choice value={f.availability} onChange={(v) => set("availability", v)} options={[["active", "Actively Looking"], ["open", "Open To Opportunities"], ["not_looking", "Not Looking"]] as const} /></Field>
-          <div className="space-y-3 rounded-2xl border border-border p-4">
-            <p className="text-sm font-semibold">Featured Project <span className="font-normal text-muted-foreground">(optional)</span></p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input value={proj.title} onChange={(e) => setProj({ ...proj, title: e.target.value })} placeholder="Project name" maxLength={150} />
-              <Input value={proj.project_url} onChange={(e) => setProj({ ...proj, project_url: e.target.value })} placeholder="Project link" maxLength={300} />
-            </div>
-            <Textarea rows={2} value={proj.description} onChange={(e) => setProj({ ...proj, description: e.target.value })} placeholder="What did you build?" maxLength={1000} />
-          </div>
           <Field label="Preferred Work Arrangement"><Choice value={f.work_arrangement} onChange={(v) => set("work_arrangement", v)} options={[["remote", "Remote"], ["hybrid", "Hybrid"], ["onsite", "On-Site"]] as const} /></Field>
         </>)}
       </div>
