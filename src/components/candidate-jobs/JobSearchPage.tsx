@@ -29,8 +29,8 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const scoreMap = Object.fromEntries((scoreQ.data ?? []).map((r) => [r.job_id, Number(r.overall_match_score)]));
   const results = useQuery({ queryKey: ["job-search", search, scoreQ.dataUpdatedAt], queryFn: () => searchJobs(search, tax.data!, scoreMap), enabled: !!tax.data && !scoreQ.isLoading, placeholderData: keepPreviousData });
   const suggested = useQuery({ queryKey: ["candidate-suggest", uid], queryFn: async () => {
-    const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title").eq("user_id", uid).maybeSingle();
-    return [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4);
+    const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title, location_country, location_state, location_city, work_arrangement").eq("user_id", uid).maybeSingle();
+    return { terms: [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4), loc: data ? { country: data.location_country, state: data.location_state, city: data.location_city } : null, arrangement: data?.work_arrangement ?? "" };
   } });
   const [q, setQ] = useState(search.q);
   const [recent, setRecent] = useState<string[]>([]);
