@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { addTaxonomyEntry, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
 
 type Exp = Tables<"work_experience">;
@@ -248,6 +249,19 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
     toast.success(ok); refresh(); return true;
   }
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
+  const kind: TaxonomyKind = table === "candidate_languages" ? "language" : table === "candidate_skills" ? "skill" : "technology";
+  const newName = newEntryName(q, options);
+  const createNew = async () => {
+    if (!newName) return;
+    setBusy(true);
+    try {
+      const id = await addTaxonomyEntry(kind, q);
+      setPicked((p) => (p.includes(id) ? p : [...p, id])); setQ("");
+      toast.success(`"${newName}" added to the list`);
+      refresh();
+    } catch (e) { toast.error(friendlyError(e, "Couldn't add. Please try again.")); }
+    setBusy(false);
+  };
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const addSelected = async () => {
     if (!picked.length) return;
@@ -266,7 +280,8 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
         <div className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input autoFocus className={`${inputCls} pl-9`} placeholder={`Search ${plural}…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy} />
+            <input autoFocus className={`${inputCls} pl-9`} placeholder={`Search or add ${plural}…`} value={q} onChange={(e) => setQ(e.target.value)} disabled={busy}
+              onKeyDown={(e) => { if (e.key === "Enter" && newName) { e.preventDefault(); createNew(); } }} />
           </div>
           <p className="text-xs text-muted-foreground">Select as many {plural} as you like. {picked.length > 0 && <span className="font-semibold text-primary">{picked.length} selected</span>}</p>
           {matches.length > 0 ? (
@@ -279,7 +294,12 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
                 </button>
               );
             })}</div>
-          ) : <p className="text-xs text-muted-foreground">No matching results.</p>}
+          ) : !newName && <p className="text-xs text-muted-foreground">No matching results.</p>}
+          {newName && (
+            <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">
+              <Plus className="h-3 w-3" />Add “{newName}”
+            </button>
+          )}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
             <button type="button" onClick={addSelected} disabled={busy || !picked.length} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
@@ -322,6 +342,18 @@ export function SoftSkillManager({ uid, options = [], selected = [], adding, set
   const refresh = () => qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
   const available = options.filter((o) => !selected.includes(o.id) && o.name.toLowerCase().includes(q.toLowerCase()));
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
+  const newName = newEntryName(q, options);
+  const createNew = async () => {
+    if (!newName) return;
+    setBusy(true);
+    try {
+      const id = await addTaxonomyEntry("soft_skill", q);
+      setPicked((p) => (p.includes(id) ? p : [...p, id])); setQ("");
+      toast.success(`"${newName}" added to the list`);
+      refresh();
+    } catch (e) { toast.error(friendlyError(e, "Couldn't add. Please try again.")); }
+    setBusy(false);
+  };
   const save = async () => {
     if (!picked.length) { close(); return; }
     setBusy(true);
@@ -340,13 +372,15 @@ export function SoftSkillManager({ uid, options = [], selected = [], adding, set
       {adding && (
         <div className="space-y-3 rounded-xl border border-border p-4">
           <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input autoFocus className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search soft skills (Communication, Leadership…)" /></div>
+            <input autoFocus className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search or add soft skills (Communication, Leadership…)"
+              onKeyDown={(e) => { if (e.key === "Enter" && newName) { e.preventDefault(); createNew(); } }} /></div>
           <div className="flex flex-wrap gap-1.5">
             {available.length ? available.map((o) => {
               const on = picked.includes(o.id);
               return <button type="button" key={o.id} aria-pressed={on} onClick={() => setPicked(on ? picked.filter((x) => x !== o.id) : [...picked, o.id])}
                 className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${on ? "border-indigo bg-indigo/10 text-indigo" : "border-border hover:border-indigo hover:text-indigo"}`}>{on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}{o.name}</button>;
-            }) : <span className="text-sm text-muted-foreground">No more soft skills to add.</span>}
+            }) : !newName && <span className="text-sm text-muted-foreground">No more soft skills to add.</span>}
+            {newName && <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-indigo px-3 py-1 text-xs font-semibold text-indigo hover:bg-indigo/10"><Plus className="h-3 w-3" />Add “{newName}”</button>}
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
