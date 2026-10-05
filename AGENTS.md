@@ -35,4 +35,4 @@
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule — informational recruiting context only.
 - Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
 - Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format, scoring never parses text.
-- Roles and levels are controlled master lists (`roles.is_active`, `levels`); jobs store role_id + level_id + optional display-only `custom_title`, and `job_title` is derived on save via `displayJobTitle` (src/lib/role-taxonomy.ts). Why: structured data for matching/search; custom titles never drive logic.
+- Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
