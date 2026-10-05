@@ -199,7 +199,6 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
             <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <a href="#resume" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Upload className="h-4 w-4" />Upload Resume</a>
             <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
-            <PhotoToggle uid={account.userId} visible={p.photo_visible} />
           </div>
         </div>
         <h1 className="mt-4 font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
@@ -388,22 +387,7 @@ function VisibilityControls({ uid, p }: { uid: string; p: Profile }) {
           onChange={(e) => save({ hide_from_current_employer: e.target.checked }, e.target.checked ? "Hidden from current employer" : "Current employer protection disabled")} />
         <span><span className="block text-sm font-semibold">Hide From Current Employer</span><span className="text-xs text-muted-foreground">Recruiters from {p.current_employer || "your current employer"} won't see your profile.</span></span>
       </label>
-      <label className="flex items-start gap-3 rounded-xl border border-border p-4">
-        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-primary" checked={!p.photo_visible}
-          onChange={(e) => save({ photo_visible: !e.target.checked }, e.target.checked ? "Photo hidden from recruiters" : "Photo visible to recruiters")} />
-        <span><span className="block text-sm font-semibold">Hide Photo From Recruiters</span><span className="text-xs text-muted-foreground">Recruiters will see your initials instead of your photo.</span></span>
-      </label>
     </div>
-  );
-}
-
-function PhotoToggle({ uid, visible }: { uid: string; visible: boolean }) {
-  const save = useSaveProfile(uid);
-  return (
-    <button onClick={() => save({ photo_visible: !visible }, visible ? "Photo hidden from recruiters" : "Photo visible to recruiters")}
-      aria-pressed={!visible} className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold hover:bg-muted ${visible ? "border-border" : "border-primary text-primary"}`}>
-      {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}{visible ? "Photo: Shown to Recruiters" : "Photo: Hidden from Recruiters"}
-    </button>
   );
 }
 
@@ -418,7 +402,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         <button onClick={onBack} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground"><ArrowLeft className="h-4 w-4" />Back to editing</button>
       </div>
       <section className={`${card} p-6`}>
-        <div className="mb-3"><ProfilePhoto uid={account.userId} path={p.photo_visible ? account.avatarPath : null} initials={`${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?"} className="h-16 w-16 text-xl" /></div>
+        <div className="mb-3"><ProfilePhoto uid={account.userId} path={account.avatarPath} initials={`${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?"} className="h-16 w-16 text-xl" /></div>
         <h1 className="font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
         <p className="font-medium">{p.job_title}{!p.hide_from_current_employer && p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
