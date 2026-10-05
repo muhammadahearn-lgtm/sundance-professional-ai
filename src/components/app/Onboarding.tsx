@@ -97,12 +97,14 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     if (f.target_roles.length === 0) return setError("Add at least one target role.");
     const links = validateLinks(f);
     if (!links.ok) return setError(links.error);
+    const amt = parseSalaryInput(f.salary_amount);
+    if (!amt.ok) return setError(amt.error);
     const projUrl = normalizeUrl(proj.project_url);
     if (projUrl === null) return setError("Enter a valid project link.");
     if (!proj.title.trim() && (proj.project_url.trim() || proj.description.trim())) return setError("Give your project a title.");
     setSaving(true);
     const { error: e1 } = await supabase.from("candidate_profiles").upsert({
-      user_id: account.userId, ...f, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
+      user_id: account.userId, ...f, salary_amount: amt.value, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
     });
     let e2 = e1 ? e1.message : null;
     if (!e2 && proj.title.trim()) {
