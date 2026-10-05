@@ -459,6 +459,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         </div>
         {p.summary && <p className="mt-4 whitespace-pre-line text-sm">{p.summary}</p>}
         {p.industry_experience.length > 0 && <div className="mt-4"><Chips items={p.industry_experience} /></div>}
+        {(p.linkedin_url || p.github_url || p.portfolio_url) && <dl className="mt-4 grid gap-4 sm:grid-cols-3"><LinkItem k="LinkedIn" url={p.linkedin_url} /><LinkItem k="GitHub" url={p.github_url} /><LinkItem k="Portfolio" url={p.portfolio_url} /></dl>}
       </section>
       {block("Experience", data.experience.length ? <ul className="space-y-4">{[...data.experience].sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? "")).map((x) => (
         <li key={x.experience_id}><p className="font-semibold">{x.job_title}</p><p className="text-sm text-muted-foreground">{x.company_name}{x.location && ` · ${x.location}`}</p>{x.responsibilities && <p className="mt-1 text-sm">{x.responsibilities}</p>}</li>
@@ -469,6 +470,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
       {block("Skills", lk(data.skills))}
       {block("Soft Skills", <Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} />)}
       {block("Technologies", lk(data.technologies))}
+      {block("Projects", (data.projects ?? []).length ? <ul className="space-y-3">{data.projects.map((x) => <li key={x.project_id} className="text-sm"><span className="font-semibold">{x.title}</span>{x.description && <span className="text-muted-foreground"> — {x.description}</span>}</li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
       {block("Career Preferences", <PrefsView p={p} />)}
     </div>
   );
