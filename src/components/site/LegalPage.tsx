@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/shared";
 
 export const LEGAL_UPDATED = "October 5, 2026";
-export const LEGAL_CONTACT = "muhammad@sundanceprofessionals.com";
+export const LEGAL_CONTACT = "support@sundanceprofessionals.com";
 
 export type LegalSection = { id: string; title: string; body: ReactNode };
 
