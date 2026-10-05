@@ -169,6 +169,13 @@
       "when": 1791219619183,
       "tag": "0023_user_taxonomy_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791220730624,
+      "tag": "0024_salary_normalization",
+      "breakpoints": true
     }
   ]
 }

@@ -181,6 +181,8 @@ export type Database = {
           resume_path: string | null
           resume_uploaded_at: string | null
           role_id: string | null
+          salary_amount: number | null
+          salary_currency: string
           salary_expectation: string
           summary: string
           target_industries: string[]
@@ -212,6 +214,8 @@ export type Database = {
           resume_path?: string | null
           resume_uploaded_at?: string | null
           role_id?: string | null
+          salary_amount?: number | null
+          salary_currency?: string
           salary_expectation?: string
           summary?: string
           target_industries?: string[]
@@ -243,6 +247,8 @@ export type Database = {
           resume_path?: string | null
           resume_uploaded_at?: string | null
           role_id?: string | null
+          salary_amount?: number | null
+          salary_currency?: string
           salary_expectation?: string
           summary?: string
           target_industries?: string[]
