@@ -6,19 +6,21 @@ type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type Insert = Database["public"]["Tables"]["jobs"]["Insert"];
 
 export async function loadTaxonomy() {
-  const [r, l, s, t] = await Promise.all([
+  const [r, l, s, t, ss] = await Promise.all([
     supabase.from("roles").select("role_id, role_name").order("role_name"),
     supabase.from("programming_languages").select("language_id, language_name").order("language_name"),
     supabase.from("technical_skills").select("skill_id, skill_name").order("skill_name"),
     supabase.from("technologies").select("technology_id, technology_name, technology_category").order("technology_name"),
+    supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
   ]);
-  const err = [r, l, s, t].find((x) => x.error)?.error;
+  const err = [r, l, s, t, ss].find((x) => x.error)?.error;
   if (err) throw err;
   return {
     roles: (r.data ?? []).map((x) => ({ id: x.role_id, name: x.role_name })),
     languages: (l.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name })),
     skills: (s.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name })),
     technologies: (t.data ?? []).map((x) => ({ id: x.technology_id, name: x.technology_name, group: x.technology_category })),
+    softSkills: (ss.data ?? []).map((x) => ({ id: x.soft_skill_id, name: x.soft_skill_name })),
   };
 }
 export type Taxonomy = Awaited<ReturnType<typeof loadTaxonomy>>;
@@ -47,14 +49,15 @@ export async function listJobs(uid: string) {
 export type JobListItem = Awaited<ReturnType<typeof listJobs>>[number];
 
 export async function loadJob(id: string) {
-  const [j, l, s, t, a] = await Promise.all([
+  const [j, l, s, t, a, ss] = await Promise.all([
     supabase.from("jobs").select("*").eq("job_id", id).maybeSingle(),
     supabase.from("job_languages").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_skills").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_technologies").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("applications").select("application_status").eq("job_id", id),
+    supabase.from("job_soft_skills").select("lookup_id, requirement_level").eq("job_id", id),
   ]);
-  const err = [j, l, s, t, a].find((x) => x.error)?.error;
+  const err = [j, l, s, t, a, ss].find((x) => x.error)?.error;
   if (err) throw err;
   if (!j.data) return null;
   const map = (rows: { lookup_id: string; requirement_level: string }[] | null): ReqItem[] => (rows ?? []).map((r) => ({ id: r.lookup_id, level: r.requirement_level as ReqLevel }));
@@ -62,7 +65,7 @@ export async function loadJob(id: string) {
   if (j.data.company_id) company = (await supabase.from("companies").select("*").eq("company_id", j.data.company_id).maybeSingle()).data;
   const apps = a.data ?? [];
   return {
-    job: j.data, company, languages: map(l.data), skills: map(s.data), technologies: map(t.data),
+    job: j.data, company, languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data),
     stats: { applications: apps.length, interviews: apps.filter((x) => x.application_status === "interviewing").length, offers: apps.filter((x) => x.application_status === "offer").length },
   };
 }
@@ -73,7 +76,7 @@ export function toForm(d: LoadedJob): JobForm {
   return {
     job_title: j.job_title, role_id: j.role_id ?? "", company_id: j.company_id ?? "", employment_type: j.employment_type, work_arrangement: j.work_arrangement,
     location: j.location, minimum_years_experience: String(j.minimum_years_experience), experience_level: j.experience_level, job_description: j.job_description,
-    languages: d.languages, skills: d.skills, technologies: d.technologies,
+    languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
     bonus_info: j.bonus_info, benefits_summary: j.benefits_summary,
   };
@@ -96,6 +99,7 @@ async function replaceLinks(id: string, f: JobForm) {
     supabase.from("job_languages").delete().eq("job_id", id),
     supabase.from("job_skills").delete().eq("job_id", id),
     supabase.from("job_technologies").delete().eq("job_id", id),
+    supabase.from("job_soft_skills").delete().eq("job_id", id),
   ]);
   const e1 = del.find((x) => x.error)?.error;
   if (e1) throw e1;
@@ -103,6 +107,7 @@ async function replaceLinks(id: string, f: JobForm) {
     f.languages.length ? supabase.from("job_languages").insert(rows(f.languages)) : null,
     f.skills.length ? supabase.from("job_skills").insert(rows(f.skills)) : null,
     f.technologies.length ? supabase.from("job_technologies").insert(rows(f.technologies)) : null,
+    f.softSkills.length ? supabase.from("job_soft_skills").insert(rows(f.softSkills)) : null,
   ]);
   const e2 = ins.find((x) => x?.error)?.error;
   if (e2) throw e2;
@@ -144,6 +149,7 @@ export async function deleteJob(id: string) {
     supabase.from("job_languages").delete().eq("job_id", id),
     supabase.from("job_skills").delete().eq("job_id", id),
     supabase.from("job_technologies").delete().eq("job_id", id),
+    supabase.from("job_soft_skills").delete().eq("job_id", id),
   ]);
   const { error } = await supabase.from("jobs").delete().eq("job_id", id);
   if (error) throw error;
