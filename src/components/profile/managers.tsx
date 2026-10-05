@@ -311,3 +311,55 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
     </div>
   );
 }
+
+/** Soft skills: searchable multi-select shown as badges. Display/search only — never used in scoring. */
+export function SoftSkillManager({ uid, options, selected, adding, setAdding }: { uid: string; options: { id: string; name: string }[]; selected: string[]; adding: boolean; setAdding: (v: boolean) => void }) {
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const name = (id: string) => options.find((o) => o.id === id)?.name ?? "";
+  const refresh = () => qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
+  const available = options.filter((o) => !selected.includes(o.id) && o.name.toLowerCase().includes(q.toLowerCase()));
+  const close = () => { setPicked([]); setQ(""); setAdding(false); };
+  const save = async () => {
+    if (!picked.length) return close();
+    setBusy(true);
+    const { error } = await supabase.from("candidate_soft_skills").insert(picked.map((id) => ({ candidate_id: uid, lookup_id: id })));
+    setBusy(false);
+    if (error) return toast.error(friendlyError(error, "Couldn't add soft skills."));
+    toast.success("Soft skills updated"); close(); refresh();
+  };
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("candidate_soft_skills").delete().eq("candidate_id", uid).eq("lookup_id", id);
+    if (error) return toast.error(friendlyError(error, "Couldn't remove soft skill."));
+    toast.success("Soft skill removed"); refresh();
+  };
+  return (
+    <div className="space-y-4">
+      {adding && (
+        <div className="space-y-3 rounded-xl border border-border p-4">
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input autoFocus className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search soft skills (Communication, Leadership…)" /></div>
+          <div className="flex flex-wrap gap-1.5">
+            {available.length ? available.map((o) => {
+              const on = picked.includes(o.id);
+              return <button type="button" key={o.id} aria-pressed={on} onClick={() => setPicked(on ? picked.filter((x) => x !== o.id) : [...picked, o.id])}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${on ? "border-indigo bg-indigo/10 text-indigo" : "border-border hover:border-indigo hover:text-indigo"}`}>{on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}{o.name}</button>;
+            }) : <span className="text-sm text-muted-foreground">No more soft skills to add.</span>}
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
+            <button type="button" disabled={busy || !picked.length} onClick={save} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">{busy ? "Saving…" : `Add Selected${picked.length ? ` (${picked.length})` : ""}`}</button>
+          </div>
+        </div>
+      )}
+      {selected.length ? (
+        <div className="flex flex-wrap gap-2">{[...selected].sort((a, b) => name(a).localeCompare(name(b))).map((id) => (
+          <span key={id} className="inline-flex items-center gap-1.5 rounded-full border border-indigo/20 bg-indigo/10 px-3 py-1 text-sm font-medium text-indigo">{name(id)}
+            <button type="button" aria-label={`Remove ${name(id)}`} onClick={() => remove(id)} className="rounded-full p-0.5 hover:bg-indigo/20"><Trash2 className="h-3.5 w-3.5" /></button></span>
+        ))}</div>
+      ) : !adding && <Empty>No soft skills added yet.</Empty>}
+    </div>
+  );
+}
