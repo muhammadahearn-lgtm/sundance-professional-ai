@@ -162,6 +162,13 @@
       "when": 1791218799452,
       "tag": "0022_taxonomy_normalization",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791219619183,
+      "tag": "0023_user_taxonomy_entries",
+      "breakpoints": true
     }
   ]
 }

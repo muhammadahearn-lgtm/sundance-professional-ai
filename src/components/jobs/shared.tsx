@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { JobStatus, ReqItem, ReqLevel } from "@/lib/job-rules";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { inputCls } from "@/components/profile/parts";
+import { addTaxonomyEntry, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
 
 export const EMPLOYMENT: [string, string][] = [["full_time", "Full-Time"], ["part_time", "Part-Time"], ["contract", "Contract"], ["internship", "Internship"], ["consulting", "Consulting"]];
 export const ARRANGEMENT: [string, string][] = [["remote", "Remote"], ["hybrid", "Hybrid"], ["on_site", "On-Site"]];
@@ -31,8 +34,25 @@ export function formatSalary(min: number | null, max: number | null, cur: string
 type Opt = { id: string; name: string; group?: string };
 
 /** Searchable multi-select where every selection carries Required / Preferred / Optional. */
-export function RequirementPicker({ options, value, onChange, placeholder }: { options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string }) {
+export function RequirementPicker({ options: baseOptions, value, onChange, placeholder, kind }: { options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string; kind?: TaxonomyKind }) {
   const [q, setQ] = useState("");
+  const [extra, setExtra] = useState<Opt[]>([]);
+  const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
+  const options = [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))];
+  const newName = kind ? newEntryName(q, options) : null;
+  const createNew = async () => {
+    if (!kind || !newName) return;
+    setBusy(true);
+    try {
+      const id = await addTaxonomyEntry(kind, q);
+      setExtra((x) => [...x, { id, name: newName }]);
+      if (!value.some((v) => v.id === id)) onChange([...value, { id, level: "required" }]);
+      setQ(""); toast.success(`"${newName}" added to the list`);
+      qc.invalidateQueries({ queryKey: ["taxonomy"] });
+    } catch { toast.error("Couldn't add. Please try again."); }
+    setBusy(false);
+  };
   const chosen = new Set(value.map((v) => v.id));
   const matches = options.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q.toLowerCase()) || (o.group ?? "").toLowerCase().includes(q.toLowerCase()))).slice(0, q ? 12 : 16);
   const name = (id: string) => options.find((o) => o.id === id)?.name ?? "Unknown";
@@ -40,7 +60,8 @@ export function RequirementPicker({ options, value, onChange, placeholder }: { o
     <div className="space-y-4">
       <div>
         <input className={inputCls} value={q} placeholder={placeholder} onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const m = matches[0]; if (m) { onChange([...value, { id: m.id, level: "required" }]); setQ(""); } } }} />
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const m = matches[0]; if (m) { onChange([...value, { id: m.id, level: "required" }]); setQ(""); } else if (newName) createNew(); } }} />
+        {newName && <button type="button" disabled={busy} onClick={createNew} className="mt-2 inline-flex items-center rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">+ Add “{newName}”</button>}
         {matches.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{matches.map((o) => (
           <button type="button" key={o.id} onClick={() => { onChange([...value, { id: o.id, level: "required" }]); setQ(""); }} className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary hover:text-primary">+ {o.name}</button>
         ))}</div>}

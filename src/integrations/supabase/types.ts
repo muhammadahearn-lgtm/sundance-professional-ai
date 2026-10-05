@@ -1686,6 +1686,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_taxonomy_entry: {
+        Args: { _kind: string; _name: string }
+        Returns: string
+      }
       applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
       candidate_avatars: {
         Args: { _ids: string[] }
