@@ -34,3 +34,11 @@ d2("soft skills filter", () => {
   i2("keeps candidates having every selected soft skill", () => { e2(mt(c, { ...DT, soft: ["comm"] })).toBe(true); });
   i2("hides candidates missing a selected soft skill", () => { e2(mt(c, { ...DT, soft: ["teamwork"] })).toBe(false); });
 });
+
+import { effectiveTalentSort, talentSortOptions } from "./talent-rules";
+describe("job-based candidate search", () => {
+  it("no job selected hides match sorts", () => expect(talentSortOptions(false).map(([k]) => k)).toEqual(["updated", "exp_high", "avail", "alpha"]));
+  it("job selected enables best/highest/lowest match", () => expect(talentSortOptions(true).slice(0, 3).map(([k]) => k)).toEqual(["match", "match_high", "match_low"]));
+  it("match sort falls back to Most Recent without a job", () => expect(effectiveTalentSort("match", false)).toBe("updated"));
+  it("defaults to Best Match once a job is selected", () => expect(effectiveTalentSort("updated", true)).toBe("updated"));
+});

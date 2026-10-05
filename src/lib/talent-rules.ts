@@ -4,12 +4,25 @@ export const CANDIDATE_COMPARE_MAX = 4;
 export const TALENT_PAGE_SIZE = 10;
 export const TALENT_SALARY_MAX = 400000;
 export { EXPERIENCE_BUCKETS };
-export const TALENT_SORTS: [string, string][] = [["match", "Best Match"], ["relevant", "Most Relevant"], ["exp_high", "Most Experience"], ["exp_low", "Least Experience"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
+export const GENERAL_SORTS: [string, string][] = [["updated", "Most Recent"], ["exp_high", "Most Experience"], ["avail", "Availability"], ["alpha", "Alphabetical"]];
+export const JOB_SORTS: [string, string][] = [["match", "Best Match"], ["match_high", "Highest Match"], ["match_low", "Lowest Match"], ...GENERAL_SORTS];
+/** @deprecated use talentSortOptions */
+export const TALENT_SORTS = JOB_SORTS;
+const MATCH_SORTS = ["match", "match_high", "match_low"];
+/** Match sorts only exist when a job is selected. */
+export function talentSortOptions(hasJob: boolean): [string, string][] { return hasJob ? JOB_SORTS : GENERAL_SORTS; }
+export function effectiveTalentSort(sort: string, hasJob: boolean): string {
+  const opts = talentSortOptions(hasJob).map(([k]) => k);
+  if (opts.includes(sort)) return sort;
+  return hasJob ? "match" : "updated";
+}
+export function isMatchSort(sort: string) { return MATCH_SORTS.includes(sort); }
 export const TALENT_INDUSTRIES = ["Technology", "Healthcare", "Financial Services", "Insurance", "Telecommunications", "Government", "Manufacturing", "Retail", "Consulting"];
 
 export type TalentFilters = {
   q: string; role: string; langs: string[]; skills: string[]; soft?: string[]; techs: string[]; exp: string; avail: string[];
   loc: string; remote: boolean; smin: number; smax: number; arr: string[]; ind: string[]; sort: string; page: number; mm: number;
+  co?: string; job?: string;
 };
 export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skills: [], techs: [], exp: "", avail: [], loc: "", remote: false, smin: 0, smax: 0, arr: [], ind: [], sort: "match", page: 1, mm: 0 };
 
@@ -67,6 +80,7 @@ export function sortTalent(rows: TalentRow[], sort: string, q = ""): TalentRow[]
   if (sort === "exp_high") return r.sort((a, b) => b.years - a.years);
   if (sort === "exp_low") return r.sort((a, b) => a.years - b.years);
   if (sort === "updated") return r.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  if (sort === "avail") { const rank = (a: string) => (a === "active" ? 0 : a === "open" ? 1 : 2); return r.sort((a, b) => rank(a.availability) - rank(b.availability)); }
   if (sort === "alpha") return r.sort((a, b) => a.name.localeCompare(b.name));
   return r.sort((a, b) => score(b) - score(a));
 }
