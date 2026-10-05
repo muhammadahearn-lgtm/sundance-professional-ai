@@ -23,6 +23,7 @@ import { Route as AuthenticatedCandidateRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
+import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
 import { Route as AuthenticatedCandidateIndexRouteImport } from './routes/_authenticated/candidate/index'
 import { Route as AuthenticatedCandidateAnalyticsRouteImport } from './routes/_authenticated/candidate/analytics'
 import { Route as AuthenticatedCandidateApplicationsRouteImport } from './routes/_authenticated/candidate/applications'
@@ -148,6 +149,12 @@ const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/admin/analytics',
     path: '/admin/analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminReportsRoute =
+  AuthenticatedAdminReportsRouteImport.update({
+    id: '/admin/reports',
+    path: '/admin/reports',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCandidateIndexRoute =
@@ -501,6 +508,7 @@ export interface FileRoutesByFullPath {
   '/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/candidate/analytics': typeof AuthenticatedCandidateAnalyticsRoute
   '/candidate/applications': typeof AuthenticatedCandidateApplicationsRouteWithChildren
   '/candidate/career': typeof AuthenticatedCandidateCareerRoute
@@ -570,6 +578,7 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/candidate/analytics': typeof AuthenticatedCandidateAnalyticsRoute
   '/candidate/career': typeof AuthenticatedCandidateCareerRoute
   '/candidate/dashboard': typeof AuthenticatedCandidateDashboardRoute
@@ -633,6 +642,7 @@ export interface FileRoutesById {
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/candidate/analytics': typeof AuthenticatedCandidateAnalyticsRoute
   '/_authenticated/candidate/applications': typeof AuthenticatedCandidateApplicationsRouteWithChildren
   '/_authenticated/candidate/career': typeof AuthenticatedCandidateCareerRoute
@@ -706,6 +716,7 @@ export interface FileRouteTypes {
     | '/recruiter'
     | '/auth/callback'
     | '/admin/analytics'
+    | '/admin/reports'
     | '/candidate/analytics'
     | '/candidate/applications'
     | '/candidate/career'
@@ -775,6 +786,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/auth/callback'
     | '/admin/analytics'
+    | '/admin/reports'
     | '/candidate/analytics'
     | '/candidate/career'
     | '/candidate/dashboard'
@@ -837,6 +849,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recruiter'
     | '/auth/callback'
     | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/reports'
     | '/_authenticated/candidate/analytics'
     | '/_authenticated/candidate/applications'
     | '/_authenticated/candidate/career'
@@ -1007,6 +1020,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/analytics'
       fullPath: '/admin/analytics'
       preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/reports': {
+      id: '/_authenticated/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/candidate/': {
@@ -1697,6 +1717,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCandidateRoute: typeof AuthenticatedCandidateRouteWithChildren
   AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRouteWithChildren
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedNotificationsIdRoute: typeof AuthenticatedNotificationsIdRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
 }
@@ -1705,6 +1726,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCandidateRoute: AuthenticatedCandidateRouteWithChildren,
   AuthenticatedRecruiterRoute: AuthenticatedRecruiterRouteWithChildren,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
   AuthenticatedNotificationsIdRoute: AuthenticatedNotificationsIdRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
 }
