@@ -125,9 +125,11 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax }: 
             </div>
           )}
         </div>
-        <div className="flex w-32 shrink-0 flex-col items-center gap-2 sm:w-40">
+        <div className="flex w-32 shrink-0 flex-col items-center self-stretch sm:w-40">
           {salary && <span className="text-center text-xs font-bold text-success sm:text-sm">{salary}</span>}
-          <MatchIntelligence score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} open={insightsOpen} onToggle={() => setInsightsOpen((value) => !value)} />
+          <div className="flex flex-1 flex-col items-center justify-center py-3">
+            <MatchIntelligence score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} open={insightsOpen} onToggle={() => setInsightsOpen((value) => !value)} />
+          </div>
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} />
