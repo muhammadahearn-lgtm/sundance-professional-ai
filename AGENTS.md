@@ -38,3 +38,4 @@
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
+- Certifications: catalog_id links to  (seeded master list);  trigger auto-links by name/abbreviation/alias (word-order-insensitive ) and Title-Cases custom entries, which stay on the candidate only. Why: clean data without blocking users.
