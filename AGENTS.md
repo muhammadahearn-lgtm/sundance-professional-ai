@@ -24,7 +24,7 @@
 - Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable, unbypassable.
 - Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: emails stay private.
 - Moving a pipeline card updates the linked application status via `stageToStatus` (src/lib/talent-rules.ts); pipeline writes are guarded by the `pipeline_job_guard` trigger. Why: timeline mirrors pipeline; no cross-recruiter writes.
-- Talent search loads searchable candidates once and filters client-side (`matchesTalent`); filter state in the URL. Why: array fields filter poorly in the API at this scale.
+- Talent search filters client-side (`matchesTalent`), state in URL. Why: array fields filter poorly via API.
 - Career intelligence (`career-engine`) and recommendations (`recommend-engine`) are pure client-side computations; only daily `career_snapshots` are stored. Why: explainable, unfakeable.
 - Conversations are created only through the `start_conversation` RPC; archive/read/delivered go through RPCs, the inbox comes from `my_conversations`, and attachments live in the private `message-attachments` bucket under `<conversation_id>/`. Why: rules enforced in the database.
 - Notifications are created only by DB triggers via `create_notification` (honors preferences, dedupes by `dedupe_key`); users only read/archive/delete their own. Why: unfakeable, no duplicates.
