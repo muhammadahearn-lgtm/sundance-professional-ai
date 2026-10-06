@@ -50,7 +50,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, mode = "address
           const [full, local, streets] = await Promise.all([get(q, "&layer=house&layer=street"), region ? get(rest, `&layer=street&countrycode=${region}`, 10) : Promise.resolve([]), get(rest, "&layer=street", 10)]);
           const low = rest.toLowerCase();
           const exact = full.filter((p) => p.housenumber === hn && (p.street ?? "").toLowerCase().startsWith(low));
-          const named = [...local, ...streets].filter((p) => (p.name ?? "").toLowerCase().startsWith(low)).map((p) => ({ ...p, street: p.name, housenumber: hn, name: undefined }));
+          const named = [...local, ...streets].filter((p) => (p.name ?? "").toLowerCase().startsWith(low)).map(({ name, ...p }): PhotonProps => ({ ...p, street: name ?? "", housenumber: hn }));
           props = [...exact, ...named];
         } else props = await get(q, "&layer=house&layer=street");
         const seen = new Set<string>();
