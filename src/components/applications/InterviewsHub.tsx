@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Bell, Building2, CalendarClock, CalendarDays, Clock, Copy, MapPin, Sparkles, Video } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, Building2, CalendarClock, CalendarDays, Clock, Copy, MapPin, Pencil, Sparkles, Video } from "lucide-react";
 import { toast } from "sonner";
 import { SearchSelect } from "@/components/ui/search-select";
-import { AddToCalendar } from "@/components/applications/Interviews";
+import { AddToCalendar, ScheduleInterviewDialog } from "@/components/applications/Interviews";
 import { INTERVIEW_TYPES, PLATFORMS, countdown, fmtInterview, splitInterviews } from "@/lib/interview-rules";
 import { listMyInterviews, type InterviewRow } from "@/lib/interviews-data";
 
@@ -26,12 +26,16 @@ function JoinButton({ i }: { i: InterviewRow }) {
     : <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(i.location_address)}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground shadow-soft"><MapPin className="h-4 w-4" />Directions</a>;
 }
 
+function EditButton({ onClick }: { onClick: () => void }) {
+  return <button type="button" onClick={onClick} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Pencil className="h-4 w-4" />Edit / Reschedule</button>;
+}
+
 function Who({ i, role }: { i: InterviewRow; role: Role }) {
   if (role === "recruiter") return <Link to="/recruiter/candidates/$id" params={{ id: i.candidate_id }} className="font-semibold text-primary hover:underline">{i.candidate_name}</Link>;
   return <span className="font-semibold">{i.company_name || "Recruiter"}</span>;
 }
 
-function Spotlight({ i, role }: { i: InterviewRow; role: Role }) {
+function Spotlight({ i, role, onEdit }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined }) {
   const online = i.format === "online";
   return (
     <section className="relative overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
@@ -54,6 +58,7 @@ function Spotlight({ i, role }: { i: InterviewRow; role: Role }) {
             <JoinButton i={i} />
             {online && <button type="button" onClick={() => { navigator.clipboard.writeText(i.meeting_url); toast.success("Link copied"); }} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Copy className="h-4 w-4" />Copy link</button>}
             <AddToCalendar i={i} title={calTitle(i, role)} />
+            {onEdit && <EditButton onClick={onEdit} />}
           </div>
         </div>
       </div>
@@ -61,7 +66,7 @@ function Spotlight({ i, role }: { i: InterviewRow; role: Role }) {
   );
 }
 
-function Row({ i, role, past }: { i: InterviewRow; role: Role; past?: boolean }) {
+function Row({ i, role, past, onEdit }: { i: InterviewRow; role: Role; past?: boolean; onEdit?: (() => void) | undefined }) {
   const online = i.format === "online";
   return (
     <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past ? "opacity-75" : ""}`}>
@@ -75,6 +80,7 @@ function Row({ i, role, past }: { i: InterviewRow; role: Role; past?: boolean })
           <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">{countdown(i.scheduled_at, i.duration_minutes)}</span>
           <JoinButton i={i} />
           <AddToCalendar i={i} title={calTitle(i, role)} />
+          {onEdit && <EditButton onClick={onEdit} />}
         </div>
       )}
     </li>
@@ -92,6 +98,9 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
   const { upcoming, past } = splitInterviews(filtered);
   const next = upcoming[0];
   const list = tab === "upcoming" ? upcoming : past;
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<InterviewRow | null>(null);
+  const editFor = (i: InterviewRow) => (role === "recruiter" ? () => setEditing(i) : undefined);
 
   return (
     <div className="space-y-6">
@@ -106,7 +115,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
         </div>
       </div>
 
-      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} /> : (
+      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} onEdit={editFor(next)} /> : (
         <section className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
           <CalendarClock className="mx-auto h-10 w-10 text-primary" />
           <p className="mt-3 font-display text-lg font-bold">No upcoming interviews</p>
@@ -124,8 +133,11 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
           </button>
         ))}
       </div>
-      {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} />)}</ul>
+      {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} onEdit={editFor(i)} />)}</ul>
         : <p className="text-sm text-muted-foreground">{tab === "upcoming" ? "No upcoming interviews yet." : "No past interviews yet."}</p>}
+      {editing && <ScheduleInterviewDialog key={editing.interview_id} open onOpenChange={(o) => { if (!o) setEditing(null); }} existing={editing} candidateName={editing.candidate_name}
+        ctx={{ uid, candidateId: editing.candidate_id, jobId: editing.job_id, pipelineId: editing.pipeline_id, applicationId: editing.application_id }}
+        onSaved={() => { qc.invalidateQueries({ queryKey: ["my-interviews"] }); qc.invalidateQueries({ queryKey: ["interviews"] }); }} />}
     </div>
   );
 }
