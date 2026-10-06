@@ -499,7 +499,7 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
         {tab === "pipeline" && <div className="space-y-6">
           <AiBrief points={[
             m.pipe.length ? `${m.pipe.length} candidate${m.pipe.length === 1 ? " is" : "s are"} on your pipeline board; ${m.kpis.interviewing} reached interviews.` : "Your pipeline is empty — save or contact candidates to start building it.",
-            m.conv[0] ? `${m.conv[0].value}% of applications move to ${m.conv[0].name.split("→").pop()?.trim().toLowerCase() || "the next stage"}.` : "Conversion rates appear once candidates move between stages.",
+            m.conv[0] ? `${m.conv[0].name} conversion is ${m.conv[0].value}%.` : "Conversion rates appear once candidates move between stages.",
             m.recs.viewed ? `${recRate}% of recommended candidates you viewed were contacted.` : "Open your Recommendations to discover high-match candidates.",
           ]} />
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
