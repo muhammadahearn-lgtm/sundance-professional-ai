@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DatePicker } from "@/components/ui/date-picker";
 import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
+import { CUSTOM_TYPE, interviewTypeLabel, DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
@@ -57,7 +57,8 @@ export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, can
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="grid grid-cols-[5.5rem_1fr] gap-2"><div><label className={label}>Round</label><select className={inputCls} value={d.round_number} onChange={(e) => set("round_number", Number(e.target.value))}>{Array.from({ length: 10 }, (_, k) => k + 1).map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
-              <div><label className={label}>Interview type</label><select className={inputCls} value={d.interview_type} onChange={(e) => set("interview_type", e.target.value)}>{INTERVIEW_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div></div>
+              <div><label className={label}>Interview type</label><select className={inputCls} value={d.interview_type} onChange={(e) => set("interview_type", e.target.value)}>{INTERVIEW_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}<option value={CUSTOM_TYPE}>Custom round name…</option>{![...INTERVIEW_TYPES.map(([k]) => k), CUSTOM_TYPE].includes(d.interview_type) && <option value={d.interview_type}>{interviewTypeLabel(d.interview_type)}</option>}</select></div></div>
+            {d.interview_type === CUSTOM_TYPE && <div className="sm:col-span-2"><label className={label}>Round name</label><input autoFocus maxLength={60} className={inputCls} placeholder="e.g. Portfolio Review, Take-Home Presentation, Founder Chat" value={d.custom_round_name ?? ""} onChange={(e) => set("custom_round_name", e.target.value)} /><p className="mt-1 text-xs text-muted-foreground">Shown as "Round {d.round_number}: {(d.custom_round_name ?? "").trim() || "…"}" to you and the candidate.</p></div>}
             <div><label className={label}>Duration</label><select className={inputCls} value={d.duration_minutes} onChange={(e) => set("duration_minutes", Number(e.target.value))}>{DURATIONS.map((m) => <option key={m} value={m}>{m} minutes</option>)}</select></div>
             <div><label className={label}>Date</label><DatePicker value={d.date} onChange={(v) => set("date", v)} clearable={false} aria-label="Interview date" /></div>
             <div><label className={label}>Start time</label><input type="time" className={inputCls} value={d.time} onChange={(e) => set("time", e.target.value)} /></div>
