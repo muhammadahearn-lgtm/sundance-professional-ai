@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Eye, Pause, Pencil, Play, Rocket, Trash2, XCircle } from "lucide-react";
+import { Copy, Eye, MoreHorizontal, Pause, Pencil, Play, Rocket, Trash2, XCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { allowedActions, canDelete, canEdit, nextStatus, type JobAction, type JobStatus } from "@/lib/job-rules";
 import { deleteJob, duplicateJob, loadJob, setJobStatus, toForm } from "@/lib/jobs-data";
 import { canPublish } from "@/lib/job-rules";
@@ -52,16 +53,44 @@ export function JobActionBar({ uid, id, status, applications, compact, onDeleted
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState<"delete" | "close" | null>(null);
   const t = (s: string) => (compact ? <span className="sr-only sm:not-sr-only">{s}</span> : s);
+  const deletable = canDelete(applications);
   return (
     <div className="flex flex-wrap gap-2">
-      {compact && <button className={btn} onClick={() => navigate({ to: "/recruiter/jobs/$id", params: { id } })}><Eye className="h-4 w-4" />{t("View")}</button>}
+      {compact ? (
+        <>
+          {canEdit(status)
+            ? <button className={btn} onClick={() => navigate({ to: "/recruiter/jobs/$id/edit", params: { id } })}><Pencil className="h-4 w-4" />Edit</button>
+            : <button className={btn} onClick={() => navigate({ to: "/recruiter/jobs/$id", params: { id } })}><Eye className="h-4 w-4" />View</button>}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={`${btn} px-2`} aria-label="More job actions"><MoreHorizontal className="h-4 w-4" /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              {canEdit(status) && <DropdownMenuItem onSelect={() => navigate({ to: "/recruiter/jobs/$id", params: { id } })}><Eye className="h-4 w-4" />View job</DropdownMenuItem>}
+              <DropdownMenuItem onSelect={() => a.duplicate(id)}><Copy className="h-4 w-4" />Duplicate job</DropdownMenuItem>
+              {allowedActions(status).map((x) => {
+                const { label, Icon } = META[x];
+                return <DropdownMenuItem key={x} onSelect={() => (x === "close" ? setConfirm("close") : a.status(id, x))}><Icon className="h-4 w-4" />{label} job</DropdownMenuItem>;
+              })}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={!deletable} onSelect={() => setConfirm("delete")} className="items-start text-destructive focus:text-destructive">
+                <Trash2 className="mt-0.5 h-4 w-4" />
+                <span className="flex flex-col">Delete job{!deletable && <span className="text-xs font-normal text-muted-foreground">Has applications — close it instead</span>}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      ) : (
+        <>
       {canEdit(status) && <button className={btn} onClick={() => navigate({ to: "/recruiter/jobs/$id/edit", params: { id } })}><Pencil className="h-4 w-4" />{t("Edit")}</button>}
       <button className={btn} onClick={() => a.duplicate(id)}><Copy className="h-4 w-4" />{t("Duplicate")}</button>
       {allowedActions(status).map((x) => {
         const { label, Icon } = META[x];
         return <button key={x} className={x === "publish" || x === "resume" ? `${btn} border-primary text-primary` : btn} onClick={() => (x === "close" ? setConfirm("close") : a.status(id, x))}><Icon className="h-4 w-4" />{t(label)}</button>;
       })}
-      {canDelete(applications) && <button className={`${btn} hover:border-destructive hover:text-destructive`} onClick={() => setConfirm("delete")}><Trash2 className="h-4 w-4" />{t("Delete")}</button>}
+      {deletable && <button className={`${btn} hover:border-destructive hover:text-destructive`} onClick={() => setConfirm("delete")}><Trash2 className="h-4 w-4" />{t("Delete")}</button>}
+        </>
+      )}
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
