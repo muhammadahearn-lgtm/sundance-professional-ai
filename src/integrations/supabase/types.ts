@@ -842,6 +842,50 @@ export type Database = {
           },
         ]
       }
+      interview_scorecards: {
+        Row: {
+          concerns: string
+          created_at: string
+          interview_id: string
+          notes: string
+          rating: number
+          recommendation: string
+          recruiter_id: string
+          strengths: string
+          updated_at: string
+        }
+        Insert: {
+          concerns?: string
+          created_at?: string
+          interview_id: string
+          notes?: string
+          rating: number
+          recommendation: string
+          recruiter_id: string
+          strengths?: string
+          updated_at?: string
+        }
+        Update: {
+          concerns?: string
+          created_at?: string
+          interview_id?: string
+          notes?: string
+          rating?: number
+          recommendation?: string
+          recruiter_id?: string
+          strengths?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_scorecards_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: true
+            referencedRelation: "interviews"
+            referencedColumns: ["interview_id"]
+          },
+        ]
+      }
       interviews: {
         Row: {
           application_id: string | null
@@ -859,6 +903,7 @@ export type Database = {
           pipeline_id: string | null
           platform: string
           recruiter_id: string
+          round_number: number
           scheduled_at: string
           status: string
           timezone: string
@@ -880,6 +925,7 @@ export type Database = {
           pipeline_id?: string | null
           platform?: string
           recruiter_id: string
+          round_number?: number
           scheduled_at: string
           status?: string
           timezone?: string
@@ -901,6 +947,7 @@ export type Database = {
           pipeline_id?: string | null
           platform?: string
           recruiter_id?: string
+          round_number?: number
           scheduled_at?: string
           status?: string
           timezone?: string

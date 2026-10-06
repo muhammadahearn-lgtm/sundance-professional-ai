@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { detectPlatform, validateInterview, type InterviewDraft } from "./interview-rules";
 
 const now = new Date("2026-10-06T12:00:00");
-const base: InterviewDraft = { format: "online", interview_type: "screen", platform: "zoom", meeting_url: "https://zoom.us/j/123", location_address: "", location_instructions: "", date: "2026-10-10", time: "14:00", duration_minutes: 45, timezone: "UTC", notes: "" };
+const base: InterviewDraft = { format: "online", interview_type: "screen", round_number: 1, platform: "zoom", meeting_url: "https://zoom.us/j/123", location_address: "", location_instructions: "", date: "2026-10-10", time: "14:00", duration_minutes: 45, timezone: "UTC", notes: "" };
 
 describe("interview rules", () => {
   it("online interviews need an https meeting link", () => {
@@ -41,4 +41,20 @@ describe("calendar + reminders", () => {
     const r = splitInterviews([iv, { ...iv, interview_id: "c", status: "cancelled" }], new Date("2026-10-10T14:30:00Z"));
     expect(r.upcoming).toHaveLength(1); expect(r.past).toHaveLength(0);
   });
+});
+
+import { nextRound, validateScorecard, roundLabel } from "./interview-rules";
+describe("interview rounds", () => {
+  it("first interview is Round 1 initial screen", () => expect(nextRound([])).toEqual({ round_number: 1, interview_type: "screen" }));
+  it("after Round 1 screen comes Round 2 technical", () => expect(nextRound([{ round_number: 1, interview_type: "screen" }])).toEqual({ round_number: 2, interview_type: "technical" }));
+  it("cancelled rounds are ignored", () => expect(nextRound([{ round_number: 1, interview_type: "screen" }, { round_number: 2, interview_type: "technical", status: "cancelled" }]).round_number).toBe(2));
+  it("stays on Final Round after the last type", () => expect(nextRound([{ round_number: 5, interview_type: "final" }])).toEqual({ round_number: 6, interview_type: "final" }));
+  it("labels rounds", () => expect(roundLabel({ round_number: 3, interview_type: "system_design" })).toBe("Round 3: System Design & Architecture"));
+  it("rejects a round outside 1-10", () => expect(validateInterview({ ...base, round_number: 11 }, new Date("2026-01-01"))).toMatch(/Round/));
+});
+describe("scorecards", () => {
+  const ok = { recommendation: "hire", rating: 4, strengths: "", concerns: "", notes: "" };
+  it("accepts a valid scorecard", () => expect(validateScorecard(ok)).toBeNull());
+  it("needs a recommendation", () => expect(validateScorecard({ ...ok, recommendation: "" })).toMatch(/recommendation/));
+  it("rating must be 1-5", () => { expect(validateScorecard({ ...ok, rating: 0 })).toMatch(/rating/); expect(validateScorecard({ ...ok, rating: 6 })).toMatch(/rating/); });
 });

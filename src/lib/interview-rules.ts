@@ -1,10 +1,34 @@
 export type InterviewFormat = "online" | "in_person";
-export const INTERVIEW_TYPES: [string, string][] = [["screen", "Initial Screen"], ["technical", "Technical Interview"], ["panel", "Panel / Culture Fit"], ["final", "Final Interview"]];
+/** Standard tech hiring rounds, in their usual order. */
+export const INTERVIEW_TYPES: [string, string][] = [["screen", "Initial Screen"], ["technical", "Technical Deep Dive"], ["system_design", "System Design & Architecture"], ["behavioral", "Behavioral & Culture"], ["final", "Final Round"]];
+/** Older round names still shown for interviews saved before the rename. */
+const LEGACY_TYPES: [string, string][] = [["panel", "Panel / Culture Fit"]];
+export const interviewTypeLabel = (k: string) => [...INTERVIEW_TYPES, ...LEGACY_TYPES].find(([v]) => v === k)?.[1] ?? k;
+export const roundLabel = (i: { round_number?: number | null; interview_type: string }) => `Round ${i.round_number ?? 1}: ${interviewTypeLabel(i.interview_type)}`;
+
+/** Next round for a candidate: one past the highest round so far, with the next standard type. */
+export function nextRound(prior: { round_number?: number | null; interview_type: string; status?: string }[]): { round_number: number; interview_type: string } {
+  const live = prior.filter((p) => p.status !== "cancelled");
+  if (!live.length) return { round_number: 1, interview_type: "screen" };
+  const last = live.reduce((a, b) => ((b.round_number ?? 1) > (a.round_number ?? 1) ? b : a));
+  const idx = INTERVIEW_TYPES.findIndex(([k]) => k === last.interview_type);
+  const type = INTERVIEW_TYPES[Math.min(idx < 0 ? 1 : idx + 1, INTERVIEW_TYPES.length - 1)]![0];
+  return { round_number: Math.min((last.round_number ?? 1) + 1, 10), interview_type: type };
+}
+
+export const RECOMMENDATIONS: [string, string][] = [["strong_hire", "Strong Hire"], ["hire", "Hire"], ["leaning_no", "Leaning No"], ["strong_no", "Strong No"]];
+export type ScorecardDraft = { recommendation: string; rating: number; strengths: string; concerns: string; notes: string };
+/** Returns the first problem, or null when the scorecard can be saved. */
+export function validateScorecard(d: ScorecardDraft): string | null {
+  if (!RECOMMENDATIONS.some(([k]) => k === d.recommendation)) return "Pick a recommendation.";
+  if (!Number.isInteger(d.rating) || d.rating < 1 || d.rating > 5) return "Give a rating from 1 to 5.";
+  return null;
+}
 export const PLATFORMS: [string, string][] = [["google_meet", "Google Meet"], ["zoom", "Zoom"], ["teams", "Microsoft Teams"], ["other", "Other link"]];
 export const DURATIONS = [30, 45, 60, 90];
 
 export type InterviewDraft = {
-  format: InterviewFormat; interview_type: string; platform: string; meeting_url: string;
+  format: InterviewFormat; interview_type: string; round_number: number; platform: string; meeting_url: string;
   location_address: string; location_instructions: string; date: string; time: string;
   duration_minutes: number; timezone: string; notes: string;
 };
@@ -17,6 +41,7 @@ export function validateInterview(d: InterviewDraft, now = new Date()): string |
   if (at.getTime() < now.getTime()) return "The interview time must be in the future.";
   if (d.format === "online" && !/^https:\/\/\S+\.\S+/i.test(d.meeting_url.trim())) return "Add a meeting link starting with https://";
   if (d.format === "in_person" && d.location_address.trim().length < 5) return "Add the interview address.";
+  if (!Number.isInteger(d.round_number) || d.round_number < 1 || d.round_number > 10) return "Round must be between 1 and 10.";
   if (d.duration_minutes < 10 || d.duration_minutes > 480) return "Duration must be between 10 and 480 minutes.";
   return null;
 }
