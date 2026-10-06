@@ -114,7 +114,7 @@ export function CompareJobsPage({ account }: { account: Account }) {
               <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 w-40 bg-card p-4" />
+                    <th className="sticky left-0 w-40 bg-card p-4 text-left align-bottom text-xs font-semibold uppercase tracking-wider text-muted-foreground">Job Criteria</th>
                     {live.map(({ id, d }) => (
                       <th key={id} className={`min-w-[200px] border-l border-border p-4 text-left align-top font-normal ${top?.id === id && live.length > 1 ? "bg-primary-soft/50" : ""}`}>
                         <div className="flex items-start justify-between gap-2">
