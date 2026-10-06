@@ -288,6 +288,13 @@
       "when": 1791315361446,
       "tag": "0040_role_governed_add",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791317281122,
+      "tag": "0041_company_governed_add",
+      "breakpoints": true
     }
   ]
 }

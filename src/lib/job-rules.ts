@@ -26,7 +26,7 @@ export function validateInfo(f: JobForm): Errs {
   if (!f.role_id) e.role_id = "Role is required.";
   if (!f.level_id) e.level_id = "Level is required.";
   if (f.custom_title.trim().length > 120) e.custom_title = "Keep the custom title under 120 characters.";
-  if (!f.company_id) e.company_id = "Company is required. Set up your company profile first.";
+  if (!f.company_id) e.company_id = "Pick or add the company you are hiring for.";
   if (!f.employment_type) e.employment_type = "Employment type is required.";
   if (!f.work_arrangement) e.work_arrangement = "Work arrangement is required.";
   if (!f.location_country.trim() || !f.location_state.trim() || !f.location_city.trim()) e.location = "Country, state / province and city are required.";

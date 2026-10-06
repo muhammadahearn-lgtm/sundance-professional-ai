@@ -5,12 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, CloudUpload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CloudOff, CloudUpload } from "lucide-react";
 import type { Account } from "@/lib/account";
 import { DESCRIPTION_MAX, draftCompletion, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
 import { useRecalc } from "@/components/match/Match";
 import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/jobs-data";
 import { addRoleEntry } from "@/lib/role-add";
+import { addCompanyEntry, loadJobCompanies, newCompanyName } from "@/lib/company-add";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
 import { digitsOnly } from "@/lib/salary";
@@ -21,8 +22,8 @@ import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, RequirementPicker } from "./shared
 const STEPS = ["Job Information", "Programming Languages", "Technical Skills", "Tools & Technologies", "Compensation"];
 
 async function loadWizard(uid: string, jobId?: string) {
-  const [tax, company, existing] = await Promise.all([loadTaxonomy(), loadMyCompany(uid), jobId ? loadJob(jobId) : Promise.resolve(null)]);
-  return { tax, company, existing };
+  const [tax, company, existing, companies] = await Promise.all([loadTaxonomy(), loadMyCompany(uid), jobId ? loadJob(jobId) : Promise.resolve(null), loadJobCompanies()]);
+  return { tax, company, existing, companies };
 }
 
 export function JobWizard({ account, jobId }: { account: Account; jobId?: string | undefined }) {
@@ -38,19 +39,11 @@ export function JobWizard({ account, jobId }: { account: Account; jobId?: string
     <div className={`${card} p-8 text-center`}><p className="font-semibold">Closed jobs are read-only.</p><p className="mt-1 text-sm text-muted-foreground">Duplicate it to create a new draft instead.</p>
       <Link to="/recruiter/jobs/$id" params={{ id: jobId! }} className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Back to job</Link></div>
   );
-  if (!data.company && !data.existing) return (
-    <div className={`${card} mx-auto max-w-xl p-8 text-center`}>
-      <Building2 className="mx-auto h-10 w-10 text-primary" />
-      <p className="mt-3 font-display text-lg font-bold">Set up your company first</p>
-      <p className="mt-1 text-sm text-muted-foreground">Every job is linked to your company profile so candidates see who they'd work for.</p>
-      <Link to="/recruiter/company" className="mt-5 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Set up company</Link>
-    </div>
-  );
   const initial = data.existing ? toForm(data.existing) : emptyJob(data.company?.company_id ?? "");
-  return <Wizard uid={uid} jobId={jobId} initial={initial} status={data.existing?.job.job_status ?? "draft"} companyName={data.company?.company_name ?? ""} tax={data.tax} />;
+  return <Wizard uid={uid} jobId={jobId} initial={initial} status={data.existing?.job.job_status ?? "draft"} companies={data.companies ?? []} tax={data.tax} />;
 }
 
-function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string; jobId?: string | undefined; initial: JobForm; status: JobStatus; companyName: string; tax: Awaited<ReturnType<typeof loadTaxonomy>> }) {
+function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; jobId?: string | undefined; initial: JobForm; status: JobStatus; companies: { id: string; name: string }[]; tax: Awaited<ReturnType<typeof loadTaxonomy>> }) {
   const [step, setStep] = useState(1);
   const [f, setF] = useState(initial);
   const [errs, setErrs] = useState<ReturnType<typeof validateStep>>({});
@@ -173,7 +166,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
               <Field label="Level *" error={errs.level_id}><SearchPicker ariaLabel="Level" options={tax.levels} value={f.level_id} onChange={(v) => set("level_id", v)} placeholder="Search level" /></Field>
               <Field label="Custom Job Title (optional)" error={errs.custom_title} hint={<span className="text-xs text-muted-foreground">Display only</span>}><input className={inputCls} value={f.custom_title} onChange={(e) => set("custom_title", e.target.value)} placeholder={displayJobTitle("", tax.levels.find((l) => l.id === f.level_id)?.name ?? "Senior", tax.allRoles.find((r) => r.id === f.role_id)?.name ?? "Data Engineer") + " – AI Platform"} /></Field>
               <Field label="Shown To Candidates As"><input readOnly className={`${inputCls} bg-muted/50`} value={displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name) || "Pick a role and level"} /></Field>
-              <Field label="Company *" error={errs.company_id}><input className={`${inputCls} bg-muted/50`} value={companyName || "Your company"} readOnly /></Field>
+              <Field label="Company *" error={errs.company_id} hint={<span className="text-xs text-muted-foreground">The company you are hiring for</span>}><SearchPicker ariaLabel="Company" options={companies} value={f.company_id} onChange={(v) => set("company_id", v)} allowClear={false} placeholder="Search or add a company" nameFor={newCompanyName} addHint="Existing names are reused automatically (e.g. “Acme Inc.” = “Acme”)." onAdd={addCompanyEntry} /></Field>
               <Field label="Employment Type *" error={errs.employment_type}>
                 <select className={inputCls} value={f.employment_type} onChange={(e) => set("employment_type", e.target.value)}>{EMPLOYMENT.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
               </Field>
