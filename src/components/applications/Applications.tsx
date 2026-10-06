@@ -154,8 +154,8 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
       <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4`}>
-        <select value={f.co} onChange={(e) => setF({ ...f, co: e.target.value, job: "" })} className={inputCls} aria-label="Filter by company"><option value="">All companies</option>{companies.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        <select value={f.job} onChange={(e) => setF({ ...f, job: e.target.value })} className={inputCls} aria-label="Filter by job"><option value="">All jobs</option>{jobs.map(([id, t]) => <option key={id} value={id}>{t}</option>)}</select>
+        <SearchSelect ariaLabel="Filter by company" value={f.co} onChange={(v) => setF({ ...f, co: v, job: "" })} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
+        <SearchSelect ariaLabel="Filter by job" value={f.job} onChange={(v) => setF({ ...f, job: v })} allLabel="All jobs" placeholder="Search job titles..." options={jobs.map(([id, t]) => ({ value: id, label: t }))} />
         <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className={inputCls} aria-label="Status"><option value="">All statuses</option>{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         <DatePicker value={f.since} onChange={(v) => setF({ ...f, since: v })} aria-label="Applied since" placeholder="Applied since" />
         <div className="sm:col-span-2 lg:col-span-4"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
