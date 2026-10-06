@@ -1,3 +1,4 @@
+import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { educationAlignment } from "@/lib/education";
 import { LocationFilter } from "@/components/location/LocationFields";
 import { locationAlignment } from "@/lib/location";
@@ -6,7 +7,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, Clock, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
+import { ChevronDown, Clock, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import type { Account } from "@/lib/account";
@@ -84,7 +85,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         <section className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              {filtersHidden && <button type="button" onClick={() => setFiltersHidden(false)} className="hidden items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary lg:inline-flex"><PanelLeftOpen className="h-4 w-4" />Show Filters{nFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{nFilters}</span>}</button>}
+              {filtersHidden && <PanelShowButton label="Show Filters" count={nFilters} onClick={() => setFiltersHidden(false)} className="hidden lg:inline-flex" />}
               <p className="text-sm"><span className="font-bold">{total}</span> <span className="text-muted-foreground">active {total === 1 ? "job" : "jobs"}{search.q && <> for “{search.q}”</>}</span></p>
             </div>
             <div className="w-48"><select aria-label="Sort" className={inputCls} value={search.sort} onChange={(e) => setSearch({ sort: e.target.value, page: 1 })}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
@@ -175,7 +176,7 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
   const selCo = (cos.data ?? []).find((c) => c.name.toLowerCase() === (s.company ?? "").toLowerCase());
   return (
     <div className={`${card} p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto`}>
-      <div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={onHide} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
+      <div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><PanelToggleButton open label="filters" onClick={onHide} className="hidden lg:inline-flex" /></div>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
       <Group title="Match Score"><MatchFilter value={s.mm} onChange={(mm) => p({ mm })} /></Group>
       <Group title="Role"><SearchPicker ariaLabel="Role filter" grouped options={tax.roles} value={s.role} onChange={(v) => p({ role: v })} placeholder="Search role" emptyLabel="All roles" /></Group>
       <Group title="Level"><SearchPicker ariaLabel="Level filter" options={tax.levels} value={s.level ?? ""} onChange={(v) => p({ level: v })} placeholder="Search level" emptyLabel="All levels" /></Group>

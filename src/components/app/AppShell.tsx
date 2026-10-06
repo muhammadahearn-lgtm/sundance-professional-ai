@@ -1,9 +1,10 @@
+import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen, GitCompare, CalendarDays } from "lucide-react";
+  Compass, Lightbulb, Bell, BarChart3, GitCompare, CalendarDays } from "lucide-react";
 import { useUpcomingInterviewCount } from "@/components/applications/InterviewsHub";
 import { listCompareIds } from "@/lib/job-search-data";
 import { listComparedCandidates } from "@/lib/talent-data";
@@ -131,11 +132,7 @@ export function AppShell({ account }: { account: Account }) {
               </button>
             )}
             {!onboarding && (
-              <button type="button" className="hidden rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex"
-                aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}
-                aria-expanded={!collapsed} onClick={toggleCollapsed}>
-                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-              </button>
+              <PanelToggleButton open={!collapsed} label="sidebar" onClick={toggleCollapsed} size="md" className="hidden lg:inline-flex" />
             )}
             <div className="min-w-0"><Logo /></div>
           </div>
