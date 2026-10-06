@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Eye, Trash2 } from "lucide-react";
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
@@ -14,6 +14,7 @@ import { meetsMinMatch } from "@/lib/match-engine";
 import { Avatar, Chips, ErrorBox, btn, useTaxonomy } from "@/components/talent/Talent";
 
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const miniBtn = "inline-flex h-7 items-center gap-1 rounded-lg border border-border bg-card px-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:bg-muted/80 hover:text-primary disabled:opacity-50";
 const MSG: Partial<Record<Stage, string>> = { rejected: "Candidate Rejected", offer: "Offer Extended", hired: "Candidate Hired" };
 
 export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | undefined }) {
@@ -101,10 +102,10 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <p className="mt-1 text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</p>
                     <div className="mt-1"><MatchBadge score={scoreOf(c)} /></div>
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
-                    <div className="mt-3 flex items-center gap-1.5">
-                      {c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className="text-xs font-semibold text-primary">View</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className="text-xs font-semibold text-primary">View</Link>}
-                      <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className="text-xs font-semibold text-primary" />
-                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} className="ml-auto rounded-lg border border-input bg-background px-1.5 py-1 text-xs">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                    <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
+                      {c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={miniBtn}><Eye className="h-3.5 w-3.5" />View</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={miniBtn}><Eye className="h-3.5 w-3.5" />View</Link>}
+                      <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} [&>svg]:h-3.5 [&>svg]:w-3.5`} />
+                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} className="ml-auto h-7 min-w-0 rounded-lg border border-input bg-card px-1.5 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
                     </div>
                   </article>))}
                   {!col.length && <p className="px-1 py-6 text-center text-xs text-muted-foreground">Drop candidates here</p>}</div>
