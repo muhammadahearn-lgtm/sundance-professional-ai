@@ -254,9 +254,9 @@ function ProfessionalForm({ p, uid, onDone }: { p: Profile; uid: string; onDone:
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Current Role"><SearchPicker ariaLabel="Current role" grouped options={tax.data?.roles ?? []} value={rl.role_id} onChange={(v) => setRl({ ...rl, role_id: v })} placeholder="Search role" /></Field>
+        <Field label="Current Role"><SearchPicker ariaLabel="Current role" grouped options={tax.data?.roles ?? []} value={rl.role_id} onChange={(v) => setRl({ ...rl, role_id: v })} placeholder="Search role" onAdd={addRoleEntry} addHint="Seniority goes in Level." /></Field>
         <Field label="Current Level"><SearchPicker ariaLabel="Current level" options={tax.data?.levels ?? []} value={rl.current_level_id} onChange={(v) => setRl({ ...rl, current_level_id: v })} placeholder="Search level" /></Field>
-        <Field label="Target Role"><SearchPicker ariaLabel="Target role" grouped options={tax.data?.roles ?? []} value={rl.target_role_id} onChange={(v) => setRl({ ...rl, target_role_id: v })} placeholder="Search role" /></Field>
+        <Field label="Target Role"><SearchPicker ariaLabel="Target role" grouped options={tax.data?.roles ?? []} value={rl.target_role_id} onChange={(v) => setRl({ ...rl, target_role_id: v })} placeholder="Search role" onAdd={addRoleEntry} addHint="Seniority goes in Level." /></Field>
         <Field label="Target Level"><SearchPicker ariaLabel="Target level" options={tax.data?.levels ?? []} value={rl.target_level_id} onChange={(v) => setRl({ ...rl, target_level_id: v })} placeholder="Search level" /></Field>
         <Field label="Current Job Title *" error={err.jobTitle}><input className={inputCls} maxLength={120} value={f.jobTitle} onChange={(e) => setF({ ...f, jobTitle: e.target.value })} /></Field>
         <Field label="Professional Headline *" error={err.headline}><input className={inputCls} maxLength={160} value={f.headline} onChange={(e) => setF({ ...f, headline: e.target.value })} /></Field>
