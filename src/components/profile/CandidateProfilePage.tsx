@@ -3,6 +3,7 @@ import { EducationLines } from "@/components/profile/EducationLines";
 import { formatLocation, type LocationParts } from "@/lib/location";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { loadTaxonomy } from "@/lib/jobs-data";
+import { addRoleEntry } from "@/lib/role-add";
 import { CURRENCIES, digitsOnly, formatSalaryAmount, parseSalaryInput } from "@/lib/salary";
 import { Link } from "@tanstack/react-router";
 import { CandidateMatchWidget } from "@/components/match/Match";

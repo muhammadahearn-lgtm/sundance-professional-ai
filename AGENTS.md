@@ -34,7 +34,7 @@
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule.
 - Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
 - Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format.
-- Roles/levels are controlled lists; jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic.
+- Roles/levels are controlled lists; new roles only via `add_role_entry` (strips seniority words, dedupes by taxonomy_key); jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic, no duplicate roles.
 - Locations: `countries` list; `location_normalize` trigger rebuilds `location`; client mirror `location.ts`. Why: consistent search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
