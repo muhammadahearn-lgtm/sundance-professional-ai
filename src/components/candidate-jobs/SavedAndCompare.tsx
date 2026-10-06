@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { SearchSelect } from "@/components/ui/search-select";
 import { useQuery } from "@tanstack/react-query";
 import { GitCompare, X } from "lucide-react";
 import type { Account } from "@/lib/account";
@@ -21,18 +23,29 @@ export function SavedJobsPage({ account }: { account: Account }) {
   const cards = useQuery({ queryKey: ["saved-cards", ids], queryFn: () => loadCardsByIds(ids) });
   const byId = new Map((cards.data ?? []).map((c) => [c.job_id, c]));
   const unavailable = cards.data ? ids.filter((id) => !byId.has(id)) : [];
+  const [co, setCo] = useState("");
+  const [jobSel, setJobSel] = useState("");
+  const saved = ids.map((id) => byId.get(id)).filter((x) => !!x);
+  const coName = (j: (typeof saved)[number]) => (j.companies as { company_name?: string } | null)?.company_name ?? "";
+  const companies = [...new Set(saved.map(coName).filter(Boolean))].sort();
+  const jobOpts = saved.filter((j) => !co || coName(j) === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${coName(j)}` }));
+  const shown = saved.filter((j) => (!co || coName(j) === co) && (!jobSel || j.job_id === jobSel));
   return (
     <div className="space-y-5 pb-16">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="font-display text-2xl font-extrabold">Saved Jobs</h1><p className="text-sm text-muted-foreground">{ids.length} saved {ids.length === 1 ? "opportunity" : "opportunities"}</p></div>
-        <Link to="/candidate/jobs" className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">Search jobs</Link>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <SearchSelect ariaLabel="Filter by company" className="sm:w-52" value={co} onChange={(v) => { setCo(v); setJobSel(""); }} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
+          <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={setJobSel} allLabel="All jobs" placeholder="Search job titles..." options={jobOpts} />
+        </div>
       </div>
       {cards.error ? <div className={`${card} p-8 text-center`}><p className="font-semibold">{friendlyError(cards.error, "Unable to load jobs.")}</p><button onClick={() => cards.refetch()} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Try again</button></div>
         : cards.isLoading ? <div className="space-y-3">{[0, 1].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>
         : !ids.length ? <Empty>You haven't saved any jobs yet. Tap Save on any job to keep it here.</Empty>
         : (
           <div className="space-y-3">
-            {ids.map((id) => byId.get(id)).filter((x) => !!x).map((j) => { const row = scoreQ.data?.find((r) => r.job_id === j.job_id); return <JobCard key={j.job_id} j={j} roleName={tax.data?.roles.find((r) => r.id === j.role_id)?.name} lists={lists} onRemove={() => lists.toggleSave(j.job_id)} score={row ? Number(row.overall_match_score) : undefined} scoreRow={row} tax={tax.data} />; })}
+            {saved.length > 0 && !shown.length && <div className={`${card} p-8 text-center`}><p className="font-semibold">No saved jobs match these filters.</p><button onClick={() => { setCo(""); setJobSel(""); }} className="mt-4 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">Reset filters</button></div>}
+            {shown.map((j) => { const row = scoreQ.data?.find((r) => r.job_id === j.job_id); return <JobCard key={j.job_id} j={j} roleName={tax.data?.roles.find((r) => r.id === j.role_id)?.name} lists={lists} onRemove={() => lists.toggleSave(j.job_id)} score={row ? Number(row.overall_match_score) : undefined} scoreRow={row} tax={tax.data} />; })}
             {unavailable.map((id) => (
               <div key={id} className={`${card} flex items-center justify-between gap-3 p-4`}><span className="text-sm text-muted-foreground">Job no longer available</span><button onClick={() => lists.toggleSave(id)} className="text-sm font-semibold text-primary">Remove</button></div>
             ))}
