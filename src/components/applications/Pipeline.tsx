@@ -4,8 +4,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, ChevronLeft, ChevronRight, Sparkles, Trash2 } from "lucide-react";
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
+import { listRecruiterInterviews } from "@/lib/interviews-data";
+import { InterviewPill, ScheduleInterviewDialog } from "@/components/applications/Interviews";
+import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
 import { card, friendlyError } from "@/components/profile/parts";
@@ -43,13 +46,18 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
     return rows.length ? Math.max(...rows.map((r) => Number(r.overall_match_score))) : undefined;
   };
 
+  const ivQ = useQuery({ queryKey: ["interviews", uid], queryFn: () => listRecruiterInterviews(uid) });
+  const ivOf = (c: PipelineCard) => (ivQ.data ?? []).find((i) => i.pipeline_id === c.pipeline_id && i.status === "scheduled");
+  const [sched, setSched] = useState<PipelineCard | null>(null);
+
   async function move(c: PipelineCard, stage: Stage) {
     if (c.current_stage === stage) return;
     const key = ["pipeline", uid, jobId ?? "all"];
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
-    try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
+    try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
   }
+  const NEXT: Partial<Record<Stage, [Stage, string]>> = { saved: ["contacted", "Mark Contacted"], interviewing: ["shortlisted", "Shortlist"], shortlisted: ["offer", "Extend Offer"], offer: ["hired", "Mark Hired"] };
   async function remove(c: PipelineCard) {
     if (!confirm(`Remove ${c.name} from the pipeline?`)) return;
     try { await removeFromPipeline(c.pipeline_id); toast.success("Candidate removed"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
