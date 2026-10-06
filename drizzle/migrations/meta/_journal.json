@@ -232,6 +232,13 @@
       "when": 1791229183531,
       "tag": "0032_grant_owner_moderator",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791287504317,
+      "tag": "0033_taxonomy_cross_category_lock",
+      "breakpoints": true
     }
   ]
 }
