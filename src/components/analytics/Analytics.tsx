@@ -481,7 +481,20 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
             <HeroKpi Icon={Clock} n={m.kpis.timeToHire == null ? "—" : `${m.kpis.timeToHire}d`} l="Time To Hire" /><HeroKpi Icon={Users} n={m.kpis.hires} l="Successful Hires" hint={m.appsPerHire ? `${m.appsPerHire} applications per hire` : undefined} />
           </div>
           <Section title="Hiring Journey"><div className={card}><FunnelStrip steps={m.fun} /></div></Section>
-          <ChartCard title="Highest Match Candidates" empty={!m.topCands.length}><ul className="divide-y divide-border text-sm">{m.topCands.map((c, i) => <li key={i} className="flex items-center justify-between gap-2 py-2"><span className="truncate"><b>{c.name}</b> <span className="text-xs text-muted-foreground">· {c.job}</span></span><span className="shrink-0 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">{c.score}%</span></li>)}</ul></ChartCard>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Section title="Highest Match Candidates"><div className={card}>{!m.topCands.length ? <p className="grid h-32 place-items-center text-sm text-muted-foreground">No Data Available</p> : <ul className="space-y-2">{m.topCands.map((c, i) => (
+              <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 transition-all hover:border-primary/40 hover:shadow-soft ${i === 0 ? "border-primary/30 bg-primary-soft/60" : "border-border"}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
+                <span className="min-w-0 flex-1"><b className="block truncate text-sm">{c.name}</b><span className="block truncate text-xs text-muted-foreground">{c.job}</span></span>
+                <span className="w-20 shrink-0"><span className="mb-1 block text-right text-xs font-bold text-primary">{c.score}%</span><span className="block h-1.5 rounded-full bg-muted"><span className="block h-1.5 rounded-full bg-gradient-primary" style={{ width: `${c.score}%` }} /></span></span>
+              </li>))}</ul>}</div></Section>
+            <Section title="Top Performing Jobs"><div className={card}>{!m.topJobs.length ? <p className="grid h-32 place-items-center text-sm text-muted-foreground">No Data Available</p> : <ul className="space-y-2">{m.topJobs.map((j, i) => (
+              <li key={i} className={`flex items-center gap-3 rounded-xl border p-3 transition-all hover:border-primary/40 hover:shadow-soft ${i === 0 ? "border-primary/30 bg-primary-soft/60" : "border-border"}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${i === 0 ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}><Briefcase className="h-4 w-4" /></span>
+                <span className="min-w-0 flex-1"><b className="block truncate text-sm">{j.job}</b><span className="block text-xs text-muted-foreground">{j.applications} applications · {j.views} views</span></span>
+                <span className="shrink-0 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">{j.interviewRate}% interview</span>
+              </li>))}</ul>}</div></Section>
+          </div>
         </div>}
         {tab === "pipeline" && <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-3">
@@ -501,7 +514,7 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
             {!m.jobPerf.length ? <p className="p-8 text-center text-sm text-muted-foreground">No Data Available</p> : (
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="border-b border-border text-left text-xs text-muted-foreground"><tr>{["Job", "Status", "Applications", "Views", "Candidate Quality", "Interview Rate", "Offer Rate", "Hire Rate"].map((h) => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
-                <tbody>{m.jobPerf.map((j, i) => <tr key={i} className="border-b border-border/60 last:border-0 hover:bg-primary-soft/40"><td className="px-4 py-3 font-medium">{j.job}</td><td className="px-4 py-3">{j.status}</td><td className="px-4 py-3">{j.applications}</td><td className="px-4 py-3">{j.views}</td><td className="px-4 py-3">{j.quality}</td><td className="px-4 py-3">{j.interviewRate}%</td><td className="px-4 py-3">{j.offerRate}%</td><td className="px-4 py-3">{j.hireRate}%</td></tr>)}</tbody>
+                <tbody>{m.jobPerf.map((j, i) => <tr key={i} className="border-b border-border/60 last:border-0 hover:bg-primary-soft/40"><td className="px-4 py-3 font-semibold">{j.job}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${j.status === "Active" ? "bg-primary-soft text-primary" : "bg-muted text-muted-foreground"}`}>{j.status}</span></td><td className="px-4 py-3">{j.applications}</td><td className="px-4 py-3">{j.views}</td><td className="px-4 py-3">{j.quality === "—" ? j.quality : <span className="font-bold text-primary">{j.quality}</span>}</td>{[j.interviewRate, j.offerRate, j.hireRate].map((r, k) => <td key={k} className="px-4 py-3"><div className="flex items-center gap-2"><span className="h-1.5 w-12 rounded-full bg-muted"><span className="block h-1.5 rounded-full bg-gradient-primary" style={{ width: `${r}%` }} /></span><span className="text-xs font-semibold">{r}%</span></div></td>)}</tr>)}</tbody>
               </table>
             )}
           </div>
