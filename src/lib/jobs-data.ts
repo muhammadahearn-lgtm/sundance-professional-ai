@@ -161,3 +161,10 @@ export async function deleteJob(id: string) {
   const { error } = await supabase.from("jobs").delete().eq("job_id", id);
   if (error) throw error;
 }
+
+/** A recruiter's non-draft jobs with their company, for company → job pickers. */
+export async function listMyJobsWithCompany(uid: string) {
+  const { data, error } = await supabase.from("jobs").select("job_id, job_title, company_id, companies(company_name)").eq("recruiter_id", uid).neq("job_status", "draft").order("job_title");
+  if (error) throw error;
+  return (data ?? []).map((j) => ({ id: j.job_id, title: j.job_title, companyId: j.company_id ?? "", company: j.companies?.company_name ?? "No company" }));
+}
