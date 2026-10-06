@@ -1,30 +1,30 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Building2, CalendarPlus, ChevronDown, Copy, MapPin, Sparkles, Video, X } from "lucide-react";
+import { Building2, CalendarPlus, ChevronDown, ClipboardCheck, Copy, Lock, MapPin, Sparkles, Star, Video, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DatePicker } from "@/components/ui/date-picker";
 import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, detectPlatform, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
-import { cancelInterview, saveInterview, type Interview } from "@/lib/interviews-data";
+import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, interviewTypeLabel, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
+import { cancelInterview, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const pad = (n: number) => String(n).padStart(2, "0");
 const lbl = (list: [string, string][], k: string) => list.find(([v]) => v === k)?.[1] ?? k;
 
-function draftFrom(i?: Interview): InterviewDraft {
-  if (!i) { const t = new Date(Date.now() + 86400000); return { format: "online", interview_type: "screen", platform: "google_meet", meeting_url: "", location_address: "", location_instructions: "", date: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`, time: "10:00", duration_minutes: 45, timezone: tz(), notes: "" }; }
+function draftFrom(i?: Interview, prior: Interview[] = []): InterviewDraft {
+  if (!i) { const t = new Date(Date.now() + 86400000); const nr = nextRound(prior); return { format: "online", interview_type: nr.interview_type, round_number: nr.round_number, platform: "google_meet", meeting_url: "", location_address: "", location_instructions: "", date: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`, time: "10:00", duration_minutes: 45, timezone: tz(), notes: "" }; }
   const d = new Date(i.scheduled_at);
-  return { format: i.format as InterviewDraft["format"], interview_type: i.interview_type, platform: i.platform || "google_meet", meeting_url: i.meeting_url, location_address: i.location_address, location_instructions: i.location_instructions, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`, duration_minutes: i.duration_minutes, timezone: i.timezone, notes: i.notes };
+  return { format: i.format as InterviewDraft["format"], interview_type: i.interview_type, round_number: i.round_number ?? 1, platform: i.platform || "google_meet", meeting_url: i.meeting_url, location_address: i.location_address, location_instructions: i.location_instructions, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`, duration_minutes: i.duration_minutes, timezone: i.timezone, notes: i.notes };
 }
 
-export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved }: {
-  open: boolean; onOpenChange: (o: boolean) => void; candidateName: string; existing?: Interview | undefined; onSaved: () => void;
+export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved, priorRounds = [] }: {
+  open: boolean; onOpenChange: (o: boolean) => void; candidateName: string; existing?: Interview | undefined; onSaved: () => void; priorRounds?: Interview[];
   ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string | null; applicationId: string | null };
 }) {
-  const [d, setD] = useState<InterviewDraft>(() => draftFrom(existing));
+  const [d, setD] = useState<InterviewDraft>(() => draftFrom(existing, priorRounds));
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof InterviewDraft>(k: K, v: InterviewDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   const err = validateInterview(d);
@@ -52,8 +52,12 @@ export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, can
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex gap-2">{fmtBtn("online", Video, "Online", "Video call link")}{fmtBtn("in_person", Building2, "In person", "Office address")}</div>
+          {priorRounds.filter((p) => p.interview_id !== existing?.interview_id).length > 0 && (
+            <div className="flex flex-wrap gap-1.5">{priorRounds.filter((p) => p.interview_id !== existing?.interview_id).sort((a, b) => (a.round_number ?? 1) - (b.round_number ?? 1)).map((p) => <span key={p.interview_id} className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">✓ {roundLabel(p)}</span>)}</div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <div><label className={label}>Interview type</label><select className={inputCls} value={d.interview_type} onChange={(e) => set("interview_type", e.target.value)}>{INTERVIEW_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+            <div className="grid grid-cols-[5.5rem_1fr] gap-2"><div><label className={label}>Round</label><select className={inputCls} value={d.round_number} onChange={(e) => set("round_number", Number(e.target.value))}>{Array.from({ length: 10 }, (_, k) => k + 1).map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+              <div><label className={label}>Interview type</label><select className={inputCls} value={d.interview_type} onChange={(e) => set("interview_type", e.target.value)}>{INTERVIEW_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div></div>
             <div><label className={label}>Duration</label><select className={inputCls} value={d.duration_minutes} onChange={(e) => set("duration_minutes", Number(e.target.value))}>{DURATIONS.map((m) => <option key={m} value={m}>{m} minutes</option>)}</select></div>
             <div><label className={label}>Date</label><DatePicker value={d.date} onChange={(v) => set("date", v)} clearable={false} aria-label="Interview date" /></div>
             <div><label className={label}>Start time</label><input type="time" className={inputCls} value={d.time} onChange={(e) => set("time", e.target.value)} /></div>
@@ -87,7 +91,7 @@ export function InterviewPill({ i, onClick }: { i: Interview; onClick?: () => vo
   const Icon = i.format === "online" ? Video : MapPin;
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-1.5 rounded-lg border border-primary/30 bg-primary-soft px-2 py-1 text-left text-[11px] font-semibold text-primary hover:border-primary">
-      <Icon className="h-3 w-3 shrink-0" /><span className="truncate">{fmtInterview(i.scheduled_at)}</span>
+      <Icon className="h-3 w-3 shrink-0" /><span className="truncate">R{i.round_number ?? 1} · {fmtInterview(i.scheduled_at)}</span>
     </button>
   );
 }
@@ -127,7 +131,7 @@ export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview;
       <div className="relative flex items-start gap-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">{online ? <Video className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Upcoming interview · {lbl(INTERVIEW_TYPES, i.interview_type)}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Upcoming interview · {roundLabel(i)}</p>
           <p className="font-display text-lg font-extrabold">{fmtInterview(i.scheduled_at)}</p>
           <p className="text-xs text-muted-foreground">{i.duration_minutes} minutes · {online ? lbl(PLATFORMS, i.platform) : "In person"} · {i.timezone}</p>
           {online ? <p className="mt-2 truncate text-sm"><a href={i.meeting_url} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">{i.meeting_url}</a></p>
@@ -146,3 +150,45 @@ export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview;
     </div>
   );
 }
+
+/** Private recruiter scorecard for a finished interview. Never shown to candidates. */
+export function ScorecardDialog({ open, onOpenChange, uid, interview, candidateName, existing, onSaved }: {
+  open: boolean; onOpenChange: (o: boolean) => void; uid: string; interview: Interview; candidateName: string; existing?: Scorecard | undefined; onSaved: () => void;
+}) {
+  const [d, setD] = useState<ScorecardDraft>(() => existing ? { recommendation: existing.recommendation, rating: existing.rating, strengths: existing.strengths, concerns: existing.concerns, notes: existing.notes } : { recommendation: "", rating: 0, strengths: "", concerns: "", notes: "" });
+  const [busy, setBusy] = useState(false);
+  const err = validateScorecard(d);
+  async function submit() {
+    if (err) { toast.error(err); return; }
+    setBusy(true);
+    try { await saveScorecard(uid, interview.interview_id, d); toast.success("Scorecard saved"); onSaved(); onOpenChange(false); }
+    catch (e) { toast.error(friendlyError(e, "Couldn't save the scorecard.")); }
+    setBusy(false);
+  }
+  const tone = (k: string) => k.endsWith("hire") ? "border-success bg-success/10 text-success" : "border-destructive bg-destructive/10 text-destructive";
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <span className="inline-flex w-fit items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><ClipboardCheck className="h-3 w-3" />Scorecard · {roundLabel(interview)}</span>
+          <DialogTitle className="font-display text-xl">How did {candidateName} do?</DialogTitle>
+          <DialogDescription className="flex items-center gap-1"><Lock className="h-3 w-3" />Private to you. The candidate never sees this.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div><p className={label}>Recommendation</p><div className="grid grid-cols-2 gap-2">{RECOMMENDATIONS.map(([k, l]) => <button key={k} type="button" aria-pressed={d.recommendation === k} onClick={() => setD((p) => ({ ...p, recommendation: k }))} className={`h-10 rounded-xl border text-sm font-bold transition-all ${d.recommendation === k ? tone(k) : "border-border bg-card hover:border-primary/50"}`}>{l}</button>)}</div></div>
+          <div><p className={label}>Overall rating</p><div className="flex gap-1">{[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" aria-label={`${n} star${n === 1 ? "" : "s"}`} onClick={() => setD((p) => ({ ...p, rating: n }))}><Star className={`h-7 w-7 ${n <= d.rating ? "fill-warning text-warning" : "text-muted-foreground/40"}`} /></button>)}</div></div>
+          <div><label className={label}>Strengths</label><textarea rows={2} className={inputCls} placeholder="What stood out?" value={d.strengths} onChange={(e) => setD((p) => ({ ...p, strengths: e.target.value }))} /></div>
+          <div><label className={label}>Concerns</label><textarea rows={2} className={inputCls} placeholder="Gaps or follow-ups for the next round" value={d.concerns} onChange={(e) => setD((p) => ({ ...p, concerns: e.target.value }))} /></div>
+          <div><label className={label}>Notes (optional)</label><textarea rows={2} className={inputCls} value={d.notes} onChange={(e) => setD((p) => ({ ...p, notes: e.target.value }))} /></div>
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" onClick={() => onOpenChange(false)} className="h-10 rounded-xl border border-border px-4 text-sm font-semibold hover:bg-muted">Not now</button>
+            <button type="button" disabled={busy || !!err} onClick={submit} className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-primary px-4 text-sm font-bold text-primary-foreground shadow-soft disabled:opacity-50"><ClipboardCheck className="h-4 w-4" />Save scorecard</button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export const recommendationLabel = (k: string) => RECOMMENDATIONS.find(([v]) => v === k)?.[1] ?? k;
+export { interviewTypeLabel };
