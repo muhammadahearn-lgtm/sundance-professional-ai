@@ -15,6 +15,8 @@ import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components
 import { DatePicker } from "@/components/ui/date-picker";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { Avatar, CandidateProfileBody, Chips, ErrorBox, MatchPlaceholder, ProfileHeader, btn, nameOf, primaryBtn, useTaxonomy } from "@/components/talent/Talent";
+import { listApplicationInterviews } from "@/lib/interviews-data";
+import { InterviewCard } from "@/components/applications/Interviews";
 
 const STATUS_STYLE: Record<string, string> = { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-destructive/10 text-destructive" };
 export function AppStatusBadge({ s }: { s: string }) {
@@ -114,6 +116,7 @@ export function CandidateApplicationsPage({ uid }: { uid: string }) {
 export function CandidateApplicationDetail({ id, uid }: { id: string; uid: string }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["my-application", id], queryFn: () => loadMyApplication(id) });
+  const ivs = useQuery({ queryKey: ["app-interviews", id], queryFn: () => listApplicationInterviews(id) });
   const [busy, setBusy] = useState(false);
   if (q.isLoading) return <div className={`${card} h-72 animate-pulse`} />;
   if (q.error) return <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} />;
@@ -130,6 +133,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
         <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+      {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
         <ol className="mt-5 space-y-4">{timeline(a.application_status as AppStatus).map((s) => (
           <li key={s.key} className="flex items-center gap-3">{s.state === "done" ? <CheckCircle2 className="h-5 w-5 text-success" /> : s.state === "rejected" ? <XCircle className="h-5 w-5 text-destructive" /> : <Circle className={`h-5 w-5 ${s.state === "current" ? "text-primary" : "text-muted-foreground"}`} />}
