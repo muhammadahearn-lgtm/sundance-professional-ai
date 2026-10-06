@@ -2,7 +2,7 @@ import { RecruiterAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Bookmark, Briefcase, Building2, CheckCircle2, Copy, FileText, Gift, KanbanSquare, MapPin, Plus, Search, Trash2, Users, CalendarCheck } from "lucide-react";
+import { Sparkles, Bell, Bookmark, Briefcase, Building2, CheckCircle2, Copy, FileText, Gift, KanbanSquare, MapPin, Plus, Search, Trash2, Users, CalendarCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,10 +40,17 @@ async function loadDashboard(uid: string) {
 }
 
 function Widget({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
-  return <section className={card}><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-bold">{title}</h2>{action}</div>{children}</section>;
+  return <section className={`${card} min-w-0`}><div className="mb-4 flex items-center justify-between gap-2"><h2 className="flex items-center gap-2 font-bold"><span className="h-4 w-1 rounded-full bg-gradient-primary" />{title}</h2>{action}</div>{children}</section>;
 }
 function Stat({ Icon, n, label }: { Icon: typeof Briefcase; n: number | string; label: string }) {
-  return <div className={card}><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary"><Icon className="h-4 w-4" /></span><div className="mt-3 text-2xl font-extrabold">{n}</div><div className="text-sm text-muted-foreground">{label}</div></div>;
+  return (
+    <div className={`${card} group relative overflow-hidden transition-all hover:-translate-y-0.5`}>
+      <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft"><Icon className="h-4 w-4" /></span>
+      <div className="mt-3 text-2xl font-extrabold tracking-tight">{n}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
+    </div>
+  );
 }
 function Soon() { return <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Coming Soon</span>; }
 function Empty({ text, cta }: { text: string; cta: ReactNode }) {
@@ -99,28 +106,51 @@ export function RecruiterDashboard({ account }: { account: Account }) {
     <>
       <PageHeader title={`Welcome back, ${account.firstName || "there"}`} subtitle="Your hiring workspace at a glance." />
 
-      <section className={`${card} flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between`}>
+      <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          {data.logo ? <img src={data.logo} alt={`${company?.company_name} logo`} className="h-14 w-14 shrink-0 rounded-xl border border-border object-cover" />
+          <div className="rounded-2xl bg-gradient-primary p-0.5 shadow-soft">
+          {data.logo ? <img src={data.logo} alt={`${company?.company_name} logo`} className="h-14 w-14 shrink-0 rounded-xl border-2 border-card object-cover" />
             : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground"><Building2 className="h-6 w-6" /></span>}
+          </div>
           <div className="min-w-0">
+            <span className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-card/70 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+              <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-primary" /></span>
+              AI sourcing active
+            </span>
             <div className="text-lg font-bold">{account.firstName} {account.lastName}</div>
             <div className="text-sm text-muted-foreground">{rp?.title || "Recruiter"}{(company?.company_name || rp?.company_name) && ` · ${company?.company_name || rp?.company_name}`}</div>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {rp?.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{rp.location}</span>}
               {rp?.specialization && <span className="rounded-full bg-primary-soft px-2 py-0.5 font-semibold text-primary">{rp.specialization}</span>}
               {rp && <span>{rp.years_experience} yrs recruiting</span>}
-              <span>Profile {rc.percent}%</span>
-              <span>Company {companyPct}%</span>
             </div>
+            <p className="mt-3 inline-flex items-start gap-1.5 rounded-xl bg-card/70 px-3 py-1.5 text-xs text-foreground">
+              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              {jobs.filter((j) => j.job_status === "active").length} active job{jobs.filter((j) => j.job_status === "active").length === 1 ? "" : "s"}, {apps.length} application{apps.length === 1 ? "" : "s"} and {data.savedCount} saved candidate{data.savedCount === 1 ? "" : "s"}.
+            </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/recruiter/jobs/create" className={linkBtn}><Plus className="h-4 w-4" />Create Job</Link>
-          <Link to="/recruiter/candidates" className={linkBtn}><Search className="h-4 w-4" />Search Candidates</Link>
-          <Link to="/recruiter/applications" className={linkBtn}><FileText className="h-4 w-4" />Review Applications</Link>
-          <Link to="/recruiter/pipeline" className={linkBtn}><KanbanSquare className="h-4 w-4" />View Pipeline</Link>
-          <Link to="/recruiter/jobs" className={linkBtn}><Briefcase className="h-4 w-4" />Manage Jobs</Link>
+        <div className="flex flex-col items-start gap-3 lg:items-end">
+          <div className="flex items-center gap-4">
+            {[["Profile", rc.percent], ["Company", companyPct]].map(([l, v]) => (
+              <div key={l} className="flex items-center gap-2">
+                <div className="relative h-12 w-12 rounded-full" style={{ background: `conic-gradient(var(--primary) ${Number(v) * 3.6}deg, var(--muted) 0deg)` }}>
+                  <div className="absolute inset-1 flex items-center justify-center rounded-full bg-card text-xs font-extrabold text-primary">{v}%</div>
+                </div>
+                <span className="text-xs font-semibold">{l}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 lg:justify-end">
+            <Link to="/recruiter/jobs/create" className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90"><Plus className="h-4 w-4" />Create Job</Link>
+            <Link to="/recruiter/candidates" className={`${linkBtn} bg-card/70`}><Search className="h-4 w-4" />Search Candidates</Link>
+            <Link to="/recruiter/applications" className={`${linkBtn} bg-card/70`}><FileText className="h-4 w-4" />Applications</Link>
+            <Link to="/recruiter/pipeline" className={`${linkBtn} bg-card/70`}><KanbanSquare className="h-4 w-4" />Pipeline</Link>
+          </div>
+        </div>
         </div>
       </section>
 

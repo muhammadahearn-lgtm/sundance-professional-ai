@@ -211,9 +211,11 @@ export function AppShell({ account }: { account: Account }) {
 
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string | undefined }) {
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+    <div className="relative mb-6">
+      <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-64 rounded-full bg-primary/10 blur-3xl" />
+      <h1 className="relative text-2xl font-extrabold tracking-tight sm:text-3xl">{title}</h1>
+      <div className="relative mt-2 h-1 w-12 rounded-full bg-gradient-primary" />
+      {subtitle && <p className="relative mt-2 text-sm text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }
