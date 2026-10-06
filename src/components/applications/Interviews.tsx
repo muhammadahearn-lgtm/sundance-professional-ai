@@ -3,7 +3,8 @@ import { toast } from "sonner";
 import { Building2, CalendarPlus, Copy, MapPin, Sparkles, Video, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
-import { inputCls, label, friendlyError } from "@/components/profile/parts";
+import { inputCls, friendlyError } from "@/components/profile/parts";
+const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, detectPlatform, fmtInterview, interviewIcs, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, type Interview } from "@/lib/interviews-data";
 
