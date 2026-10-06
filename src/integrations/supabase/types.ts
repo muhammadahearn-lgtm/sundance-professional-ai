@@ -2084,6 +2084,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_company_entry: { Args: { _name: string }; Returns: string }
       add_role_entry: { Args: { _name: string }; Returns: string }
       add_taxonomy_entry: {
         Args: { _kind: string; _name: string }
@@ -2110,6 +2111,7 @@ export type Database = {
         Returns: boolean
       }
       cert_key: { Args: { _v: string }; Returns: string }
+      company_key: { Args: { _v: string }; Returns: string }
       company_recruiters: {
         Args: { _company: string }
         Returns: {
@@ -2182,6 +2184,13 @@ export type Database = {
           recruiter_id: string
           recruiter_name: string
           unread: number
+        }[]
+      }
+      my_job_companies: {
+        Args: never
+        Returns: {
+          company_id: string
+          company_name: string
         }[]
       }
       my_job_view_counts: {
