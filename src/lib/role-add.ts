@@ -14,7 +14,7 @@ export function newRoleName(input: string, options: { name: string }[]): string 
   const k = taxonomyKey(base);
   if (!k || base.length < 2 || base.length > 60) return null;
   if (options.some((o) => taxonomyKey(o.name) === k)) return null;
-  return base.replace(/\s+/g, " ").split(" ").map((w) => (w === w.toUpperCase() && w.length > 1 ? w : w[0].toUpperCase() + w.slice(1))).join(" ");
+  return base.replace(/\s+/g, " ").split(" ").map((w) => (w === w.toUpperCase() && w.length > 1 ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(" ");
 }
 
 /** Adds (or reuses) a role in the shared list; the database dedupes and normalizes. */
