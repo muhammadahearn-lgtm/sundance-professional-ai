@@ -36,11 +36,25 @@ export function AddressAutocomplete({ value, onChange, onSelect, mode = "address
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const layer = mode === "city" ? "&layer=city" : "&layer=house&layer=street";
-        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=en${layer}`, { signal: ctrl.signal });
-        const j = (await r.json()) as { features?: { properties: PhotonProps }[] };
+        const get = async (query: string, layer: string, limit = 6) => {
+          const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=${limit}&lang=en${layer}`, { signal: ctrl.signal });
+          return ((await r.json()) as { features?: { properties: PhotonProps }[] }).features?.map((f) => f.properties) ?? [];
+        };
+        let props: PhotonProps[];
+        const num = mode === "address" ? /^(\d+[a-z]?)\s+(.+)$/i.exec(q) : null;
+        if (mode === "city") props = await get(q, "&layer=city");
+        else if (num) {
+          // "16 Sun": the geocoder only prefix-matches street names without a number, so search the street part too and add the number back.
+          const [hn, rest] = [num[1]!, num[2]!];
+          const region = (typeof navigator !== "undefined" ? /-([A-Z]{2})$/.exec(navigator.language)?.[1] : undefined) ?? "";
+          const [full, local, streets] = await Promise.all([get(q, "&layer=house&layer=street"), region ? get(rest, `&layer=street&countrycode=${region}`, 10) : Promise.resolve([]), get(rest, "&layer=street", 10)]);
+          const low = rest.toLowerCase();
+          const exact = full.filter((p) => p.housenumber === hn && (p.street ?? "").toLowerCase().startsWith(low));
+          const named = [...local, ...streets].filter((p) => (p.name ?? "").toLowerCase().startsWith(low)).map(({ name, ...p }): PhotonProps => ({ ...p, street: name ?? "", housenumber: hn }));
+          props = [...exact, ...named];
+        } else props = await get(q, "&layer=house&layer=street");
         const seen = new Set<string>();
-        const out = (j.features ?? []).map((f) => toSuggestion(f.properties, mode)).filter((s): s is AddressSuggestion => !!s && !seen.has(s.label) && !!seen.add(s.label));
+        const out = props.map((p) => toSuggestion(p, mode)).filter((s): s is AddressSuggestion => !!s && !seen.has(s.label) && !!seen.add(s.label)).slice(0, 7);
         setItems(out); setActive(-1); setOpen(true);
       } catch { /* aborted or offline — keep free typing */ }
       finally { setLoading(false); }
