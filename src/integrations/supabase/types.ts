@@ -842,6 +842,94 @@ export type Database = {
           },
         ]
       }
+      interviews: {
+        Row: {
+          application_id: string | null
+          candidate_id: string
+          created_at: string
+          duration_minutes: number
+          format: string
+          interview_id: string
+          interview_type: string
+          job_id: string | null
+          location_address: string
+          location_instructions: string
+          meeting_url: string
+          notes: string
+          pipeline_id: string | null
+          platform: string
+          recruiter_id: string
+          scheduled_at: string
+          status: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          candidate_id: string
+          created_at?: string
+          duration_minutes?: number
+          format: string
+          interview_id?: string
+          interview_type?: string
+          job_id?: string | null
+          location_address?: string
+          location_instructions?: string
+          meeting_url?: string
+          notes?: string
+          pipeline_id?: string | null
+          platform?: string
+          recruiter_id: string
+          scheduled_at: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          candidate_id?: string
+          created_at?: string
+          duration_minutes?: number
+          format?: string
+          interview_id?: string
+          interview_type?: string
+          job_id?: string | null
+          location_address?: string
+          location_instructions?: string
+          meeting_url?: string
+          notes?: string
+          pipeline_id?: string | null
+          platform?: string
+          recruiter_id?: string
+          scheduled_at?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["application_id"]
+          },
+          {
+            foreignKeyName: "interviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "interviews_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "recruiting_pipeline"
+            referencedColumns: ["pipeline_id"]
+          },
+        ]
+      }
       job_comparisons: {
         Row: {
           candidate_id: string
