@@ -155,7 +155,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
 
       {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={ivOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["interviews"] })} />}
+        onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}
     </div>
   );
 }

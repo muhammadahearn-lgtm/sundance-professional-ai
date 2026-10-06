@@ -34,10 +34,52 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const icsDate = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
 const esc = (s: string) => s.replace(/[\\,;]/g, (m) => `\\${m}`).replace(/\n/g, "\\n");
 
-export function interviewIcs(i: { interview_id: string; scheduled_at: string; duration_minutes: number; format: string; meeting_url: string; location_address: string; notes: string }, title: string): string {
+type CalInterview = { interview_id: string; scheduled_at: string; duration_minutes: number; format: string; meeting_url: string; location_address: string; notes: string };
+/** Reminder alarms embedded in every calendar entry (minutes before start). */
+export const REMINDER_MINUTES = [60, 15];
+const calLoc = (i: CalInterview) => (i.format === "online" ? i.meeting_url : i.location_address);
+const calDetails = (i: CalInterview) => [i.format === "online" ? `Join: ${i.meeting_url}` : `Address: ${i.location_address}`, i.notes, "Scheduled via Sundance Professionals"].filter(Boolean).join("\n\n");
+
+export function interviewIcs(i: CalInterview, title: string): string {
   const start = new Date(i.scheduled_at); const end = new Date(start.getTime() + i.duration_minutes * 60000);
-  const loc = i.format === "online" ? i.meeting_url : i.location_address;
-  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sundance Professionals//EN", "BEGIN:VEVENT", `UID:${i.interview_id}@sundanceprofessionals.com`, `DTSTAMP:${icsDate(new Date())}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, `SUMMARY:${esc(title)}`, `LOCATION:${esc(loc)}`, `DESCRIPTION:${esc(i.notes)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const alarms = REMINDER_MINUTES.flatMap((m) => ["BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${esc(title)}`, `TRIGGER:-PT${m}M`, "END:VALARM"]);
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sundance Professionals//EN", "BEGIN:VEVENT", `UID:${i.interview_id}@sundanceprofessionals.com`, `DTSTAMP:${icsDate(new Date())}`, `DTSTART:${icsDate(start)}`, `DTEND:${icsDate(end)}`, `SUMMARY:${esc(title)}`, `LOCATION:${esc(calLoc(i))}`, `DESCRIPTION:${esc(calDetails(i))}`, ...alarms, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+}
+
+/** One-click Google Calendar link (pre-filled, no download). */
+export function googleCalendarUrl(i: CalInterview, title: string): string {
+  const start = new Date(i.scheduled_at); const end = new Date(start.getTime() + i.duration_minutes * 60000);
+  const p = new URLSearchParams({ action: "TEMPLATE", text: title, dates: `${icsDate(start)}/${icsDate(end)}`, details: calDetails(i), location: calLoc(i) });
+  return `https://calendar.google.com/calendar/render?${p.toString()}`;
+}
+
+/** One-click Outlook web link. */
+export function outlookCalendarUrl(i: CalInterview, title: string): string {
+  const start = new Date(i.scheduled_at); const end = new Date(start.getTime() + i.duration_minutes * 60000);
+  const p = new URLSearchParams({ path: "/calendar/action/compose", rru: "addevent", subject: title, startdt: start.toISOString(), enddt: end.toISOString(), body: calDetails(i), location: calLoc(i) });
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${p.toString()}`;
+}
+
+/** Friendly countdown: "in 2 days", "in 3 hours", "in 20 min", "now", "ended". */
+export function countdown(iso: string, durationMin: number, now = new Date()): string {
+  const diff = new Date(iso).getTime() - now.getTime();
+  if (diff <= 0) return diff > -durationMin * 60000 ? "Happening now" : "Ended";
+  const min = Math.round(diff / 60000);
+  if (min < 60) return `In ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `In ${h} hour${h === 1 ? "" : "s"}`;
+  const d = Math.round(h / 24);
+  return `In ${d} day${d === 1 ? "" : "s"}`;
+}
+
+/** Splits interviews into upcoming (incl. in progress) and past. */
+export function splitInterviews<T extends { scheduled_at: string; duration_minutes: number; status: string }>(list: T[], now = new Date()) {
+  const live = list.filter((i) => i.status !== "cancelled");
+  const end = (i: T) => new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000;
+  return {
+    upcoming: live.filter((i) => end(i) > now.getTime()).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at)),
+    past: live.filter((i) => end(i) <= now.getTime()).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)),
+  };
 }
 
 export function fmtInterview(iso: string) {

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Building2, CalendarPlus, Copy, MapPin, Sparkles, Video, X } from "lucide-react";
+import { Building2, CalendarPlus, ChevronDown, Copy, MapPin, Sparkles, Video, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DatePicker } from "@/components/ui/date-picker";
 import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, detectPlatform, fmtInterview, interviewIcs, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
+import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, detectPlatform, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, type Interview } from "@/lib/interviews-data";
 
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -95,6 +96,23 @@ function downloadIcs(i: Interview, title: string) {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "interview.ics"; a.click(); URL.revokeObjectURL(a.href);
 }
 
+/** "Add to calendar" menu: Google, Outlook, Apple/other (.ics with 1h + 15min reminders). */
+export function AddToCalendar({ i, title, className = "" }: { i: Interview; title: string; className?: string }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className={`inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary ${className}`}>
+        <CalendarPlus className="h-4 w-4" />Add to calendar<ChevronDown className="h-3.5 w-3.5" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuItem asChild><a href={googleCalendarUrl(i, title)} target="_blank" rel="noreferrer">Google Calendar</a></DropdownMenuItem>
+        <DropdownMenuItem asChild><a href={outlookCalendarUrl(i, title)} target="_blank" rel="noreferrer">Outlook</a></DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => downloadIcs(i, title)}>Apple Calendar / other (.ics)</DropdownMenuItem>
+        <p className="px-2 pb-1 pt-1.5 text-[11px] text-muted-foreground">Includes reminders 1 hour and 15 minutes before.</p>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** Full interview card for candidate and recruiter detail views. */
 export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview; title: string; onEdit?: () => void; onCancelled?: () => void }) {
   const online = i.format === "online";
@@ -118,7 +136,7 @@ export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview;
             {online ? <a href={i.meeting_url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground"><Video className="h-4 w-4" />Join call</a>
               : <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(i.location_address)}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground"><MapPin className="h-4 w-4" />Directions</a>}
             {online && <button type="button" onClick={() => { navigator.clipboard.writeText(i.meeting_url); toast.success("Link copied"); }} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Copy className="h-4 w-4" />Copy link</button>}
-            <button type="button" onClick={() => downloadIcs(i, title)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><CalendarPlus className="h-4 w-4" />Add to calendar</button>
+            <AddToCalendar i={i} title={title} />
             {onEdit && <button type="button" onClick={onEdit} className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary">Reschedule</button>}
             {onCancelled && <button type="button" onClick={cancel} className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:text-destructive"><X className="h-4 w-4" />Cancel</button>}
           </div>

@@ -21,3 +21,24 @@ describe("interview rules", () => {
     expect(detectPlatform("https://teams.microsoft.com/l/x")).toBe("teams");
   });
 });
+
+import { countdown, googleCalendarUrl, interviewIcs, splitInterviews } from "./interview-rules";
+const iv = { interview_id: "abc", scheduled_at: "2026-10-10T14:00:00Z", duration_minutes: 45, format: "online", meeting_url: "https://zoom.us/j/1", location_address: "", notes: "", status: "scheduled" };
+describe("calendar + reminders", () => {
+  it("calendar file reminds 1 hour and 15 minutes before", () => {
+    const ics = interviewIcs(iv, "Interview");
+    expect(ics).toContain("TRIGGER:-PT60M");
+    expect(ics).toContain("TRIGGER:-PT15M");
+  });
+  it("google link carries the exact start/end", () => {
+    expect(decodeURIComponent(googleCalendarUrl(iv, "X"))).toContain("20261010T140000Z/20261010T144500Z");
+  });
+  it("countdown", () => {
+    expect(countdown(iv.scheduled_at, 45, new Date("2026-10-10T13:40:00Z"))).toBe("In 20 min");
+    expect(countdown(iv.scheduled_at, 45, new Date("2026-10-10T14:10:00Z"))).toBe("Happening now");
+  });
+  it("in-progress counts as upcoming; cancelled is hidden", () => {
+    const r = splitInterviews([iv, { ...iv, interview_id: "c", status: "cancelled" }], new Date("2026-10-10T14:30:00Z"));
+    expect(r.upcoming).toHaveLength(1); expect(r.past).toHaveLength(0);
+  });
+});
