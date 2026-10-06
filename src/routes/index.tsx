@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
 import hero from "@/assets/hero.jpg";
+import { PreviewBody } from "@/components/site/ProductPreviewMocks";
 
 const TITLE = "Sundance Professionals — AI Hiring Platform for Skill-Based Technology Recruiting";
 const DESC = "AI hiring platform for technology recruiting: skill-based hiring, candidate discovery, career intelligence and a recruiter marketplace in one place.";
@@ -182,11 +183,11 @@ function SkillFirst() {
 }
 
 const PREVIEW_TABS = [
-  { id: "candidate", label: "Candidate Dashboard", path: "app.sundance.ai / candidate-dashboard" },
-  { id: "recruiter", label: "Recruiter Dashboard", path: "app.sundance.ai / recruiter-dashboard" },
-  { id: "profile", label: "Candidate Profile", path: "app.sundance.ai / candidate-profile" },
-  { id: "jobs", label: "Job Search", path: "app.sundance.ai / job-search" },
-  { id: "talent", label: "Talent Search", path: "app.sundance.ai / talent-search" },
+  { id: "candidate", label: "Candidate Dashboard", path: "sundanceprofessionals.com/candidate/dashboard" },
+  { id: "recruiter", label: "Recruiter Dashboard", path: "sundanceprofessionals.com/recruiter/dashboard" },
+  { id: "profile", label: "Candidate Profile", path: "sundanceprofessionals.com/candidate/profile" },
+  { id: "jobs", label: "Job Search", path: "sundanceprofessionals.com/candidate/jobs" },
+  { id: "talent", label: "Talent Search", path: "sundanceprofessionals.com/recruiter/candidates" },
 ] as const;
 type PreviewTabId = (typeof PREVIEW_TABS)[number]["id"];
 
@@ -286,121 +287,7 @@ function ProductPreview() {
             <span className="ml-4 text-xs text-muted-foreground">{active.path}</span>
           </div>
           <div className="bg-secondary/60 p-5 sm:p-8 lg:p-10">
-            {tab === "candidate" ? (
-              <div className="mx-auto max-w-5xl space-y-4">
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <StatCard I={TrendingUp} n={84} l="Career readiness" />
-                  <StatCard I={Briefcase} n={6} l="Active applications" />
-                  <StatCard I={Users} n={23} l="Recruiter views" />
-                </div>
-                <div className="grid gap-4 lg:grid-cols-5">
-                  <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-3">
-                    <h3 className="font-display text-lg font-bold">Top matches for you</h3>
-                    <div className="mt-2 divide-y divide-border">
-                      <JobRow title="Senior Frontend Engineer" sub="Northwind Labs · Remote · US" score={96} />
-                      <JobRow title="Staff ML Engineer" sub="Hello Systems · San Francisco, CA" score={91} />
-                      <JobRow title="Full-Stack Developer" sub="Brightpath · Austin, TX" score={87} />
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-2">
-                    <h3 className="font-display text-lg font-bold">Skill gaps</h3>
-                    <div className="mt-6 space-y-6">
-                      <Bar label="React" v={94} strong />
-                      <Bar label="System Design" v={68} strong />
-                      <Bar label="GraphQL" v={52} strong />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : tab === "recruiter" ? (
-              <div className="mx-auto max-w-5xl space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatCard I={Briefcase} n={12} l="Open roles" />
-                  <StatCard I={Users} n={348} l="Matched talent" />
-                  <StatCard I={Star} n={27} l="Interviews" />
-                  <StatCard I={TrendingUp} n="18d" l="Avg. time to hire" />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <PipelineCol title="Sourced" n={42} people={["Priya Raman", "Marcus Lee"]} />
-                  <PipelineCol title="Screening" n={18} people={["Priya Raman", "Marcus Lee"]} />
-                  <PipelineCol title="Interview" n={9} people={["Priya Raman", "Marcus Lee"]} />
-                  <PipelineCol title="Offer" n={3} people={["Priya Raman", "Marcus Lee"]} />
-                </div>
-              </div>
-            ) : tab === "profile" ? (
-              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-3">
-                <div className="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center">
-                  <span className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary font-display text-2xl font-bold text-primary-foreground">PR</span>
-                  <div className="mt-4 font-display text-lg font-bold">Priya Raman</div>
-                  <div className="text-sm text-muted-foreground">Senior React Engineer</div>
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5" />Seattle, WA</div>
-                  <div className="mt-8 w-full rounded-2xl bg-primary-soft px-6 py-5">
-                    <div className="font-display text-3xl font-extrabold text-primary">84</div>
-                    <div className="mt-1 text-sm text-muted-foreground">Career readiness</div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-8 lg:col-span-2">
-                  <h3 className="font-display text-lg font-bold">Skills</h3>
-                  <div className="mt-4 flex flex-wrap gap-2.5">
-                    {["React", "TypeScript", "Next.js", "Node.js", "GraphQL", "AWS", "Testing", "Design Systems"].map((s) => (
-                      <span key={s} className="rounded-full border border-border bg-background px-3.5 py-1.5 text-sm text-foreground">{s}</span>
-                    ))}
-                  </div>
-                  <h3 className="mt-8 font-display text-lg font-bold">Experience</h3>
-                  <div className="mt-4 space-y-4">
-                    <div className="flex gap-3">
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                      <div>
-                        <div className="text-sm font-semibold">Senior Engineer</div>
-                        <div className="mt-0.5 text-sm text-muted-foreground">Northwind Labs · 2021-Now</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                      <div>
-                        <div className="text-sm font-semibold">Frontend Engineer</div>
-                        <div className="mt-0.5 text-sm text-muted-foreground">Brightpath · 2018-2021</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-            <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 sm:p-7">
-              {tab === "talent" && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Senior React engineers with 5+ years...</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {["5+ years", "US-based", "Open to work", "TypeScript"].map((c, i) => (
-                      <span key={c} className={`rounded-full px-3 py-1 text-xs font-medium ${i < 3 ? "bg-primary-soft text-primary" : "border border-border text-muted-foreground"}`}>{c}</span>
-                    ))}
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <PersonRow initials="PR" name="Priya Raman" sub="Senior React Engineer · 7 yrs" score={97} />
-                    <PersonRow initials="ML" name="Marcus Lee" sub="Full-Stack Engineer · 5 yrs" score={92} />
-                    <PersonRow initials="ET" name="Elena Torres" sub="Frontend Lead · 9 yrs" score={89} />
-                    <PersonRow initials="DO" name="David Okafor" sub="TypeScript Engineer · 4 yrs" score={84} />
-                  </div>
-                </div>
-              )}
-              {tab === "jobs" && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Machine learning roles near San Francisco...</span>
-                  </div>
-                  <div className="space-y-3">
-                    <PersonRow initials="N" name="Senior ML Engineer" sub="Northwind AI · Remote" score={96} />
-                    <PersonRow initials="L" name="Data Engineer" sub="Lumen Cloud · San Francisco" score={91} />
-                    <PersonRow initials="V" name="AI Platform Engineer" sub="Vertex Labs · Hybrid" score={88} />
-                  </div>
-                </div>
-              )}
-            </div>
-            )}
+            <PreviewBody tab={tab} />
           </div>
         </div>
       </div>
