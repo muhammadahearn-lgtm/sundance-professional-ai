@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, CloudUpload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CloudOff, CloudUpload } from "lucide-react";
 import type { Account } from "@/lib/account";
 import { DESCRIPTION_MAX, draftCompletion, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
 import { useRecalc } from "@/components/match/Match";
