@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen, GitCompare } from "lucide-react";
+  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen, GitCompare, CalendarDays } from "lucide-react";
+import { useUpcomingInterviewCount } from "@/components/applications/InterviewsHub";
 import { listCompareIds } from "@/lib/job-search-data";
 import { listComparedCandidates } from "@/lib/talent-data";
 import {
@@ -22,6 +23,7 @@ const NAV = {
     { to: "/candidate/jobs/saved", label: "Saved Jobs", Icon: Bookmark },
     { to: "/candidate/jobs/compare", label: "Compare Jobs", Icon: GitCompare },
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
+    { to: "/candidate/interviews", label: "Interviews", Icon: CalendarDays },
     { to: "/candidate/career", label: "Career", Icon: Compass },
     { to: "/candidate/recommendations", label: "For You", Icon: Lightbulb },
     { to: "/candidate/analytics", label: "Analytics", Icon: BarChart3 },
@@ -38,6 +40,7 @@ const NAV = {
     { to: "/recruiter/candidates/compare", label: "Compare Candidates", Icon: GitCompare },
     { to: "/recruiter/applications", label: "Applications", Icon: FileText },
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
+    { to: "/recruiter/interviews", label: "Interviews", Icon: CalendarDays },
     { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
     { to: "/recruiter/analytics", label: "Analytics", Icon: BarChart3 },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare },
@@ -58,6 +61,10 @@ function CompareBadge({ uid, role }: { uid: string; role: "candidate" | "recruit
   const q = useQuery({ queryKey: role === "candidate" ? ["compare-jobs", uid] : ["cmp-cands", uid], queryFn: () => (role === "candidate" ? listCompareIds(uid) : listComparedCandidates(uid)) });
   const n = q.data?.length ?? 0;
   return n ? <span className={pill} aria-label={`${n} selected`}>{n}</span> : null;
+}
+function InterviewBadge({ uid, role }: { uid: string; role: "candidate" | "recruiter" }) {
+  const n = useUpcomingInterviewCount(uid, role);
+  return n ? <span className={pill} aria-label={`${n} upcoming`}>{n}</span> : null;
 }
 
 
@@ -120,7 +127,7 @@ export function AppShell({ account }: { account: Account }) {
         return (
         <Link key={to} to={to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}
           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/compare") && <CompareBadge uid={account.userId} role={account.role} />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
+          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/compare") && <CompareBadge uid={account.userId} role={account.role} />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}{to.endsWith("/interviews") && <InterviewBadge uid={account.userId} role={account.role} />}
         </Link>
         );
       })}
