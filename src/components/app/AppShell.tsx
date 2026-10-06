@@ -192,23 +192,13 @@ export function AppShell({ account }: { account: Account }) {
       </header>
       <div className="flex">
         {!onboarding && !collapsed && (
-          <aside aria-label="Sidebar" className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 overflow-y-auto border-r border-border bg-background p-4 lg:relative lg:block" style={{ width }}>
-            {nav}
-            <div
-              role="separator" aria-orientation="vertical" aria-label="Resize sidebar" aria-valuemin={200} aria-valuemax={360} aria-valuenow={width}
-              tabIndex={0}
-              title="Drag to resize, double-click to hide"
-              onPointerDown={startResize}
-              onDoubleClick={toggleCollapsed}
-              onKeyDown={(e) => {
-                if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-                e.preventDefault();
-                const w = Math.min(360, Math.max(200, width + (e.key === "ArrowRight" ? 16 : -16)));
-                setWidth(w); localStorage.setItem("sundance.sidebarWidth", String(w));
-              }}
-              className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 focus-visible:bg-primary/50"
-            />
+          <aside aria-label="Sidebar" className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border bg-background lg:block" style={{ width }}>
+            <div className="h-full overflow-y-auto p-4">{nav}</div>
+            <PanelSeparator label="sidebar" width={width} setWidth={(w) => { const c = Math.min(360, Math.max(200, w)); setWidth(c); localStorage.setItem("sundance.sidebarWidth", String(c)); }} min={200} max={360} onHide={toggleCollapsed} />
           </aside>
+        )}
+        {!onboarding && collapsed && (
+          <div className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:flex"><PanelReveal label="sidebar" onShow={toggleCollapsed} className="relative" /></div>
         )}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 p-4 outline-none sm:p-6 lg:p-8"><Outlet /></main>
       </div>
