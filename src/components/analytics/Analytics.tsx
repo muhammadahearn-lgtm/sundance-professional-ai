@@ -497,6 +497,17 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
           </div>
         </div>}
         {tab === "pipeline" && <div className="space-y-6">
+          <AiBrief points={[
+            m.pipe.length ? `${m.pipe.length} candidate${m.pipe.length === 1 ? " is" : "s are"} on your pipeline board; ${m.kpis.interviewing} reached interviews.` : "Your pipeline is empty — save or contact candidates to start building it.",
+            m.conv[0] ? `${m.conv[0].name} conversion is ${m.conv[0].value}%.` : "Conversion rates appear once candidates move between stages.",
+            m.recs.viewed ? `${recRate}% of recommended candidates you viewed were contacted.` : "Open your Recommendations to discover high-match candidates.",
+          ]} />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <HeroKpi Icon={KanbanSquare} n={m.pipe.length} l="In Pipeline" />
+            <HeroKpi Icon={Send} n={m.kpis.applications} l="Applications" />
+            <HeroKpi Icon={Clock} n={m.kpis.timeToHire == null ? "—" : `${m.kpis.timeToHire}d`} l="Avg Time To Hire" />
+            <HeroKpi Icon={Sparkles} n={`${recRate}%`} l="Recommendation Success" />
+          </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <ChartCard title="Hiring Funnel" empty={!m.fun[0]!.value}><Funnel data={m.fun} /></ChartCard>
             <ChartCard title="Conversion Rates"><Rates data={m.conv} /></ChartCard>
@@ -526,6 +537,17 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
           </div>
         </div>}
         {tab === "candidates" && <div className="space-y-6">
+          <AiBrief points={[
+            m.distribution.some((x) => x.value) ? `Your candidates average a ${m.kpis.avgMatch}% match across your jobs.` : "No match scores yet — publish a job or search talent to start scoring candidates.",
+            m.skills[0] ? `${m.skills[0].name} is the most common skill among your candidates.` : "Candidate skills will appear here as people apply.",
+            m.candLocations[0] ? `Most of your candidates are based in ${m.candLocations[0].name}.` : "Candidate locations will appear as your pool grows.",
+          ]} />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <HeroKpi Icon={Users} n={m.experience.reduce((s, x) => s + x.value, 0)} l="Candidates In Scope" />
+            <HeroKpi Icon={Target} n={`${m.kpis.avgMatch}%`} l="Average Match" />
+            <HeroKpi Icon={Sparkles} n={<span className="block truncate text-2xl">{m.skills[0]?.name ?? "—"}</span>} l="Top Skill" />
+            <HeroKpi Icon={TrendingUp} n={<span className="block truncate text-2xl">{m.candLocations[0]?.name.split(",")[0] ?? "—"}</span>} l="Top Location" />
+          </div>
           <Section title="Fit & Experience"><div className="grid gap-4 lg:grid-cols-3">
             <ChartCard title="Match Distribution" empty={!m.distribution.some((x) => x.value)}><Bars data={m.distribution} /></ChartCard>
             <ChartCard title="Candidate Experience" empty={!m.experience.some((x) => x.value)}><Bars data={m.experience} /></ChartCard>
