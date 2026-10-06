@@ -1,9 +1,9 @@
 import { MessageButton } from "@/components/messages/Messages";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, Trash2 } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
@@ -24,6 +24,14 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const job = useQuery({ queryKey: ["job-basic", jobId], queryFn: () => loadJob(jobId!), enabled: !!jobId });
   const navigate = useNavigate();
   const [drag, setDrag] = useState<string | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (dir: number) => boardRef.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
+  const edgeScroll = (e: React.DragEvent) => {
+    const el = boardRef.current; if (!el || !drag) return;
+    const r = el.getBoundingClientRect(); const edge = 80;
+    if (e.clientX > r.right - edge) el.scrollLeft += 18;
+    else if (e.clientX < r.left + edge) el.scrollLeft -= 18;
+  };
   const [mm, setMm] = useState(0);
   const scores = useScores({});
   const scoreOf = (c: PipelineCard) => {
@@ -64,9 +72,13 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>
 
-      <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match</span><MatchFilter value={mm} onChange={setMm} /></div>
+      <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match</span><MatchFilter value={mm} onChange={setMm} />
+        <div className="ml-auto flex gap-2">
+          <button type="button" onClick={() => scrollBy(-1)} aria-label="Scroll pipeline left" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => scrollBy(1)} aria-label="Scroll pipeline right" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-muted"><ChevronRight className="h-4 w-4" /></button>
+        </div></div>
       {tax.error ? <ErrorBox msg="Unable To Load Pipeline" retry={() => tax.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-2"><div className="flex gap-4" style={{ minWidth: STAGES.length * 260 }}>
+        <div ref={boardRef} onDragOver={edgeScroll} className="pipeline-scroll -mx-4 overflow-x-scroll px-4 pb-3"><div className="flex gap-4" style={{ minWidth: STAGES.length * 260 }}>
           {STAGES.map(([key, title]) => {
             const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
             return (
