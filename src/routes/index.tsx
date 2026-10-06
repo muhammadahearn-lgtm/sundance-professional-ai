@@ -184,7 +184,7 @@ function SkillFirst() {
 
 const PREVIEW_TABS = [
   { id: "candidate", label: "Candidate Dashboard", path: "sundanceprofessionals.com/candidate/dashboard" },
-  { id: "recruiter", label: "Recruiter Dashboard", path: "sundanceprofessionals.com/recruiter/dashboard" },
+  { id: "recruiter", label: "Recruiter Pipeline", path: "sundanceprofessionals.com/recruiter/dashboard" },
   { id: "profile", label: "Candidate Profile", path: "sundanceprofessionals.com/candidate/profile" },
   { id: "jobs", label: "Job Search", path: "sundanceprofessionals.com/candidate/jobs" },
   { id: "talent", label: "Talent Search", path: "sundanceprofessionals.com/recruiter/candidates" },
