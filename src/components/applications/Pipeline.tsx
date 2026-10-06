@@ -1,4 +1,5 @@
 import { MessageButton } from "@/components/messages/Messages";
+import { SearchSelect } from "@/components/ui/search-select";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
@@ -74,10 +75,10 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{j ? `${j.job_title} Pipeline` : "Recruiting Pipeline"}</h1>
           <p className="text-sm text-muted-foreground">{j ? `${j.location} · ${lbl(ARRANGEMENT, j.work_arrangement)} · ${cards.length} candidates` : "Drag candidates between stages to update their progress."}</p></div>
         <div className="flex flex-wrap gap-2"><Link to="/recruiter/applications" className={btn}>Applications</Link>
-          <select value={coSel} onChange={(e) => { setCo(e.target.value); if (jobId) navigate({ to: "/recruiter/pipeline" }); }} aria-label="Filter by company" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
-            <option value="">All companies</option>{companies.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
-          <select value={jobId ?? ""} onChange={(e) => { if (e.target.value) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: e.target.value } }); else navigate({ to: "/recruiter/pipeline" }); }} aria-label="Filter by job" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
-            <option value="">All jobs</option>{myJobs.filter((j) => !coSel || j.companyId === coSel).map((j) => <option key={j.id} value={j.id}>{coSel ? j.title : `${j.company} — ${j.title}`}</option>)}</select></div>
+          <SearchSelect ariaLabel="Filter by company" className="w-52" value={coSel} onChange={(v) => { setCo(v); if (jobId) navigate({ to: "/recruiter/pipeline" }); }}
+            allLabel="All companies" placeholder="Search companies..." options={companies.map(([id, name]) => ({ value: id, label: name }))} />
+          <SearchSelect ariaLabel="Filter by job" className="w-64" value={jobId ?? ""} onChange={(v) => { if (v) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: v } }); else navigate({ to: "/recruiter/pipeline" }); }}
+            allLabel="All jobs" placeholder="Search job titles..." options={myJobs.filter((j) => !coSel || j.companyId === coSel).map((j) => ({ value: j.id, label: coSel ? j.title : `${j.company} — ${j.title}` }))} /></div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>
 
