@@ -56,7 +56,16 @@ function EditButton({ onClick }: { onClick: () => void }) {
 
 function Who({ i, role }: { i: InterviewRow; role: Role }) {
   if (role === "recruiter") return <Link to="/recruiter/candidates/$id" params={{ id: i.candidate_id }} className="font-semibold text-primary hover:underline">{i.candidate_name}</Link>;
-  return <span className="font-semibold">{i.company_name || "Recruiter"}</span>;
+  if (!i.company_name) return <span className="font-semibold">Recruiter</span>;
+  return <Link to="/candidate/jobs" search={{ q: i.company_name }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{i.company_name}</Link>;
+}
+
+function JobTitle({ i, role }: { i: InterviewRow; role: Role }) {
+  const cls = "hover:text-primary hover:underline underline-offset-2 transition-colors";
+  if (!i.job_id) return <>{i.job_title}</>;
+  return role === "recruiter"
+    ? <Link to="/recruiter/jobs/$id" params={{ id: i.job_id }} className={cls}>{i.job_title}</Link>
+    : <Link to="/candidate/jobs/$id" params={{ id: i.job_id }} className={cls}>{i.job_title}</Link>;
 }
 
 function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined; rounds: InterviewRow[] }) {
@@ -70,7 +79,7 @@ function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; o
         </div>
         <div className="min-w-0 flex-1">
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />Next interview · {countdown(i.scheduled_at, i.duration_minutes)}</span>
-          <h2 className="mt-1 font-display text-2xl font-extrabold">{i.job_title}</h2>
+          <h2 className="mt-1 font-display text-2xl font-extrabold"><JobTitle i={i} role={role} /></h2>
           <p className="text-sm text-muted-foreground"><Who i={i} role={role} /> · {roundLabel(i)}</p>
           <Journey rounds={rounds} current={i.interview_id} />
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -97,7 +106,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow
     <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past ? "opacity-75" : ""}`}>
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">{online ? <Video className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}</span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold">{i.job_title} <span className="font-normal text-muted-foreground">· {roundLabel(i)}</span></p>
+        <p className="truncate font-semibold"><JobTitle i={i} role={role} /> <span className="font-normal text-muted-foreground">· {roundLabel(i)}</span></p>
         <p className="truncate text-sm text-muted-foreground"><Who i={i} role={role} /> · {fmtInterview(i.scheduled_at)} · {i.duration_minutes} min · {online ? lbl(PLATFORMS, i.platform) : "In person"}</p>
       </div>
       {past ? (
@@ -199,7 +208,7 @@ export function NextInterviewBanner({ uid, role }: { uid: string; role: Role }) 
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><CalendarClock className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Next interview · {countdown(i.scheduled_at, i.duration_minutes)}</p>
-        <p className="truncate font-semibold">{i.job_title} <span className="font-normal text-muted-foreground">· <Who i={i} role={role} /></span></p>
+        <p className="truncate font-semibold"><JobTitle i={i} role={role} /> <span className="font-normal text-muted-foreground">· <Who i={i} role={role} /></span></p>
         <p className="text-sm text-muted-foreground">{fmtInterview(i.scheduled_at)} · {i.duration_minutes} min{upcoming.length > 1 ? ` · +${upcoming.length - 1} more` : ""}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

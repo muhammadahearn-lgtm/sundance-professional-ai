@@ -171,7 +171,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
               <div className="space-y-2">{sortedJobs.slice(0, 6).map((j) => (
                 <div key={j.job_id} className="rounded-xl border border-border px-3 py-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="min-w-0"><div className="truncate text-sm font-semibold">{j.job_title}</div><div className="text-xs text-muted-foreground">{appsByJob[j.job_id] ?? 0} applications · {pipeByJob[j.job_id] ?? 0} in pipeline · Created {fmt(j.created_at)} · Updated {fmt(j.updated_at)}</div></div>
+                    <div className="min-w-0"><div className="truncate text-sm font-semibold"><Link to="/recruiter/jobs/$id" params={{ id: j.job_id }} className="hover:text-primary hover:underline underline-offset-2">{j.job_title}</Link></div><div className="text-xs text-muted-foreground">{appsByJob[j.job_id] ?? 0} applications · {pipeByJob[j.job_id] ?? 0} in pipeline · Created {fmt(j.created_at)} · Updated {fmt(j.updated_at)}</div></div>
                     <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold capitalize text-primary">{j.job_status}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-3">
@@ -201,7 +201,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
             {apps.length === 0 ? <Empty text="No applications yet." cta={<Link to="/recruiter/candidates" className={linkBtn}>Search Candidates</Link>} /> : (
               <div className="space-y-2">{apps.slice(0, 5).map((a) => (
                 <div key={a.application_id} className="flex flex-col gap-2 rounded-xl border border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0"><div className="truncate text-sm font-semibold">{a.name}{a.candTitle && ` · ${a.candTitle}`}</div><div className="truncate text-xs text-muted-foreground">{a.jobs?.job_title} · Applied {fmt(a.application_date)}</div></div>
+                  <div className="min-w-0"><div className="truncate text-sm font-semibold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link>{a.candTitle && ` · ${a.candTitle}`}</div><div className="truncate text-xs text-muted-foreground"><Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="hover:text-primary hover:underline underline-offset-2">{a.jobs?.job_title}</Link> · Applied {fmt(a.application_date)}</div></div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{appLabel(a.application_status)}</span>
                     <Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={small}>Review</Link>
