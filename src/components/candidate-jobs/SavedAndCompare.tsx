@@ -11,7 +11,9 @@ import { Empty, card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
 import { CompanyLogo, CompareTray, JobCard } from "./JobCard";
 import { useJobLists } from "./useJobLists";
-import { useAutoRecalc, useScores } from "@/components/match/Match";
+import { asDetails, useAutoRecalc, useScores } from "@/components/match/Match";
+import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
+import { bestBy, rankCompare } from "@/lib/compare-rank";
 
 export function SavedJobsPage({ account }: { account: Account }) {
   const uid = account.userId;
@@ -114,12 +116,13 @@ export function CompareJobsPage({ account }: { account: Account }) {
                   <tr>
                     <th className="sticky left-0 w-40 bg-card p-4" />
                     {live.map(({ id, d }) => (
-                      <th key={id} className="min-w-[200px] border-l border-border p-4 text-left align-top font-normal">
+                      <th key={id} className={`min-w-[200px] border-l border-border p-4 text-left align-top font-normal ${top?.id === id && live.length > 1 ? "bg-primary-soft/50" : ""}`}>
                         <div className="flex items-start justify-between gap-2">
                           <CompanyLogo path={d!.company?.logo_url} size="h-10 w-10" />
                           <button onClick={() => lists.toggleCompare(id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button>
                         </div>
                         <Link to="/candidate/jobs/$id" params={{ id }} className="mt-2 block font-display font-bold hover:text-primary">{d!.job.job_title}</Link>
+                        <RankPill rank={ranks[id]} score={scoreOf(id)} />
                       </th>
                     ))}
                   </tr>
@@ -128,7 +131,7 @@ export function CompareJobsPage({ account }: { account: Account }) {
                   {rows.map(([label, render]) => (
                     <tr key={label} className="border-t border-border">
                       <th scope="row" className="sticky left-0 bg-card p-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</th>
-                      {live.map(({ id, d }) => <td key={id} className="border-l border-border p-4 align-top">{render(d!)}</td>)}
+                      {live.map(({ id, d }) => <td key={id} className={`border-l border-border p-4 align-top ${top?.id === id && live.length > 1 ? "bg-primary-soft/30" : ""}`}>{render(d!, id)}{best[label] === id && <BestTag />}</td>)}
                     </tr>
                   ))}
                 </tbody>
