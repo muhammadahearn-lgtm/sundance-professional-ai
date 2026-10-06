@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, MapPin, Plus, Search, Users } from "lucide-react";
+import { Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { SearchSelect } from "@/components/ui/search-select";
 import type { Account } from "@/lib/account";
 import type { JobStatus } from "@/lib/job-rules";
 import { listJobs } from "@/lib/jobs-data";
@@ -18,7 +19,6 @@ export function JobsDashboard({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [sort, setSort] = useState("newest");
-  const [q, setQ] = useState("");
   const [co, setCo] = useState("");
   const [jobSel, setJobSel] = useState("");
 
@@ -35,14 +35,13 @@ export function JobsDashboard({ account }: { account: Account }) {
   const jobOptions = useMemo(() => (data ?? []).filter(inCo).sort((a, b) => a.job_title.localeCompare(b.job_title)), [data, co]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const list = (data ?? []).filter((j) => (filter === "all" || j.job_status === filter) && inCo(j) && (!jobSel || j.job_id === jobSel) && (!term || j.job_title.toLowerCase().includes(term)));
+    const list = (data ?? []).filter((j) => (filter === "all" || j.job_status === filter) && inCo(j) && (!jobSel || j.job_id === jobSel));
     const cmp: Record<string, (a: (typeof list)[number], b: (typeof list)[number]) => number> = {
       newest: (a, b) => b.created_at.localeCompare(a.created_at), oldest: (a, b) => a.created_at.localeCompare(b.created_at),
       updated: (a, b) => b.updated_at.localeCompare(a.updated_at), alpha: (a, b) => a.job_title.localeCompare(b.job_title),
     };
     return [...list].sort(cmp[sort]);
-  }, [data, filter, sort, q, co, jobSel]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, filter, sort, co, jobSel]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (s: JobStatus | "all") => (data ?? []).filter((j) => (s === "all" || j.job_status === s) && inCo(j) && (!jobSel || j.job_id === jobSel)).length;
 
   return (
@@ -58,11 +57,10 @@ export function JobsDashboard({ account }: { account: Account }) {
           ))}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-        <select aria-label="Filter by company" className={`${inputCls} sm:w-48`} value={co} onChange={(e) => { setCo(e.target.value); setJobSel(""); }}>
-          <option value="">All companies</option>{companies.map(([id, c]) => <option key={id} value={id}>{c.name} ({c.n})</option>)}</select>
-        <select aria-label="Filter by job" className={`${inputCls} sm:w-56`} value={jobSel} onChange={(e) => setJobSel(e.target.value)}>
-          <option value="">All jobs</option>{jobOptions.map((j) => <option key={j.job_id} value={j.job_id}>{co ? j.job_title : `${j.companies?.company_name ?? "No company"} — ${j.job_title}`}</option>)}</select>
-        <label className="relative sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input aria-label="Search jobs" className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs and drafts" /></label>
+        <SearchSelect ariaLabel="Filter by company" className="sm:w-52" value={co} onChange={(v) => { setCo(v); setJobSel(""); }}
+          allLabel="All companies" placeholder="Search companies..." options={companies.map(([id, c]) => ({ value: id, label: `${c.name} (${c.n})` }))} />
+        <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={setJobSel}
+          allLabel="All jobs" placeholder="Search job titles..." options={jobOptions.map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.companies?.company_name ?? "No company"} — ${j.job_title}` }))} />
         <select aria-label="Sort jobs" className={`${inputCls} sm:w-48`} value={sort} onChange={(e) => setSort(e.target.value)}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         </div>
       </div>
