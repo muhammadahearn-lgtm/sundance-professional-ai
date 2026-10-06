@@ -239,6 +239,13 @@
       "when": 1791287504317,
       "tag": "0033_taxonomy_cross_category_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791288317652,
+      "tag": "0034_notification_skip_missing_recipient",
+      "breakpoints": true
     }
   ]
 }
