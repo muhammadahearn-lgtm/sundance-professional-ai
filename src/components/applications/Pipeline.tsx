@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronLeft, ChevronRight, Eye, Trash2 } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
@@ -96,16 +96,15 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                 <div className="mb-3 flex items-center justify-between px-1"><h2 className="text-sm font-bold">{title}</h2><span className="rounded-full bg-card px-2 text-xs font-semibold">{col.length}</span></div>
                 <div className="min-h-24 space-y-3">{col.map((c) => (
                   <article key={c.pipeline_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} cursor-grab p-3 active:cursor-grabbing`}>
-                    <div className="flex items-start gap-2"><Avatar name={c.name} size="h-8 w-8 text-xs" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div>
+                    <div className="flex items-start gap-2">{(() => { const inner = <><Avatar name={c.name} size="h-8 w-8 text-xs" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     {!jobId && c.jobs?.job_title && <p className="mt-2 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
                     <p className="mt-1 text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</p>
                     <div className="mt-1"><MatchBadge score={scoreOf(c)} /></div>
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
-                      {c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={miniBtn}><Eye className="h-3.5 w-3.5" />View</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={miniBtn}><Eye className="h-3.5 w-3.5" />View</Link>}
-                      <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} [&>svg]:h-3.5 [&>svg]:w-3.5`} />
-                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} className="ml-auto h-7 min-w-0 rounded-lg border border-input bg-card px-1.5 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                      <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
+                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} className="h-7 min-w-0 flex-1 rounded-lg border border-input bg-card px-2 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
                     </div>
                   </article>))}
                   {!col.length && <p className="px-1 py-6 text-center text-xs text-muted-foreground">Drop candidates here</p>}</div>
