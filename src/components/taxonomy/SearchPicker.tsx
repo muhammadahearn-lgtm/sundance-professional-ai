@@ -31,9 +31,9 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
     catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't add that role"); }
     finally { setAdding(false); }
   };
-  const groups = grouped && !q.trim()
-    ? results.reduce<[string, Opt[]][]>((acc, o) => { const g = o.category || "Other"; const last = acc[acc.length - 1]; if (last && last[0] === g) last[1].push(o); else acc.push([g, [o]]); return acc; }, [])
-    : [["", results] as [string, Opt[]]];
+  const groups: [string, Opt[]][] = grouped && !q.trim()
+    ? Array.from(results.reduce((m, o) => { const g = o.category || "Other"; m.set(g, [...(m.get(g) ?? []), o]); return m; }, new Map<string, Opt[]>()))
+    : [["", results]];
   let idx = -1;
 
   return (
@@ -64,7 +64,7 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
         <div className="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-lg" role="listbox">
           {results.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">{onAdd ? "No matches in the list." : "No matches. Pick from the list."}</p>}
           {groups.map(([g, items]) => (
-            <div key={g || "all"}>
+            <div key={g ? `g:${g}` : "results"}>
               {g && <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>}
               {items.map((o) => {
                 idx += 1; const i = idx;
