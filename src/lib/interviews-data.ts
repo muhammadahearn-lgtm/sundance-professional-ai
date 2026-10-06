@@ -3,7 +3,7 @@ import type { InterviewDraft, ScorecardDraft } from "./interview-rules";
 
 export type Interview = {
   interview_id: string; pipeline_id: string | null; application_id: string | null; recruiter_id: string; candidate_id: string; job_id: string | null;
-  format: string; interview_type: string; round_number: number; platform: string; meeting_url: string; location_address: string; location_instructions: string;
+  format: string; interview_type: string; custom_round_name: string; round_number: number; platform: string; meeting_url: string; location_address: string; location_instructions: string;
   scheduled_at: string; duration_minutes: number; timezone: string; notes: string; status: string;
 };
 
@@ -22,7 +22,7 @@ export async function listApplicationInterviews(applicationId: string): Promise<
 export async function saveInterview(ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string | null; applicationId: string | null; interviewId?: string }, d: InterviewDraft) {
   const row = {
     recruiter_id: ctx.uid, candidate_id: ctx.candidateId, job_id: ctx.jobId, pipeline_id: ctx.pipelineId, application_id: ctx.applicationId,
-    format: d.format, interview_type: d.interview_type, round_number: d.round_number, platform: d.format === "online" ? d.platform : "",
+    format: d.format, interview_type: d.interview_type, custom_round_name: d.interview_type === "custom" ? (d.custom_round_name ?? "").trim() : "", round_number: d.round_number, platform: d.format === "online" ? d.platform : "",
     meeting_url: d.format === "online" ? d.meeting_url.trim() : "", location_address: d.format === "in_person" ? d.location_address.trim() : "",
     location_instructions: d.format === "in_person" ? d.location_instructions.trim() : "",
     scheduled_at: new Date(`${d.date}T${d.time}`).toISOString(), duration_minutes: d.duration_minutes, timezone: d.timezone, notes: d.notes.trim(),

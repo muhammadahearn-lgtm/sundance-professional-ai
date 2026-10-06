@@ -3,8 +3,11 @@ export type InterviewFormat = "online" | "in_person";
 export const INTERVIEW_TYPES: [string, string][] = [["screen", "Initial Screen"], ["technical", "Technical Deep Dive"], ["system_design", "System Design & Architecture"], ["behavioral", "Behavioral & Culture"], ["final", "Final Round"]];
 /** Older round names still shown for interviews saved before the rename. */
 const LEGACY_TYPES: [string, string][] = [["panel", "Panel / Culture Fit"]];
-export const interviewTypeLabel = (k: string) => [...INTERVIEW_TYPES, ...LEGACY_TYPES].find(([v]) => v === k)?.[1] ?? k;
-export const roundLabel = (i: { round_number?: number | null; interview_type: string }) => `Round ${i.round_number ?? 1}: ${interviewTypeLabel(i.interview_type)}`;
+/** Recruiter-typed round name instead of a preset. */
+export const CUSTOM_TYPE = "custom";
+export const interviewTypeLabel = (k: string, custom?: string | null) => (k === CUSTOM_TYPE && custom?.trim()) ? custom.trim() : [...INTERVIEW_TYPES, ...LEGACY_TYPES].find(([v]) => v === k)?.[1] ?? (k === CUSTOM_TYPE ? "Custom round" : k);
+export const roundName = (i: { interview_type: string; custom_round_name?: string | null }) => interviewTypeLabel(i.interview_type, i.custom_round_name);
+export const roundLabel = (i: { round_number?: number | null; interview_type: string; custom_round_name?: string | null }) => `Round ${i.round_number ?? 1}: ${roundName(i)}`;
 
 /** Next round for a candidate: one past the highest round so far, with the next standard type. */
 export function nextRound(prior: { round_number?: number | null; interview_type: string; status?: string }[]): { round_number: number; interview_type: string } {
@@ -28,7 +31,7 @@ export const PLATFORMS: [string, string][] = [["google_meet", "Google Meet"], ["
 export const DURATIONS = [30, 45, 60, 90];
 
 export type InterviewDraft = {
-  format: InterviewFormat; interview_type: string; round_number: number; platform: string; meeting_url: string;
+  format: InterviewFormat; interview_type: string; custom_round_name?: string; round_number: number; platform: string; meeting_url: string;
   location_address: string; location_instructions: string; date: string; time: string;
   duration_minutes: number; timezone: string; notes: string;
 };
@@ -42,6 +45,8 @@ export function validateInterview(d: InterviewDraft, now = new Date()): string |
   if (d.format === "online" && !/^https:\/\/\S+\.\S+/i.test(d.meeting_url.trim())) return "Add a meeting link starting with https://";
   if (d.format === "in_person" && d.location_address.trim().length < 5) return "Add the interview address.";
   if (!Number.isInteger(d.round_number) || d.round_number < 1 || d.round_number > 10) return "Round must be between 1 and 10.";
+  if (d.interview_type === CUSTOM_TYPE && (d.custom_round_name ?? "").trim().length < 2) return "Enter a round name.";
+  if ((d.custom_round_name ?? "").trim().length > 60) return "Round name must be 60 characters or fewer.";
   if (d.duration_minutes < 10 || d.duration_minutes > 480) return "Duration must be between 10 and 480 minutes.";
   return null;
 }

@@ -58,3 +58,13 @@ describe("scorecards", () => {
   it("needs a recommendation", () => expect(validateScorecard({ ...ok, recommendation: "" })).toMatch(/recommendation/));
   it("rating must be 1-5", () => { expect(validateScorecard({ ...ok, rating: 0 })).toMatch(/rating/); expect(validateScorecard({ ...ok, rating: 6 })).toMatch(/rating/); });
 });
+
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+import { roundLabel as rl, validateInterview as vi2 } from "./interview-rules";
+d2("custom round names", () => {
+  const b = { format: "online" as const, interview_type: "custom", round_number: 2, platform: "zoom", meeting_url: "https://zoom.us/j/1", location_address: "", location_instructions: "", date: "2030-10-10", time: "14:00", duration_minutes: 45, timezone: "UTC", notes: "" };
+  i2("labels with the custom name", () => e2(rl({ round_number: 2, interview_type: "custom", custom_round_name: " Founder Chat " })).toBe("Round 2: Founder Chat"));
+  i2("requires a name for custom rounds", () => e2(vi2({ ...b, custom_round_name: "" })).toBe("Enter a round name."));
+  i2("rejects names over 60 characters", () => e2(vi2({ ...b, custom_round_name: "x".repeat(61) })).toBe("Round name must be 60 characters or fewer."));
+  i2("accepts a valid custom name", () => e2(vi2({ ...b, custom_round_name: "Portfolio Review" })).toBeNull());
+});
