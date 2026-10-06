@@ -1,22 +1,36 @@
 import { useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Plus, Search, X } from "lucide-react";
+import { toast } from "sonner";
 import { searchOptions } from "@/lib/role-taxonomy";
+import { newRoleName } from "@/lib/role-add";
 import { inputCls } from "@/components/profile/parts";
 
 type Opt = { id: string; name: string; category?: string };
 
-/** Searchable single-select for controlled lists (roles, levels). No custom entries. */
-export function SearchPicker({ options, value, onChange, placeholder = "Search…", allowClear = true, emptyLabel, grouped, ariaLabel }: {
+/** Searchable single-select for controlled lists (roles, levels). Optional governed "+ Add" via onAdd. */
+export function SearchPicker({ options: baseOptions, value, onChange, placeholder = "Search…", allowClear = true, emptyLabel, grouped, ariaLabel, onAdd, addHint }: {
   options: Opt[]; value: string; onChange: (id: string) => void; placeholder?: string; allowClear?: boolean; emptyLabel?: string; grouped?: boolean; ariaLabel?: string;
+  onAdd?: (name: string) => Promise<Opt>; addHint?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
+  const [extra, setExtra] = useState<Opt[]>([]);
+  const [adding, setAdding] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const options = useMemo(() => [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))], [baseOptions, extra]);
   const selected = options.find((o) => o.id === value);
   const results = useMemo(() => searchOptions(options, q), [options, q]);
+  const addName = onAdd ? newRoleName(q, options) : null;
 
   const pick = (id: string) => { onChange(id); setOpen(false); setQ(""); };
+  const add = async () => {
+    if (!onAdd || !addName || adding) return;
+    setAdding(true);
+    try { const o = await onAdd(addName); setExtra((x) => [...x, o]); pick(o.id); toast.success(`"${o.name}" added to the list`); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't add that role"); }
+    finally { setAdding(false); }
+  };
   const groups = grouped && !q.trim()
     ? results.reduce<[string, Opt[]][]>((acc, o) => { const g = o.category || "Other"; const last = acc[acc.length - 1]; if (last && last[0] === g) last[1].push(o); else acc.push([g, [o]]); return acc; }, [])
     : [["", results] as [string, Opt[]]];
