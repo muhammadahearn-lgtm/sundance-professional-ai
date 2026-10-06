@@ -22,7 +22,7 @@ function draftFrom(i?: Interview): InterviewDraft {
 
 export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved }: {
   open: boolean; onOpenChange: (o: boolean) => void; candidateName: string; existing?: Interview | undefined; onSaved: () => void;
-  ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string; applicationId: string | null };
+  ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string | null; applicationId: string | null };
 }) {
   const [d, setD] = useState<InterviewDraft>(() => draftFrom(existing));
   const [busy, setBusy] = useState(false);

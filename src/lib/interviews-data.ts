@@ -19,7 +19,7 @@ export async function listApplicationInterviews(applicationId: string): Promise<
   return (data ?? []) as Interview[];
 }
 
-export async function saveInterview(ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string; applicationId: string | null; interviewId?: string }, d: InterviewDraft) {
+export async function saveInterview(ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string | null; applicationId: string | null; interviewId?: string }, d: InterviewDraft) {
   const row = {
     recruiter_id: ctx.uid, candidate_id: ctx.candidateId, job_id: ctx.jobId, pipeline_id: ctx.pipelineId, application_id: ctx.applicationId,
     format: d.format, interview_type: d.interview_type, platform: d.format === "online" ? d.platform : "",
