@@ -8,6 +8,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, Clock, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
+import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import type { Account } from "@/lib/account";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listActiveCompanyJobs, searchJobs } from "@/lib/job-search-data";
@@ -39,6 +40,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const [recent, setRecent] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersHidden, setFiltersHidden] = useFiltersHidden("job-filters-hidden");
+  const [fw, setFw] = usePanelWidth("sundance.jobFiltersWidth", 280, 240, 420);
   useEffect(() => setRecent(readRecent()), []);
   useEffect(() => setQ(search.q), [search.q]);
 

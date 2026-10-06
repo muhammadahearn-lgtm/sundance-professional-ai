@@ -213,6 +213,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
   const [open, setOpen] = useState(false);
   const [view, setView] = useViewMode();
   const [hidden, setHidden] = useFiltersHidden("talent-filters-hidden");
+  const [fw, setFw] = usePanelWidth("sundance.talentFiltersWidth", 300, 240, 440);
   const set = (p: Partial<TalentFilters>) => navigate({ to: "/recruiter/candidates", search: { ...f, page: 1, ...p } });
 
   const results = useMemo(() => {

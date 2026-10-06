@@ -67,6 +67,7 @@ function InterviewBadge({ uid, role }: { uid: string; role: "candidate" | "recru
   return n ? <span className={pill} aria-label={`${n} upcoming`}>{n}</span> : null;
 }
 
+import { PanelReveal, PanelSeparator } from "@/components/ui/panel-separator";
 
 export function AppShell({ account }: { account: Account }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -82,22 +83,6 @@ export function AppShell({ account }: { account: Account }) {
   }, []);
   function toggleCollapsed() {
     setCollapsed((c) => { localStorage.setItem("sundance.sidebarCollapsed", c ? "0" : "1"); return !c; });
-  }
-  function startResize(e: React.PointerEvent) {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startW = width;
-    function onMove(ev: PointerEvent) {
-      const w = Math.min(360, Math.max(200, startW + ev.clientX - startX));
-      setWidth(w);
-      localStorage.setItem("sundance.sidebarWidth", String(w));
-    }
-    function onUp() {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    }
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
   }
   const onboarding = pathname.endsWith("/onboarding");
   // Close the phone menu when the page changes or Escape is pressed.
