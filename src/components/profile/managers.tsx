@@ -4,7 +4,10 @@ import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { EducationLines } from "./EducationLines";
 import { DEGREE_TYPES, gradYearError, isDegreeType, normalizeEduText } from "@/lib/education";
 import { toast } from "sonner";
-import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
+import { BadgeCheck, Check, Pencil, Plus, Trash2, Search } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { suggestCertification } from "@/lib/certification-suggest.functions";
+import { catalogLabel, certKey, exactCatalogMatch, normalizeCertName, searchCatalog, type CatalogCert } from "@/lib/certifications";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { addTaxonomyEntry, canAddTaxonomy, KIND_LABEL, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
@@ -208,30 +211,91 @@ export function CertificationManager({ uid, items, adding, setAdding }: { uid: s
 
 function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; onDone: () => void; onCancel: () => void }) {
   const [f, setF] = useState({ certification_name: item?.certification_name ?? "", issuing_organization: item?.issuing_organization ?? "", issue_date: item?.issue_date ?? "", expiration_date: item?.expiration_date ?? "", certification_number: item?.certification_number ?? "" });
+  const [catalogId, setCatalogId] = useState<string | null>(item?.catalog_id ?? null);
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ catalog?: CatalogCert; name: string; issuer: string } | null>(null);
+  const suggest = useServerFn(suggestCertification);
+  const { data: catalog = [] } = useQuery({
+    queryKey: ["certification-catalog"], staleTime: 3600_000,
+    queryFn: async () => { const { data, error } = await supabase.from("certification_catalog").select("catalog_id, name, abbreviation, issuer, category, aliases").order("name"); if (error) throw error; return data as CatalogCert[]; },
+  });
+  const verified = catalogId ? catalog.find((c) => c.catalog_id === catalogId) : undefined;
+  const hits = catalogId ? [] : searchCatalog(catalog, f.certification_name);
+
+  function pick(c: CatalogCert) { setCatalogId(c.catalog_id); setF((p) => ({ ...p, certification_name: c.name, issuing_organization: c.issuer })); setOpen(false); setSuggestion(null); }
+
+  async function save(row: typeof f, cid: string | null) {
+    setSaving(true);
+    const data = { certification_name: row.certification_name.trim(), issuing_organization: row.issuing_organization.trim(), issue_date: row.issue_date || null, expiration_date: row.expiration_date || null, certification_number: row.certification_number.trim(), catalog_id: cid };
+    const { error } = item ? await supabase.from("certifications").update(data).eq("certification_id", item.certification_id) : await supabase.from("certifications").insert({ ...data, candidate_id: uid });
+    setSaving(false);
+    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
+    toast.success(item ? "Certification updated" : "Certification added"); onDone();
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     const er: Partial<Record<keyof typeof f, string>> = {};
     if (!f.certification_name.trim()) er.certification_name = "Certification name is required.";
     if (f.issue_date && f.expiration_date && f.expiration_date < f.issue_date) er.expiration_date = "Expiration must be after issue date.";
     setErr(er); if (Object.keys(er).length) return;
+    if (catalogId) return save(f, catalogId);
+    const exact = exactCatalogMatch(catalog, f.certification_name);
+    if (exact) return save({ ...f, certification_name: exact.name, issuing_organization: exact.issuer }, exact.catalog_id);
     setSaving(true);
-    const row = { certification_name: f.certification_name.trim(), issuing_organization: f.issuing_organization.trim(), issue_date: f.issue_date || null, expiration_date: f.expiration_date || null, certification_number: f.certification_number.trim() };
-    const { error } = item ? await supabase.from("certifications").update(row).eq("certification_id", item.certification_id) : await supabase.from("certifications").insert({ ...row, candidate_id: uid });
+    const r = await suggest({ data: { name: f.certification_name } }).catch(() => null);
     setSaving(false);
-    if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return; }
-    toast.success(item ? "Certification updated" : "Certification added"); onDone();
+    const cat = r?.catalog_name ? catalog.find((c) => c.name === r.catalog_name) : undefined;
+    const name = cat?.name ?? normalizeCertName(r?.name || f.certification_name);
+    const issuer = cat?.issuer ?? (r?.issuer ? normalizeCertName(r.issuer) : "");
+    const same = !cat && certKey(name) === certKey(f.certification_name) && (!issuer || issuer.toLowerCase() === f.issuing_organization.trim().toLowerCase());
+    if (same || r?.failed) return save({ ...f, certification_name: normalizeCertName(f.certification_name) }, null);
+    setSuggestion({ ...(cat ? { catalog: cat } : {}), name, issuer });
   }
+
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Certification Name *" error={err.certification_name}><input className={inputCls} maxLength={150} value={f.certification_name} onChange={(e) => setF({ ...f, certification_name: e.target.value })} /></Field>
-        <Field label="Issuing Organization"><input className={inputCls} maxLength={150} value={f.issuing_organization} onChange={(e) => setF({ ...f, issuing_organization: e.target.value })} /></Field>
+        <Field label="Certification Name *" error={err.certification_name}>
+          <div className="relative">
+            <input className={inputCls} maxLength={150} value={f.certification_name} placeholder="Search, e.g. PMP, AWS, CISSP" role="combobox" aria-expanded={open && hits.length > 0} aria-autocomplete="list"
+              onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)}
+              onChange={(e) => { setCatalogId(null); setSuggestion(null); setOpen(true); setF({ ...f, certification_name: e.target.value }); }} />
+            {open && hits.length > 0 && (
+              <ul role="listbox" className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
+                {hits.map((c) => (
+                  <li key={c.catalog_id} role="option" aria-selected={false}>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(c)} className="w-full rounded-lg px-3 py-2 text-left hover:bg-muted">
+                      <p className="text-sm font-medium">{catalogLabel(c)}</p>
+                      <p className="text-xs text-muted-foreground">{c.issuer}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {verified ? <p className="mt-1 flex items-center gap-1 text-xs text-primary"><BadgeCheck className="h-3.5 w-3.5" /> Verified certification</p>
+            : <p className="mt-1 text-xs text-muted-foreground">Pick from the list. Not listed? Type the full official name and we'll check it.</p>}
+        </Field>
+        <Field label="Issuing Organization"><input className={inputCls} maxLength={150} value={f.issuing_organization} readOnly={!!verified} aria-readonly={!!verified} onChange={(e) => setF({ ...f, issuing_organization: e.target.value })} /></Field>
         <Field label="Issue Date"><DatePicker aria-label="Issue date" value={f.issue_date} max={f.expiration_date || undefined} onChange={(v) => setF({ ...f, issue_date: v })} placeholder="Select issue date" /></Field>
         <Field label="Expiration Date" error={err.expiration_date}><DatePicker aria-label="Expiration date" value={f.expiration_date} min={f.issue_date || undefined} onChange={(v) => setF({ ...f, expiration_date: v })} placeholder="Select expiration date" /></Field>
         <Field label="Certification Number (Optional)"><input className={inputCls} maxLength={100} value={f.certification_number} onChange={(e) => setF({ ...f, certification_number: e.target.value })} /></Field>
       </div>
+      {suggestion && (
+        <div role="alert" className="rounded-xl border border-primary/40 bg-background p-4">
+          <p className="text-sm font-semibold">Did you mean this?</p>
+          <p className="mt-1 text-sm">{suggestion.catalog ? catalogLabel(suggestion.catalog) : suggestion.name}</p>
+          {suggestion.issuer && <p className="text-xs text-muted-foreground">{suggestion.issuer}</p>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" disabled={saving} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              onClick={() => suggestion.catalog ? save({ ...f, certification_name: suggestion.catalog.name, issuing_organization: suggestion.catalog.issuer }, suggestion.catalog.catalog_id) : save({ ...f, certification_name: suggestion.name, issuing_organization: suggestion.issuer || f.issuing_organization }, null)}>Use this</button>
+            <button type="button" disabled={saving} className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted" onClick={() => save({ ...f, certification_name: normalizeCertName(f.certification_name) }, null)}>Keep what I typed</button>
+          </div>
+        </div>
+      )}
       <SaveBar saving={saving} onCancel={onCancel} />
     </form>
   );
