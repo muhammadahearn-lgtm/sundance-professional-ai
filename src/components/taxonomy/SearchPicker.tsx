@@ -51,7 +51,7 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") { e.preventDefault(); setHi((h) => Math.min(h + 1, results.length - 1)); }
             else if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
-            else if (e.key === "Enter") { e.preventDefault(); const o = results[hi]; if (o) pick(o.id); }
+            else if (e.key === "Enter") { e.preventDefault(); const o = results[hi]; if (o) pick(o.id); else if (addName) void add(); }
             else if (e.key === "Escape") { setOpen(false); setQ(""); }
           }}
         />
@@ -62,7 +62,7 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
       </div>
       {open && (
         <div className="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-lg" role="listbox">
-          {results.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">No matches. Pick from the list.</p>}
+          {results.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">{onAdd ? "No matches in the list." : "No matches. Pick from the list."}</p>}
           {groups.map(([g, items]) => (
             <div key={g || "all"}>
               {g && <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>}
@@ -79,6 +79,15 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
               })}
             </div>
           ))}
+          {addName && (
+            <div className="mt-1 border-t border-border pt-1">
+              <button type="button" disabled={adding} onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); void add(); }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-60">
+                <Plus className="h-4 w-4" />{adding ? "Adding…" : <>Add “{addName}”</>}
+              </button>
+              {addHint && <p className="px-3 pb-1.5 text-[11px] text-muted-foreground">{addHint}</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
