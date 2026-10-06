@@ -28,7 +28,7 @@ export function notifyByEmail(kind: "application" | "message", id: string) {
 }
 
 export async function listMyApplications(uid: string) {
-  const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, updated_at, jobs(${JOB})`).eq("candidate_id", uid).order("application_date", { ascending: false });
+  const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, updated_at, job_id, jobs(${JOB})`).eq("candidate_id", uid).order("application_date", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
