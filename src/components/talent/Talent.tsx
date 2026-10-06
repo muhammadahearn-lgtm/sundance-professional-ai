@@ -277,7 +277,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
         {hidden ? <PanelReveal label="filters" onShow={() => setHidden(false)} className="relative mr-3" />
           : <aside className="relative hidden shrink-0 lg:mr-6 lg:block" style={{ width: fw }}>{filters}<PanelSeparator label="filters" width={fw} setWidth={setFw} min={240} max={440} onHide={() => setHidden(true)} className="-right-5" /></aside>}
         {open && <div className="fixed inset-0 z-40 overflow-y-auto bg-background p-4 lg:hidden"><div className="mb-3 flex justify-between"><p className="font-display text-lg font-bold">Filters</p><button onClick={() => setOpen(false)} aria-label="Close filters"><X className="h-5 w-5" /></button></div>{filters}<button onClick={() => setOpen(false)} className={`${primaryBtn} mt-4 w-full justify-center`}>Show {results.length} candidates</button></div>}
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-3">{hidden && <button type="button" onClick={() => setHidden(false)} className={`${btn} hidden lg:inline-flex`}><PanelLeftOpen className="h-4 w-4" />Show Filters{count > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{count}</span>}</button>}<p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p></div>
             <div className="flex items-center gap-2">
               <div role="group" aria-label="Results view" className="inline-flex rounded-xl border border-input p-0.5">
