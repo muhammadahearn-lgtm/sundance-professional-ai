@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { inputCls } from "@/components/profile/parts";
 import { formatLocation, normalizeLocationPart, type LocationParts } from "@/lib/location";
@@ -34,9 +35,12 @@ export function LocationFields({ value, onChange, required, error, showPreview =
         <label><span className={lab}>State / Province{star}</span>
           <input className={inputCls} maxLength={80} value={value.state} placeholder="e.g. New Hampshire" onChange={(e) => onChange({ ...value, state: e.target.value })} onBlur={() => onChange({ ...value, state: normalizeLocationPart(value.state) })} />
         </label>
-        <label><span className={lab}>City{star}</span>
-          <input className={inputCls} maxLength={80} value={value.city} placeholder="e.g. Bow" onChange={(e) => onChange({ ...value, city: e.target.value })} onBlur={() => onChange({ ...value, city: normalizeLocationPart(value.city) })} />
-        </label>
+        <div><span className={lab}>City{star}</span>
+          <AddressAutocomplete mode="city" ariaLabel="City" maxLength={80} value={value.city} placeholder="Start typing, e.g. Bow"
+            onChange={(c) => onChange({ ...value, city: c })}
+            onBlur={() => onChange({ ...value, city: normalizeLocationPart(value.city) })}
+            onSelect={(sg) => onChange({ city: sg.city || sg.primary, state: sg.state || value.state, country: countries.includes(sg.country) ? sg.country : value.country })} />
+        </div>
       </div>
       {error ? <p className="text-xs text-destructive">{error}</p> : showPreview && preview ? <p className="text-xs text-muted-foreground">Shown as: <span className="font-medium text-foreground">{preview}</span></p> : null}
     </div>

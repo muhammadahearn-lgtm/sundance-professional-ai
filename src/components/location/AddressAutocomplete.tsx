@@ -73,7 +73,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, mode = "address
       />
       {loading && <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
       {open && items.length > 0 && (
-        <ul id={listId} role="listbox" className="absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-elevated">
+        <ul id={listId} role="listbox" className="absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-soft">
           {items.map((s, i) => (
             <li key={s.label} role="option" aria-selected={i === active}
               onMouseDown={(e) => { e.preventDefault(); pick(s); }} onMouseEnter={() => setActive(i)}

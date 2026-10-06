@@ -8,6 +8,7 @@ import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, detectPlatform, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, type Interview } from "@/lib/interviews-data";
+import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -65,7 +66,7 @@ export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, can
             </div>
           ) : (
             <>
-              <div><label className={label}>Address</label><input className={inputCls} placeholder="100 Main St, Suite 400, Boston, MA 02110" value={d.location_address} onChange={(e) => set("location_address", e.target.value)} /></div>
+              <div><label className={label}>Address</label><AddressAutocomplete ariaLabel="Address" placeholder="Start typing, e.g. 100 Main St, Boston" value={d.location_address} onChange={(v) => set("location_address", v)} /></div>
               <div><label className={label}>Arrival instructions (optional)</label><input className={inputCls} placeholder="Check in at 4th floor reception, bring photo ID" value={d.location_instructions} onChange={(e) => set("location_instructions", e.target.value)} /></div>
             </>
           )}
