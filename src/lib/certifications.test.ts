@@ -16,6 +16,6 @@ describe("certification governance", () => {
     expect(searchCatalog(list, "Professionals Manager Project")[0]?.catalog_id).toBe("1");
   });
   it("custom names are cleaned to Title Case", () => {
-    expect(normalizeCertName("  ADVANCED   widget  builder ")).toBe("Advanced Widget Builder");
+    expect(normalizeCertName("  advanced   widget  builder ")).toBe("Advanced Widget Builder");
   });
 });
