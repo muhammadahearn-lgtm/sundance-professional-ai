@@ -8,9 +8,9 @@ import { inputCls } from "@/components/profile/parts";
 type Opt = { id: string; name: string; category?: string };
 
 /** Searchable single-select for controlled lists (roles, levels). Optional governed "+ Add" via onAdd. */
-export function SearchPicker({ options: baseOptions, value, onChange, placeholder = "Search…", allowClear = true, emptyLabel, grouped, ariaLabel, onAdd, addHint }: {
+export function SearchPicker({ options: baseOptions, value, onChange, placeholder = "Search…", allowClear = true, emptyLabel, grouped, ariaLabel, onAdd, addHint, nameFor }: {
   options: Opt[]; value: string; onChange: (id: string) => void; placeholder?: string; allowClear?: boolean; emptyLabel?: string; grouped?: boolean; ariaLabel?: string;
-  onAdd?: (name: string) => Promise<Opt>; addHint?: string;
+  onAdd?: (name: string) => Promise<Opt>; addHint?: string; nameFor?: (q: string, options: Opt[]) => string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -21,14 +21,14 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
   const options = useMemo(() => [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))], [baseOptions, extra]);
   const selected = options.find((o) => o.id === value);
   const results = useMemo(() => searchOptions(options, q), [options, q]);
-  const addName = onAdd ? newRoleName(q, options) : null;
+  const addName = onAdd ? (nameFor ?? newRoleName)(q, options) : null;
 
   const pick = (id: string) => { onChange(id); setOpen(false); setQ(""); };
   const add = async () => {
     if (!onAdd || !addName || adding) return;
     setAdding(true);
     try { const o = await onAdd(addName); setExtra((x) => [...x, o]); pick(o.id); toast.success(`"${o.name}" added to the list`); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't add that role"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't add that entry"); }
     finally { setAdding(false); }
   };
   const groups: [string, Opt[]][] = grouped && !q.trim()
