@@ -11,10 +11,10 @@
 
 ## Architecture rules
 - Roles live in `user_roles` (one row per user, no client write access); profiles hold account data. Why: prevents users escalating or switching roles.
-- Accounts + roles are created by the `handle_new_user` signup trigger from signup metadata. Why: role is fixed at registration.
+- `handle_new_user` signup trigger creates account + role. Why: role fixed at registration.
 - Role areas (`/candidate/*`, `/recruiter/*`) sit under `_authenticated` and use `roleGuard` (src/lib/role-guard.ts) for cross-role blocking and onboarding redirects. Why: one gate per area.
-- Onboarding completion goes only through the `complete_onboarding` RPC. Why: it checks the role's profile exists first.
-- candidate_profiles.user_id and recruiter_profiles.user_id serve as candidate_id / recruiter_id in all related tables. Why: reuses Stage 2 profiles without a redesign.
+- Onboarding completes only via `complete_onboarding` RPC. Why: checks profile exists.
+- candidate/recruiter_profiles.user_id = candidate_id/recruiter_id everywhere. Why: no redesign.
 - Taxonomy: languages fixed (no user entries); skills/technologies/soft skills added only via `add_taxonomy_entry` (dedupe by `normalized_name`, rejects names in the other skill/tech category); UI `CategoryGuardAdd` routes/AI-suggests category. Why: clean data.
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
@@ -38,4 +38,4 @@
 - Locations: country from `countries` list; state/city normalized by `location_normalize` trigger which also rebuilds `location` ("City, State, Country"); client mirror `src/lib/location.ts`. Why: consistent display/search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
-- Certifications link to `certification_catalog` via catalog_id; the `certification_normalize` trigger auto-links by name/abbreviation/alias (word-order-insensitive `cert_key`) and Title-Cases custom entries, which stay on the candidate only. Why: clean data without blocking users.
+- Certifications: `certification_normalize` links to `certification_catalog` by name/abbr/alias (`cert_key`, word-order-free); custom entries Title-Cased, candidate-only. Why: clean data.
