@@ -137,7 +137,7 @@ export function NextInterviewBanner({ uid, role }: { uid: string; role: Role }) 
   const i = upcoming[0];
   if (!i) return null;
   return (
-    <section aria-label="Next interview" className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-primary/30 bg-primary-soft/60 p-4 shadow-soft">
+    <section aria-label="Next interview" className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-primary/30 bg-primary-soft/60 p-4 shadow-soft">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><CalendarClock className="h-5 w-5" /></span>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Next interview · {countdown(i.scheduled_at, i.duration_minutes)}</p>
