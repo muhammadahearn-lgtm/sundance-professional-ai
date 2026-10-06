@@ -91,7 +91,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
   const filtered = all.filter((i) => (!co || i.company_name === co) && (!job || i.job_id === job));
   const { upcoming, past } = splitInterviews(filtered);
   const next = upcoming[0];
-  const list = tab === "upcoming" ? upcoming.slice(next ? 1 : 0) : past;
+  const list = tab === "upcoming" ? upcoming : past;
 
   return (
     <div className="space-y-6">
@@ -125,7 +125,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
         ))}
       </div>
       {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} />)}</ul>
-        : <p className="text-sm text-muted-foreground">{tab === "upcoming" ? (next ? "No other upcoming interviews." : "Nothing here yet.") : "No past interviews yet."}</p>}
+        : <p className="text-sm text-muted-foreground">{tab === "upcoming" ? "No upcoming interviews yet." : "No past interviews yet."}</p>}
     </div>
   );
 }
