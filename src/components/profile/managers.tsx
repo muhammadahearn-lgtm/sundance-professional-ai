@@ -314,12 +314,13 @@ export function LookupManager({ uid, table, options, otherOptions = [], rows, no
                 </button>
               );
             }} /></div>
-          ) : !newName && <p className="text-xs text-muted-foreground">No matching results.</p>}
+          ) : !newName && !guarded && <p className="text-xs text-muted-foreground">No matching results.</p>}
           {newName && (
             <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">
               <Plus className="h-3 w-3" />Add “{newName}”
             </button>
           )}
+          {guarded && <CategoryGuardAdd q={q} kind={kind} options={options} otherOptions={otherOptions} onAdd={guardAdd} disabled={busy} />}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
             <button type="button" onClick={addSelected} disabled={busy || !picked.length} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">
