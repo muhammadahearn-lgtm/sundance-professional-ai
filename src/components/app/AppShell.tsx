@@ -120,7 +120,7 @@ export function AppShell({ account }: { account: Account }) {
         return (
         <Link key={to} to={to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}
           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
+          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/compare") && <CompareBadge uid={account.userId} role={account.role} />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
         </Link>
         );
       })}
