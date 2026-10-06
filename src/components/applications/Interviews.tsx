@@ -17,7 +17,7 @@ const lbl = (list: [string, string][], k: string) => list.find(([v]) => v === k)
 function draftFrom(i?: Interview, prior: Interview[] = []): InterviewDraft {
   if (!i) { const t = new Date(Date.now() + 86400000); const nr = nextRound(prior); return { format: "online", interview_type: nr.interview_type, round_number: nr.round_number, platform: "google_meet", meeting_url: "", location_address: "", location_instructions: "", date: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`, time: "10:00", duration_minutes: 45, timezone: tz(), notes: "" }; }
   const d = new Date(i.scheduled_at);
-  return { format: i.format as InterviewDraft["format"], interview_type: i.interview_type, round_number: i.round_number ?? 1, platform: i.platform || "google_meet", meeting_url: i.meeting_url, location_address: i.location_address, location_instructions: i.location_instructions, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`, duration_minutes: i.duration_minutes, timezone: i.timezone, notes: i.notes };
+  return { format: i.format as InterviewDraft["format"], interview_type: i.interview_type, custom_round_name: i.custom_round_name ?? "", round_number: i.round_number ?? 1, platform: i.platform || "google_meet", meeting_url: i.meeting_url, location_address: i.location_address, location_instructions: i.location_instructions, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`, duration_minutes: i.duration_minutes, timezone: i.timezone, notes: i.notes };
 }
 
 export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved, priorRounds = [] }: {
