@@ -84,12 +84,22 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
 
 export function CandidateApplicationsPage({ uid }: { uid: string }) {
   const q = useQuery({ queryKey: ["my-applications", uid], queryFn: () => listMyApplications(uid) });
+  const [co, setCo] = useState(""), [jt, setJt] = useState("");
+  const all = q.data ?? [];
+  const companies = [...new Set(all.map((a) => a.jobs?.companies?.company_name).filter((x): x is string => !!x))].sort();
+  const titles = [...new Set(all.filter((a) => !co || a.jobs?.companies?.company_name === co).map((a) => a.jobs?.job_title).filter((x): x is string => !!x))].sort();
+  const rows = all.filter((a) => (!co || a.jobs?.companies?.company_name === co) && (!jt || a.jobs?.job_title === jt));
   return (
     <div className="space-y-6">
-      <div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Track every application in one place.</p></div>
+      <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Track every application in one place.</p></div>
+        {all.length > 0 && <div className="flex flex-wrap gap-2">
+          <select aria-label="Filter by company" value={co} onChange={(e) => { setCo(e.target.value); setJt(""); }} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All companies</option>{companies.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+          <select aria-label="Filter by job" value={jt} onChange={(e) => setJt(e.target.value)} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All jobs</option>{titles.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+        </div>}</div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading ? <div className={`${card} h-48 animate-pulse`} />
-        : !q.data?.length ? <div className={`${card} p-10 text-center`}><FileText className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-display text-lg font-bold">No applications yet</p><Link to="/candidate/jobs" className={`${primaryBtn} mt-4`}>Browse jobs</Link></div>
-        : <div className={`${card} divide-y divide-border`}>{q.data.map((a) => (
+        : !all.length ? <div className={`${card} p-10 text-center`}><FileText className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-display text-lg font-bold">No applications yet</p><Link to="/candidate/jobs" className={`${primaryBtn} mt-4`}>Browse jobs</Link></div>
+        : !rows.length ? <div className={`${card} p-8 text-center text-sm text-muted-foreground`}>No applications match these filters. <button onClick={() => { setCo(""); setJt(""); }} className="font-semibold text-primary">Clear filters</button></div>
+        : <div className={`${card} divide-y divide-border`}>{rows.map((a) => (
             <div key={a.application_id} className="flex flex-wrap items-center gap-4 p-5">
               <div className="min-w-0 flex-1"><p className="font-display font-bold">{a.jobs?.job_title ?? "Job removed"}</p><p className="text-sm text-muted-foreground">{a.jobs?.companies?.company_name}</p>
                 <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.jobs?.location}</span>{a.jobs && <span>{lbl(ARRANGEMENT, a.jobs.work_arrangement)}</span>}<span>Applied {fmt(a.application_date)}</span></p></div>
