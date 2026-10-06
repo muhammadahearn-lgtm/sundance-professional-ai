@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, MapPin, Plus, Search, Users } from "lucide-react";
+import { Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { SearchSelect } from "@/components/ui/search-select";
 import type { Account } from "@/lib/account";
 import type { JobStatus } from "@/lib/job-rules";
 import { listJobs } from "@/lib/jobs-data";
@@ -18,7 +19,6 @@ export function JobsDashboard({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [sort, setSort] = useState("newest");
-  const [q, setQ] = useState("");
   const [co, setCo] = useState("");
   const [jobSel, setJobSel] = useState("");
 
@@ -35,14 +35,13 @@ export function JobsDashboard({ account }: { account: Account }) {
   const jobOptions = useMemo(() => (data ?? []).filter(inCo).sort((a, b) => a.job_title.localeCompare(b.job_title)), [data, co]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const list = (data ?? []).filter((j) => (filter === "all" || j.job_status === filter) && inCo(j) && (!jobSel || j.job_id === jobSel) && (!term || j.job_title.toLowerCase().includes(term)));
+    const list = (data ?? []).filter((j) => (filter === "all" || j.job_status === filter) && inCo(j) && (!jobSel || j.job_id === jobSel));
     const cmp: Record<string, (a: (typeof list)[number], b: (typeof list)[number]) => number> = {
       newest: (a, b) => b.created_at.localeCompare(a.created_at), oldest: (a, b) => a.created_at.localeCompare(b.created_at),
       updated: (a, b) => b.updated_at.localeCompare(a.updated_at), alpha: (a, b) => a.job_title.localeCompare(b.job_title),
     };
     return [...list].sort(cmp[sort]);
-  }, [data, filter, sort, q, co, jobSel]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, filter, sort, co, jobSel]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (s: JobStatus | "all") => (data ?? []).filter((j) => (s === "all" || j.job_status === s) && inCo(j) && (!jobSel || j.job_id === jobSel)).length;
 
   return (
