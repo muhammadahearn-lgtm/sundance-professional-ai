@@ -19,3 +19,10 @@ describe("canAddTaxonomy", () => {
     expect(canAddTaxonomy("soft_skill")).toBe(true);
   });
 });
+
+import { crossCategoryMatch } from "./taxonomy-add";
+describe("crossCategoryMatch", () => {
+  const techs = [{ id: "t1", name: "AWS" }, { id: "t2", name: "Docker" }];
+  it("finds a term that already lives in the other category, any casing", () => expect(crossCategoryMatch("  aws ", techs)?.id).toBe("t1"));
+  it("returns null for terms not in the other category", () => expect(crossCategoryMatch("Machine Learning", techs)).toBeNull());
+});

@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { Check, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { addTaxonomyEntry, canAddTaxonomy, KIND_LABEL, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
@@ -240,8 +241,8 @@ function CertForm({ uid, item, onDone, onCancel }: { uid: string; item?: Cert; o
 export type LookupRow = { lookup_id: string; name: string; proficiency_level: Proficiency; years_experience: number };
 type LookupTable = "candidate_languages" | "candidate_skills" | "candidate_technologies";
 
-export function LookupManager({ uid, table, options, rows, noun, required, successMsg, adding, setAdding, roleName }: {
-  roleName?: string | null | undefined; uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
+export function LookupManager({ uid, table, options, otherOptions = [], rows, noun, required, successMsg, adding, setAdding, roleName }: {
+  roleName?: string | null | undefined; uid: string; table: LookupTable; options: { id: string; name: string; group?: string | undefined }[]; otherOptions?: { id: string; name: string }[]; rows: LookupRow[]; noun: string; required?: boolean; successMsg: string;
   adding: boolean; setAdding: (v: boolean) => void;
 }) {
   const refresh = useRefresh(uid);
@@ -261,7 +262,8 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
   }
   const close = () => { setPicked([]); setQ(""); setAdding(false); };
   const kind: TaxonomyKind = table === "candidate_languages" ? "language" : table === "candidate_skills" ? "skill" : "technology";
-  const newName = canAddTaxonomy(kind) ? newEntryName(q, options) : null;
+  const guarded = kind === "skill" || kind === "technology";
+  const newName = canAddTaxonomy(kind) && !guarded ? newEntryName(q, options) : null;
   const createNew = async () => {
     if (!newName) return;
     setBusy(true);
@@ -272,6 +274,13 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
       refresh();
     } catch (e) { toast.error(friendlyError(e, "Couldn't add. Please try again.")); }
     setBusy(false);
+  };
+  const guardAdd = async (target: "skill" | "technology", id: string, name: string) => {
+    if (target === kind) { setPicked((p) => (p.includes(id) ? p : [...p, id])); setQ(""); toast.success(`"${name}" ready to add`); refresh(); return; }
+    const otherTable = target === "skill" ? "candidate_skills" : "candidate_technologies";
+    const { error } = await supabase.from(otherTable).insert({ candidate_id: uid, lookup_id: id });
+    if (error && (error as { code?: string }).code !== "23505") throw new Error(friendlyError(error, "Couldn't add. Please try again."));
+    setQ(""); toast.success(`"${name}" added to ${KIND_LABEL[target]}`); refresh();
   };
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const addSelected = async () => {
@@ -305,12 +314,13 @@ export function LookupManager({ uid, table, options, rows, noun, required, succe
                 </button>
               );
             }} /></div>
-          ) : !newName && <p className="text-xs text-muted-foreground">No matching results.</p>}
+          ) : !newName && !guarded && <p className="text-xs text-muted-foreground">No matching results.</p>}
           {newName && (
             <button type="button" onClick={createNew} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">
               <Plus className="h-3 w-3" />Add “{newName}”
             </button>
           )}
+          {guarded && <CategoryGuardAdd q={q} kind={kind} options={options} otherOptions={otherOptions} onAdd={guardAdd} disabled={busy} />}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={close} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">Cancel</button>
             <button type="button" onClick={addSelected} disabled={busy || !picked.length} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60">

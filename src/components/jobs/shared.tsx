@@ -7,7 +7,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatSalaryRange } from "@/lib/salary";
 import { inputCls } from "@/components/profile/parts";
-import { addTaxonomyEntry, canAddTaxonomy, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { addTaxonomyEntry, canAddTaxonomy, KIND_LABEL, newEntryName, type TaxonomyKind } from "@/lib/taxonomy-add";
+import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 
 export const EMPLOYMENT: [string, string][] = [["full_time", "Full-Time"], ["part_time", "Part-Time"], ["contract", "Contract"], ["internship", "Internship"], ["consulting", "Consulting"]];
 export const ARRANGEMENT: [string, string][] = [["remote", "Remote"], ["hybrid", "Hybrid"], ["on_site", "On-Site"]];
@@ -33,13 +34,25 @@ export function formatSalary(min: number | null, max: number | null, cur: string
 type Opt = { id: string; name: string; group?: string };
 
 /** Searchable multi-select where every selection carries Required / Preferred / Optional. */
-export function RequirementPicker({ options: baseOptions, value, onChange, placeholder, kind, roleName }: { options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string; kind?: TaxonomyKind; roleName?: string | null | undefined }) {
+export function RequirementPicker({ options: baseOptions, otherOptions = [], onAddOther, value, onChange, placeholder, kind, roleName }: { otherOptions?: Opt[]; onAddOther?: (id: string) => void; options: Opt[]; value: ReqItem[]; onChange: (v: ReqItem[]) => void; placeholder: string; kind?: TaxonomyKind; roleName?: string | null | undefined }) {
   const [q, setQ] = useState("");
   const [extra, setExtra] = useState<Opt[]>([]);
   const [busy, setBusy] = useState(false);
   const qc = useQueryClient();
   const options = [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))];
-  const newName = kind && canAddTaxonomy(kind) ? newEntryName(q, options) : null;
+  const guarded = kind === "skill" || kind === "technology";
+  const newName = kind && canAddTaxonomy(kind) && !guarded ? newEntryName(q, options) : null;
+  const guardAdd = (target: "skill" | "technology", id: string, name: string) => {
+    if (target === kind) {
+      setExtra((x) => [...x, { id, name }]);
+      if (!value.some((v) => v.id === id)) onChange([...value, { id, level: "required" }]);
+      toast.success(`"${name}" added`);
+    } else {
+      onAddOther?.(id);
+      toast.success(`"${name}" added to ${KIND_LABEL[target]}`);
+    }
+    setQ(""); qc.invalidateQueries({ queryKey: ["taxonomy"] });
+  };
   const createNew = async () => {
     if (!kind || !newName) return;
     setBusy(true);
@@ -63,6 +76,7 @@ export function RequirementPicker({ options: baseOptions, value, onChange, place
         <input className={inputCls} value={q} placeholder={placeholder} onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const m = matches[0]; if (m) { onChange([...value, { id: m.id, level: "required" }]); setQ(""); } else if (newName) createNew(); } }} />
         {newName && <button type="button" disabled={busy} onClick={createNew} className="mt-2 inline-flex items-center rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">+ Add “{newName}”</button>}
+        {guarded && kind && <div className="mt-2"><CategoryGuardAdd q={q} kind={kind as "skill" | "technology"} options={options} otherOptions={otherOptions} onAdd={guardAdd} /></div>}
         {shown.length > 0 && <div className="mt-2"><RecGroups items={shown} roleName={roleName} kind={kind ?? "skill"} query={q} className="flex flex-wrap gap-1.5" render={(o) => (
           <button type="button" key={o.id} onClick={() => { onChange([...value, { id: o.id, level: "required" }]); setQ(""); }} className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary hover:text-primary">+ {o.name}</button>
         )} /></div>}

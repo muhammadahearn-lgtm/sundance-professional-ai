@@ -15,6 +15,15 @@ export function newEntryName(input: string, options: { name: string }[]): string
   return options.some((o) => taxonomyKey(o.name) === k) ? null : taxonomyDisplay(input);
 }
 
+/** The entry in the other category (skills ↔ technologies) whose canonical name matches the typed text. */
+export function crossCategoryMatch<T extends { name: string }>(input: string, otherOptions: T[]): T | null {
+  const k = taxonomyKey(input);
+  if (!k) return null;
+  return otherOptions.find((o) => taxonomyKey(o.name) === k) ?? null;
+}
+
+export const KIND_LABEL: Record<"skill" | "technology", string> = { skill: "Technical Skills", technology: "Tools & Technologies" };
+
 /** Creates (or reuses) a shared list entry; the database normalizes the name. */
 export async function addTaxonomyEntry(kind: TaxonomyKind, name: string): Promise<string> {
   const { data, error } = await supabase.rpc("add_taxonomy_entry", { _kind: kind, _name: name });
