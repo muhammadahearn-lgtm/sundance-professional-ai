@@ -1,3 +1,4 @@
+import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { LocationFilter } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
 import { DEGREE_TYPES, educationAlignment, highestDegree, type EducationAlignment } from "@/lib/education";
@@ -15,7 +16,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, ChevronDown, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, ChevronDown, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
@@ -235,7 +236,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
 
   const filters = t && (
     <div className={`${card} p-5`}>
-      <div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={() => setHidden(true)} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
+      <div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><PanelToggleButton open label="filters" onClick={() => setHidden(true)} className="hidden lg:inline-flex" /></div>{count > 0 && <button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className="text-xs font-semibold text-primary">Clear all ({count})</button>}</div>
       <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/40 p-3">
         <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Job Context</p>
         <label className="text-xs font-semibold text-muted-foreground">Company</label>
@@ -279,7 +280,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
           : <aside className="relative hidden shrink-0 lg:mr-6 lg:block" style={{ width: fw }}>{filters}<PanelSeparator label="filters" width={fw} setWidth={setFw} min={240} max={440} onHide={() => setHidden(true)} className="-right-5" /></aside>}
         {open && <div className="fixed inset-0 z-40 overflow-y-auto bg-background p-4 lg:hidden"><div className="mb-3 flex justify-between"><p className="font-display text-lg font-bold">Filters</p><button onClick={() => setOpen(false)} aria-label="Close filters"><X className="h-5 w-5" /></button></div>{filters}<button onClick={() => setOpen(false)} className={`${primaryBtn} mt-4 w-full justify-center`}>Show {results.length} candidates</button></div>}
         <div className="min-w-0 flex-1 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-3">{hidden && <button type="button" onClick={() => setHidden(false)} className={`${btn} hidden lg:inline-flex`}><PanelLeftOpen className="h-4 w-4" />Show Filters{count > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{count}</span>}</button>}<p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-3">{hidden && <PanelShowButton label="Show Filters" count={count} onClick={() => setHidden(false)} className="hidden lg:inline-flex" />}<p className="text-sm text-muted-foreground">{q.isLoading ? "Searching…" : `${results.length} candidate${results.length === 1 ? "" : "s"} found`}</p></div>
             <div className="flex items-center gap-2">
               <div role="group" aria-label="Results view" className="inline-flex rounded-xl border border-input p-0.5">
                 {(["list", "grid"] as const).map((m) => <button key={m} type="button" aria-pressed={view === m} onClick={() => setView(m)} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${view === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}>{m === "list" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}<span className="hidden sm:inline">{m === "list" ? "List View" : "Grid View"}</span></button>)}
