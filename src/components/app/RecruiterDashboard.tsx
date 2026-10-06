@@ -2,7 +2,7 @@ import { RecruiterAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Bookmark, Briefcase, Building2, CheckCircle2, Copy, FileText, Gift, KanbanSquare, MapPin, Plus, Search, Trash2, Users, CalendarCheck } from "lucide-react";
+import { Sparkles, Bell, Bookmark, Briefcase, Building2, CheckCircle2, Copy, FileText, Gift, KanbanSquare, MapPin, Plus, Search, Trash2, Users, CalendarCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
