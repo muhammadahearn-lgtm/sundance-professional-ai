@@ -119,3 +119,12 @@ export function timeline(status: AppStatus): { key: string; label: string; state
   const idx = flow.findIndex(([k]) => k === status);
   return flow.map(([key, label], i) => ({ key, label, state: i < idx ? "done" : i === idx ? (key === "hired" ? "done" : "current") : "pending" }));
 }
+
+/** Candidate board columns (read-only; recruiters move applications). */
+export const CANDIDATE_BOARD: [string, string][] = [["applied", "Applied"], ["review", "In Review"], ["interviewing", "Interviewing"], ["offer", "Offers"], ["archived", "Archived"]];
+export function candidateBoardColumn(status: string): string {
+  if (status === "viewed" || status === "recruiter_contacted") return "review";
+  if (status === "interviewing" || status === "offer") return status;
+  if (status === "hired" || status === "rejected") return "archived";
+  return "applied";
+}
