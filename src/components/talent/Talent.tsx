@@ -105,7 +105,6 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
           {c.headline && <p className="mt-2 text-sm font-medium">{c.headline}</p>}
           {c.summary && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>}
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
-          <div className="mt-3 flex items-center gap-2 text-xs"><span className="text-muted-foreground">Profile</span><div className="h-1.5 w-28 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${c.completion}%` }} /></div><span className="font-semibold">{c.completion}%</span></div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={primaryBtn}>View Profile</Link>
             <button onClick={() => lists.toggleSave(c.id)} aria-pressed={saved} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>
@@ -341,8 +340,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
           <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
-          <div className="mt-3"><LinkBadges p={p} /></div>
-          <div className="mt-3 flex items-center gap-2 text-xs"><span className="text-muted-foreground">Profile Completion</span><div className="h-1.5 w-32 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${d.completion}%` }} /></div><span className="font-semibold">{d.completion}%</span></div></div></div>
+          <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
@@ -410,10 +408,6 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
   const best: Record<string, string | null> = cands.length > 1 ? {
     "Overall Match": top?.id ?? null,
     Experience: bestBy(cands, (c) => c.id, (c) => c.years),
-    "Language Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "language_alignment_score")),
-    "Skill Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "skill_alignment_score")),
-    "Technology Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "technology_alignment_score")),
-    "Experience Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "experience_alignment_score")),
   } : {};
   const scope = selJob ? `for ${selJob.job_title}` : "best across your jobs";
   const rows: [string, (c: TalentRow) => ReactNode][] = t ? [
@@ -421,11 +415,11 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
     ["Current Role", (c) => c.jobTitle], ["Employer", (c) => c.employer], ["Location", (c) => c.location], ["Experience", (c) => `${c.years} yrs`],
     ["Availability", (c) => label(AVAILABILITY, c.availability)], ["Work Arrangement", (c) => label(ARRANGEMENTS, c.arrangement)], ["Desired Minimum Salary", (c) => c.salary],
     ["Languages", (c) => <Chips ids={c.langs} opts={t.languages} max={8} />], ["Skills", (c) => <Chips ids={c.skills} opts={t.skills} max={8} />], ["Technologies", (c) => <Chips ids={c.techs} opts={t.technologies} max={8} />],
-    ["Language Score", (c) => pct(c.id, "language_alignment_score")], ["Skill Score", (c) => pct(c.id, "skill_alignment_score")],
-    ["Technology Score", (c) => pct(c.id, "technology_alignment_score")], ["Experience Score", (c) => pct(c.id, "experience_alignment_score")], ["Preference Score", (c) => pct(c.id, "preference_alignment_score")],
+    ["Soft Skills", (c) => (c.softSkills?.length ? <Chips soft ids={c.softSkills} opts={t.softSkills} max={6} /> : null)],
+    ["Latest Education", (c) => { const e = [...(c.education ?? [])].sort((a, b) => (b.graduation_year ?? 0) - (a.graduation_year ?? 0))[0]; return e ? <EducationLines e={e} /> : null; }],
+    ["Certifications", (c) => (c.certs?.length ? <ul className="space-y-0.5 text-xs">{c.certs.slice(0, 4).map((x) => <li key={x}>{x}</li>)}{c.certs.length > 4 && <li className="text-muted-foreground">+{c.certs.length - 4} more</li>}</ul> : null)],
     ["Strengths", (c) => <ul className="space-y-0.5 text-xs">{(det(c.id).strengths ?? []).slice(0, 4).map((x) => <li key={x}>✓ {x}</li>)}</ul>],
     ["Gaps", (c) => { const m = det(c.id).missing ?? {}; const all = [...(m.languages ?? []), ...(m.skills ?? []), ...(m.technologies ?? [])]; return all.length ? <ul className="space-y-0.5 text-xs">{all.slice(0, 4).map((x) => <li key={x}>• Missing {x}</li>)}</ul> : null; }],
-    ["Profile Completion", (c) => `${c.completion}%`],
   ] : [];
   const companies = (ctx.data?.companies ?? []).map((c) => ({ value: c.company_id, label: c.company_name }));
   const coName = (id: string | null) => ctx.data?.companies.find((c) => c.company_id === id)?.company_name ?? "";
