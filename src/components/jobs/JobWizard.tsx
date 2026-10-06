@@ -10,6 +10,7 @@ import type { Account } from "@/lib/account";
 import { DESCRIPTION_MAX, draftCompletion, emptyJob, validateAll, validateStep, type JobForm, type JobStatus } from "@/lib/job-rules";
 import { useRecalc } from "@/components/match/Match";
 import { loadJob, loadMyCompany, loadTaxonomy, saveJob, toForm } from "@/lib/jobs-data";
+import { addRoleEntry } from "@/lib/role-add";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
 import { digitsOnly } from "@/lib/salary";
@@ -168,7 +169,7 @@ function Wizard({ uid, jobId, initial, status, companyName, tax }: { uid: string
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Role *" error={errs.role_id}><SearchPicker ariaLabel="Role" grouped options={tax.roles} value={f.role_id} onChange={(v) => set("role_id", v)} placeholder="Search role (data, cloud, security…)" /></Field>
+              <Field label="Role *" error={errs.role_id}><SearchPicker ariaLabel="Role" grouped options={tax.roles} value={f.role_id} onChange={(v) => set("role_id", v)} placeholder="Search role (data, cloud, security…)" addHint="Seniority goes in Level; use Custom Job Title for team or project details." onAdd={async (name) => { const r = await addRoleEntry(name); if (!tax.allRoles.some((x) => x.id === r.id)) tax.allRoles.push({ ...r, active: true }); return r; }} /></Field>
               <Field label="Level *" error={errs.level_id}><SearchPicker ariaLabel="Level" options={tax.levels} value={f.level_id} onChange={(v) => set("level_id", v)} placeholder="Search level" /></Field>
               <Field label="Custom Job Title (optional)" error={errs.custom_title} hint={<span className="text-xs text-muted-foreground">Display only</span>}><input className={inputCls} value={f.custom_title} onChange={(e) => set("custom_title", e.target.value)} placeholder={displayJobTitle("", tax.levels.find((l) => l.id === f.level_id)?.name ?? "Senior", tax.allRoles.find((r) => r.id === f.role_id)?.name ?? "Data Engineer") + " – AI Platform"} /></Field>
               <Field label="Shown To Candidates As"><input readOnly className={`${inputCls} bg-muted/50`} value={displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name) || "Pick a role and level"} /></Field>
