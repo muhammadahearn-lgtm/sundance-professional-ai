@@ -3,23 +3,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import {
   ArrowRight, ArrowDown, Target, Brain, LineChart, Search, Gauge, Sparkles,
-  Check, Quote, ChartColumn, ListChecks, Eye, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
-  Briefcase, Users, Star, MapPin,
+  Check, ListChecks, GitCompareArrows, Layers, CalendarCheck, TrendingUp,
+  Briefcase, Star, MapPin, MessageSquare, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
 import hero from "@/assets/hero.jpg";
 import { PreviewBody } from "@/components/site/ProductPreviewMocks";
 
-const TITLE = "Sundance Professionals — AI Hiring Platform for Skill-Based Technology Recruiting";
-const DESC = "AI hiring platform for technology recruiting: skill-based hiring, candidate discovery, career intelligence and a recruiter marketplace in one place.";
+const TITLE = "Sundance Professionals — Free Skill-First Tech Hiring Platform";
+const DESC = "Skill-first match scores, job and candidate comparison, a hiring pipeline and an interviews hub for tech professionals and recruiters. Free during early access.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
       { title: TITLE },
       { name: "description", content: DESC },
-      { name: "keywords", content: "AI Hiring Platform, Technology Recruiting, Career Intelligence, Skill-Based Hiring, Candidate Discovery, Recruiter Marketplace" },
+      { name: "keywords", content: "Skill-Based Hiring, Technology Recruiting, Match Scores, Hiring Pipeline, Candidate Comparison, Career Intelligence" },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
     ],
@@ -38,11 +38,10 @@ function Index() {
       <AudienceSplit />
       <Intelligence />
       <ProductPreview />
-
-      <Testimonials />
+      <HowItWorks />
       <section className="py-24">
         <div className="container-x">
-          <SectionHeading eyebrow="Pricing" title="Simple, transparent pricing" desc="Free for candidates. Powerful for recruiters." />
+          <SectionHeading eyebrow="Pricing" title="Free for everyone during early access" desc="Every feature is unlocked for candidates and recruiters. No credit card required." />
           <div className="mt-14"><PricingCards /></div>
         </div>
       </section>
@@ -52,26 +51,26 @@ function Index() {
 }
 
 function Hero() {
-  const stats = [["10,000+", "Talent Professionals"], ["1,000+", "Recruiters"], ["500+", "Companies"], ["95%", "Match Accuracy"]];
+  const stats = [["5-factor", "Explainable match scores"], ["7-stage", "Hiring pipeline"], ["1-click", "Calendar links"], ["$0", "During early access"]];
   return (
     <section className="relative overflow-hidden bg-gradient-hero">
       <div className="container-x grid items-center gap-12 pb-16 pt-14 md:pt-20 lg:grid-cols-2">
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Eyebrow><Sparkles className="h-3.5 w-3.5" /> Skill-first hiring, powered by AI</Eyebrow>
+          <Eyebrow><Sparkles className="h-3.5 w-3.5" /> Early access · Free for everyone</Eyebrow>
           <h1 className="mt-6 text-5xl font-extrabold leading-[1.05] md:text-6xl xl:text-7xl">
             Find the Right Opportunity.<br /><span className="text-gradient">Hire the Right Talent.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Sundance Professionals brings AI-powered candidate discovery, skill-first matching, career intelligence, and recruiting intelligence to help technology professionals and recruiters make better hiring decisions.
+            Skill-first hiring for technology. Candidates see exactly why a job fits. Recruiters see scored candidates, compare them side by side and run interviews from one pipeline.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="rounded-full px-6 shadow-elevated"><Link to="/register">Get Started <ArrowRight /></Link></Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-6"><Link to="/register">Explore Opportunities</Link></Button>
-            <Button asChild size="lg" variant="ghost" className="rounded-full px-4 text-primary"><Link to="/pricing">For Recruiters <ArrowRight /></Link></Button>
+            <Button asChild size="lg" className="rounded-full px-6 shadow-elevated"><Link to="/register">Join as Candidate <ArrowRight /></Link></Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full px-6"><Link to="/register">Join as Recruiter</Link></Button>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">No credit card. One role per account.</p>
         </div>
         <div className="relative animate-in fade-in zoom-in-95 duration-1000">
-          <img src={hero} alt="AI matching technology professionals with recruiters" width={1280} height={1024} className="w-full mix-blend-multiply" />
+          <img src={hero} alt="Technology professionals matched with recruiters" width={1280} height={1024} className="w-full mix-blend-multiply" />
         </div>
       </div>
       <div className="container-x pb-20">
@@ -105,13 +104,14 @@ function ComingSoonNotice() {
               Early Access Preview
             </span>
             <h2 className="mt-5 text-4xl font-extrabold md:text-5xl">
-              Official Launch <span className="text-gradient">Coming Soon</span>
+              Help us test <span className="text-gradient">Sundance Professionals</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              We're putting the final touches on Sundance Professionals before our official commercial release. During this preview, creating an account is free and open to all candidates and recruiters.
+              We're inviting our first community before the official launch. Every feature is free. Sign up as a candidate or recruiter, try it out and send us your feedback through the Contact page.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild size="lg" className="rounded-full px-6"><Link to="/register">Join Early Access <ArrowRight /></Link></Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full px-6"><Link to="/contact">Send Feedback</Link></Button>
             </div>
           </div>
         </div>
@@ -122,17 +122,17 @@ function ComingSoonNotice() {
 
 function Solution() {
   const feats = [
-    [Target, "Skill-First Matching", "Match on what people can do, not just what's on paper."],
-    [Search, "Candidate Discovery", "Surface qualified technical talent instantly."],
-    [Brain, "Career Intelligence", "Personalized guidance on skills, roles and growth."],
-    [LineChart, "Recruiting Intelligence", "Rank, compare and pipeline candidates with data."],
-    [Sparkles, "Transparent Match Scores", "Every score explains exactly why it matches."],
-    [Gauge, "Career Readiness Scoring", "Know how ready you are for your next role."],
+    [Target, "Skill-First Match Scores", "Five clear factors show exactly why a job and a candidate fit."],
+    [GitCompareArrows, "Side-by-Side Comparison", "Compare jobs or candidates, with an AI Top Pick and best-in-category highlights."],
+    [Layers, "Kanban Hiring Pipeline", "Drag candidates from Saved to Hired — candidates see their status update."],
+    [CalendarCheck, "Interviews Hub", "Online or in person, with Google, Outlook and Apple calendar links and reminders."],
+    [MessageSquare, "Private Messaging", "Talk in-app. Personal emails and resumes stay private."],
+    [LineChart, "Analytics & Career Intelligence", "Funnels, briefings, readiness and skill-gap insights for both sides."],
   ] as const;
   return (
     <section className="py-24">
       <div className="container-x">
-        <SectionHeading eyebrow="The solution" title={<>Meet <span className="text-gradient">Sundance Professionals</span></>} desc="An intelligent hiring marketplace built specifically for technology professionals and recruiters." />
+        <SectionHeading eyebrow="What you can do today" title={<>Everything in <span className="text-gradient">Sundance Professionals</span></>} desc="Live features for technology professionals and recruiters — all free during early access." />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {feats.map(([I, t, d]) => (
             <div key={t} className="group rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-1 hover:shadow-elevated">
@@ -297,23 +297,23 @@ function ProductPreview() {
 
 function AudienceSplit() {
   const candidate = [
-    { I: Brain, label: "AI-Powered Job Matching" },
-    { I: Gauge, label: "Career Readiness Scoring" },
-    { I: ChartColumn, label: "Skill Gap Analysis" },
-    { I: Sparkles, label: "Personalized Recommendations" },
-    { I: ListChecks, label: "Application Tracking" },
-    { I: Eye, label: "Recruiter Visibility" },
+    { I: Target, label: "Transparent Match Scores" },
+    { I: GitCompareArrows, label: "Save & Compare Jobs" },
+    { I: ListChecks, label: "Application Timeline" },
+    { I: CalendarCheck, label: "Interviews Hub & Calendar" },
+    { I: Gauge, label: "Career Readiness & Skill Gaps" },
+    { I: MessageSquare, label: "In-App Messaging" },
   ];
   const recruiter = [
-    { I: Brain, label: "AI-Powered Candidate Matching" },
-    { I: Search, label: "Talent Search" },
-    { I: GitCompareArrows, label: "Candidate Comparison" },
-    { I: Layers, label: "Recruiting Pipeline" },
-    { I: CalendarCheck, label: "Interview Tracking" },
-    { I: TrendingUp, label: "Hiring Insights" },
+    { I: Search, label: "Talent Search with Scores" },
+    { I: Star, label: "Compare Candidates & AI Top Pick" },
+    { I: Layers, label: "Kanban Hiring Pipeline" },
+    { I: MapPin, label: "Online & In-Person Interviews" },
+    { I: Briefcase, label: "Company Page & Job Wizard" },
+    { I: TrendingUp, label: "Hiring Analytics" },
   ];
   const FeatureCard = ({ I, label }: { I: typeof Brain; label: string }) => (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><I className="h-5 w-5" /></div>
       <div className="font-semibold leading-snug">{label}</div>
     </div>
@@ -322,8 +322,8 @@ function AudienceSplit() {
     <section className="py-24">
       <div className="container-x grid items-center gap-14 lg:grid-cols-2">
         <div>
-          <SectionHeading center={false} eyebrow="For Candidates" title="Advance Your Career" desc="Know exactly where you stand, what to improve, and which roles are worth your time." />
-          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Create Candidate Profile <ArrowRight /></Link></Button>
+          <SectionHeading center={false} eyebrow="For Candidates" title="Know exactly where you stand" desc="See why each job fits you, compare roles side by side, follow every application and keep interviews in your own calendar." />
+          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Join as Candidate — Free <ArrowRight /></Link></Button>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {candidate.map(({ I, label }) => <FeatureCard key={label} I={I} label={label} />)}
@@ -334,8 +334,8 @@ function AudienceSplit() {
           {recruiter.map(({ I, label }) => <FeatureCard key={label} I={I} label={label} />)}
         </div>
         <div>
-          <SectionHeading center={false} eyebrow="For Recruiters" title="Find Qualified Talent Faster" desc="Stop sifting through resumes. Start with candidates already scored against your role." />
-          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Create Recruiter Account <ArrowRight /></Link></Button>
+          <SectionHeading center={false} eyebrow="For Recruiters" title="Hire qualified talent faster" desc="Post a job, see candidates already scored against it, compare the best side by side and move them through your pipeline to an interview." />
+          <Button asChild size="lg" className="mt-8 rounded-full bg-gradient-primary px-6 shadow-elevated"><Link to="/register">Join as Recruiter — Free <ArrowRight /></Link></Button>
         </div>
       </div>
     </section>
@@ -343,56 +343,54 @@ function AudienceSplit() {
 }
 
 function Intelligence() {
-  const cards = [
-    { t: "Match Intelligence", I: Target, items: ["Match Scores", "Skill Alignment", "Experience Alignment", "Technology Alignment"] },
-    { t: "Career Intelligence", I: Brain, items: ["Career Readiness", "Skill Gap Analysis", "Career Recommendations", "Salary Intelligence"] },
-    { t: "Recruiting Intelligence", I: LineChart, items: ["Candidate Ranking", "Talent Discovery", "Candidate Comparison", "Recruiting Pipelines"] },
-    { t: "Recommendation Engine", I: Sparkles, items: ["Recommended Jobs", "Recommended Candidates", "Personalized Recommendations"] },
-  ];
+  const weights: [string, number][] = [["Technical skills", 30], ["Programming languages", 20], ["Tools & technologies", 20], ["Relevant experience", 20], ["Preferences", 10]];
   return (
     <section className="bg-ink py-24 text-ink-foreground">
-      <div className="container-x">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-extrabold md:text-5xl">Powered By Intelligence</h2>
-          <p className="mt-4 text-lg text-ink-foreground/70">Four engines working together across the entire hiring lifecycle.</p>
+      <div className="container-x grid items-center gap-14 lg:grid-cols-2">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-ink-foreground/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-ink-foreground/80"><Sparkles className="h-3.5 w-3.5 text-primary" /> How matching works</span>
+          <h2 className="mt-4 text-3xl font-extrabold md:text-5xl">Fair, explainable match scores</h2>
+          <p className="mt-4 text-lg text-ink-foreground/70">Every score is built from five factors you can see. Scores are calculated by the platform, so nobody can fake them.</p>
+          <ul className="mt-8 space-y-3 text-sm text-ink-foreground/80">
+            {["Degrees, soft skills, certifications and photos never affect the score", "One clean list of skills, languages and tools — no duplicates or misspellings", "Same scoring for candidates and recruiters"].map((t) => (
+              <li key={t} className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {t}</li>
+            ))}
+          </ul>
         </div>
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map(({ t, I, items }) => (
-            <div key={t} className="rounded-3xl border border-ink-foreground/10 bg-ink-foreground/5 p-7 transition hover:bg-ink-foreground/10">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground"><I className="h-5 w-5" /></span>
-              <h3 className="mt-5 text-lg font-bold">{t}</h3>
-              <ul className="mt-4 space-y-2.5">
-                {items.map((i) => <li key={i} className="flex items-center gap-2 text-sm text-ink-foreground/75"><Check className="h-4 w-4 text-primary" /> {i}</li>)}
-              </ul>
-            </div>
-          ))}
+        <div className="rounded-3xl border border-ink-foreground/10 bg-ink-foreground/5 p-8">
+          <div className="text-sm font-semibold text-ink-foreground/70">Match score breakdown</div>
+          <div className="mt-6 space-y-5">
+            {weights.map(([l, v]) => (
+              <div key={l}>
+                <div className="flex justify-between text-sm"><span>{l}</span><span className="font-bold">{v}%</span></div>
+                <div className="mt-2 h-2 rounded-full bg-ink-foreground/10"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${v * 3.33}%` }} /></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-
-function Testimonials() {
-  const t = [
-    ["Sundance Professionals helped me understand exactly which opportunities matched my skills.", "Aisha Rahman", "Data Engineer"],
-    ["We reduced candidate screening time significantly.", "Jordan Ellis", "Technical Recruiter"],
-    ["The match transparency made hiring decisions easier.", "Sofia Martinez", "Engineering Hiring Manager"],
+function HowItWorks() {
+  const steps: [string, string, string][] = [
+    ["1", "Create a free account", "Pick Candidate or Recruiter and confirm your email (check spam)."],
+    ["2", "Build your profile", "Candidates add skills, languages and tools. Recruiters add a company and post a job."],
+    ["3", "See your matches", "Candidates see scored jobs. Recruiters see scored candidates for each job."],
+    ["4", "Connect & interview", "Message in-app, move candidates through the pipeline and schedule interviews."],
   ];
   return (
     <section className="bg-secondary py-24">
       <div className="container-x">
-        <SectionHeading eyebrow="Testimonials" title="Loved by talent and teams" />
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {t.map(([q, n, r]) => (
-            <figure key={n} className="rounded-3xl border border-border bg-card p-8 shadow-soft">
-              <Quote className="h-7 w-7 text-primary" />
-              <blockquote className="mt-4 text-lg font-medium">“{q}”</blockquote>
-              <figcaption className="mt-6 flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-primary-foreground">{n?.charAt(0)}</span>
-                <div><div className="text-sm font-semibold">{n}</div><div className="text-xs text-muted-foreground">{r}</div></div>
-              </figcaption>
-            </figure>
+        <SectionHeading eyebrow="How it works" title="From sign-up to interview" />
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {steps.map(([n, t, d]) => (
+            <div key={n} className="rounded-3xl border border-border bg-card p-7 shadow-soft">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-display font-bold text-primary-foreground">{n}</span>
+              <h3 className="mt-5 text-lg font-bold">{t}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -402,14 +400,14 @@ function Testimonials() {
 
 function FinalCta() {
   return (
-    <section className="pb-24">
+    <section className="py-24">
       <div className="container-x">
         <div className="relative overflow-hidden rounded-[2rem] bg-gradient-primary px-8 py-16 text-center text-primary-foreground shadow-elevated md:py-20">
-          <h2 className="text-3xl font-extrabold md:text-5xl">Start Hiring Smarter Today</h2>
-          <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">Join thousands of technology professionals and recruiters using skill-first intelligence.</p>
+          <h2 className="text-3xl font-extrabold md:text-5xl">Be one of our first testers</h2>
+          <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">Everything is free during early access. Create an account, try it out and tell us what you think.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" variant="secondary" className="rounded-full px-6"><Link to="/register">Create Candidate Account</Link></Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/40 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><Link to="/register">Create Recruiter Account</Link></Button>
+            <Button asChild size="lg" variant="secondary" className="rounded-full px-6"><Link to="/register">Join as Candidate</Link></Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/40 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><Link to="/register">Join as Recruiter</Link></Button>
           </div>
         </div>
       </div>
