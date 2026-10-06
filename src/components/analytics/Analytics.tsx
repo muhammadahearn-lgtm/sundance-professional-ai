@@ -129,6 +129,7 @@ function Rates({ data }: { data: { name: string; value: number }[] }) {
 }
 function Stat({ items }: { items: [string, ReactNode][] }) {
   return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{items.map(([l, v]) => <div key={l} className="rounded-xl bg-muted/50 px-3 py-2"><div className="text-lg font-extrabold">{v}</div><div className="text-[11px] text-muted-foreground">{l}</div></div>)}</div>;
+}
 
 // ---------- AI-vibe layout helpers ----------
 function Tabs<T extends string>({ tabs, value, onChange }: { tabs: [T, string, typeof BarChart3][]; value: T; onChange: (t: T) => void }) {
@@ -192,7 +193,6 @@ function Ring({ v, l }: { v: number; l: string }) {
       <span className="text-sm font-semibold">{l}</span>
     </div>
   );
-}
 }
 
 function download(name: string, text: string) {
