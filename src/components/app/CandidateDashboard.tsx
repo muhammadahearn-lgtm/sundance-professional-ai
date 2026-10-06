@@ -186,7 +186,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
               <div className="space-y-2">
                 {apps.slice(0, 5).map((a) => (
                   <div key={a.application_id} className="flex flex-col gap-2 rounded-xl border border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0"><div className="truncate text-sm font-semibold">{a.job_title}{a.company && ` · ${a.company}`}</div><div className="text-xs text-muted-foreground">Applied {fmt(a.application_date)}</div></div>
+                    <div className="min-w-0"><div className="truncate text-sm font-semibold"><Link to="/candidate/jobs/$id" params={{ id: a.job_id }} className="hover:text-primary hover:underline underline-offset-2">{a.job_title}</Link>{a.company && ` · ${a.company}`}</div><div className="text-xs text-muted-foreground">Applied {fmt(a.application_date)}</div></div>
                     <div className="flex items-center gap-2">
                       <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{statusLabel(a.application_status)}</span>
                       <Link to="/candidate/applications/$id" params={{ id: a.application_id }} className="text-xs font-semibold text-primary">View</Link>
@@ -203,7 +203,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
               <div className="space-y-2">
                 {data.saved.slice(0, 4).map((s) => (
                   <div key={s.saved_job_id} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2.5">
-                    <div className="min-w-0"><div className="truncate text-sm font-semibold">{s.jobs?.job_title}</div><div className="truncate text-xs text-muted-foreground">{s.jobs?.companies?.company_name} · Saved {fmt(s.saved_date)}</div></div>
+                    <div className="min-w-0"><div className="truncate text-sm font-semibold"><Link to="/candidate/jobs/$id" params={{ id: s.job_id }} className="hover:text-primary hover:underline underline-offset-2">{s.jobs?.job_title}</Link></div><div className="truncate text-xs text-muted-foreground">{s.jobs?.companies?.company_name} · Saved {fmt(s.saved_date)}</div></div>
                     <div className="flex items-center gap-2">
                       <Link to="/candidate/jobs/$id" params={{ id: s.job_id }} className="text-xs font-semibold text-primary">Continue review</Link>
                       <button aria-label="Remove saved job" onClick={() => removeSaved(s.saved_job_id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
