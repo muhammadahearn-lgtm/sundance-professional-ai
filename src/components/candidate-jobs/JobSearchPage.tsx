@@ -10,7 +10,7 @@ import { ChevronDown, Clock, PanelLeftClose, PanelLeftOpen, Search, SlidersHoriz
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import type { Account } from "@/lib/account";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
-import { searchJobs } from "@/lib/job-search-data";
+import { listActiveCompanyJobs, searchJobs } from "@/lib/job-search-data";
 import { DEFAULT_SEARCH, EXPERIENCE_BUCKETS, PAGE_SIZE, POPULAR_SEARCHES, SALARY_MAX, SORTS, activeFilterCount, readRecent, saveRecent, type SearchState } from "@/lib/job-search";
 import { card, friendlyError, inputCls } from "@/components/profile/parts";
 import { Slider } from "@/components/ui/slider";
@@ -167,6 +167,8 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
   useEffect(() => { setLoc(s.loc); setCompany(s.company); setSal([s.smin, s.smax || SALARY_MAX]); }, [s.loc, s.company, s.smin, s.smax]);
   const fmt = (n: number) => (n >= SALARY_MAX ? `$${SALARY_MAX / 1000}k+` : `$${Math.round(n / 1000)}k`);
   const n = activeFilterCount(s);
+  const cos = useQuery({ queryKey: ["active-company-jobs"], queryFn: listActiveCompanyJobs, staleTime: 60_000 });
+  const selCo = (cos.data ?? []).find((c) => c.name.toLowerCase() === (s.company ?? "").toLowerCase());
   return (
     <div className={`${card} p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto`}>
       <div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><p className="font-display font-bold">Filters</p><button type="button" onClick={onHide} aria-label="Hide filters" title="Hide filters" className="hidden rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary lg:inline-flex"><PanelLeftClose className="h-4 w-4" /></button></div>{n > 0 && <button onClick={() => set({ ...DEFAULT_SEARCH, q: s.q, sort: s.sort })} className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><X className="h-3 w-3" />Clear {n}</button>}</div>
@@ -196,7 +198,15 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
         <LocationFilter country={s.country ?? ""} state={s.state ?? ""} city={s.city ?? ""} onChange={(v) => p({ ...v, loc: "" })} />
         <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-primary" checked={s.arr.includes("remote")} onChange={(e) => p({ arr: e.target.checked ? [...new Set([...s.arr, "remote"])] : s.arr.filter((x) => x !== "remote") })} />Remote</label>
       </Group>
-      <Group title="Company"><input className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} onBlur={() => company !== s.company && p({ company })} onKeyDown={(e) => e.key === "Enter" && p({ company })} placeholder="Company name" /></Group>
+      <Group title="Company & Job">
+        <select aria-label="Company" className={inputCls} value={selCo?.name ?? ""} onChange={(e) => { setCompany(e.target.value); p({ company: e.target.value, q: "" }); }}>
+          <option value="">All companies</option>{(cos.data ?? []).map((c) => <option key={c.id} value={c.name}>{c.name} ({c.jobs.length})</option>)}
+          {company && !selCo && <option value={company}>{company}</option>}
+        </select>
+        {selCo && <select aria-label="Job title" className={`${inputCls} mt-2`} value={selCo.jobs.some((j) => j.title === s.q) ? s.q : ""} onChange={(e) => p({ q: e.target.value })}>
+          <option value="">All jobs at {selCo.name}</option>{selCo.jobs.map((j) => <option key={j.id} value={j.title}>{j.title}</option>)}
+        </select>}
+      </Group>
       <button onClick={onApply} className="mt-4 w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground lg:hidden">Show results</button>
       <Link to="/candidate/jobs/saved" className="mt-4 hidden text-center text-sm font-semibold text-primary lg:block">View saved jobs →</Link>
     </div>

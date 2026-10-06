@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Bell, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
-import { loadJob } from "@/lib/jobs-data";
+import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, type Stage } from "@/lib/talent-rules";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
@@ -22,6 +22,8 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const q = useQuery({ queryKey: ["pipeline", uid, jobId ?? "all"], queryFn: () => listPipeline(uid, jobId) });
   const apps = useQuery({ queryKey: ["job-applications", uid], queryFn: () => listJobApplications(uid) });
   const job = useQuery({ queryKey: ["job-basic", jobId], queryFn: () => loadJob(jobId!), enabled: !!jobId });
+  const jobsQ = useQuery({ queryKey: ["my-jobs-company", uid], queryFn: () => listMyJobsWithCompany(uid) });
+  const [co, setCo] = useState("");
   const navigate = useNavigate();
   const [drag, setDrag] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -53,8 +55,12 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   }
 
   if (q.error) return <ErrorBox msg="Unable To Update Pipeline" retry={() => q.refetch()} />;
-  const cards = q.data ?? [];
-  const appRows = (apps.data ?? []).filter((a) => !jobId || a.job_id === jobId);
+  const myJobs = jobsQ.data ?? [];
+  const companies = [...new Map(myJobs.map((j) => [j.companyId, j.company])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const coSel = jobId ? myJobs.find((j) => j.id === jobId)?.companyId ?? co : co;
+  const inCo = (jid: string | null) => !coSel || myJobs.find((j) => j.id === jid)?.companyId === coSel;
+  const cards = (q.data ?? []).filter((c) => inCo(c.job_id));
+  const appRows = (apps.data ?? []).filter((a) => (!jobId || a.job_id === jobId) && inCo(a.job_id));
   const n = (s: string) => cards.filter((c) => c.current_stage === s).length;
   const metrics: [string, number | string][] = [["Applications Received", appRows.length], ["Candidates Contacted", n("contacted")], ["Candidates Interviewing", n("interviewing") + n("shortlisted")], ["Offers Extended", n("offer")], ["Hires Made", n("hired")], ["Fill Rate", "Coming Soon"]];
   const activity = [...cards].sort((a, b) => b.stage_date.localeCompare(a.stage_date)).slice(0, 6);
@@ -66,9 +72,11 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
         <div>{jobId && <Link to="/recruiter/pipeline" className="text-sm text-muted-foreground hover:text-primary">← All pipelines</Link>}
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{j ? `${j.job_title} Pipeline` : "Recruiting Pipeline"}</h1>
           <p className="text-sm text-muted-foreground">{j ? `${j.location} · ${lbl(ARRANGEMENT, j.work_arrangement)} · ${cards.length} candidates` : "Drag candidates between stages to update their progress."}</p></div>
-        <div className="flex gap-2"><Link to="/recruiter/applications" className={btn}>Applications</Link>
+        <div className="flex flex-wrap gap-2"><Link to="/recruiter/applications" className={btn}>Applications</Link>
+          <select value={coSel} onChange={(e) => { setCo(e.target.value); if (jobId) navigate({ to: "/recruiter/pipeline" }); }} aria-label="Filter by company" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
+            <option value="">All companies</option>{companies.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
           <select value={jobId ?? ""} onChange={(e) => { if (e.target.value) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: e.target.value } }); else navigate({ to: "/recruiter/pipeline" }); }} aria-label="Filter by job" className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
-            <option value="">All jobs</option>{[...new Map((apps.data ?? []).map((a) => [a.job_id, a.jobs.job_title])).entries()].map(([id, t]) => <option key={id} value={id}>{t}</option>)}</select></div>
+            <option value="">All jobs</option>{myJobs.filter((j) => !coSel || j.companyId === coSel).map((j) => <option key={j.id} value={j.id}>{coSel ? j.title : `${j.company} — ${j.title}`}</option>)}</select></div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{metrics.map(([l, v]) => <div key={l} className={`${card} p-4`}><p className={`font-display font-extrabold ${typeof v === "number" ? "text-2xl" : "text-sm text-muted-foreground"}`}>{v}</p><p className="text-xs text-muted-foreground">{l}</p></div>)}</div>
 

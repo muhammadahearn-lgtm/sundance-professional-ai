@@ -131,3 +131,17 @@ export async function setCompared(uid: string, jobId: string, on: boolean) {
   const r = on ? await supabase.from("job_comparisons").insert({ candidate_id: uid, job_id: jobId }) : await supabase.from("job_comparisons").delete().eq("candidate_id", uid).eq("job_id", jobId);
   if (r.error && r.error.code !== "23505") throw r.error;
 }
+
+/** Companies with active jobs, each with its open job titles (for company → job pickers). */
+export async function listActiveCompanyJobs() {
+  const { data, error } = await supabase.from("jobs").select("job_id, job_title, companies(company_id, company_name)").eq("job_status", "active").order("job_title");
+  if (error) throw error;
+  const map = new Map<string, { id: string; name: string; jobs: { id: string; title: string }[] }>();
+  for (const j of data ?? []) {
+    const c = j.companies; if (!c) continue;
+    const e = map.get(c.company_id) ?? { id: c.company_id, name: c.company_name, jobs: [] };
+    if (!e.jobs.some((x) => x.title === j.job_title)) e.jobs.push({ id: j.job_id, title: j.job_title });
+    map.set(c.company_id, e);
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
