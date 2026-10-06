@@ -515,9 +515,43 @@ export type Database = {
           },
         ]
       }
+      certification_catalog: {
+        Row: {
+          abbreviation: string
+          aliases: string[]
+          catalog_id: string
+          category: string
+          created_at: string
+          issuer: string
+          name: string
+          name_key: string
+        }
+        Insert: {
+          abbreviation?: string
+          aliases?: string[]
+          catalog_id?: string
+          category?: string
+          created_at?: string
+          issuer: string
+          name: string
+          name_key?: string
+        }
+        Update: {
+          abbreviation?: string
+          aliases?: string[]
+          catalog_id?: string
+          category?: string
+          created_at?: string
+          issuer?: string
+          name?: string
+          name_key?: string
+        }
+        Relationships: []
+      }
       certifications: {
         Row: {
           candidate_id: string
+          catalog_id: string | null
           certification_id: string
           certification_name: string
           certification_number: string
@@ -525,10 +559,12 @@ export type Database = {
           expiration_date: string | null
           issue_date: string | null
           issuing_organization: string
+          name_key: string
           updated_at: string
         }
         Insert: {
           candidate_id: string
+          catalog_id?: string | null
           certification_id?: string
           certification_name: string
           certification_number?: string
@@ -536,10 +572,12 @@ export type Database = {
           expiration_date?: string | null
           issue_date?: string | null
           issuing_organization?: string
+          name_key?: string
           updated_at?: string
         }
         Update: {
           candidate_id?: string
+          catalog_id?: string | null
           certification_id?: string
           certification_name?: string
           certification_number?: string
@@ -547,6 +585,7 @@ export type Database = {
           expiration_date?: string | null
           issue_date?: string | null
           issuing_organization?: string
+          name_key?: string
           updated_at?: string
         }
         Relationships: [
@@ -556,6 +595,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "candidate_profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "certifications_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "certification_catalog"
+            referencedColumns: ["catalog_id"]
           },
         ]
       }
@@ -1924,6 +1970,7 @@ export type Database = {
         Args: { _candidate: string }
         Returns: boolean
       }
+      cert_key: { Args: { _v: string }; Returns: string }
       company_recruiters: {
         Args: { _company: string }
         Returns: {
