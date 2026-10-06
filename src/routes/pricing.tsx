@@ -4,43 +4,45 @@ import { PageHero, PricingCards } from "@/components/site/shared";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
-    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
-      { title: "Pricing — Sundance Professionals" },
-      { name: "description", content: "Free for candidates. Recruiter Professional at $99/month. Enterprise plans for talent teams." },
-      { property: "og:title", content: "Sundance Professionals Pricing" },
-      { property: "og:description", content: "Compare Candidate, Recruiter Professional and Enterprise plans." },
+    meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+      { title: "Pricing — Free Early Access | Sundance Professionals" },
+      { name: "description", content: "Sundance Professionals is free for every candidate and recruiter during early access. No credit card required." },
+      { property: "og:title", content: "Sundance Professionals Pricing — Free Early Access" },
+      { property: "og:description", content: "Every feature is free for candidates and recruiters during early access." },
     ],
     links: [{ rel: "canonical", href: "/pricing" }],
   }),
   component: Pricing,
 });
 
-const rows: [string, boolean, boolean, boolean][] = [
-  ["Talent Profile", true, false, false],
-  ["Job Search", true, false, false],
-  ["Match Scores", true, true, true],
-  ["Career Intelligence", true, false, false],
-  ["Job Posting", false, true, true],
-  ["Candidate Search", false, true, true],
-  ["Recruiting Pipeline", false, true, true],
-  ["Messaging", false, true, true],
-  ["Advanced Analytics", false, false, true],
-  ["Team Management", false, false, true],
-  ["Enterprise Support", false, false, true],
+const rows: [string, boolean, boolean][] = [
+  ["Skill-first talent profile", true, false],
+  ["Job search with match scores", true, false],
+  ["Save & compare jobs", true, false],
+  ["Application tracking & timeline", true, false],
+  ["Career intelligence", true, false],
+  ["Company page & job wizard", false, true],
+  ["Talent search with match scores", false, true],
+  ["Compare candidates & AI Top Pick", false, true],
+  ["Kanban hiring pipeline", false, true],
+  ["Interview scheduling & calendar links", true, true],
+  ["In-app messaging", true, true],
+  ["Analytics", true, true],
+  ["Notifications", true, true],
 ];
 
 function Pricing() {
   return (
     <>
-      <PageHero eyebrow="Pricing" title="Plans for every side of hiring" desc="Candidates are always free. Recruiters get the tools to hire faster." />
+      <PageHero eyebrow="Free early access" title="Free for everyone, for now" desc="Every feature is free for candidates and recruiters while we test with our early community. No credit card required." />
       <section className="-mt-8 pb-20"><div className="container-x"><PricingCards /></div></section>
       <section className="pb-24">
         <div className="container-x">
-          <h2 className="text-center text-3xl font-extrabold">Compare plans</h2>
-          <div className="mt-10 overflow-x-auto rounded-3xl border border-border bg-card shadow-soft">
-            <table className="w-full min-w-[600px] text-sm">
+          <h2 className="text-center text-3xl font-extrabold">What's included</h2>
+          <div className="mx-auto mt-10 max-w-4xl overflow-x-auto rounded-3xl border border-border bg-card shadow-soft">
+            <table className="w-full min-w-[520px] text-sm">
               <thead className="bg-secondary">
-                <tr>{["Feature", "Candidate", "Recruiter Professional", "Enterprise"].map((h) => <th key={h} className="px-6 py-4 text-left font-semibold">{h}</th>)}</tr>
+                <tr>{["Feature", "Candidate", "Recruiter"].map((h) => <th key={h} className="px-6 py-4 text-left font-semibold">{h}</th>)}</tr>
               </thead>
               <tbody>
                 {rows.map(([f, ...v]) => (
@@ -52,6 +54,7 @@ function Pricing() {
               </tbody>
             </table>
           </div>
+          <p className="mt-6 text-center text-sm text-muted-foreground">Paid plans may be introduced later. We'll let you know well in advance.</p>
         </div>
       </section>
     </>

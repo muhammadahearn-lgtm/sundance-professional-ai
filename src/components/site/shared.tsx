@@ -21,27 +21,26 @@ export function SectionHeading({ eyebrow, title, desc, center = true }: { eyebro
   );
 }
 
+// Early access: every plan is free. Paid pricing will be set later.
 export const plans = [
   {
-    name: "Candidate", price: "Free", period: "forever", desc: "For technology professionals finding their next role.",
-    features: ["Talent Profile", "Job Search", "Match Scores", "Career Intelligence"], cta: "Create Free Profile", featured: false,
+    name: "Candidate", price: "Free", period: "for everyone", desc: "For technology professionals looking for their next role.",
+    features: ["Skill-first talent profile", "Job search with match scores", "Save & compare jobs", "Application tracking", "Interviews hub with calendar links", "Career intelligence & analytics", "In-app messaging"],
+    cta: "Join as Candidate", featured: false,
   },
   {
-    name: "Recruiter Professional", price: "$99", period: "/month", desc: "For recruiters who want qualified talent, faster.",
-    features: ["Job Posting", "Candidate Search", "Recruiting Pipeline", "Messaging"], cta: "Start Recruiting", featured: true,
-  },
-  {
-    name: "Enterprise", price: "Custom", period: "contact sales", desc: "For talent teams and staffing agencies at scale.",
-    features: ["Advanced Analytics", "Team Management", "Enterprise Support"], cta: "Contact Sales", featured: false,
+    name: "Recruiter", price: "Free", period: "during early access", desc: "For recruiters who want qualified technical talent, faster.",
+    features: ["Company page & job wizard", "Talent search with match scores", "Save & compare candidates", "AI Top Pick", "Kanban hiring pipeline", "Interview scheduling", "Hiring analytics & messaging"],
+    cta: "Join as Recruiter", featured: true,
   },
 ];
 
 export function PricingCards() {
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
       {plans.map((p) => (
         <div key={p.name} className={`relative flex flex-col rounded-3xl border p-8 ${p.featured ? "border-primary bg-ink text-ink-foreground shadow-elevated" : "border-border bg-card shadow-soft"}`}>
-          {p.featured && <span className="absolute -top-3 left-8 rounded-full bg-gradient-primary px-3 py-1 text-xs font-semibold text-primary-foreground">Most popular</span>}
+          {p.featured && <span className="absolute -top-3 left-8 rounded-full bg-gradient-primary px-3 py-1 text-xs font-semibold text-primary-foreground">Early access</span>}
           <h3 className="text-lg font-bold">{p.name}</h3>
           <p className={`mt-1 text-sm ${p.featured ? "text-ink-foreground/70" : "text-muted-foreground"}`}>{p.desc}</p>
           <div className="mt-6 flex items-baseline gap-2">
@@ -51,7 +50,7 @@ export function PricingCards() {
           <ul className="mt-8 flex-1 space-y-3">
             {p.features.map((f) => (
               <li key={f} className="flex items-center gap-3 text-sm">
-                <span className={`flex h-5 w-5 items-center justify-center rounded-full ${p.featured ? "bg-primary" : "bg-primary-soft"}`}>
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${p.featured ? "bg-primary" : "bg-primary-soft"}`}>
                   <Check className={`h-3 w-3 ${p.featured ? "text-primary-foreground" : "text-primary"}`} />
                 </span>
                 {f}
@@ -59,7 +58,7 @@ export function PricingCards() {
             ))}
           </ul>
           <Button asChild size="lg" variant={p.featured ? "default" : "outline"} className="mt-8 rounded-full">
-            <Link to={p.name === "Enterprise" ? "/contact" : "/register"}>{p.cta}</Link>
+            <Link to="/register">{p.cta}</Link>
           </Button>
         </div>
       ))}
