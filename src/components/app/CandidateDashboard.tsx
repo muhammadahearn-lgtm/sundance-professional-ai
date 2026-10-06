@@ -17,6 +17,7 @@ import { CandidateMatchWidget } from "@/components/match/Match";
 import { CareerWidget } from "@/components/career/Career";
 import { MessagesWidget } from "@/components/messages/Messages";
 import { CandidateRecsWidget } from "@/components/recommend/Recommend";
+import { NextInterviewBanner } from "@/components/applications/InterviewsHub";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -115,6 +116,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
   return (
     <>
       <PageHeader title={`Welcome back, ${account.firstName || "there"}`} subtitle="Here's where your job search stands today." />
+      <NextInterviewBanner uid={uid} role="candidate" />
 
       <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
