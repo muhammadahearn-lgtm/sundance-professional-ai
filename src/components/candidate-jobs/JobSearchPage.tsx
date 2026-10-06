@@ -8,6 +8,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, Clock, PanelLeftClose, PanelLeftOpen, Search, SlidersHorizontal, Sparkles, TrendingUp, X } from "lucide-react";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
+import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import type { Account } from "@/lib/account";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listActiveCompanyJobs, searchJobs } from "@/lib/job-search-data";
@@ -39,6 +40,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
   const [recent, setRecent] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersHidden, setFiltersHidden] = useFiltersHidden("job-filters-hidden");
+  const [fw, setFw] = usePanelWidth("sundance.jobFiltersWidth", 280, 240, 420);
   useEffect(() => setRecent(readRecent()), []);
   useEffect(() => setQ(search.q), [search.q]);
 
@@ -72,12 +74,14 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         </div>
       </div>
 
-      <div className={`grid gap-6 ${filtersHidden ? "" : "lg:grid-cols-[280px_1fr]"}`}>
-        <aside className={`${filtersOpen ? "block" : "hidden"} ${filtersHidden ? "lg:hidden" : "lg:block"}`}>
+      <div className="grid gap-6 lg:flex lg:gap-0">
+        {filtersHidden && <PanelReveal label="filters" onShow={() => setFiltersHidden(false)} className="relative mr-3" />}
+        <aside className={`relative lg:mr-6 lg:shrink-0 ${filtersOpen ? "block" : "hidden"} ${filtersHidden ? "lg:hidden" : "lg:block lg:[width:var(--fw)]"}`} style={{ "--fw": `${fw}px` } as React.CSSProperties}>
           {tax.data ? <Filters tax={tax.data} s={search} set={setSearch} onHide={() => setFiltersHidden(true)} onApply={() => { setFiltersOpen(false); toast.success("Filters applied"); }} /> : <div className={`${card} h-96 animate-pulse`} />}
+          {!filtersHidden && <PanelSeparator label="filters" width={fw} setWidth={setFw} min={240} max={420} onHide={() => setFiltersHidden(true)} className="-right-5" />}
         </aside>
 
-        <section className="min-w-0 space-y-4">
+        <section className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               {filtersHidden && <button type="button" onClick={() => setFiltersHidden(false)} className="hidden items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary lg:inline-flex"><PanelLeftOpen className="h-4 w-4" />Show Filters{nFilters > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground">{nFilters}</span>}</button>}
