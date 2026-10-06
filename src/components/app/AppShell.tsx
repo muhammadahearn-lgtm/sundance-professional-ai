@@ -100,13 +100,17 @@ export function AppShell({ account }: { account: Account }) {
 
   const nav = (
     <nav className="flex flex-col gap-1" aria-label="Main">
-      {NAV[account.role].map(({ to, label, Icon }) => (
-        <Link key={to} to={to} onClick={() => setOpen(false)}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          activeProps={{ className: "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary", "aria-current": "page" }}>
+      {NAV[account.role].map(({ to, label, Icon }, _i, items) => {
+        // Highlight only the most specific matching item (e.g. Saved Jobs, not Jobs too).
+        const hit = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
+        const active = hit(to) && !items.some((o) => o.to.length > to.length && o.to.startsWith(`${to}/`) && hit(o.to));
+        return (
+        <Link key={to} to={to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
           <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
         </Link>
-      ))}
+        );
+      })}
     </nav>
   );
 
