@@ -1,4 +1,5 @@
 import { formatSalaryAmount } from "@/lib/salary";
+import { SearchSelect } from "@/components/ui/search-select";
 import { MessageButton } from "@/components/messages/Messages";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { MatchBadge, MatchFilter, MatchPanel, useAutoRecalc, useRecalc, useScores } from "@/components/match/Match";
