@@ -39,4 +39,4 @@
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
 - Certifications: `certification_normalize` links to `certification_catalog` by name/abbr/alias (`cert_key`, word-order-free); custom entries Title-Cased, candidate-only. Why: clean data.
-- Interviews: recruiter writes own, candidate reads own; validated by trigger + `interview-rules.ts`. Why: no missing details.
+- Interviews: recruiter writes own, candidate reads own; scorecards in recruiter-only table; rules in `interview-rules.ts`. Why: private.
