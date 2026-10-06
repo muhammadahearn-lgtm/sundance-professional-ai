@@ -1,18 +1,42 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Building2, CalendarClock, CalendarDays, Clock, Copy, MapPin, Pencil, Sparkles, Video } from "lucide-react";
+import { Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, MapPin, Pencil, Sparkles, Star, Video } from "lucide-react";
 import { toast } from "sonner";
 import { SearchSelect } from "@/components/ui/search-select";
-import { AddToCalendar, ScheduleInterviewDialog } from "@/components/applications/Interviews";
-import { INTERVIEW_TYPES, PLATFORMS, countdown, fmtInterview, splitInterviews } from "@/lib/interview-rules";
-import { listMyInterviews, type InterviewRow } from "@/lib/interviews-data";
+import { AddToCalendar, ScheduleInterviewDialog, ScorecardDialog, recommendationLabel } from "@/components/applications/Interviews";
+import { PLATFORMS, countdown, fmtInterview, roundLabel, splitInterviews } from "@/lib/interview-rules";
+import { listMyInterviews, listMyScorecards, type InterviewRow, type Scorecard } from "@/lib/interviews-data";
 
 type Role = "candidate" | "recruiter";
 const lbl = (list: [string, string][], k: string) => list.find(([v]) => v === k)?.[1] ?? k;
 const calTitle = (i: InterviewRow, role: Role) => role === "candidate"
-  ? `Interview: ${i.job_title}${i.company_name ? ` at ${i.company_name}` : ""}`
-  : `Interview with ${i.candidate_name} — ${i.job_title}`;
+  ? `${roundLabel(i)} · ${i.job_title}${i.company_name ? ` at ${i.company_name}` : ""}`
+  : `${roundLabel(i)} with ${i.candidate_name} — ${i.job_title}`;
+/** Interviews belonging to the same hiring process (same application, or same candidate + job). */
+const processKey = (i: InterviewRow) => i.application_id ?? i.pipeline_id ?? `${i.candidate_id}:${i.job_id}`;
+
+/** Round-by-round progress for one hiring process. */
+function Journey({ rounds, current }: { rounds: InterviewRow[]; current: string }) {
+  if (rounds.length < 2) return null;
+  const now = Date.now();
+  return (
+    <ol className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Interview rounds">
+      {rounds.map((r, k) => {
+        const done = new Date(r.scheduled_at).getTime() + r.duration_minutes * 60000 <= now;
+        const here = r.interview_id === current;
+        return (
+          <li key={r.interview_id} className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${here ? "border-primary bg-primary text-primary-foreground" : done ? "border-success/40 bg-success/10 text-success" : "border-border bg-card text-muted-foreground"}`}>
+              {done && !here ? <Check className="h-3 w-3" /> : null}{roundLabel(r)}
+            </span>
+            {k < rounds.length - 1 && <span className="h-px w-3 bg-border" />}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 export function useUpcomingInterviewCount(uid: string, role: Role) {
   const q = useQuery({ queryKey: ["my-interviews", uid, role], queryFn: () => listMyInterviews(uid, role), staleTime: 60000 });
@@ -35,7 +59,7 @@ function Who({ i, role }: { i: InterviewRow; role: Role }) {
   return <span className="font-semibold">{i.company_name || "Recruiter"}</span>;
 }
 
-function Spotlight({ i, role, onEdit }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined }) {
+function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined; rounds: InterviewRow[] }) {
   const online = i.format === "online";
   return (
     <section className="relative overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
@@ -47,7 +71,8 @@ function Spotlight({ i, role, onEdit }: { i: InterviewRow; role: Role; onEdit?: 
         <div className="min-w-0 flex-1">
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />Next interview · {countdown(i.scheduled_at, i.duration_minutes)}</span>
           <h2 className="mt-1 font-display text-2xl font-extrabold">{i.job_title}</h2>
-          <p className="text-sm text-muted-foreground"><Who i={i} role={role} /> · {lbl(INTERVIEW_TYPES, i.interview_type)}</p>
+          <p className="text-sm text-muted-foreground"><Who i={i} role={role} /> · {roundLabel(i)}</p>
+          <Journey rounds={rounds} current={i.interview_id} />
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" />{fmtInterview(i.scheduled_at)} · {i.duration_minutes} min</span>
             <span className="inline-flex items-center gap-1">{online ? <Video className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-primary" />}{online ? lbl(PLATFORMS, i.platform) : i.location_address}</span>
@@ -66,16 +91,24 @@ function Spotlight({ i, role, onEdit }: { i: InterviewRow; role: Role; onEdit?: 
   );
 }
 
-function Row({ i, role, past, onEdit }: { i: InterviewRow; role: Role; past?: boolean; onEdit?: (() => void) | undefined }) {
+function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow; role: Role; past?: boolean; onEdit?: (() => void) | undefined; card?: Scorecard | undefined; onScore?: (() => void) | undefined; onNext?: (() => void) | undefined }) {
   const online = i.format === "online";
   return (
     <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past ? "opacity-75" : ""}`}>
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">{online ? <Video className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}</span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold">{i.job_title} <span className="font-normal text-muted-foreground">· {lbl(INTERVIEW_TYPES, i.interview_type)}</span></p>
+        <p className="truncate font-semibold">{i.job_title} <span className="font-normal text-muted-foreground">· {roundLabel(i)}</span></p>
         <p className="truncate text-sm text-muted-foreground"><Who i={i} role={role} /> · {fmtInterview(i.scheduled_at)} · {i.duration_minutes} min · {online ? lbl(PLATFORMS, i.platform) : "In person"}</p>
       </div>
-      {past ? <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Completed</span> : (
+      {past ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Completed</span>
+          {onScore && (card
+            ? <button type="button" onClick={onScore} title="Private scorecard — edit" className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm font-bold ${card.recommendation.endsWith("hire") ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}><Star className="h-4 w-4 fill-current" />{card.rating}/5 · {recommendationLabel(card.recommendation)}</button>
+            : <button type="button" onClick={onScore} className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground shadow-soft"><ClipboardCheck className="h-4 w-4" />Submit scorecard</button>)}
+          {onNext && <button type="button" onClick={onNext} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-primary/40 bg-primary-soft px-3 text-sm font-semibold text-primary hover:border-primary"><CalendarPlus className="h-4 w-4" />Schedule Round {(i.round_number ?? 1) + 1}</button>}
+        </div>
+      ) : (
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">{countdown(i.scheduled_at, i.duration_minutes)}</span>
           <JoinButton i={i} />
@@ -101,6 +134,13 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<InterviewRow | null>(null);
   const editFor = (i: InterviewRow) => (role === "recruiter" ? () => setEditing(i) : undefined);
+  const sc = useQuery({ queryKey: ["scorecards", uid], queryFn: () => listMyScorecards(uid), enabled: role === "recruiter" });
+  const cardOf = (i: InterviewRow) => (sc.data ?? []).find((c) => c.interview_id === i.interview_id);
+  const roundsOf = (i: InterviewRow) => all.filter((x) => processKey(x) === processKey(i)).sort((a, b) => (a.round_number ?? 1) - (b.round_number ?? 1) || a.scheduled_at.localeCompare(b.scheduled_at));
+  const isLatest = (i: InterviewRow) => { const r = roundsOf(i); return r[r.length - 1]?.interview_id === i.interview_id; };
+  const [scoring, setScoring] = useState<InterviewRow | null>(null);
+  const [nextFor, setNextFor] = useState<InterviewRow | null>(null);
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["my-interviews"] }); qc.invalidateQueries({ queryKey: ["interviews"] }); };
 
   return (
     <div className="space-y-6">
@@ -115,7 +155,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
         </div>
       </div>
 
-      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} onEdit={editFor(next)} /> : (
+      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} onEdit={editFor(next)} rounds={roundsOf(next)} /> : (
         <section className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
           <CalendarClock className="mx-auto h-10 w-10 text-primary" />
           <p className="mt-3 font-display text-lg font-bold">No upcoming interviews</p>
@@ -133,11 +173,17 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
           </button>
         ))}
       </div>
-      {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} onEdit={editFor(i)} />)}</ul>
+      {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} onEdit={editFor(i)}
+          card={cardOf(i)} onScore={role === "recruiter" ? () => setScoring(i) : undefined} onNext={role === "recruiter" && tab === "past" && isLatest(i) ? () => setNextFor(i) : undefined} />)}</ul>
         : <p className="text-sm text-muted-foreground">{tab === "upcoming" ? "No upcoming interviews yet." : "No past interviews yet."}</p>}
       {editing && <ScheduleInterviewDialog key={editing.interview_id} open onOpenChange={(o) => { if (!o) setEditing(null); }} existing={editing} candidateName={editing.candidate_name}
         ctx={{ uid, candidateId: editing.candidate_id, jobId: editing.job_id, pipelineId: editing.pipeline_id, applicationId: editing.application_id }}
-        onSaved={() => { qc.invalidateQueries({ queryKey: ["my-interviews"] }); qc.invalidateQueries({ queryKey: ["interviews"] }); }} />}
+        priorRounds={roundsOf(editing)} onSaved={refresh} />}
+      {nextFor && <ScheduleInterviewDialog key={`next-${nextFor.interview_id}`} open onOpenChange={(o) => { if (!o) setNextFor(null); }} candidateName={nextFor.candidate_name} priorRounds={roundsOf(nextFor)}
+        ctx={{ uid, candidateId: nextFor.candidate_id, jobId: nextFor.job_id, pipelineId: nextFor.pipeline_id, applicationId: nextFor.application_id }}
+        onSaved={() => { refresh(); setTab("upcoming"); }} />}
+      {scoring && <ScorecardDialog key={scoring.interview_id} open onOpenChange={(o) => { if (!o) setScoring(null); }} uid={uid} interview={scoring} candidateName={scoring.candidate_name} existing={cardOf(scoring)}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["scorecards"] })} />}
     </div>
   );
 }

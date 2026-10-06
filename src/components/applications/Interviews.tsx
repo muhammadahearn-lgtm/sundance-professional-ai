@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DatePicker } from "@/components/ui/date-picker";
 import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, interviewTypeLabel, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
+import { DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
@@ -191,4 +191,3 @@ export function ScorecardDialog({ open, onOpenChange, uid, interview, candidateN
 }
 
 export const recommendationLabel = (k: string) => RECOMMENDATIONS.find(([v]) => v === k)?.[1] ?? k;
-export { interviewTypeLabel };
