@@ -18,7 +18,7 @@ export function SearchPicker({ options: baseOptions, value, onChange, placeholde
   const [extra, setExtra] = useState<Opt[]>([]);
   const [adding, setAdding] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const options = useMemo(() => [...baseOptions, ...extra.filter((e) => !baseOptions.some((o) => o.id === e.id))], [baseOptions, extra]);
+  const options = useMemo(() => [...(baseOptions ?? []), ...extra.filter((e) => !(baseOptions ?? []).some((o) => o.id === e.id))], [baseOptions, extra]);
   const selected = options.find((o) => o.id === value);
   const results = useMemo(() => searchOptions(options, q), [options, q]);
   const addName = onAdd ? (nameFor ?? newRoleName)(q, options) : null;

@@ -40,7 +40,7 @@ export function JobWizard({ account, jobId }: { account: Account; jobId?: string
       <Link to="/recruiter/jobs/$id" params={{ id: jobId! }} className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Back to job</Link></div>
   );
   const initial = data.existing ? toForm(data.existing) : emptyJob(data.company?.company_id ?? "");
-  return <Wizard uid={uid} jobId={jobId} initial={initial} status={data.existing?.job.job_status ?? "draft"} companies={data.companies} tax={data.tax} />;
+  return <Wizard uid={uid} jobId={jobId} initial={initial} status={data.existing?.job.job_status ?? "draft"} companies={data.companies ?? []} tax={data.tax} />;
 }
 
 function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; jobId?: string | undefined; initial: JobForm; status: JobStatus; companies: { id: string; name: string }[]; tax: Awaited<ReturnType<typeof loadTaxonomy>> }) {
