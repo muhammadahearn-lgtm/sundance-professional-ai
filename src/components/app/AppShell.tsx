@@ -1,9 +1,11 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, MessageSquare, UserRound, Settings, Search, GitBranch, LogOut, Menu, X, Building2, Bookmark,
-  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+  Compass, Lightbulb, Bell, BarChart3, PanelLeftClose, PanelLeftOpen, GitCompare } from "lucide-react";
+import { listCompareIds } from "@/lib/job-search-data";
+import { listComparedCandidates } from "@/lib/talent-data";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -18,6 +20,7 @@ const NAV = {
     { to: "/candidate/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/candidate/jobs", label: "Jobs", Icon: Briefcase },
     { to: "/candidate/jobs/saved", label: "Saved Jobs", Icon: Bookmark },
+    { to: "/candidate/jobs/compare", label: "Compare Jobs", Icon: GitCompare },
     { to: "/candidate/applications", label: "Applications", Icon: FileText },
     { to: "/candidate/career", label: "Career", Icon: Compass },
     { to: "/candidate/recommendations", label: "For You", Icon: Lightbulb },
@@ -31,6 +34,8 @@ const NAV = {
     { to: "/recruiter/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/recruiter/jobs", label: "Jobs", Icon: Briefcase },
     { to: "/recruiter/candidates", label: "Search Talent", Icon: Search },
+    { to: "/recruiter/candidates/saved", label: "Saved Candidates", Icon: Bookmark },
+    { to: "/recruiter/candidates/compare", label: "Compare Candidates", Icon: GitCompare },
     { to: "/recruiter/applications", label: "Applications", Icon: FileText },
     { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch },
     { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
@@ -43,10 +48,18 @@ const NAV = {
   ],
 } as const;
 
+const pill = "ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground";
 function UnreadBadge() {
   const n = useUnreadCount();
-  return n ? <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">{n}</span> : null;
+  return n ? <span className={pill}>{n}</span> : null;
 }
+/** Live count of items queued for comparison (shares cache keys with the compare lists). */
+function CompareBadge({ uid, role }: { uid: string; role: "candidate" | "recruiter" }) {
+  const q = useQuery({ queryKey: role === "candidate" ? ["compare-jobs", uid] : ["cmp-cands", uid], queryFn: () => (role === "candidate" ? listCompareIds(uid) : listComparedCandidates(uid)) });
+  const n = q.data?.length ?? 0;
+  return n ? <span className={pill} aria-label={`${n} selected`}>{n}</span> : null;
+}
+
 
 export function AppShell({ account }: { account: Account }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -107,7 +120,7 @@ export function AppShell({ account }: { account: Account }) {
         return (
         <Link key={to} to={to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}
           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
+          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="min-w-0 truncate">{label}</span>{to.endsWith("/messages") && <UnreadBadge />}{to.endsWith("/compare") && <CompareBadge uid={account.userId} role={account.role} />}{to.endsWith("/notifications") && <NotificationNavBadge uid={account.userId} />}
         </Link>
         );
       })}

@@ -11,7 +11,9 @@ import { Empty, card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
 import { CompanyLogo, CompareTray, JobCard } from "./JobCard";
 import { useJobLists } from "./useJobLists";
-import { useAutoRecalc, useScores } from "@/components/match/Match";
+import { asDetails, useAutoRecalc, useScores } from "@/components/match/Match";
+import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
+import { bestBy, rankCompare } from "@/lib/compare-rank";
 
 export function SavedJobsPage({ account }: { account: Account }) {
   const uid = account.userId;
@@ -59,6 +61,8 @@ export function SavedJobsPage({ account }: { account: Account }) {
 export function CompareJobsPage({ account }: { account: Account }) {
   const lists = useJobLists(account.userId);
   const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
+  useAutoRecalc();
+  const scoreQ = useScores({ candidateId: account.userId });
   const ids = lists.compareIds;
   const jobs = useQuery({ queryKey: ["compare-details", ids], queryFn: () => Promise.all(ids.map((id) => loadCandidateJob(id).then((d) => ({ id, d })))) });
 
@@ -67,7 +71,16 @@ export function CompareJobsPage({ account }: { account: Account }) {
   const cols = jobs.data ?? [];
   const live = cols.filter((c) => c.d);
   type Live = NonNullable<(typeof cols)[number]["d"]>;
-  const rows: [string, (d: Live) => React.ReactNode][] = [
+  const rowOf = (id: string) => scoreQ.data?.find((r) => r.job_id === id);
+  const scoreOf = (id: string) => { const r = rowOf(id); return r ? Number(r.overall_match_score) : null; };
+  const { top, ranks, lead } = rankCompare(live.map(({ id, d }) => ({ id, score: scoreOf(id), tie: d!.job.maximum_salary })));
+  const topD = top ? live.find((c) => c.id === top.id)?.d : undefined;
+  const best: Record<string, string | null> = live.length > 1 ? {
+    Salary: bestBy(live, (c) => c.id, (c) => c.d!.job.maximum_salary ?? c.d!.job.minimum_salary),
+    "Match Score": top?.id ?? null,
+  } : {};
+  const rows: [string, (d: Live, id: string) => React.ReactNode][] = [
+    ["Match Score", (_d, id) => { const r = rowOf(id); return r ? <span className="font-display text-lg font-extrabold">{Math.round(Number(r.overall_match_score))}%</span> : "—"; }],
     ["Company", (d) => d.company?.company_name ?? "—"],
     ["Salary", (d) => formatSalary(d.job.minimum_salary, d.job.maximum_salary, d.job.salary_currency) || "—"],
     ["Location", (d) => d.job.location],
@@ -85,6 +98,11 @@ export function CompareJobsPage({ account }: { account: Account }) {
         <div><h1 className="font-display text-2xl font-extrabold">Compare Jobs</h1><p className="text-sm text-muted-foreground">Compare up to {COMPARE_MAX} jobs side by side.</p></div>
         <Link to="/candidate/jobs" className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">Add more jobs</Link>
       </div>
+      {top && topD && live.length > 1 && (
+        <AiTopPick title={topD.job.job_title} subtitle={topD.company?.company_name} score={Number(top.score)} lead={lead}
+          media={<CompanyLogo path={topD.company?.logo_url} size="h-10 w-10" />} context={`best fit for your profile among ${live.length} jobs`}
+          reasons={asDetails(rowOf(top.id)?.details).strengths} />
+      )}
       {jobs.isLoading || tax.isLoading ? <div className={`${card} h-96 animate-pulse`} />
         : !ids.length ? <div className={`${card} p-10 text-center`}><GitCompare className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 font-semibold">No jobs selected</p><p className="mt-1 text-sm text-muted-foreground">Tap Compare on any job to add it here.</p></div>
         : (
@@ -98,12 +116,13 @@ export function CompareJobsPage({ account }: { account: Account }) {
                   <tr>
                     <th className="sticky left-0 w-40 bg-card p-4" />
                     {live.map(({ id, d }) => (
-                      <th key={id} className="min-w-[200px] border-l border-border p-4 text-left align-top font-normal">
+                      <th key={id} className={`min-w-[200px] border-l border-border p-4 text-left align-top font-normal ${top?.id === id && live.length > 1 ? "bg-primary-soft/50" : ""}`}>
                         <div className="flex items-start justify-between gap-2">
                           <CompanyLogo path={d!.company?.logo_url} size="h-10 w-10" />
                           <button onClick={() => lists.toggleCompare(id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button>
                         </div>
                         <Link to="/candidate/jobs/$id" params={{ id }} className="mt-2 block font-display font-bold hover:text-primary">{d!.job.job_title}</Link>
+                        <RankPill rank={ranks[id]} score={scoreOf(id)} />
                       </th>
                     ))}
                   </tr>
@@ -112,7 +131,7 @@ export function CompareJobsPage({ account }: { account: Account }) {
                   {rows.map(([label, render]) => (
                     <tr key={label} className="border-t border-border">
                       <th scope="row" className="sticky left-0 bg-card p-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</th>
-                      {live.map(({ id, d }) => <td key={id} className="border-l border-border p-4 align-top">{render(d!)}</td>)}
+                      {live.map(({ id, d }) => <td key={id} className={`border-l border-border p-4 align-top ${top?.id === id && live.length > 1 ? "bg-primary-soft/30" : ""}`}>{render(d!, id)}{best[label] === id && <BestTag />}</td>)}
                     </tr>
                   ))}
                 </tbody>

@@ -23,6 +23,9 @@ import { listComparedCandidates, listSavedCandidates, listTalent, loadCandidateF
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
+import { SearchSelect } from "@/components/ui/search-select";
+import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
+import { bestBy, rankCompare } from "@/lib/compare-rank";
 
 /** Highest score each candidate has across the recruiter's jobs. */
 export function useBestScores() {
@@ -382,32 +385,67 @@ export function SavedCandidatesPage({ uid }: { uid: string }) {
 
 export function CompareCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
-  const scoreQ = useScores({});
+  useAutoRecalc();
+  const ctx = useJobContext(uid);
+  const [co, setCo] = useState("");
+  const [jobSel, setJobSel] = useState("");
+  const selJob = ctx.data?.jobs.find((j) => j.job_id === jobSel);
+  const scoreQ = useScores(selJob ? { jobIds: [selJob.job_id] } : {});
   const bestRow = (id: string) => (scoreQ.data ?? []).filter((r) => r.candidate_id === id).sort((a, b) => Number(b.overall_match_score) - Number(a.overall_match_score))[0];
-  const pct = (id: string, k: "language_alignment_score" | "skill_alignment_score" | "technology_alignment_score" | "experience_alignment_score") => { const r = bestRow(id); return r ? `${Math.round(Number(r[k]))}%` : "—"; };
+  const pct = (id: string, k: "language_alignment_score" | "skill_alignment_score" | "technology_alignment_score" | "experience_alignment_score" | "preference_alignment_score") => { const r = bestRow(id); return r ? `${Math.round(Number(r[k]))}%` : "—"; };
   const det = (id: string) => (bestRow(id)?.details ?? {}) as { strengths?: string[]; missing?: { languages?: string[]; skills?: string[]; technologies?: string[] } };
   const tax = useTaxonomy();
   const key = lists.compareIds.join(",");
   const q = useQuery({ queryKey: ["talent-ids", key], queryFn: () => talentByIds(lists.compareIds) });
   const t = tax.data;
+  const cands = q.data ?? [];
+  const scoreOf = (id: string) => { const r = bestRow(id); return r ? Number(r.overall_match_score) : null; };
+  const { top, ranks, lead } = rankCompare(cands.map((c) => ({ id: c.id, score: scoreOf(c.id), tie: c.years })));
+  const topC = top ? cands.find((c) => c.id === top.id) : undefined;
+  const num = (id: string, k: Parameters<typeof pct>[1]) => { const r = bestRow(id); return r ? Number(r[k]) : null; };
+  const best: Record<string, string | null> = cands.length > 1 ? {
+    "Overall Match": top?.id ?? null,
+    Experience: bestBy(cands, (c) => c.id, (c) => c.years),
+    "Language Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "language_alignment_score")),
+    "Skill Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "skill_alignment_score")),
+    "Technology Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "technology_alignment_score")),
+    "Experience Score": bestBy(cands, (c) => c.id, (c) => num(c.id, "experience_alignment_score")),
+  } : {};
+  const scope = selJob ? `for ${selJob.job_title}` : "best across your jobs";
   const rows: [string, (c: TalentRow) => ReactNode][] = t ? [
+    ["Overall Match", (c) => { const r = bestRow(c.id); return r ? <span className="inline-flex flex-col gap-0.5"><MatchBadge score={r.overall_match_score} showLabel /><span className="text-[11px] text-muted-foreground">{scope}</span></span> : <MatchBadge score={null} />; }],
     ["Current Role", (c) => c.jobTitle], ["Employer", (c) => c.employer], ["Location", (c) => c.location], ["Experience", (c) => `${c.years} yrs`],
     ["Availability", (c) => label(AVAILABILITY, c.availability)], ["Work Arrangement", (c) => label(ARRANGEMENTS, c.arrangement)], ["Desired Minimum Salary", (c) => c.salary],
     ["Languages", (c) => <Chips ids={c.langs} opts={t.languages} max={8} />], ["Skills", (c) => <Chips ids={c.skills} opts={t.skills} max={8} />], ["Technologies", (c) => <Chips ids={c.techs} opts={t.technologies} max={8} />],
-    ["Profile Completion", (c) => `${c.completion}%`], ["Overall Match", (c) => { const r = bestRow(c.id); return r ? <span className="inline-flex flex-col gap-0.5"><MatchBadge score={r.overall_match_score} showLabel /><span className="text-[11px] text-muted-foreground">best across your jobs</span></span> : <MatchBadge score={null} />; }],
     ["Language Score", (c) => pct(c.id, "language_alignment_score")], ["Skill Score", (c) => pct(c.id, "skill_alignment_score")],
-    ["Technology Score", (c) => pct(c.id, "technology_alignment_score")], ["Experience Score", (c) => pct(c.id, "experience_alignment_score")],
+    ["Technology Score", (c) => pct(c.id, "technology_alignment_score")], ["Experience Score", (c) => pct(c.id, "experience_alignment_score")], ["Preference Score", (c) => pct(c.id, "preference_alignment_score")],
     ["Strengths", (c) => <ul className="space-y-0.5 text-xs">{(det(c.id).strengths ?? []).slice(0, 4).map((x) => <li key={x}>✓ {x}</li>)}</ul>],
-    ["Weaknesses", (c) => { const m = det(c.id).missing ?? {}; const all = [...(m.languages ?? []), ...(m.skills ?? []), ...(m.technologies ?? [])]; return all.length ? <ul className="space-y-0.5 text-xs">{all.slice(0, 4).map((x) => <li key={x}>• Missing {x}</li>)}</ul> : null; }],
+    ["Gaps", (c) => { const m = det(c.id).missing ?? {}; const all = [...(m.languages ?? []), ...(m.skills ?? []), ...(m.technologies ?? [])]; return all.length ? <ul className="space-y-0.5 text-xs">{all.slice(0, 4).map((x) => <li key={x}>• Missing {x}</li>)}</ul> : null; }],
+    ["Profile Completion", (c) => `${c.completion}%`],
   ] : [];
+  const companies = (ctx.data?.companies ?? []).map((c) => ({ value: c.company_id, label: c.company_name }));
+  const coName = (id: string | null) => ctx.data?.companies.find((c) => c.company_id === id)?.company_name ?? "";
+  const jobOpts = (ctx.data?.jobs ?? []).filter((j) => !co || j.company_id === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${coName(j.company_id)}` }));
+  const hl = (id: string) => (top?.id === id && cands.length > 1 ? "bg-primary-soft/40" : "");
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
-      <h1 className="font-display text-2xl font-extrabold">Compare Candidates</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div><h1 className="font-display text-2xl font-extrabold">Compare Candidates</h1><p className="text-sm text-muted-foreground">{selJob ? `Scored against ${selJob.job_title}.` : "Pick a job to compare candidates for that role."}</p></div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <SearchSelect ariaLabel="Filter by company" className="sm:w-52" value={co} onChange={(v) => { setCo(v); setJobSel(""); }} allLabel="All companies" placeholder="Search companies..." options={companies} />
+          <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={(v) => { setJobSel(v); const j = ctx.data?.jobs.find((x) => x.job_id === v); if (j) setCo(j.company_id ?? ""); }} allLabel="All jobs" placeholder="Search job titles..." options={jobOpts} />
+        </div>
+      </div>
       {q.error ? <ErrorBox msg="Unable to load comparison." retry={() => q.refetch()} /> : q.isLoading || !t ? <div className={`${card} h-48 animate-pulse`} />
-        : (q.data?.length ?? 0) < 2 ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">Select at least 2 candidates to compare</p><p className="mt-1 text-sm text-muted-foreground">You can compare up to {CANDIDATE_COMPARE_MAX}.</p>{q.data?.map((c) => <button key={c.id} onClick={() => lists.toggleCompare(c.id)} className={`${btn} mt-3`}>Remove {c.name}</button>)}<Link to="/recruiter/candidates" className={`${primaryBtn} ml-2 mt-4`}>Search talent</Link></div>
-        : <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] text-sm"><thead><tr className="border-b border-border"><th className="p-4 text-left" />{q.data!.map((c) => <th key={c.id} className="p-4 text-left align-top"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><button onClick={() => lists.toggleCompare(c.id)} className="text-xs text-muted-foreground hover:text-destructive">Remove</button></th>)}</tr></thead>
-          <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-b border-border last:border-0"><td className="p-4 text-xs font-semibold uppercase text-muted-foreground">{l}</td>{q.data!.map((c) => <td key={c.id} className="p-4 align-top">{fn(c) || "—"}</td>)}</tr>)}</tbody></table></div>}
+        : cands.length < 2 ? <div className={`${card} p-10 text-center`}><GitCompare className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 font-display text-lg font-bold">Select at least 2 candidates to compare</p><p className="mt-1 text-sm text-muted-foreground">You can compare up to {CANDIDATE_COMPARE_MAX}.</p>{cands.map((c) => <button key={c.id} onClick={() => lists.toggleCompare(c.id)} className={`${btn} mt-3`}>Remove {c.name}</button>)}<Link to="/recruiter/candidates" className={`${primaryBtn} ml-2 mt-4`}>Search talent</Link></div>
+        : <>
+          {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
+            media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
+            : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
+          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] text-sm"><thead><tr className="border-b border-border"><th className="p-4 text-left" />{cands.map((c) => <th key={c.id} className={`p-4 text-left align-top font-normal ${hl(c.id)}`}><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><button onClick={() => lists.toggleCompare(c.id)} className="mt-1 block text-xs text-muted-foreground hover:text-destructive">Remove</button></th>)}</tr></thead>
+            <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-b border-border last:border-0"><td className="p-4 text-xs font-semibold uppercase text-muted-foreground">{l}</td>{cands.map((c) => <td key={c.id} className={`p-4 align-top ${hl(c.id)}`}>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
+        </>}
     </div>
   );
 }
