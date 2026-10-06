@@ -119,3 +119,8 @@
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   }
 }
+
+.pipeline-scroll { scrollbar-width: auto; scrollbar-color: var(--color-primary) var(--color-muted); }
+.pipeline-scroll::-webkit-scrollbar { height: 12px; }
+.pipeline-scroll::-webkit-scrollbar-track { background: var(--color-muted); border-radius: 9999px; }
+.pipeline-scroll::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 9999px; border: 3px solid var(--color-muted); }
