@@ -2084,6 +2084,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_role_entry: { Args: { _name: string }; Returns: string }
       add_taxonomy_entry: {
         Args: { _kind: string; _name: string }
         Returns: string
