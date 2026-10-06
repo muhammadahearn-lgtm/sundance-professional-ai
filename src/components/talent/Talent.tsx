@@ -424,7 +424,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
     ["Profile Completion", (c) => `${c.completion}%`],
   ] : [];
   const companies = (ctx.data?.companies ?? []).map((c) => ({ value: c.company_id, label: c.company_name }));
-  const coName = (id: string) => ctx.data?.companies.find((c) => c.company_id === id)?.company_name ?? "";
+  const coName = (id: string | null) => ctx.data?.companies.find((c) => c.company_id === id)?.company_name ?? "";
   const jobOpts = (ctx.data?.jobs ?? []).filter((j) => !co || j.company_id === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${coName(j.company_id)}` }));
   const hl = (id: string) => (top?.id === id && cands.length > 1 ? "bg-primary-soft/40" : "");
   return (
@@ -434,7 +434,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
         <div><h1 className="font-display text-2xl font-extrabold">Compare Candidates</h1><p className="text-sm text-muted-foreground">{selJob ? `Scored against ${selJob.job_title}.` : "Pick a job to compare candidates for that role."}</p></div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <SearchSelect ariaLabel="Filter by company" className="sm:w-52" value={co} onChange={(v) => { setCo(v); setJobSel(""); }} allLabel="All companies" placeholder="Search companies..." options={companies} />
-          <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={(v) => { setJobSel(v); const j = ctx.data?.jobs.find((x) => x.job_id === v); if (j) setCo(j.company_id); }} allLabel="All jobs" placeholder="Search job titles..." options={jobOpts} />
+          <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={(v) => { setJobSel(v); const j = ctx.data?.jobs.find((x) => x.job_id === v); if (j) setCo(j.company_id ?? ""); }} allLabel="All jobs" placeholder="Search job titles..." options={jobOpts} />
         </div>
       </div>
       {q.error ? <ErrorBox msg="Unable to load comparison." retry={() => q.refetch()} /> : q.isLoading || !t ? <div className={`${card} h-48 animate-pulse`} />
