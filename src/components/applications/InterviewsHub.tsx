@@ -129,3 +129,26 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
     </div>
   );
 }
+
+/** Compact "next interview" banner for dashboards; renders nothing when none is upcoming. */
+export function NextInterviewBanner({ uid, role }: { uid: string; role: Role }) {
+  const q = useQuery({ queryKey: ["my-interviews", uid, role], queryFn: () => listMyInterviews(uid, role), staleTime: 60000 });
+  const { upcoming } = splitInterviews(q.data ?? []);
+  const i = upcoming[0];
+  if (!i) return null;
+  return (
+    <section aria-label="Next interview" className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-primary/30 bg-primary-soft/60 p-4 shadow-soft">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><CalendarClock className="h-5 w-5" /></span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Next interview · {countdown(i.scheduled_at, i.duration_minutes)}</p>
+        <p className="truncate font-semibold">{i.job_title} <span className="font-normal text-muted-foreground">· <Who i={i} role={role} /></span></p>
+        <p className="text-sm text-muted-foreground">{fmtInterview(i.scheduled_at)} · {i.duration_minutes} min{upcoming.length > 1 ? ` · +${upcoming.length - 1} more` : ""}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <JoinButton i={i} />
+        <AddToCalendar i={i} title={calTitle(i, role)} />
+        <Link to={role === "candidate" ? "/candidate/interviews" : "/recruiter/interviews"} className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary">All interviews</Link>
+      </div>
+    </section>
+  );
+}
