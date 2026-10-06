@@ -9,11 +9,14 @@ import { Empty, card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
 import { CompanyLogo, CompareTray, JobCard } from "./JobCard";
 import { useJobLists } from "./useJobLists";
+import { useAutoRecalc, useScores } from "@/components/match/Match";
 
 export function SavedJobsPage({ account }: { account: Account }) {
   const uid = account.userId;
   const lists = useJobLists(uid);
   const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
+  useAutoRecalc();
+  const scoreQ = useScores({ candidateId: uid });
   const ids = lists.savedIds;
   const cards = useQuery({ queryKey: ["saved-cards", ids], queryFn: () => loadCardsByIds(ids) });
   const byId = new Map((cards.data ?? []).map((c) => [c.job_id, c]));
@@ -29,7 +32,7 @@ export function SavedJobsPage({ account }: { account: Account }) {
         : !ids.length ? <Empty>You haven't saved any jobs yet. Tap Save on any job to keep it here.</Empty>
         : (
           <div className="space-y-3">
-            {ids.map((id) => byId.get(id)).filter((x) => !!x).map((j) => <JobCard key={j.job_id} j={j} roleName={tax.data?.roles.find((r) => r.id === j.role_id)?.name} lists={lists} onRemove={() => lists.toggleSave(j.job_id)} />)}
+            {ids.map((id) => byId.get(id)).filter((x) => !!x).map((j) => { const row = scoreQ.data?.find((r) => r.job_id === j.job_id); return <JobCard key={j.job_id} j={j} roleName={tax.data?.roles.find((r) => r.id === j.role_id)?.name} lists={lists} onRemove={() => lists.toggleSave(j.job_id)} score={row ? Number(row.overall_match_score) : undefined} scoreRow={row} tax={tax.data} />; })}
             {unavailable.map((id) => (
               <div key={id} className={`${card} flex items-center justify-between gap-3 p-4`}><span className="text-sm text-muted-foreground">Job no longer available</span><button onClick={() => lists.toggleSave(id)} className="text-sm font-semibold text-primary">Remove</button></div>
             ))}
