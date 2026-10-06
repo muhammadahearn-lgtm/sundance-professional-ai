@@ -132,10 +132,10 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
                       : ["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && <button type="button" onClick={() => setSched(c)} className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1 text-[11px] font-semibold transition-colors hover:border-primary hover:text-primary ${c.current_stage === "interviewing" ? "border-warning/60 text-warning" : "border-border text-muted-foreground"}`}><CalendarClock className="h-3 w-3" />Schedule interview</button>}
-                    <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5">
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
                       {next ? <button type="button" onClick={() => move(c, next[0])} className={`${miniBtn} min-w-0 flex-1 justify-center`}>{next[1]}<ArrowRight className="h-3 w-3" /></button> : <span className="flex-1" />}
-                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} title="Move to stage" className="h-7 w-[5.5rem] shrink-0 rounded-lg border border-input bg-card px-1 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} title="Move to stage" className="h-7 w-full rounded-lg border border-input bg-card px-1 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
                     </div>
                   </article>); })}
                   {!col.length && <p className="rounded-xl border border-dashed border-border px-1 py-6 text-center text-xs text-muted-foreground">Drop candidates here</p>}</div>
