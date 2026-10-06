@@ -44,7 +44,7 @@ export function searchOptions<T extends { name: string; category?: string }>(opt
       const allStem = qWords.every((qw, i) => {
         const s = stem(qw);
         const partial = i === qWords.length - 1;
-        return nStems.some((ns, j) => ns === s || nw[j].startsWith(qw) || (partial && qw.length >= 3 && (ns.startsWith(qw) || qw.startsWith(ns))));
+        return nStems.some((ns, j) => ns === s || (nw[j] ?? "").startsWith(qw) || (partial && qw.length >= 3 && (ns.startsWith(qw) || qw.startsWith(ns))));
       });
       const score = n.startsWith(q) ? 0 : allPrefix ? 1 : allStem ? 2 : n.includes(q) ? 3 : norm(o.category ?? "").includes(q) ? 4 : -1;
       return { o, score };
