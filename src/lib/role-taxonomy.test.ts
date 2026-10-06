@@ -10,3 +10,12 @@ describe("role taxonomy", () => {
   it("'security' finds the four security roles", () => expect(searchOptions(roles, "security").map((r) => r.name).sort()).toEqual(["Cybersecurity Engineer", "Security Analyst", "Security Architect", "Security Engineer"]));
   it("'data' finds data roles first", () => expect(searchOptions(roles, "data").slice(0, 3).map((r) => r.name)).toEqual(["Data Engineer", "Data Analyst", "Data Scientist"]));
 });
+
+describe("searchOptions stems", () => {
+  const r = ["Data Scientist", "Data Analyst", "Software Engineer", "Cybersecurity Engineer", "Database Administrator"].map((name, i) => ({ id: String(i), name }));
+  it("'Data Science' finds Data Scientist", () => expect(searchOptions(r, "Data Science")[0]?.name).toBe("Data Scientist"));
+  it("'Data Sci' finds Data Scientist, not Software Engineer", () => expect(searchOptions(r, "Data Sci").map((x) => x.name)).toEqual(["Data Scientist"]));
+  it("'data analytics' finds Data Analyst", () => expect(searchOptions(r, "data analytics")[0]?.name).toBe("Data Analyst"));
+  it("'cyber security' finds Cybersecurity Engineer", () => expect(searchOptions(r, "cyber security")[0]?.name).toBe("Cybersecurity Engineer"));
+  it("'db admin' style: 'database admin' finds administrator", () => expect(searchOptions(r, "database admin")[0]?.name).toBe("Database Administrator"));
+});
