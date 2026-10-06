@@ -7,10 +7,10 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays, CheckCircle2, Circle, FileText, GitBranch, LayoutGrid, List, MapPin, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, FileText, GitBranch, MapPin, XCircle } from "lucide-react";
 import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, setApplicationStatus, withdrawApplication } from "@/lib/applications-data";
 import { loadCandidateFull } from "@/lib/talent-data";
-import { APP_STATUSES, CANDIDATE_BOARD, candidateBoardColumn, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
+import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
 import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components/profile/parts";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
@@ -88,44 +88,20 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
 export function CandidateApplicationsPage({ uid }: { uid: string }) {
   const q = useQuery({ queryKey: ["my-applications", uid], queryFn: () => listMyApplications(uid) });
   const [co, setCo] = useState(""), [jt, setJt] = useState("");
-  const [view, setView] = useState<"list" | "board">("list");
   const all = q.data ?? [];
   const companies = [...new Set(all.map((a) => a.jobs?.companies?.company_name).filter((x): x is string => !!x))].sort();
   const titles = [...new Set(all.filter((a) => !co || a.jobs?.companies?.company_name === co).map((a) => a.jobs?.job_title).filter((x): x is string => !!x))].sort();
   const rows = all.filter((a) => (!co || a.jobs?.companies?.company_name === co) && (!jt || a.jobs?.job_title === jt));
-  const seg = (on: boolean) => `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${on ? "bg-gradient-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"}`;
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Track every application in one place.</p></div>
-        {all.length > 0 && <div className="flex flex-wrap items-center gap-2">
-          <div className="w-52"><SearchSelect ariaLabel="Filter by company" value={co} onChange={(v) => { setCo(v); setJt(""); }} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} /></div>
-          <div className="w-52"><SearchSelect ariaLabel="Filter by job" value={jt} onChange={setJt} allLabel="All jobs" placeholder="Search job titles..." options={titles.map((t) => ({ value: t, label: t }))} /></div>
-          <div role="group" aria-label="View" className="inline-flex rounded-xl border border-border bg-card p-1">
-            <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")} className={seg(view === "list")}><List className="h-4 w-4" />List</button>
-            <button type="button" aria-pressed={view === "board"} onClick={() => setView("board")} className={seg(view === "board")}><LayoutGrid className="h-4 w-4" />Board</button>
-          </div>
+        {all.length > 0 && <div className="flex flex-wrap gap-2">
+          <select aria-label="Filter by company" value={co} onChange={(e) => { setCo(e.target.value); setJt(""); }} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All companies</option>{companies.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+          <select aria-label="Filter by job" value={jt} onChange={(e) => setJt(e.target.value)} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All jobs</option>{titles.map((t) => <option key={t} value={t}>{t}</option>)}</select>
         </div>}</div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading ? <div className={`${card} h-48 animate-pulse`} />
         : !all.length ? <div className={`${card} p-10 text-center`}><FileText className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-display text-lg font-bold">No applications yet</p><Link to="/candidate/jobs" className={`${primaryBtn} mt-4`}>Browse jobs</Link></div>
         : !rows.length ? <div className={`${card} p-8 text-center text-sm text-muted-foreground`}>No applications match these filters. <button onClick={() => { setCo(""); setJt(""); }} className="font-semibold text-primary">Clear filters</button></div>
-        : view === "board" ? (
-          <div className="overflow-x-auto pb-2">
-            <div className="grid min-w-[1000px] grid-cols-5 gap-4">{CANDIDATE_BOARD.map(([key, title]) => {
-              const items = rows.filter((a) => candidateBoardColumn(a.application_status) === key);
-              return (
-                <section key={key} aria-label={title} className="rounded-2xl border border-border bg-muted/40 p-3">
-                  <h2 className="mb-3 flex items-center justify-between px-1 text-sm font-bold"><span className="flex items-center gap-2"><span className="h-3.5 w-1 rounded-full bg-gradient-primary" />{title}</span><span className="rounded-full bg-card px-2 py-0.5 text-xs text-muted-foreground">{items.length}</span></h2>
-                  <div className="space-y-3">{items.length ? items.map((a) => (
-                    <div key={a.application_id} className="rounded-xl border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/40">
-                      <Link to="/candidate/applications/$id" params={{ id: a.application_id }} className="block font-display text-sm font-bold hover:text-primary">{a.jobs?.job_title ?? "Job removed"}</Link>
-                      <p className="text-xs text-muted-foreground">{a.jobs?.companies?.company_name}</p>
-                      <div className="mt-2 flex items-center justify-between gap-2"><AppStatusBadge s={a.application_status} /><span className="text-[11px] text-muted-foreground">Applied {fmt(a.application_date)}</span></div>
-                      {key === "interviewing" && <Link to="/candidate/interviews" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary"><CalendarDays className="h-3.5 w-3.5" />View interviews</Link>}
-                    </div>)) : <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Nothing here yet</p>}</div>
-                </section>);
-            })}</div>
-            <p className="mt-3 text-xs text-muted-foreground">Cards move automatically as recruiters update your applications.</p>
-          </div>)
         : <div className={`${card} divide-y divide-border`}>{rows.map((a) => (
             <div key={a.application_id} className="flex flex-wrap items-center gap-4 p-5">
               <div className="min-w-0 flex-1"><p className="font-display font-bold">{a.jobs?.job_title ?? "Job removed"}</p><p className="text-sm text-muted-foreground">{a.jobs?.companies?.company_name}</p>
