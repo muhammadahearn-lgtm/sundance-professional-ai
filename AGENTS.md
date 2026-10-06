@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- Roles live in `user_roles` (one row per user, no client write access); profiles hold account data. Why: prevents users escalating or switching roles.
+- Roles live in `user_roles` (one row per user, no client write access); profiles hold account data. Why: no role escalation.
 - `handle_new_user` signup trigger creates account + role. Why: role fixed at registration.
 - Role areas (`/candidate/*`, `/recruiter/*`) sit under `_authenticated` and use `roleGuard` (src/lib/role-guard.ts) for cross-role blocking and onboarding redirects. Why: one gate per area.
 - Onboarding completes only via `complete_onboarding` RPC. Why: checks profile exists.
@@ -39,4 +39,4 @@
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
 - Certifications: `certification_normalize` links to `certification_catalog` by name/abbr/alias (`cert_key`, word-order-free); custom entries Title-Cased, candidate-only. Why: clean data.
-- Interviews live in `interviews` (recruiter writes own, candidate reads own); format rules validated by `interviews_validate` trigger + `src/lib/interview-rules.ts`; candidate alerts via `notify_interview` trigger. Why: details can't be faked or missing.
+- Interviews: recruiter writes own, candidate reads own; validated by trigger + `interview-rules.ts`. Why: no missing details.
