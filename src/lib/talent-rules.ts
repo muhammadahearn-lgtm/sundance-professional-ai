@@ -31,7 +31,7 @@ export const DEFAULT_TALENT: TalentFilters = { q: "", role: "", langs: [], skill
 export type TalentRow = {
   id: string; name: string; jobTitle: string; employer: string; location: string; country?: string; state?: string; city?: string; years: number; availability: string;
   headline: string; summary: string; salary: string; salaryAmount?: number | null; salaryCurrency?: string; arrangement: string; industries: string[]; roleId: string | null; levelId?: string | null;
-  langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null; education?: EduLike[];
+  langs: string[]; skills: string[]; softSkills?: string[]; techs: string[]; updatedAt: string; completion: number; avatarPath?: string | null; education?: EduLike[]; certs?: string[];
 };
 
 /** First number in free text, "k" = thousands. "$120k-150k" -> 120000. */
