@@ -891,6 +891,7 @@ export type Database = {
           application_id: string | null
           candidate_id: string
           created_at: string
+          custom_round_name: string
           duration_minutes: number
           format: string
           interview_id: string
@@ -913,6 +914,7 @@ export type Database = {
           application_id?: string | null
           candidate_id: string
           created_at?: string
+          custom_round_name?: string
           duration_minutes?: number
           format: string
           interview_id?: string
@@ -935,6 +937,7 @@ export type Database = {
           application_id?: string | null
           candidate_id?: string
           created_at?: string
+          custom_round_name?: string
           duration_minutes?: number
           format?: string
           interview_id?: string
