@@ -90,6 +90,7 @@ export function CompareJobsPage({ account }: { account: Account }) {
     ["Languages", (d) => (t ? <RequirementList items={d.languages} options={t.languages} /> : null)],
     ["Skills", (d) => (t ? <RequirementList items={d.skills} options={t.skills} /> : null)],
     ["Technologies", (d) => (t ? <RequirementList items={d.technologies} options={t.technologies} /> : null)],
+    ["Soft Skills", (d) => (t ? <RequirementList items={d.softSkills} options={t.softSkills} /> : null)],
     ["Benefits", (d) => <span className="whitespace-pre-line">{d.job.benefits_summary || "—"}</span>],
   ];
   return (
