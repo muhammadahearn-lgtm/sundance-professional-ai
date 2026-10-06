@@ -114,9 +114,8 @@ export function CompareJobsPage({ account }: { account: Account }) {
               <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 w-40 bg-card p-4 text-left align-bottom text-xs font-semibold uppercase tracking-wider text-muted-foreground">Job Criteria</th>
-                    {live.map(({ id, d }) => (
-                      <th key={id} className={`min-w-[200px] border-l border-border p-4 text-left align-top font-normal ${top?.id === id && live.length > 1 ? "bg-primary-soft/50" : ""}`}>
+                    {live.map(({ id, d }, i) => (
+                      <th key={id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${top?.id === id && live.length > 1 ? "bg-primary-soft/50" : ""}`}>
                         <div className="flex items-start justify-between gap-2">
                           <CompanyLogo path={d!.company?.logo_url} size="h-10 w-10" />
                           <button onClick={() => lists.toggleCompare(id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button>
@@ -130,8 +129,7 @@ export function CompareJobsPage({ account }: { account: Account }) {
                 <tbody>
                   {rows.map(([label, render]) => (
                     <tr key={label} className="border-t border-border">
-                      <th scope="row" className="sticky left-0 bg-card p-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</th>
-                      {live.map(({ id, d }) => <td key={id} className={`border-l border-border p-4 align-top ${top?.id === id && live.length > 1 ? "bg-primary-soft/30" : ""}`}>{render(d!, id)}{best[label] === id && <BestTag />}</td>)}
+                      {live.map(({ id, d }, i) => <td key={id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${top?.id === id && live.length > 1 ? "bg-primary-soft/30" : ""}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>{render(d!, id)}{best[label] === id && <BestTag />}</td>)}
                     </tr>
                   ))}
                 </tbody>
