@@ -58,11 +58,10 @@ export function JobsDashboard({ account }: { account: Account }) {
           ))}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-        <select aria-label="Filter by company" className={`${inputCls} sm:w-48`} value={co} onChange={(e) => { setCo(e.target.value); setJobSel(""); }}>
-          <option value="">All companies</option>{companies.map(([id, c]) => <option key={id} value={id}>{c.name} ({c.n})</option>)}</select>
-        <select aria-label="Filter by job" className={`${inputCls} sm:w-56`} value={jobSel} onChange={(e) => setJobSel(e.target.value)}>
-          <option value="">All jobs</option>{jobOptions.map((j) => <option key={j.job_id} value={j.job_id}>{co ? j.job_title : `${j.companies?.company_name ?? "No company"} — ${j.job_title}`}</option>)}</select>
-        <label className="relative sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input aria-label="Search jobs" className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs and drafts" /></label>
+        <SearchSelect ariaLabel="Filter by company" className="sm:w-52" value={co} onChange={(v) => { setCo(v); setJobSel(""); }}
+          allLabel="All companies" placeholder="Search companies..." options={companies.map(([id, c]) => ({ value: id, label: `${c.name} (${c.n})` }))} />
+        <SearchSelect ariaLabel="Filter by job" className="sm:w-64" value={jobSel} onChange={setJobSel}
+          allLabel="All jobs" placeholder="Search job titles..." options={jobOptions.map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.companies?.company_name ?? "No company"} — ${j.job_title}` }))} />
         <select aria-label="Sort jobs" className={`${inputCls} sm:w-48`} value={sort} onChange={(e) => setSort(e.target.value)}>{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         </div>
       </div>
