@@ -16,7 +16,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, Check, ChevronDown, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, UserPlus, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, Check, ChevronDown, Download, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
@@ -215,7 +215,6 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
             <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={primaryBtn}>View Profile</Link>
             <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} />
             <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
-            <button onClick={soon("Talent pools")} className={btn}><UserPlus className="h-4 w-4" />Talent Pool</button>
             <button onClick={soon("Messaging")} className={btn}><MessageSquare className="h-4 w-4" />Contact</button>
           </div>
         </div>
@@ -254,7 +253,6 @@ export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Tax
           <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
           <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" />
           <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} aria-label="Compare candidate" title="Compare" className={`${icon} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" /></button>
-          <button onClick={soon("Talent pools")} aria-label="Add to talent pool" title="Talent Pool" className={icon}><UserPlus className="h-4 w-4" /></button>
           <button onClick={soon("Messaging")} aria-label="Message candidate" title="Message" className={icon}><MessageSquare className="h-4 w-4" /></button>
         </div>
       </div>
