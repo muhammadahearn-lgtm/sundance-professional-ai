@@ -30,6 +30,27 @@ export async function loadPendingRequests(companyId: string): Promise<AdminReque
   return (data ?? []).map((r) => ({ request_id: r.request_id, user_id: r.user_id, name: r.name, created_at: r.created_at }));
 }
 
+export type RequestStatus = "pending" | "approved" | "denied";
+export type RequestRecord = { request_id: string; user_id: string; name: string; status: RequestStatus; created_at: string; resolved_at: string | null; resolved_by_name: string | null };
+export type InboxTab = "pending" | "approved" | "denied" | "all";
+
+/** Full request history (admins: whole company; members: their own). */
+export async function loadRequestHistory(companyId: string): Promise<RequestRecord[]> {
+  const { data, error } = await supabase.rpc("company_admin_request_history", { _company: companyId });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ ...r, status: r.status as RequestStatus }));
+}
+
+export function filterInbox(list: RequestRecord[], tab: InboxTab): RequestRecord[] {
+  return tab === "all" ? list : list.filter((r) => r.status === tab);
+}
+
+export function inboxCounts(list: RequestRecord[]): Record<InboxTab, number> {
+  const c = { pending: 0, approved: 0, denied: 0, all: list.length };
+  for (const r of list) c[r.status]++;
+  return c;
+}
+
 /** My pending admin request for a company, if any. */
 export async function myPendingRequest(companyId: string, uid: string): Promise<boolean> {
   const { data, error } = await supabase.from("company_admin_requests").select("request_id").eq("company_id", companyId).eq("user_id", uid).eq("status", "pending").maybeSingle();
