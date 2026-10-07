@@ -113,7 +113,6 @@ function ReqGroup({ title, rows, names, tone, mine }: { title: string; rows: Req
   const list = [...(rows ?? [])].sort((a, b) => Number(has(b)) - Number(has(a)) || (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3));
   if (!list.length) return null;
   const nm = (id: string) => names.find((n) => n.id === id)?.name ?? "Unknown";
-  const hit = mine ? list.filter(has).length : 0;
   return (
     <div>
       <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
