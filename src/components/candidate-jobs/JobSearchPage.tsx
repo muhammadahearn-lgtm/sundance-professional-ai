@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CompareTray, JobCard } from "./JobCard";
 import { MatchFilter, useAutoRecalc, useScores } from "@/components/match/Match";
 import { useJobLists } from "./useJobLists";
+import { JobPreviewDrawer } from "./CandidateJobDetail";
 
 type Props = { account: Account; search: SearchState; setSearch: (patch: Partial<SearchState>) => void };
 
@@ -46,6 +47,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
     return { education: edu ?? [], terms: [...new Set([...(data?.target_roles ?? []), data?.job_title ?? ""].filter(Boolean))].slice(0, 4), loc: data ? { country: data.location_country, state: data.location_state, city: data.location_city } : null, arrangement: data?.work_arrangement ?? "" };
   } });
   const [q, setQ] = useState(search.q);
+  const [preview, setPreview] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersHidden, setFiltersHidden] = useFiltersHidden("job-filters-hidden");
@@ -113,7 +115,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              {results.data.rows.map((j) => <JobCard key={j.job_id} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} mine={mine.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} eduAlign={suggested.data ? educationAlignment(suggested.data.education, j.minimum_degree) : undefined} />)}
+              {results.data.rows.map((j) => <JobCard key={j.job_id} onPreview={setPreview} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} mine={mine.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} eduAlign={suggested.data ? educationAlignment(suggested.data.education, j.minimum_degree) : undefined} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>
@@ -136,6 +138,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
         </section>
       </div>
       <CompareTray lists={lists} />
+      <JobPreviewDrawer account={account} id={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

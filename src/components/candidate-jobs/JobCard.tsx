@@ -2,6 +2,7 @@ import type { EducationAlignment } from "@/lib/education";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { JobCardRow } from "@/lib/job-search-data";
 import type { Taxonomy } from "@/lib/jobs-data";
@@ -127,7 +128,7 @@ function ReqGroup({ title, rows, names, tone, mine }: { title: string; rows: Req
   );
 }
 
-export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign, mine }: { mine?: Set<string> | undefined; j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
+export function JobCard({ onPreview, j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign, mine }: { onPreview?: ((id: string) => void) | undefined; mine?: Set<string> | undefined; j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
@@ -163,6 +164,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, lo
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
       <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">View Job</Link>
+            {onPreview && <button onClick={() => onPreview(j.job_id)} className={act}><Eye className="h-4 w-4" />Quick View</button>}
             {onRemove ? <button onClick={onRemove} className={act}><BookmarkCheck className="h-4 w-4" />Remove</button>
               : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}
             <button onClick={() => lists.toggleCompare(j.job_id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare"}</button>
