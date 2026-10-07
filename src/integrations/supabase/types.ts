@@ -2426,6 +2426,18 @@ export type Database = {
           name: string
         }[]
       }
+      get_candidate_application_insights: {
+        Args: { _application: string }
+        Returns: {
+          active_pool: number
+          in_review: number
+          interviewing: number
+          not_moving_forward: number
+          offers: number
+          total_applicants: number
+          your_status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
