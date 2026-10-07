@@ -7,10 +7,16 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, FileText, GitBranch, MapPin, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Send, Sparkles, Upload, XCircle } from "lucide-react";
+import { loadTaxonomy } from "@/lib/jobs-data";
+import { loadCandidateJob } from "@/lib/job-search-data";
+import { listMyInterviews } from "@/lib/interviews-data";
+import { CompanyLogo } from "@/components/candidate-jobs/JobCard";
+import { HUB_TABS, INTRO_NOTE_MAX, hubCounts, matchesTab, nextStep, type HubTab } from "@/lib/application-hub";
+import { validateResumeFile } from "@/lib/profile-completion";
 import { loadScreeningQuestions, saveScreeningAnswers, loadScreeningAnswers } from "@/lib/applications-data";
 import { answerFit, optionsFor, validateAnswers, type ScreeningQ } from "@/lib/screening";
-import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, setApplicationStatus, withdrawApplication } from "@/lib/applications-data";
+import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, myPendingOfferApps, sendIntroNote, setApplicationStatus, uploadResumeForApply, withdrawApplication } from "@/lib/applications-data";
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
 import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components/profile/parts";
@@ -43,6 +49,17 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
   const sq = useQuery({ queryKey: ["screening", jobId], queryFn: () => loadScreeningQuestions(jobId), enabled: open });
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showErr, setShowErr] = useState(false);
+  const [note, setNote] = useState("");
+  const [uploading, setUploading] = useState(false);
+  async function attach(file: File | undefined) {
+    if (!file) return;
+    const bad = validateResumeFile(file);
+    if (bad) { toast.error(bad); return; }
+    setUploading(true);
+    try { await uploadResumeForApply(uid, file, me.data?.profile?.resume_path ?? null); await me.refetch(); setMode("resume"); toast.success("Resume attached"); }
+    catch (e) { toast.error(friendlyError(e, "Resume upload failed. Please try again.")); }
+    setUploading(false);
+  }
   const ansErrs = validateAnswers(sq.data ?? [], answers);
   const rule = canApply(jobStatus, !!existing.data);
 
@@ -52,6 +69,7 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
     setBusy(true);
     try { const a = await applyToJob(uid, jobId);
       try { await saveScreeningAnswers(a.application_id, answers); } catch { toast.error("Application sent, but your screening answers couldn't be saved."); }
+      if (note.trim()) { try { await sendIntroNote(uid, jobId, note.trim()); } catch { toast.error("Application sent, but your note couldn't be delivered."); } }
       setDone({ date: a.application_date }); toast.success("Application Submitted"); qc.invalidateQueries({ queryKey: ["my-applications"] }); }
     catch (e) { toast.error(e instanceof Error && e.message === "Already Applied" ? "Already Applied" : friendlyError(e, e instanceof Error ? e.message : "Application Failed")); }
     setBusy(false);
@@ -83,7 +101,15 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
                       <p className="mt-2"><strong>Resume:</strong> {p.resume_file_name ?? "None uploaded"}</p></div>
                     <fieldset><legend className="mb-2 font-semibold">Submit using</legend>
                       <label className="flex items-center gap-2"><input type="radio" checked={mode === "profile"} onChange={() => setMode("profile")} />Structured Profile</label>
-                      <label className="mt-1 flex items-center gap-2"><input type="radio" checked={mode === "resume"} disabled={!p.resume_path} onChange={() => setMode("resume")} />Structured Profile + Resume{!p.resume_path && <span className="text-xs text-muted-foreground">(upload a resume first)</span>}</label></fieldset>
+                      <label className="mt-1 flex items-center gap-2"><input type="radio" checked={mode === "resume"} disabled={!p.resume_path} onChange={() => setMode("resume")} />Structured Profile + Resume</label>
+                      <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void attach(e.dataTransfer.files[0]); }} className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-primary/40 bg-primary-soft/40 p-4 transition-colors hover:bg-primary-soft">
+                        <Upload className="h-5 w-5 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1"><span className="block font-semibold">{uploading ? "Uploading…" : p.resume_path ? "Replace your resume" : "Attach a resume"}</span><span className="block text-xs text-muted-foreground">{p.resume_path ? `Current: ${p.resume_file_name}` : "Drop a PDF or Word file here, or click to choose. It's saved to your profile too."}</span></span>
+                        <input type="file" accept=".pdf,.doc,.docx" className="sr-only" disabled={uploading} onChange={(e) => { void attach(e.target.files?.[0]); e.target.value = ""; }} />
+                      </label></fieldset>
+                    <div><label htmlFor="intro-note" className="font-semibold">Note to the hiring team <span className="font-normal text-muted-foreground">(optional)</span></label>
+                      <textarea id="intro-note" value={note} maxLength={INTRO_NOTE_MAX} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Why this role excites you, in a sentence or two." className={`${inputCls} mt-1.5 resize-none`} />
+                      <p className="mt-1 text-right text-xs text-muted-foreground">{note.length}/{INTRO_NOTE_MAX} · sent as your first message</p></div>
                     {!!sq.data?.length && <ScreeningForm qs={sq.data} answers={answers} setAnswers={setAnswers} errs={showErr ? ansErrs : {}} />}
                     <label className="flex items-start gap-2"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} className="mt-0.5" />I confirm my profile information is accurate and I want to apply.</label>
                   </div>
@@ -153,10 +179,10 @@ export function CandidateApplicationsPage({ uid }: { uid: string }) {
 }
 
 function PrepCard({ jobId }: { jobId: string }) {
-  const tax = useTaxonomy();
-  const q = useQuery({ queryKey: ["candidate-job", jobId, "prep"], queryFn: () => loadPublicJob(jobId) });
+  const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
+  const q = useQuery({ queryKey: ["candidate-job", jobId], queryFn: () => loadCandidateJob(jobId) });
   if (!q.data || !tax.data) return null;
-  const name = (ids: { lookup_id: string }[], opts: { id: string; name: string }[]) => ids.map((x) => opts.find((o) => o.id === x.lookup_id)?.name).filter(Boolean).slice(0, 8) as string[];
+  const name = (ids: { id: string }[], opts: { id: string; name: string }[]) => ids.map((x) => opts.find((o) => o.id === x.id)?.name).filter(Boolean).slice(0, 8) as string[];
   const stack = [...name(q.data.languages, tax.data.languages), ...name(q.data.skills, tax.data.skills), ...name(q.data.technologies, tax.data.technologies)].slice(0, 12);
   const c = q.data.company;
   return (
@@ -198,6 +224,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       {a.application_status === "rejected" && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
       {a.job_id && <CandidateOfferCard applicationId={id} uid={uid} jobId={a.job_id} jobTitle={a.jobs?.job_title ?? "this role"} />}
       <ApplicationInsights applicationId={id} status={a.application_status} />
+      {a.job_id && ["applied", "viewed", "recruiter_contacted", "interviewing"].includes(a.application_status) && <PrepCard jobId={a.job_id} />}
       {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
       {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
