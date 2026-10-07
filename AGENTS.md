@@ -19,6 +19,7 @@
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Company editing needs `is_company_admin` (`company_members`; creator backfilled as admin). Requests via `company_admin_requests` (approve promotes; last admin protected). Team via `company_team` RPC; directory via `company_recruiters`. Why: no orphaned companies.
+- Company admin dashboard (Company page tabs) reads company-wide jobs/pipeline counts via the admin-gated `company_admin_jobs` RPC; counts only, no candidate data. Why: admins oversee without editing teammates' work.
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
 - Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: keeps history.
 - Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable, unbypassable.

@@ -49,9 +49,9 @@ export function AdminOverview({ companyId, teamSize, pendingRequests, onOpen }: 
         <Stat label="Hired" value={s.hired} icon={<CheckCircle2 className="h-5 w-5" />} />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <button onClick={() => onOpen("jobs")} className={`${card} p-4 text-left hover:border-primary`}><p className="text-sm font-semibold">{s.totalJobs} jobs</p><p className="text-xs text-muted-foreground">{s.draftJobs} draft · {s.closedJobs} closed · {s.recruiters} recruiters posting</p></button>
+        <button onClick={() => onOpen("jobs")} className={`${card} p-4 text-left hover:border-primary`}><p className="text-sm font-semibold">{s.totalJobs} jobs</p><p className="text-xs text-muted-foreground">{s.draftJobs} draft · {s.closedJobs} closed · {s.recruiters} recruiter{s.recruiters === 1 ? "" : "s"} posting</p></button>
         <button onClick={() => onOpen("pipeline")} className={`${card} p-4 text-left hover:border-primary`}><p className="text-sm font-semibold">Hiring pipeline</p><p className="text-xs text-muted-foreground">{s.stages.interviewing} interviewing · {s.stages.offer} at offer</p></button>
-        <button onClick={() => onOpen("team")} className={`${card} p-4 text-left hover:border-primary`}><p className="text-sm font-semibold">{teamSize} team members</p><p className="text-xs text-muted-foreground">{pendingRequests ? `${pendingRequests} admin request${pendingRequests === 1 ? "" : "s"} waiting` : "No pending admin requests"}</p></button>
+        <button onClick={() => onOpen("team")} className={`${card} p-4 text-left hover:border-primary`}><p className="text-sm font-semibold">{teamSize} team member{teamSize === 1 ? "" : "s"}</p><p className="text-xs text-muted-foreground">{pendingRequests ? `${pendingRequests} admin request${pendingRequests === 1 ? "" : "s"} waiting` : "No pending admin requests"}</p></button>
       </div>
     </div>
   );
