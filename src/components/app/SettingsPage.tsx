@@ -1,4 +1,5 @@
 import { NotificationPreferences } from "@/components/notifications/Notifications";
+import { CareerModeCard } from "./CareerModeCard";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -117,6 +118,11 @@ export function SettingsPage({ account }: { account: Account }) {
         <div id="notification-preferences"><Card title="Notification Preferences" desc="Choose which notifications you receive. Changes save automatically.">
           <NotificationPreferences uid={account.userId} role={account.role} />
         </Card></div>
+        {account.role === "candidate" && (
+          <Card title="Career Mode" desc="Got hired? Stay quietly visible for exceptional roles while keeping your Market Pulse.">
+            <CareerModeCard uid={account.userId} />
+          </Card>
+        )}
         <Card title="Privacy Settings">
           {account.role === "candidate" ? (<>
             <Toggle label="Visible to recruiters" desc="Let recruiters find your profile in talent search." defaultChecked />
