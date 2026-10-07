@@ -1,0 +1,9 @@
+## src/lib rules
+- Talent search filters client-side (`matchesTalent`), state in URL. Why: array fields filter poorly via API.
+- Career intelligence (`career-engine`) and recommendations (`recommend-engine`) are pure client-side computations; only daily `career_snapshots` are stored. Why: explainable, unfakeable.
+- Analytics computed client-side; only `analytics_events` stored; job views via `my_job_view_counts`. Why: viewers private.
+- Candidate links/projects: validate in `profile-links.ts`, render via `links-projects.tsx`. Why: one path.
+- Salaries are stored as integer amounts + currency code; all validation/display goes through `src/lib/salary.ts`. Why: one format.
+- Interviews: recruiter writes own, candidate reads own; scorecards recruiter-only; rules: `interview-rules.ts`. Why: private.
+- Confidential jobs masked in candidate loaders via `confidential.ts`. Why: one masking path.
+- Resume auto-fill: browser extracts text (`document-text-extractor.ts`), server fn `parseResume` asks AI with a strict schema, `sanitizeParsedResume` cleans output; never writes to DB. Why: candidate reviews before save.
