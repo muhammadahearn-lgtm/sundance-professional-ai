@@ -1397,6 +1397,7 @@ export type Database = {
           location_country: string
           location_state: string
           location_state_key: string
+          max_applications: number | null
           maximum_salary: number | null
           minimum_degree: string | null
           minimum_salary: number | null
@@ -1433,6 +1434,7 @@ export type Database = {
           location_country?: string
           location_state?: string
           location_state_key?: string
+          max_applications?: number | null
           maximum_salary?: number | null
           minimum_degree?: string | null
           minimum_salary?: number | null
@@ -1469,6 +1471,7 @@ export type Database = {
           location_country?: string
           location_state?: string
           location_state_key?: string
+          max_applications?: number | null
           maximum_salary?: number | null
           minimum_degree?: string | null
           minimum_salary?: number | null
