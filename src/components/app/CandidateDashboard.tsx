@@ -164,7 +164,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
         <Stat Icon={Target} n={m.active} label="Active" />
         <Stat Icon={Gift} n={m.offers} label="Offers" />
         <Stat Icon={CheckCircle2} n={m.hires} label="Hires" />
-        <Stat Icon={XCircle} n={m.rejected} label="Rejected" />
+        <Stat Icon={CircleSlash} n={m.rejected} label="Not Moving Forward" />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">

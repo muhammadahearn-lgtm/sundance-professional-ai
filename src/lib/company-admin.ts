@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const STAGES = ["saved", "contacted", "interviewing", "shortlisted", "offer", "hired", "rejected"] as const;
 export type Stage = (typeof STAGES)[number];
-export const STAGE_LABELS: Record<Stage, string> = { saved: "Saved", contacted: "Contacted", interviewing: "Interviewing", shortlisted: "Shortlisted", offer: "Offer", hired: "Hired", rejected: "Rejected" };
+export const STAGE_LABELS: Record<Stage, string> = { saved: "Saved", contacted: "Contacted", interviewing: "Interviewing", shortlisted: "Shortlisted", offer: "Offer", hired: "Hired", rejected: "Not Moving Forward" };
 
 export type CompanyJob = {
   job_id: string; job_title: string; job_status: string; recruiter_id: string; recruiter_name: string;
