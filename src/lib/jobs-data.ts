@@ -88,7 +88,7 @@ export function toForm(d: LoadedJob): JobForm {
     location: j.location, location_country: j.location_country, location_state: j.location_state, location_city: j.location_city, minimum_years_experience: String(j.minimum_years_experience), minimum_degree: j.minimum_degree ?? "", experience_level: j.experience_level, job_description: j.job_description,
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
-    bonus_info: j.bonus_info, benefits_summary: j.benefits_summary, is_confidential: j.is_confidential, confidential_label: j.confidential_label,
+    bonus_info: j.bonus_info, benefits_summary: j.benefits_summary, is_confidential: j.is_confidential, confidential_label: j.confidential_label, max_applications: j.max_applications?.toString() ?? "",
     equity_type: j.equity_type, equity_range: j.equity_range, equity_vesting: j.equity_vesting, screening: d.screening,
   };
 }
@@ -101,6 +101,7 @@ function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
     location: formatLocation({ country: f.location_country, state: f.location_state, city: f.location_city }) || f.location.trim(), location_country: f.location_country, location_state: normalizeLocationPart(f.location_state), location_city: normalizeLocationPart(f.location_city), minimum_years_experience: Number(f.minimum_years_experience) || 0, minimum_degree: f.minimum_degree || null, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
     salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(), is_confidential: f.is_confidential, confidential_label: f.is_confidential ? f.confidential_label.trim().slice(0, 80) : "",
+    max_applications: (() => { const n = num(f.max_applications); return n && n > 0 ? Math.min(n, 10000) : null; })(),
     equity_type: f.equity_type, equity_range: f.equity_type === "none" ? "" : f.equity_range.trim().slice(0, 80), equity_vesting: f.equity_type === "none" ? "" : f.equity_vesting.trim().slice(0, 160),
   };
 }
