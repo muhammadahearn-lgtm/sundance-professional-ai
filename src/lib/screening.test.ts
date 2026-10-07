@@ -11,10 +11,10 @@ describe("screening", () => {
     expect(validateAnswers([q({ required: false })], {})).toEqual({});
   });
   it("rejects answers outside the yes/no options", () => {
-    expect(validateAnswers([q({})], { q1: "Maybe" }).q1).toBe("Pick one of the options.");
+    expect(validateAnswers([q({})], { q1: "Maybe" })["q1"]).toBe("Pick one of the options.");
   });
   it("needs at least two options for choice questions", () => {
-    expect(validateQuestions([q({ type: "choice", options: ["Only one"] })]).q1).toBe("Add at least two answer options.");
+    expect(validateQuestions([q({ type: "choice", options: ["Only one"] })])["q1"]).toBe("Add at least two answer options.");
   });
   it("flags answers that differ from the preferred answer", () => {
     expect(answerFit({ ideal: "No" }, "Yes")).toBe("mismatch");

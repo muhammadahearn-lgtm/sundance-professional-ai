@@ -19,8 +19,8 @@ export function EquityPanel({ v, onChange, errs }: { v: EquityVals; onChange: (k
       </div>
       {v.equity_type !== "none" && (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Range" error={errs.equity_range}><input className={inputCls} maxLength={80} value={v.equity_range} onChange={(e) => onChange("equity_range", e.target.value)} placeholder={v.equity_type === "percentage" ? "0.1% – 0.5%" : v.equity_type === "rsu" ? "$40k – $80k / year" : "10,000 – 25,000 options"} /></Field>
-          <Field label="Vesting (optional)" error={errs.equity_vesting}><input className={inputCls} maxLength={160} value={v.equity_vesting} onChange={(e) => onChange("equity_vesting", e.target.value)} placeholder="4 years, 1-year cliff" /></Field>
+          <Field label="Range" error={errs["equity_range"]}><input className={inputCls} maxLength={80} value={v.equity_range} onChange={(e) => onChange("equity_range", e.target.value)} placeholder={v.equity_type === "percentage" ? "0.1% – 0.5%" : v.equity_type === "rsu" ? "$40k – $80k / year" : "10,000 – 25,000 options"} /></Field>
+          <Field label="Vesting (optional)" error={errs["equity_vesting"]}><input className={inputCls} maxLength={160} value={v.equity_vesting} onChange={(e) => onChange("equity_vesting", e.target.value)} placeholder="4 years, 1-year cliff" /></Field>
         </div>
       )}
     </section>
