@@ -1,3 +1,4 @@
+import { ResumeAutofillPanel } from "./ResumeAutofillPanel";
 import { LocationFields } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
 import { formatLocation, type LocationParts } from "@/lib/location";
@@ -100,6 +101,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Header account={account} p={p} percent={completion.percent}
           onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
           onPreview={() => setPreview(true)} />
+        <ResumeAutofillPanel uid={uid} profile={p} />
 
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
           {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
