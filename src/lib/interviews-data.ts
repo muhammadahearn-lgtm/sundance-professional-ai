@@ -1,3 +1,4 @@
+import { confidentialName } from "./confidential";
 import { supabase } from "@/integrations/supabase/client";
 import type { InterviewDraft, ScorecardDraft } from "./interview-rules";
 
@@ -40,16 +41,16 @@ export type InterviewRow = Interview & { job_title: string; company_id: string |
 
 /** All interviews for the signed-in user (either role), with job, company and candidate names. */
 export async function listMyInterviews(uid: string, role: "candidate" | "recruiter"): Promise<InterviewRow[]> {
-  const { data, error } = await supabase.from("interviews").select("*, jobs(job_title, company_id, companies(company_name))")
+  const { data, error } = await supabase.from("interviews").select("*, jobs(job_title, company_id, is_confidential, confidential_label, companies(company_name))")
     .eq(role === "candidate" ? "candidate_id" : "recruiter_id", uid).neq("status", "cancelled").order("scheduled_at");
   if (error) throw error;
-  const rows = (data ?? []) as unknown as (Interview & { jobs: { job_title: string; company_id: string | null; companies: { company_name: string } | null } | null })[];
+  const rows = (data ?? []) as unknown as (Interview & { jobs: { job_title: string; company_id: string | null; is_confidential: boolean; confidential_label: string; companies: { company_name: string } | null } | null })[];
   let names = new Map<string, string>();
   if (role === "recruiter" && rows.length) {
     const { data: n } = await supabase.rpc("candidate_names", { _ids: [...new Set(rows.map((r) => r.candidate_id))] });
     names = new Map((n ?? []).map((x: { user_id: string; first_name: string; last_name: string }) => [x.user_id, `${x.first_name} ${x.last_name}`.trim()]));
   }
-  return rows.map(({ jobs, ...r }) => ({ ...r, job_title: jobs?.job_title ?? "Interview", company_id: jobs?.company_id ?? null, company_name: jobs?.companies?.company_name ?? "", candidate_name: names.get(r.candidate_id) ?? "Candidate" }));
+  return rows.map(({ jobs, ...r }) => ({ ...r, job_title: jobs?.job_title ?? "Interview", ...(role === "candidate" && jobs?.is_confidential ? { company_id: null, company_name: confidentialName(jobs.confidential_label) } : { company_id: jobs?.company_id ?? null, company_name: jobs?.companies?.company_name ?? "" }), candidate_name: names.get(r.candidate_id) ?? "Candidate" }));
 }
 
 export type Scorecard = ScorecardDraft & { interview_id: string; recruiter_id: string; updated_at: string };

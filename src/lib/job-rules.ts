@@ -11,12 +11,13 @@ export type JobForm = {
   location: string; location_country: string; location_state: string; location_city: string; minimum_years_experience: string; minimum_degree: string; experience_level: string; job_description: string;
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
+  is_confidential: boolean; confidential_label: string;
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
   job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "", location_country: "", location_state: "", location_city: "",
   minimum_years_experience: "", minimum_degree: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
-  minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "",
+  minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "", is_confidential: false, confidential_label: "",
 });
 
 type Errs = Partial<Record<keyof JobForm, string>>;

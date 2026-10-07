@@ -38,6 +38,7 @@
 - Locations: `countries` list; `location_normalize` trigger rebuilds `location`; client mirror `location.ts`. Why: consistent search.
 - Education: fixed `degree_type` list (DB CHECK); field/institution normalized by `education_normalize`; client `src/lib/education.ts`; job `minimum_degree`/education fit never scored. Why: clean data.
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
-- Certifications: `certification_normalize` links to `certification_catalog` by name/abbr/alias (`cert_key`, word-order-free); custom entries Title-Cased, candidate-only. Why: clean data.
+- Certifications: `certification_normalize` links to `certification_catalog` via `cert_key`; custom entries candidate-only. Why: clean data.
 - Interviews: recruiter writes own, candidate reads own; scorecards recruiter-only; rules: `interview-rules.ts`. Why: private.
-- Job companies: recruiters pick from `my_job_companies` or add via `add_company_entry` (dedupes by `company_key`, ignoring case/punctuation/legal suffixes); only the creator edits a company profile. Why: supports in-house, independent and agency recruiters without duplicate companies.
+- Job companies: pick via `my_job_companies` or add via `add_company_entry` (dedupe by `company_key`); creator edits unclaimed clients. Why: no duplicates.
+- Confidential jobs masked in candidate loaders via `confidential.ts`. Why: one masking path.

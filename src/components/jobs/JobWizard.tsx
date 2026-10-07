@@ -14,6 +14,7 @@ import { addRoleEntry } from "@/lib/role-add";
 import { addCompanyEntry, loadJobCompanies, newCompanyName } from "@/lib/company-add";
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
+import { ClientCompanyPanel } from "./ClientCompanyPanel";
 import { digitsOnly } from "@/lib/salary";
 import { displayJobTitle } from "@/lib/role-taxonomy";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
@@ -167,6 +168,7 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
               <Field label="Custom Job Title (optional)" error={errs.custom_title} hint={<span className="text-xs text-muted-foreground">Display only</span>}><input className={inputCls} value={f.custom_title} onChange={(e) => set("custom_title", e.target.value)} placeholder={displayJobTitle("", tax.levels.find((l) => l.id === f.level_id)?.name ?? "Senior", tax.allRoles.find((r) => r.id === f.role_id)?.name ?? "Data Engineer") + " – AI Platform"} /></Field>
               <Field label="Shown To Candidates As"><input readOnly className={`${inputCls} bg-muted/50`} value={displayJobTitle(f.custom_title, tax.levels.find((l) => l.id === f.level_id)?.name, tax.allRoles.find((r) => r.id === f.role_id)?.name) || "Pick a role and level"} /></Field>
               <Field label="Company *" error={errs.company_id} hint={<span className="text-xs text-muted-foreground">The company you are hiring for</span>}><SearchPicker ariaLabel="Company" options={companies} value={f.company_id} onChange={(v) => set("company_id", v)} allowClear={false} placeholder="Search or add a company" nameFor={newCompanyName} addHint="Existing names are reused automatically (e.g. “Acme Inc.” = “Acme”)." onAdd={addCompanyEntry} /></Field>
+              <ClientCompanyPanel uid={uid} companyId={f.company_id} confidential={f.is_confidential} label={f.confidential_label} onConfidential={(v) => set("is_confidential", v)} onLabel={(v) => set("confidential_label", v)} />
               <Field label="Employment Type *" error={errs.employment_type}>
                 <select className={inputCls} value={f.employment_type} onChange={(e) => set("employment_type", e.target.value)}>{EMPLOYMENT.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
               </Field>

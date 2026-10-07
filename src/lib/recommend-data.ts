@@ -1,3 +1,4 @@
+import { confidentialName } from "./confidential";
 import { supabase } from "@/integrations/supabase/client";
 import type { CareerData } from "./career-data";
 import type { MatchDetails } from "./match-engine";
@@ -11,7 +12,7 @@ const det = (d: unknown) => (d && typeof d === "object" && "missing" in d ? (d a
 /** Candidate recommendations, built on top of the Career Intelligence report. */
 export async function loadCandidateRecs(uid: string, career: CareerData) {
   const [sc, apps, saved] = await Promise.all([
-    supabase.from("match_scores").select("job_id, overall_match_score, details, jobs!inner(job_title, location, job_status, minimum_salary, maximum_salary, companies(company_name))").eq("candidate_id", uid).eq("jobs.job_status", "active"),
+    supabase.from("match_scores").select("job_id, overall_match_score, details, jobs!inner(job_title, location, job_status, minimum_salary, maximum_salary, is_confidential, confidential_label, companies(company_name))").eq("candidate_id", uid).eq("jobs.job_status", "active"),
     supabase.from("applications").select("job_id").eq("candidate_id", uid),
     supabase.from("saved_jobs").select("job_id").eq("candidate_id", uid),
   ]);
@@ -20,7 +21,7 @@ export async function loadCandidateRecs(uid: string, career: CareerData) {
   const applied = new Set((apps.data ?? []).map((a) => a.job_id)), savedSet = new Set((saved.data ?? []).map((s) => s.job_id));
   const r = career.report;
   const jobs = recommendJobs((sc.data ?? []).map((s) => ({
-    jobId: s.job_id, title: s.jobs.job_title, company: s.jobs.companies?.company_name ?? "", location: s.jobs.location,
+    jobId: s.job_id, title: s.jobs.job_title, company: s.jobs.is_confidential ? confidentialName(s.jobs.confidential_label) : s.jobs.companies?.company_name ?? "", location: s.jobs.location,
     salary: [money(s.jobs.minimum_salary), money(s.jobs.maximum_salary)].filter(Boolean).join("–"), overall: Number(s.overall_match_score), details: det(s.details),
     saved: savedSet.has(s.job_id), applied: applied.has(s.job_id),
   })), r.readiness.score);
