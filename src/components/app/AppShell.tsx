@@ -146,19 +146,8 @@ export function AppShell({ account }: { account: Account }) {
     <div className="flex min-h-full flex-col gap-4">
       <nav className="flex flex-col gap-1" aria-label="Main">
         {NAV[account.role].map((item) => navLink(item, hit(item.to) || !!item.match?.some(hit)))}
+        {ACCOUNT_NAV[account.role].map((item) => navLink(item, hit(item.to)))}
       </nav>
-      <div className="mt-auto rounded-2xl border border-border bg-muted/40 p-2">
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-[11px] font-bold text-primary-foreground">{initials}</span>
-          <div className="min-w-0"><p className="truncate text-sm font-semibold leading-tight">{name}</p><p className="text-xs capitalize text-muted-foreground">{account.role}</p></div>
-        </div>
-        <nav className="flex flex-col gap-0.5" aria-label="Account">
-          {ACCOUNT_NAV[account.role].map((item) => navLink(item, hit(item.to)))}
-          <button type="button" onClick={signOut} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
-            <LogOut className="h-4 w-4 shrink-0" aria-hidden />Sign out
-          </button>
-        </nav>
-      </div>
     </div>
   );
 
