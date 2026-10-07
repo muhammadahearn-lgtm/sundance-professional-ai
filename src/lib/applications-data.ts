@@ -74,7 +74,7 @@ export type JobApplication = Awaited<ReturnType<typeof listJobApplications>>[num
 export async function loadJobApplication(id: string) {
   const { data, error } = await supabase.from("applications").select("application_id, application_date, application_status, candidate_id, job_id, jobs(job_id, job_title, recruiter_id)").eq("application_id", id).maybeSingle();
   if (error) throw error;
-  return data && data.jobs ? { ...data, jobs: maskJobRow(data.jobs) } : data;
+  return data;
 }
 
 export async function setApplicationStatus(id: string, status: AppStatus) {
