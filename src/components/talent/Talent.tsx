@@ -82,7 +82,7 @@ export function useCandidateLists(uid: string) {
     await qc.invalidateQueries({ queryKey: [key, uid] });
   };
   return {
-    savedIds: s, compareIds: c, isSaved: (id: string) => s.includes(id), isCompared: (id: string) => c.includes(id),
+    uid, savedIds: s, compareIds: c, isSaved: (id: string) => s.includes(id), isCompared: (id: string) => c.includes(id),
     toggleSave: (id: string) => toggle("saved-cands", s, id, setSavedCandidate, ["Candidate saved", "Candidate removed from saved"]),
     toggleCompare: (id: string) => toggle("cmp-cands", c, id, setComparedCandidate, ["Added to comparison", "Removed from comparison"]),
   };
@@ -110,7 +110,7 @@ export function useSavedJobs(uid: string) {
 }
 
 /** Save button with a searchable, company-grouped job picker and an AI top-match suggestion. */
-export function SaveToJobControl({ uid, candidateId, name }: { uid: string; candidateId: string; name: string }) {
+export function SaveToJobControl({ uid, candidateId, name, variant = "button", preferJobId }: { uid: string; candidateId: string; name: string; variant?: "button" | "icon" | "compact"; preferJobId?: string | undefined }) {
   const s = useSavedJobs(uid);
   const e = s.entryOf(candidateId);
   const [open, setOpen] = useState(false);
@@ -120,7 +120,8 @@ export function SaveToJobControl({ uid, candidateId, name }: { uid: string; cand
   const scores = useMemo(() => Object.fromEntries((scoreQ.data ?? []).map((r) => [r.job_id, Number(r.overall_match_score)])) as Record<string, number>, [scoreQ.data]);
   const companies = useMemo(() => [...new Map(s.jobs.filter((j) => j.company_id).map((j) => [j.company_id!, j.company_name])).entries()].map(([id, n]) => ({ id, n, count: s.jobs.filter((j) => j.company_id === id).length })).sort((a, b) => a.n.localeCompare(b.n)), [s.jobs]);
   const groups = groupPickerJobs(s.jobs, { company: co, q });
-  const top = !q && !co ? topPickJob(s.jobs, scores) : null;
+  const preferred = preferJobId ? s.jobs.find((j) => j.job_id === preferJobId) : undefined;
+  const top = !q && !co ? preferred ?? topPickJob(s.jobs, scores) : null;
   const current = e?.job_id ? s.jobs.find((j) => j.job_id === e.job_id) : undefined;
   const pick = (jobId: string | null) => { setOpen(false); setQ(""); void s.saveFor(candidateId, jobId); };
   const pill = (id: string) => scores[id] != null ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${matchTone(scores[id]!)}`}>{Math.round(scores[id]!)}%</span> : null;
@@ -128,11 +129,12 @@ export function SaveToJobControl({ uid, candidateId, name }: { uid: string; cand
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button aria-label={`Save ${name} for a job`} className={`${btn} ${e ? "border-primary text-primary" : ""} max-w-[280px]`}>
+        {variant === "icon" ? <button aria-label={`Save ${name} for a job`} title={current ? `Saved for ${current.job_title}` : e ? "Saved · General pool" : "Save"} className={`grid h-9 w-9 place-items-center rounded-xl border bg-card transition hover:border-primary hover:text-primary ${e ? "border-primary text-primary" : "border-border"}`}>{e ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}</button>
+          : <button aria-label={`Save ${name} for a job`} className={variant === "compact" ? `mt-2 inline-flex max-w-full items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition hover:border-primary hover:text-primary ${e ? "border-primary bg-primary-soft text-primary" : "border-border"}` : `${btn} ${e ? "border-primary text-primary" : ""} max-w-[280px]`}>
           {e ? <BookmarkCheck className="h-4 w-4 shrink-0" /> : <Bookmark className="h-4 w-4 shrink-0" />}
-          <span className="truncate">{!e ? "Save Candidate" : current ? `Saved for ${current.job_title}` : "Saved · General pool"}</span>
+          <span className="truncate">{!e ? (variant === "compact" ? "Save" : "Save Candidate") : current ? `Saved for ${current.job_title}` : "Saved · General pool"}</span>
           <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
-        </button>
+        </button>}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[380px] overflow-hidden rounded-2xl p-0 shadow-xl">
         <div className="border-b border-border bg-gradient-to-br from-primary-soft/70 to-transparent p-3">
@@ -144,10 +146,10 @@ export function SaveToJobControl({ uid, candidateId, name }: { uid: string; cand
           </div>}
         </div>
         <div className="max-h-80 overflow-y-auto p-2">
-          {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">✦ AI top match</p>
+          {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">{preferred ? "✦ Job you're comparing for" : "✦ AI top match"}</p>
             <button onClick={() => pick(top.job_id)} className="w-full rounded-xl border border-primary/40 bg-primary-soft/40 p-3 text-left ring-4 ring-primary/10 transition hover:border-primary hover:shadow-md">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{top.job_title}</span>{pill(top.job_id)}</div>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">{top.company_name} · strongest fit across your active jobs</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{top.company_name} · {preferred ? "save for this job in one click" : "strongest fit across your active jobs"}</p>
             </button></div>}
           {!q && <button onClick={() => pick(null)} className={row}><Bookmark className="h-4 w-4 text-muted-foreground" /><span className="flex-1">General talent pool</span>{e && !e.job_id && <Check className="h-4 w-4 text-primary" />}</button>}
           {groups.map((g) => <div key={g.company} className="mt-2"><p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.company} · {g.jobs.length}</p>
@@ -191,15 +193,8 @@ export function SourcedCandidatesPanel({ uid, jobId }: { uid: string; jobId: str
   );
 }
 
-/** Compare-page column action: save/tag the candidate for the job being compared. */
-function SaveForJobButton({ s, cid, jobId }: { s: ReturnType<typeof useSavedJobs>; cid: string; jobId: string }) {
-  const e = s.entryOf(cid);
-  if (e?.job_id === jobId) return <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1 text-xs font-semibold text-primary"><BookmarkCheck className="h-3.5 w-3.5" />Saved for this job</span>;
-  return <button onClick={() => void s.saveFor(cid, jobId)} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-semibold hover:border-primary hover:text-primary"><Bookmark className="h-3.5 w-3.5" />{e ? "Move to this job" : "Save for this job"}</button>;
-}
-
 export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
-  const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
+  const cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
   return (
     <article className={`${card} p-5`}>
@@ -218,7 +213,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={primaryBtn}>View Profile</Link>
-            <button onClick={() => lists.toggleSave(c.id)} aria-pressed={saved} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>
+            <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} />
             <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
             <button onClick={soon("Talent pools")} className={btn}><UserPlus className="h-4 w-4" />Talent Pool</button>
             <button onClick={soon("Messaging")} className={btn}><MessageSquare className="h-4 w-4" />Contact</button>
@@ -240,7 +235,7 @@ function PhotoCover({ name, path }: { name: string; path?: string | null | undef
 }
 
 export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
-  const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
+  const cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
@@ -257,7 +252,7 @@ export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Tax
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
           <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
-          <button onClick={() => lists.toggleSave(c.id)} aria-pressed={saved} aria-label={saved ? "Unsave candidate" : "Save candidate"} title="Save" className={`${icon} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}</button>
+          <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" />
           <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} aria-label="Compare candidate" title="Compare" className={`${icon} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" /></button>
           <button onClick={soon("Talent pools")} aria-label="Add to talent pool" title="Talent Pool" className={icon}><UserPlus className="h-4 w-4" /></button>
           <button onClick={soon("Messaging")} aria-label="Message candidate" title="Message" className={icon}><MessageSquare className="h-4 w-4" /></button>
@@ -600,7 +595,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
           {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
             media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
             : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
-          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} />{selJob && <div><SaveForJobButton s={savedJobs} cid={c.id} jobId={selJob.job_id} /></div>}</th>)}</tr></thead>
+          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><div><SaveToJobControl uid={uid} candidateId={c.id} name={c.name} variant="compact" preferJobId={selJob?.job_id} /></div></th>)}</tr></thead>
             <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
         </>}
     </div>
