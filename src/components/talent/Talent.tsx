@@ -245,17 +245,35 @@ function PhotoCover({ name, path }: { name: string; path?: string | null | undef
     : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
 }
 
-export function CandidateGridCard({ c, t, lists, score, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
+/** Compact 5-factor match breakdown shown in the grid card's score popover. */
+function GridMatchBreakdown({ r }: { r: ScoreRow }) {
+  const items: [string, number, string][] = [["Languages", r.language_alignment_score, "20%"], ["Skills", r.skill_alignment_score, "30%"], ["Tools & Tech", r.technology_alignment_score, "20%"], ["Experience", r.experience_alignment_score, "20%"], ["Preferences", r.preference_alignment_score, "10%"]];
+  return <div className="space-y-2">{items.map(([l, v, w]) => <div key={l}><div className="flex justify-between text-[11px]"><span className="text-muted-foreground">{l} <span className="text-[10px]">· {w}</span></span><span className="font-semibold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1 rounded-full bg-muted"><div className="h-1 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}</div>;
+}
+
+export function CandidateGridCard({ c, t, lists, score, row, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; row?: ScoreRow | undefined }) {
   const cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
-      <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="relative block aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
-        <PhotoCover name={c.name} path={c.avatarPath} />
-        {score !== undefined && <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
+      <div className="relative aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
+        <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="block h-full w-full" aria-label={`View ${c.name} profile`}>
+          <PhotoCover name={c.name} path={c.avatarPath} />
+        </Link>
+        {score !== undefined && (row ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" aria-label={`${Math.round(score)}% match — view score breakdown`} className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}% Match</button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 rounded-2xl p-3 shadow-xl">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Match Breakdown</p>
+              <GridMatchBreakdown r={row} />
+            </PopoverContent>
+          </Popover>
+        ) : <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>)}
         {c.availability && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold shadow-soft" title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
-        {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
-      </Link>
+        {c.summary && <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
+      </div>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
         <p className="truncate text-sm">{c.jobTitle || "—"}</p><div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
@@ -407,7 +425,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
 {q.error || tax.error ? <ErrorBox msg="Unable To Load Candidates" retry={() => { void tax.refetch(); void q.refetch(); }} /> : q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-80" : "h-48"} animate-pulse`} />)}</div>
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
-            : view === "grid" ? <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobId={selJob?.job_id} />)}</div>
+            : view === "grid" ? <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} row={hasJob ? rowsBy[c.id] : undefined} jobId={selJob?.job_id} />)}</div>
             : shown.map((c) => <CandidateCard key={c.id} jobId={selJob?.job_id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} locAlign={selJob ? locationAlignment({ country: c.country ?? "", state: c.state ?? "", city: c.city ?? "" }, { country: selJob.location_country ?? "", state: selJob.location_state ?? "", city: selJob.location_city ?? "" }, selJob.work_arrangement, c.arrangement) : undefined} eduAlign={selJob ? educationAlignment(c.education ?? [], selJob.minimum_degree) : undefined} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
