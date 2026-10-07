@@ -58,7 +58,7 @@ function ScoreRing({ s }: { s: number }) {
 function MatchBadgePopover({ score, row }: { score: number | undefined; row: ScoreRow | undefined }) {
   if (score == null) return <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground" title="Complete your profile to see how you match"><Sparkles className="h-3.5 w-3.5" />No score yet</span>;
   const s = Math.round(score), tier = matchTier(s);
-  const pill = <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums ${softTone(s)}`}><ScoreRing s={s} />{s}% Match</span>;
+  const pill = <span className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-1.5 text-base font-semibold tabular-nums ${softTone(s)} [&>svg]:h-5 [&>svg]:w-5`}><ScoreRing s={s} />{s}% Match</span>;
   if (!row) return pill;
   const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Tools & Tech", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
   return (
@@ -191,8 +191,8 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
           {salary && <span className="whitespace-nowrap text-xs font-semibold tabular-nums text-foreground/80">{salary}</span>}
+          <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
