@@ -313,7 +313,7 @@ export function NotificationWidget({ uid, role }: { uid: string; role: Role }) {
 }
 
 type Prefs = Record<Exclude<NotificationCategory, "company">, boolean>;
-const PREF_LABELS: [NotificationCategory, string, string][] = [
+const PREF_LABELS: [keyof Prefs, string, string][] = [
   ["application", "Application Notifications", "Submissions, status changes and saved job updates."],
   ["messaging", "Messaging Notifications", "New messages, replies and attachments."],
   ["pipeline", "Pipeline Notifications", "Stage changes and candidate availability."],
