@@ -1,7 +1,8 @@
 // Profile page "Auto-fill from resume": parse, show what will be added, save only on confirm.
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,10 +14,9 @@ import type { ParsedResume } from "@/lib/resume-parse";
 
 type Profile = { headline: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; job_title: string };
 
-export function ResumeAutofillPanel({ uid, profile }: { uid: string; profile: Profile }) {
+export function ResumeAutofillPanel({ uid, profile, open, onOpenChange }: { uid: string; profile: Profile; open: boolean; onOpenChange: (v: boolean) => void }) {
   const qc = useQueryClient();
   const catalogs = useResumeCatalogs();
-  const [open, setOpen] = useState(false);
   const [review, setReview] = useState<{ plan: ResumeImportPlan; patch: Partial<Profile>; m: MatchedResume } | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -37,14 +37,8 @@ export function ResumeAutofillPanel({ uid, profile }: { uid: string; profile: Pr
     setSaving(false);
     await qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
     if (failed) toast.error("Some items couldn't be added. Please check your profile."); else toast.success("Profile updated from your resume");
-    setReview(null); setOpen(false);
+    setReview(null); onOpenChange(false);
   }
-
-  if (!open) return (
-    <button onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/50 p-4 text-left hover:border-primary">
-      <Sparkles className="h-5 w-5 text-primary" /><span><span className="block text-sm font-semibold">Auto-fill from your resume</span><span className="text-xs text-muted-foreground">Add missing skills, jobs, education and certifications in one go. You review before anything is saved.</span></span>
-    </button>
-  );
 
   const pl = review?.plan;
   const lines = pl ? [
@@ -54,8 +48,12 @@ export function ResumeAutofillPanel({ uid, profile }: { uid: string; profile: Pr
   ].filter(([n]) => (n as number) > 0) as [number, string][] : [];
 
   return (
-    <div className="relative">
-      <button aria-label="Close" onClick={() => { setOpen(false); setReview(null); }} className="absolute right-3 top-3 z-10 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setReview(null); }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Auto-fill with AI</DialogTitle>
+          <DialogDescription>Add missing skills, jobs, education and certifications from your resume. You review before anything is saved.</DialogDescription>
+        </DialogHeader>
       {!review ? <ResumeUploadCard catalogs={catalogs.data ?? null} onParsed={onParsed} /> : (
         <div className="rounded-2xl border bg-card p-5">
           <h3 className="font-semibold">Review what we'll add</h3>
@@ -70,6 +68,7 @@ export function ResumeAutofillPanel({ uid, profile }: { uid: string; profile: Pr
           </div>
         </div>
       )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
