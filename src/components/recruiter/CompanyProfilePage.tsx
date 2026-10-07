@@ -247,10 +247,22 @@ function InfoForm({ uid, companyId, initial, onDone, submitLabel }: { uid: strin
     if (cid) {
       err = (await supabase.from("companies").update(row).eq("company_id", cid)).error;
     } else {
-      const ins = await supabase.from("companies").insert({ ...row, created_by: uid }).select("company_id").single();
-      err = ins.error;
-      cid = ins.data?.company_id ?? null;
-      if (!err && cid) err = (await supabase.from("recruiter_profiles").update({ company_id: cid, company_name: row.company_name }).eq("user_id", uid)).error;
+      // Reuse an existing company with the same normalized name instead of creating a duplicate.
+      try {
+        const co = await addCompanyEntry(row.company_name);
+        cid = co.id;
+        err = (await supabase.from("recruiter_profiles").update({ company_id: cid, company_name: co.name }).eq("user_id", uid)).error;
+        if (!err) {
+          const { data: isAdmin } = await supabase.rpc("is_company_admin", { _company: cid, _uid: uid });
+          if (!isAdmin) {
+            setSaving(false);
+            toast.success(`${co.name} already exists — you've joined its team. Ask an admin for edit access.`);
+            onSaved?.();
+            return;
+          }
+          err = (await supabase.from("companies").update(row).eq("company_id", cid)).error;
+        }
+      } catch (e) { err = e as Error; }
     }
     if (!err && cid) {
       err = (await supabase.from("company_contacts").upsert({ company_id: cid, contact_email: f.contact_email.trim() }, { onConflict: "company_id" })).error;
