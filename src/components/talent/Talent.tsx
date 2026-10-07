@@ -193,6 +193,18 @@ export function SourcedCandidatesPanel({ uid, jobId }: { uid: string; jobId: str
   );
 }
 
+/** Shows whether the recruiter already saved this candidate: sourced for the active job, another job, or the general pool. */
+function SavedBadge({ uid, candidateId, jobId }: { uid: string; candidateId: string; jobId?: string | undefined }) {
+  const entries = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
+  const jobs = useQuery({ queryKey: ["save-job-options", uid], queryFn: () => loadSaveJobOptions(uid) });
+  const e = entries.data?.find((x) => x.candidate_id === candidateId);
+  if (!e) return null;
+  const forThis = !!jobId && e.job_id === jobId;
+  const other = e.job_id ? jobs.data?.find((j) => j.job_id === e.job_id)?.job_title : null;
+  const text = forThis ? "Sourced for this job" : other ? `Saved · ${other}` : "Saved";
+  return <span title={text} className={`inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${forThis ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary"}`}>{forThis ? <Sparkles className="h-3 w-3 shrink-0" /> : <BookmarkCheck className="h-3 w-3 shrink-0" />}<span className="truncate">{text}</span></span>;
+}
+
 export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
@@ -202,7 +214,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
         <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
+            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link><span className="ml-2 align-middle"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></span>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
             <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
@@ -246,7 +258,7 @@ export function CandidateGridCard({ c, t, lists, score, jobId }: { jobId?: strin
       </Link>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
-        <p className="truncate text-sm">{c.jobTitle || "—"}</p>
+        <p className="truncate text-sm">{c.jobTitle || "—"}</p><div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
         <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs</span></p>
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
