@@ -28,7 +28,7 @@ const stageLabel = (s: string) => STAGES.find(([k]) => k === s)?.[1] ?? s;
 
 async function loadDashboard(uid: string) {
   const [rp, jobs, apps, pipe, savedIds] = await Promise.all([
-    supabase.from("recruiter_profiles").select("*, companies(*)").eq("user_id", uid).maybeSingle(),
+    supabase.from("recruiter_profiles").select("*, companies!recruiter_profiles_company_id_fkey(*)").eq("user_id", uid).maybeSingle(),
     listJobs(uid), listJobApplications(uid), listPipeline(uid), listSavedCandidates(uid),
   ]);
   if (rp.error) throw rp.error;
