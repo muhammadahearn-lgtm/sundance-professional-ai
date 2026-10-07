@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
-import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
+import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, saveCandidateForJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
 import { SAVED_SORTS, UNASSIGNED, filterSaved, sortSaved, type SavedItem, type SavedSort } from "@/lib/saved-candidates";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
@@ -399,12 +399,12 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   if (q.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
-  const saved = lists.isSaved(id), cmp = lists.isCompared(id);
+  const cmp = lists.isCompared(id);
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
       <ProfileHeader d={q.data} actions={<>
-        <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
+        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
         <MessageButton role="recruiter" candidateId={id} className={btn} />
         <ReportButton type="user" targetId={id} /></>} />
@@ -481,6 +481,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
   useAutoRecalc();
   const ctx = useJobContext(uid);
+  const savedJobs = useSavedJobs(uid);
   const [co, setCo] = useState("");
   const [jobSel, setJobSel] = useState("");
   const selJob = ctx.data?.jobs.find((j) => j.job_id === jobSel);
@@ -533,7 +534,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
           {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
             media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
             : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
-          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /></th>)}</tr></thead>
+          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} />{selJob && <div><SaveForJobButton s={savedJobs} cid={c.id} jobId={selJob.job_id} /></div>}</th>)}</tr></thead>
             <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
         </>}
     </div>
