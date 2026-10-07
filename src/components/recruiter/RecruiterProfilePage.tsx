@@ -225,7 +225,7 @@ function ProForm({ uid, r, a, companyName, companies, team, onDone }: { uid: str
     setErrs(v);
     if (Object.keys(v).length) { toast.error("Missing required fields."); return; }
     if (r.company_id && companyId !== r.company_id && isLastAdmin(team, uid)) {
-      toast.error(`You're the only admin of ${companyName}. Promote another member in Company Profile → Team & Admins before switching companies.`);
+      toast.error(`You're the only admin of ${companyName}. Promote another member in Company → Team before switching. Just fixing a typo? Rename the company in Company → Branding instead.`, { duration: 9000 });
       return;
     }
     const picked = companies.find((co) => co.id === companyId);
@@ -251,7 +251,7 @@ function ProForm({ uid, r, a, companyName, companies, team, onDone }: { uid: str
       <div className="grid gap-4 sm:grid-cols-2">
         {inp("first_name", "First Name *")}{inp("last_name", "Last Name *")}
         {inp("title", "Recruiter Title *", { placeholder: "Senior Technical Recruiter" })}
-        <Field label="Company *" error={errs.company_name} hint={<span className="text-xs text-muted-foreground">Pick your company, or add a new one — duplicates are merged automatically.</span>}>
+        <Field label="Employer or Agency *" error={errs.company_name} hint={<span className="text-xs text-muted-foreground">The company you work for (not a job's client — pick clients per job). Changing this moves your team workspace; your sign-in email stays the same.</span>}>
           <SearchPicker ariaLabel="Company" options={companies} value={companyId} onChange={setCompanyId} placeholder="Search or add a company" nameFor={newCompanyName} addHint="Existing names are reused automatically (e.g. “Acme Inc.” = “Acme”)." onAdd={addCompanyEntry} />
         </Field>
         <LocationFields required error={(errs as Record<string, string | undefined>)["location"]} value={loc} onChange={setLoc} />
