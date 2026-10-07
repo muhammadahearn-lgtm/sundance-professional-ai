@@ -1,6 +1,6 @@
 import { Plus, Trash2, Gem, ListChecks } from "lucide-react";
 import { Field, inputCls } from "@/components/profile/parts";
-import { EQUITY_TYPES, MAX_QUESTIONS, PRESETS, fromPreset, newId, optionsFor, validateQuestions, type QType, type ScreeningQ } from "@/lib/screening";
+import { EQUITY_TYPES, MAX_QUESTIONS, PRESETS, PRESET_GROUPS, fromPreset, newId, optionsFor, validateQuestions, type QType, type ScreeningQ } from "@/lib/screening";
 
 type EquityVals = { equity_type: string; equity_range: string; equity_vesting: string };
 
@@ -38,12 +38,18 @@ export function ScreeningPanel({ value, onChange, error }: { value: ScreeningQ[]
     <section className="rounded-2xl border border-border p-4">
       <h3 className="flex items-center gap-2 font-display font-bold"><ListChecks className="h-4 w-4 text-primary" />Screening Questions</h3>
       <p className="mb-3 text-xs text-muted-foreground">Optional. Candidates answer these when applying. Answers help you review quickly — they never change match scores or auto-reject anyone.</p>
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map((p) => (
-          <button key={p.key} type="button" disabled={full || used(p.key)} onClick={() => { const q = fromPreset(p.key); if (q) onChange([...value, q]); }} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold hover:border-primary hover:text-primary disabled:opacity-50"><Plus className="h-3 w-3" />{p.label}</button>
+      <p className="mb-2 text-xs font-semibold text-muted-foreground">Templates — add in one click, then edit freely</p>
+      <div className="space-y-2">
+        {PRESET_GROUPS.map((g) => (
+          <div key={g.key} className="flex flex-wrap items-center gap-2">
+            <span className="w-full text-[11px] font-bold uppercase tracking-wide text-muted-foreground sm:w-36">{g.label}</span>
+            {PRESETS.filter((p) => p.group === g.key).map((p) => (
+              <button key={p.key} type="button" disabled={full || used(p.key)} onClick={() => { const q = fromPreset(p.key); if (q) onChange([...value, q]); }} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold hover:border-primary hover:text-primary disabled:opacity-50"><Plus className="h-3 w-3" />{p.label}</button>
+            ))}
+          </div>
         ))}
-        <button type="button" disabled={full} onClick={() => onChange([...value, { id: newId(), text: "", type: "text", options: [], ideal: "", required: true }])} className="inline-flex items-center gap-1 rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary disabled:opacity-50"><Plus className="h-3 w-3" />Custom question</button>
       </div>
+      <button type="button" disabled={full} onClick={() => onChange([...value, { id: newId(), text: "", type: "text", options: [], ideal: "", required: true }])} className="mt-3 inline-flex items-center gap-1 rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary disabled:opacity-50"><Plus className="h-3 w-3" />Custom question</button>
       {full && <p className="mt-2 text-xs text-muted-foreground">Up to {MAX_QUESTIONS} questions per job.</p>}
       <ol className="mt-4 space-y-3">
         {value.map((q, i) => (

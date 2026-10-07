@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
+import { PRESETS, answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 const q = (p: Partial<ScreeningQ>): ScreeningQ => ({ id: "q1", text: "Do you need a visa?", type: "yes_no", options: [], ideal: "", required: true, ...p });
 
@@ -23,6 +23,17 @@ describe("screening", () => {
   });
   it("notice preset offers four start options", () => {
     expect(fromPreset("notice")?.options).toEqual(["Immediately", "2 weeks", "1 month", "2+ months"]);
+  });
+  it("every template is a valid question with a unique key", () => {
+    const keys = PRESETS.map((p) => p.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const p of PRESETS) {
+      const made = fromPreset(p.key)!;
+      expect(validateQuestions([made])).toEqual({});
+    }
+  });
+  it("visa template prefers No", () => {
+    expect(fromPreset("visa")?.ideal).toBe("No");
   });
 });
 
