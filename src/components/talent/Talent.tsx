@@ -543,15 +543,17 @@ export function CandidatePreviewDrawer({ uid, id, jobId, onClose }: { uid: strin
           {q.isLoading || tax.isLoading ? <div className="space-y-4"><div className={`${card} h-40 animate-pulse`} /><div className={`${card} h-96 animate-pulse`} /></div>
           : q.error || tax.error ? <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />
           : !q.data || !tax.data || !id ? <div className={`${card} p-8 text-center`}><p className="font-display font-bold">Profile not available</p></div>
-          : <>
+           : <LensState key={id} jobId={jobId}>{(lensJob, setLensJob) => <>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Quick view</div>
-            <ProfileHeader d={q.data} actions={<>
-              <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} preferJobId={jobId} />
+            <ProfileHeader d={q.data!} actions={<>
+              <InviteToApplyButton uid={uid} d={q.data!} t={tax.data!} jobId={lensJob} className={primaryBtn} />
+              <MessageButton role="recruiter" candidateId={id} jobId={lensJob || undefined} className={btn} />
+              <SaveToJobControl uid={uid} candidateId={id} name={q.data!.name ?? "candidate"} preferJobId={lensJob || jobId} />
               <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
-              <MessageButton role="recruiter" candidateId={id} jobId={jobId} className={btn} />
-              <Link to="/recruiter/candidates/$id" params={{ id }} search={jobId ? { job: jobId } : {}} className={btn}>Open full profile</Link></>} />
-            <CandidateProfileBody d={q.data} t={tax.data} stacked />
-          </>}
+              <Link to="/recruiter/candidates/$id" params={{ id }} search={lensJob ? { job: lensJob } : {}} className={btn}>Open full profile</Link></>} />
+            <JobMatchLens uid={uid} d={q.data!} t={tax.data!} jobId={lensJob} onJob={setLensJob} />
+            <CandidateProfileBody d={q.data!} t={tax.data!} stacked />
+          </>}</LensState>}
         </div>
       </SheetContent>
     </Sheet>
