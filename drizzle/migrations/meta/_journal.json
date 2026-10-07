@@ -393,6 +393,20 @@
       "when": 1791402237598,
       "tag": "0055_job_application_cap",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791403746819,
+      "tag": "0056_company_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1791403820560,
+      "tag": "0057_company_catalog_seed",
+      "breakpoints": true
     }
   ]
 }

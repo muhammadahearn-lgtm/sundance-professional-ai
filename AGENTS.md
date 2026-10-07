@@ -37,3 +37,5 @@
 - Job companies: pick via `my_job_companies` or add via `add_company_entry` (dedupe by `company_key`); creator edits unclaimed clients. Why: no duplicates.
 - App navigation: sidebar lists workspaces only; sibling list pages share one entry and show tabs from `WORKSPACES` in AppShell; account links live in the sidebar footer. Why: fewer menu items, URLs unchanged.
 - Market Pulse (`market-pulse.ts`) is a pure client computation comparing the last 30 days of published jobs with the prior 30; career mode + passive pay floor live on candidate_profiles; hide-from-current-employer is enforced in `candidate_visible_to_recruiters`. Why: explainable numbers, privacy enforced in the DB.
+
+- Seeded company catalog rows have `is_catalog = true`, a nil-UUID creator and no members, so they are readable by all signed-in users, selectable for jobs, and editable by no one. Why: shared reference list without ownership.
