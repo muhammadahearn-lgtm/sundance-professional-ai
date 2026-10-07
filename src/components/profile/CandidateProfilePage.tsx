@@ -188,7 +188,7 @@ function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 text-sm">{v || "—"}</dd></div>;
 }
 
-function Header({ account, p, percent, onEdit, onPreview }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void }) {
+function Header({ account, p, percent, onEdit, onPreview, onAutofill }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void; onAutofill: () => void }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
   const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
