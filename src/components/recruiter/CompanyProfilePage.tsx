@@ -16,7 +16,7 @@ async function load(uid: string) {
   const prof = await supabase.from("recruiter_profiles").select("company_id, company_name, company_website, industry, company_description, organization_type").eq("user_id", uid).maybeSingle();
   if (prof.error) throw prof.error;
   const cid = prof.data?.company_id;
-  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[], team: [] as TeamMember[], myRole: null as CompanyRole | null, requests: [] as AdminRequest[], myPending: false };
+  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[], team: [] as TeamMember[], myRole: null as CompanyRole | null, requests: [] as RequestRecord[], myPending: false };
   const [c, rec, roles, contact, team] = await Promise.all([
     supabase.from("companies").select("*").eq("company_id", cid).maybeSingle(),
     supabase.rpc("company_recruiters", { _company: cid }),
