@@ -254,6 +254,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className={primaryBtn}>View Profile</Link>
+            {onPreview && <button type="button" onClick={() => onPreview(c.id)} className={btn}><Eye className="h-4 w-4" />Quick View</button>}
             <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} preferJobId={jobId} />
             <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
             <MessageButton role="recruiter" candidateId={c.id} jobId={jobId} label="Contact" className={btn} />
@@ -310,6 +311,7 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
           <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
+          {onPreview && <button type="button" onClick={() => onPreview(c.id)} aria-label={`Quick view ${c.name}`} title="Quick view" className={icon}><Eye className="h-4 w-4" /></button>}
           <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" preferJobId={jobId} />
           <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} aria-label="Compare candidate" title="Compare" className={`${icon} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" /></button>
           <MessageButton role="recruiter" candidateId={c.id} jobId={jobId} label="Message candidate" iconOnly className={icon} />
@@ -508,6 +510,36 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
           <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
     </div>
+  );
+}
+
+/** Slide-over quick preview from search: full profile without leaving filtered results. */
+export function CandidatePreviewDrawer({ uid, id, jobId, onClose }: { uid: string; id: string | null; jobId?: string | undefined; onClose: () => void }) {
+  const tax = useTaxonomy();
+  const q = useQuery({ queryKey: ["candidate-full", id], queryFn: () => loadCandidateFull(id!), enabled: !!id });
+  const lists = useCandidateLists(uid);
+  useEffect(() => { if (id && q.data) track("candidate_view", id); }, [q.data, id]);
+  const cmp = id ? lists.isCompared(id) : false;
+  return (
+    <Sheet open={!!id} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" className="w-full overflow-y-auto bg-background p-0 sm:max-w-2xl">
+        <SheetHeader className="sr-only"><SheetTitle>{q.data?.name ?? "Candidate"} quick view</SheetTitle><SheetDescription>Candidate profile preview</SheetDescription></SheetHeader>
+        <div className="space-y-4 p-5">
+          {q.isLoading || tax.isLoading ? <div className="space-y-4"><div className={`${card} h-40 animate-pulse`} /><div className={`${card} h-96 animate-pulse`} /></div>
+          : q.error || tax.error ? <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />
+          : !q.data || !tax.data || !id ? <div className={`${card} p-8 text-center`}><p className="font-display font-bold">Profile not available</p></div>
+          : <>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Quick view</div>
+            <ProfileHeader d={q.data} actions={<>
+              <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} preferJobId={jobId} />
+              <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
+              <MessageButton role="recruiter" candidateId={id} jobId={jobId} className={btn} />
+              <Link to="/recruiter/candidates/$id" params={{ id }} search={jobId ? { job: jobId } : {}} className={btn}>Open full profile</Link></>} />
+            <CandidateProfileBody d={q.data} t={tax.data} stacked />
+          </>}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
