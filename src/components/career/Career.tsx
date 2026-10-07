@@ -19,12 +19,17 @@ function SalarySpectrum({ s }: { s: { marketLow: number; marketHigh: number; con
   const e0 = s.expected[0] ?? 0, e1 = s.expected[1] ?? 0;
   return (
     <div>
-      <div className="relative mb-10 mt-8 h-3 rounded-full bg-muted">
+      <div className="relative mx-12 mb-16 mt-16 h-3 rounded-full bg-muted">
         <div className="absolute inset-y-0 rounded-full bg-primary/15" style={{ left: pct(s.marketLow), right: `calc(100% - ${pct(s.marketHigh)})` }} />
         <div className="absolute inset-y-0 rounded-full bg-gradient-primary shadow-[0_0_16px_-2px_var(--primary)]" style={{ left: pct(e0), right: `calc(100% - ${pct(e1)})` }} />
         {([["Conservative", s.conservative, "bottom"], ["Expected", (e0 + e1) / 2, "top"], ["Stretch", s.stretch, "bottom"]] as const).map(([l, v, pos]) => (
-          <div key={l} className="absolute -translate-x-1/2" style={{ left: pct(v), top: pos === "top" ? "-2.1rem" : "1.1rem" }}>
-            <div className="whitespace-nowrap text-center text-[11px] text-muted-foreground"><b className="block text-sm text-foreground">{l === "Expected" ? `${money(e0)}–${money(e1)}` : `${money(v)}${l === "Stretch" ? "+" : ""}`}</b>{l}</div>
+          <div key={l} className="absolute top-1/2 -translate-x-1/2" style={{ left: pct(v) }}>
+            <span className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-card shadow-[0_0_10px_-2px_var(--primary)]" />
+            <span className={`absolute left-1/2 h-4 w-px -translate-x-1/2 bg-border ${pos === "top" ? "bottom-2" : "top-2"}`} />
+            <div className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center text-[11px] text-muted-foreground ${pos === "top" ? "bottom-6" : "top-6"}`}>
+              <b className={`block text-sm tabular-nums ${l === "Expected" ? "rounded-full border border-primary/30 bg-primary-soft px-2.5 py-0.5 text-primary" : "text-foreground"}`}>{l === "Expected" ? `${money(e0)}–${money(e1)}` : `${money(v)}${l === "Stretch" ? "+" : ""}`}</b>
+              <span className="mt-0.5 block">{l}</span>
+            </div>
           </div>
         ))}
       </div>
