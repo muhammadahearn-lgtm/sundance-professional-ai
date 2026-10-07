@@ -108,20 +108,56 @@ export function useSavedJobs(uid: string) {
   return { jobs: jobs.data ?? [], entryOf, saveFor, unsave };
 }
 
-/** Save button with a job picker: save to general pool or tag to one of the recruiter's own jobs. */
+/** Save button with a searchable, company-grouped job picker and an AI top-match suggestion. */
 export function SaveToJobControl({ uid, candidateId, name }: { uid: string; candidateId: string; name: string }) {
   const s = useSavedJobs(uid);
   const e = s.entryOf(candidateId);
-  const val = !e ? "__none" : e.job_id ?? "";
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [co, setCo] = useState("");
+  const scoreQ = useScores({ candidateId });
+  const scores = useMemo(() => Object.fromEntries((scoreQ.data ?? []).map((r) => [r.job_id, Number(r.overall_match_score)])) as Record<string, number>, [scoreQ.data]);
+  const companies = useMemo(() => [...new Map(s.jobs.filter((j) => j.company_id).map((j) => [j.company_id!, j.company_name])).entries()].map(([id, n]) => ({ id, n, count: s.jobs.filter((j) => j.company_id === id).length })).sort((a, b) => a.n.localeCompare(b.n)), [s.jobs]);
+  const groups = groupPickerJobs(s.jobs, { company: co, q });
+  const top = !q && !co ? topPickJob(s.jobs, scores) : null;
+  const current = e?.job_id ? s.jobs.find((j) => j.job_id === e.job_id) : undefined;
+  const pick = (jobId: string | null) => { setOpen(false); setQ(""); void s.saveFor(candidateId, jobId); };
+  const pill = (id: string) => scores[id] != null ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${matchTone(scores[id]!)}`}>{Math.round(scores[id]!)}%</span> : null;
+  const row = "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-primary-soft/60";
   return (
-    <label className={`${btn} ${e ? "border-primary text-primary" : ""} cursor-pointer`}>
-      {e ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-      <select aria-label={`Save ${name} for a job`} value={val} onChange={(ev) => { const v = ev.target.value; void (v === "__none" ? s.unsave(candidateId) : s.saveFor(candidateId, v || null)); }} className="max-w-[220px] cursor-pointer bg-transparent text-sm font-semibold outline-none">
-        <option value="__none">{e ? "Remove from saved" : "Save Candidate…"}</option>
-        <option value="">{e ? "Saved: " : ""}General talent pool</option>
-        {s.jobs.map((j) => <option key={j.job_id} value={j.job_id}>{e?.job_id === j.job_id ? "Saved for: " : ""}{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
-      </select>
-    </label>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button aria-label={`Save ${name} for a job`} className={`${btn} ${e ? "border-primary text-primary" : ""} max-w-[280px]`}>
+          {e ? <BookmarkCheck className="h-4 w-4 shrink-0" /> : <Bookmark className="h-4 w-4 shrink-0" />}
+          <span className="truncate">{!e ? "Save Candidate" : current ? `Saved for ${current.job_title}` : "Saved · General pool"}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[380px] overflow-hidden rounded-2xl p-0 shadow-xl">
+        <div className="border-b border-border bg-gradient-to-br from-primary-soft/70 to-transparent p-3">
+          <p className="flex items-center gap-1.5 font-display text-sm font-bold"><Sparkles className="h-4 w-4 text-primary" />Save {name} to…</p>
+          <div className="relative mt-2"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input autoFocus aria-label="Search jobs or companies" value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="Search jobs or companies…" className={`${inputCls} h-9 pl-9`} /></div>
+          {companies.length > 1 && <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+            {[{ id: "", n: "All", count: s.jobs.length }, ...companies].map((c) => <button key={c.id || "all"} onClick={() => setCo(c.id)} className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${co === c.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary hover:text-primary"}`}>{c.n} <span className="opacity-70">{c.count}</span></button>)}
+          </div>}
+        </div>
+        <div className="max-h-80 overflow-y-auto p-2">
+          {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">✦ AI top match</p>
+            <button onClick={() => pick(top.job_id)} className="w-full rounded-xl border border-primary/40 bg-primary-soft/40 p-3 text-left shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition hover:border-primary hover:shadow-md">
+              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{top.job_title}</span>{pill(top.job_id)}</div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{top.company_name} · strongest fit across your active jobs</p>
+            </button></div>}
+          {!q && <button onClick={() => pick(null)} className={row}><Bookmark className="h-4 w-4 text-muted-foreground" /><span className="flex-1">General talent pool</span>{e && !e.job_id && <Check className="h-4 w-4 text-primary" />}</button>}
+          {groups.map((g) => <div key={g.company} className="mt-2"><p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.company} · {g.jobs.length}</p>
+            {g.jobs.map((j) => <button key={j.job_id} onClick={() => pick(j.job_id)} className={`${row} ${e?.job_id === j.job_id ? "bg-primary-soft/50" : ""}`}>
+              <span className="min-w-0 flex-1 truncate">{j.job_title}{j.job_status !== "active" && <span className="ml-1 text-xs text-muted-foreground">({j.job_status})</span>}</span>{pill(j.job_id)}{e?.job_id === j.job_id && <Check className="h-4 w-4 text-primary" />}
+            </button>)}</div>)}
+          {!groups.length && <p className="px-3 py-6 text-center text-sm text-muted-foreground">No jobs match "{q}".</p>}
+        </div>
+        {e && <div className="border-t border-border p-2"><button onClick={() => { setOpen(false); void s.unsave(candidateId); }} className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-destructive hover:bg-destructive/10">Remove from saved</button></div>}
+      </PopoverContent>
+    </Popover>
   );
 }
 
