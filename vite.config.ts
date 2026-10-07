@@ -7,13 +7,50 @@
 import path from "path";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// The bundler's server runtime helper calls createRequire(import.meta.url) at load time.
+// On the edge worker import.meta.url is undefined, which crashes every request (HTTP 500).
+// Give it a safe fallback in server output only.
+const safeImportMetaUrl = {
+  name: "safe-import-meta-url",
+  apply: "build" as const,
+  renderChunk(code: string) {
+    if (!code.includes("import.meta.url)")) return null;
+    return { code: code.replace(/import\.meta\.url\)/g, 'import.meta.url||"file:///")'), map: null };
+  },
+  applyToEnvironment(env: { name: string }) {
+    return env.name !== "client";
+  },
+};
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  nitro: {
+    // @ts-expect-error hooks is a valid nitro option missing from the wrapper's type
+    hooks: {
+      // Final server bundle is produced by nitro, so patch its output files after compiling.
+      compiled: async (nitro: { options: { output: { serverDir: string } } }) => {
+        const fs = await import("node:fs/promises");
+        const walk = async (dir: string): Promise<void> => {
+          for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+            const f = path.join(dir, e.name);
+            if (e.isDirectory()) await walk(f);
+            else if (/\.m?js$/.test(e.name)) {
+              const c = await fs.readFile(f, "utf8");
+              if (/createRequire|\be\(import\.meta\.url\)/.test(c) && c.includes("(import.meta.url)"))
+                await fs.writeFile(f, c.replace(/\(import\.meta\.url\)/g, '(import.meta.url||"file:///")'));
+            }
+          }
+        };
+        await walk(nitro.options.output.serverDir);
+      },
+    },
+  },
   vite: {
+    plugins: [safeImportMetaUrl],
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
