@@ -42,3 +42,4 @@
 - Interviews: recruiter writes own, candidate reads own; scorecards recruiter-only; rules: `interview-rules.ts`. Why: private.
 - Job companies: pick via `my_job_companies` or add via `add_company_entry` (dedupe by `company_key`); creator edits unclaimed clients. Why: no duplicates.
 - Confidential jobs masked in candidate loaders via `confidential.ts`. Why: one masking path.
+- Resume auto-fill: browser extracts text (`document-text-extractor.ts`), server fn `parseResume` asks AI with a strict schema, `sanitizeParsedResume` cleans output; never writes to DB. Why: candidate reviews before save.
