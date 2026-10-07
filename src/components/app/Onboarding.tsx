@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { FormAlert, SuccessScreen } from "@/components/auth/AuthCard";
 import { normalizeUrl, validateLinks } from "@/lib/profile-links";
+import { addCompanyEntry } from "@/lib/company-add";
 
 const TECH_SUGGESTIONS = ["Python", "SQL", "Java", "JavaScript", "TypeScript", "AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "React", "Go", "Spark"];
 
@@ -192,8 +193,13 @@ export function RecruiterOnboarding({ account }: { account: Account }) {
     if (!f.company_name.trim() || !f.industry.trim()) return setError("Company name and industry are required.");
     if (f.company_website && !/^https?:\/\/\S+\.\S+/.test(f.company_website.trim())) return setError("Enter a valid website starting with http:// or https://");
     setSaving(true);
+    // Link to an existing company with the same normalized name (or create it) so teammates join one team.
+    let company: { id: string; name: string } | null = null;
+    try { company = await addCompanyEntry(f.company_name); } catch { company = null; }
+    if (!company) { setSaving(false); return setError("Enter a valid company name (2–80 characters)."); }
     const { error: e1 } = await supabase.from("recruiter_profiles").upsert({
-      user_id: account.userId, ...f, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
+      user_id: account.userId, ...f, company_name: company.name, company_id: company.id,
+      years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
     });
     const e2 = e1 ? e1.message : await finish();
     setSaving(false);
@@ -218,7 +224,7 @@ export function RecruiterOnboarding({ account }: { account: Account }) {
           <LocationFields required value={{ country: f.location_country, state: f.location_state, city: f.location_city }} onChange={(v) => setF((p) => ({ ...p, location_country: v.country, location_state: v.state, location_city: v.city, location: formatLocation(v) }))} />
         </>) : (<>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Company Name"><Input value={f.company_name} onChange={(e) => set("company_name", e.target.value)} maxLength={120} /></Field>
+            <Field label="Your Employer or Agency"><Input value={f.company_name} onChange={(e) => set("company_name", e.target.value)} maxLength={80} placeholder="e.g. Apex Staffing" /><p className="text-xs text-muted-foreground">The company you work for. If it's already on Sundance, you'll join its team automatically. Client companies are picked per job.</p></Field>
             <Field label="Company Website"><Input value={f.company_website} onChange={(e) => set("company_website", e.target.value)} placeholder="https://" maxLength={200} /></Field>
           </div>
           <Field label="Industry"><Input value={f.industry} onChange={(e) => set("industry", e.target.value)} placeholder="Fintech" maxLength={100} /></Field>
