@@ -40,7 +40,7 @@ describe("resume parsing", () => {
   });
   it("only accepts 2-letter country codes", () => {
     expect(sanitizeParsedResume({ location_country: "us" }).location_country).toBe("US");
-    expect(sanitizeParsedResume({ location_country: "USA" }).location_country).toBe("US".slice(0, 0) || "");
+    expect(sanitizeParsedResume({ location_country: "USA" }).location_country).toBe("");
   });
   it("schema is strict: every object lists all properties as required", () => {
     const check = (s: { type?: unknown; properties?: Record<string, unknown>; required?: string[]; items?: unknown; additionalProperties?: boolean }): void => {
