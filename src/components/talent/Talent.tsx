@@ -144,7 +144,7 @@ export function SaveToJobControl({ uid, candidateId, name }: { uid: string; cand
         </div>
         <div className="max-h-80 overflow-y-auto p-2">
           {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">✦ AI top match</p>
-            <button onClick={() => pick(top.job_id)} className="w-full rounded-xl border border-primary/40 bg-primary-soft/40 p-3 text-left shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition hover:border-primary hover:shadow-md">
+            <button onClick={() => pick(top.job_id)} className="w-full rounded-xl border border-primary/40 bg-primary-soft/40 p-3 text-left ring-4 ring-primary/10 transition hover:border-primary hover:shadow-md">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{top.job_title}</span>{pill(top.job_id)}</div>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{top.company_name} · strongest fit across your active jobs</p>
             </button></div>}
