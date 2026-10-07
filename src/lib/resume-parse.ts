@@ -66,7 +66,7 @@ const date = (v: unknown) => {
   if (typeof v !== "string") return null;
   const m = v.trim().match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/);
   if (!m) return null;
-  const y = +m[1]; const mo = Math.min(12, Math.max(1, +(m[2] ?? 1))); const d = Math.min(28, Math.max(1, +(m[3] ?? 1)));
+  const y = +(m[1] ?? 0); const mo = Math.min(12, Math.max(1, +(m[2] ?? 1))); const d = Math.min(28, Math.max(1, +(m[3] ?? 1)));
   if (y < 1950 || y > 2100) return null;
   return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 };
@@ -75,13 +75,13 @@ export function cleanUrl(v: unknown): string {
   const s = clip(v, 300); if (!s) return "";
   try { const u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`); return u.protocol.startsWith("http") && u.hostname.includes(".") ? u.toString() : ""; } catch { return ""; }
 }
-const rec = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+const rec = <T,>(v: unknown): { [K in keyof T]?: unknown } => (v && typeof v === "object" && !Array.isArray(v) ? (v as { [K in keyof T]?: unknown }) : {});
 
 /** Coerce untrusted AI output into a safe ParsedResume (never throws). */
 export function sanitizeParsedResume(raw: unknown): ParsedResume {
-  const r = rec(raw);
+  const r = rec<ParsedResume>(raw);
   const ye = typeof r.years_experience === "number" && Number.isFinite(r.years_experience) ? Math.max(0, Math.min(60, Math.round(r.years_experience))) : null;
-  const country = clip(r.location_country, 2).toUpperCase();
+  const country = clip(r.location_country, 3).toUpperCase();
   return {
     full_name: clip(r.full_name, 120), job_title: clip(r.job_title, 120), years_experience: ye, current_employer: clip(r.current_employer, 120),
     location_city: clip(r.location_city, 80), location_state: clip(r.location_state, 80), location_country: /^[A-Z]{2}$/.test(country) ? country : "",
@@ -90,17 +90,17 @@ export function sanitizeParsedResume(raw: unknown): ParsedResume {
     target_roles: list(r.target_roles, 5, 80),
     linkedin_url: cleanUrl(r.linkedin_url), github_url: cleanUrl(r.github_url), portfolio_url: cleanUrl(r.portfolio_url),
     experience: (Array.isArray(r.experience) ? r.experience : []).slice(0, 20).map((e) => {
-      const x = rec(e); const current = x.current_position === true;
+      const x = rec<ParsedExperience>(e); const current = x.current_position === true;
       return { company_name: clip(x.company_name, 120), job_title: clip(x.job_title, 120), location: clip(x.location, 120), start_date: date(x.start_date), end_date: current ? null : date(x.end_date), current_position: current, responsibilities: clipMulti(x.responsibilities, 2000), technologies_used: list(x.technologies_used, 30) };
     }).filter((e) => e.company_name && e.job_title),
     education: (Array.isArray(r.education) ? r.education : []).slice(0, 10).map((e) => {
-      const x = rec(e); return { institution_name: clip(x.institution_name, 160), degree: clip(x.degree, 120), field_of_study: clip(x.field_of_study, 120), graduation_year: year(x.graduation_year) };
+      const x = rec<ParsedEducation>(e); return { institution_name: clip(x.institution_name, 160), degree: clip(x.degree, 120), field_of_study: clip(x.field_of_study, 120), graduation_year: year(x.graduation_year) };
     }).filter((e) => e.institution_name),
     certifications: (Array.isArray(r.certifications) ? r.certifications : []).slice(0, 20).map((e) => {
-      const x = rec(e); return { certification_name: clip(x.certification_name, 160), issuing_organization: clip(x.issuing_organization, 120), issue_date: date(x.issue_date) };
+      const x = rec<ParsedCertification>(e); return { certification_name: clip(x.certification_name, 160), issuing_organization: clip(x.issuing_organization, 120), issue_date: date(x.issue_date) };
     }).filter((e) => e.certification_name),
     projects: (Array.isArray(r.projects) ? r.projects : []).slice(0, 10).map((e) => {
-      const x = rec(e); return { title: clip(x.title, 120), description: clipMulti(x.description, 1000), project_url: cleanUrl(x.project_url) };
+      const x = rec<ParsedProject>(e); return { title: clip(x.title, 120), description: clipMulti(x.description, 1000), project_url: cleanUrl(x.project_url) };
     }).filter((e) => e.title),
   };
 }

@@ -34,7 +34,7 @@ describe("resume parsing", () => {
     expect(r.linkedin_url).toBe("");
   });
   it("clears end date for current positions and normalizes partial dates", () => {
-    const [e] = sanitizeParsedResume({ experience: [{ company_name: "Acme", job_title: "Engineer", start_date: "2021-03", end_date: "2024-01-01", current_position: true }] }).experience;
+    const e = sanitizeParsedResume({ experience: [{ company_name: "Acme", job_title: "Engineer", start_date: "2021-03", end_date: "2024-01-01", current_position: true }] }).experience[0]!;
     expect(e.start_date).toBe("2021-03-01");
     expect(e.end_date).toBeNull();
   });
