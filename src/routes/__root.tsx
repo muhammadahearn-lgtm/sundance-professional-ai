@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { areaForPath } from "@/lib/auth-rules";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineBanner } from "@/components/app/RouteStates";
+import { useCursorGlow } from "@/hooks/use-cursor-glow";
 
 function NotFoundComponent() {
   return (
@@ -108,6 +109,7 @@ function RootComponent() {
   const router = useRouter();
   const pathname = useRouterState({ select: (st) => st.location.pathname });
   const inApp = areaForPath(pathname) !== null;
+  useCursorGlow();
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
