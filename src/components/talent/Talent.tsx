@@ -267,8 +267,10 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
 
 const matchTone = (s: number) => (s >= 90 ? "bg-success/15 text-success" : s >= 75 ? "bg-primary-soft text-primary" : s >= 60 ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground");
 const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? "bg-primary" : "bg-muted-foreground");
-/** Frosted-glass pill floating over grid card photos. */
-const glassPill = "absolute top-2 rounded-full border border-border/40 px-2 py-1 shadow-soft backdrop-blur-md backdrop-saturate-150 whitespace-nowrap";
+/** Solid, high-contrast pill floating over grid card photos (readable on any photo color). */
+const glassPill = "absolute top-2 rounded-full border border-border bg-card px-2 py-1 text-foreground shadow-md whitespace-nowrap";
+/** Opaque score tone: solid fill + contrasting text. */
+const solidTone = (s: number) => (s >= 90 ? "!border-success bg-success text-primary-foreground" : s >= 75 ? "!border-primary bg-primary text-primary-foreground" : s >= 60 ? "!border-warning bg-warning text-foreground" : "");
 
 function PhotoCover({ name, path }: { name: string; path?: string | null | undefined }) {
   const url = useAvatarUrl(path);
