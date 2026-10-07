@@ -309,6 +309,13 @@
       "when": 1791335240732,
       "tag": "0043_company_team_rpcs",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791335890604,
+      "tag": "0044_notifications_company_category",
+      "breakpoints": true
     }
   ]
 }

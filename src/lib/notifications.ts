@@ -1,6 +1,6 @@
 // Pure notification helpers: filtering, grouping, time display. No I/O.
 
-export type NotificationCategory = "application" | "messaging" | "pipeline" | "recommendation" | "career" | "match";
+export type NotificationCategory = "application" | "messaging" | "pipeline" | "recommendation" | "career" | "match" | "company";
 export type NotificationPriority = "high" | "medium" | "low";
 export type NotificationStatus = "unread" | "read" | "archived";
 
@@ -25,6 +25,7 @@ export const CATEGORY_LABELS: Record<NotificationCategory, string> = {
   recommendation: "Recommendations",
   career: "Career Intelligence",
   match: "Match Intelligence",
+  company: "Company Team",
 };
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as NotificationCategory[];
 
