@@ -12,8 +12,8 @@ export function newTextName(q: string, options: { name: string }[], max = 150): 
 
 /** Free-text value picked from suggestions with search and "+ Add" — same look as SearchPicker. */
 export function TextPicker({ options, value, onChange, placeholder, ariaLabel, addHint, onAdd, nameFor, max = 150 }: {
-  options: string[]; value: string; onChange: (v: string) => void; placeholder?: string; ariaLabel?: string; addHint?: string;
-  onAdd?: (name: string) => Promise<string>; nameFor?: (q: string, options: { name: string }[]) => string | null; max?: number;
+  options: string[]; value: string; onChange: (v: string) => void; placeholder?: string | undefined; ariaLabel?: string | undefined; addHint?: string | undefined;
+  onAdd?: ((name: string) => Promise<string>) | undefined; nameFor?: ((q: string, options: { name: string }[]) => string | null) | undefined; max?: number | undefined;
 }) {
   const opts = useMemo(() => {
     const all = [...new Set([...options, ...(value ? [value] : [])])];
@@ -28,8 +28,8 @@ export function TextPicker({ options, value, onChange, placeholder, ariaLabel, a
 
 /** Multi-value chips + TextPicker for adding more. */
 export function TagPicker({ options, value, onChange, placeholder, ariaLabel, addHint, onAdd, nameFor, max }: {
-  options: string[]; value: string[]; onChange: (v: string[]) => void; placeholder?: string; ariaLabel?: string; addHint?: string;
-  onAdd?: (name: string) => Promise<string>; nameFor?: (q: string, options: { name: string }[]) => string | null; max?: number;
+  options: string[]; value: string[]; onChange: (v: string[]) => void; placeholder?: string | undefined; ariaLabel?: string | undefined; addHint?: string | undefined;
+  onAdd?: ((name: string) => Promise<string>) | undefined; nameFor?: ((q: string, options: { name: string }[]) => string | null) | undefined; max?: number | undefined;
 }) {
   const rest = options.filter((o) => !value.includes(o));
   return (

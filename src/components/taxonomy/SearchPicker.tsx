@@ -9,8 +9,8 @@ type Opt = { id: string; name: string; category?: string };
 
 /** Searchable single-select for controlled lists (roles, levels). Optional governed "+ Add" via onAdd. */
 export function SearchPicker({ options: baseOptions, value, onChange, placeholder = "Search…", allowClear = true, emptyLabel, grouped, ariaLabel, onAdd, addHint, nameFor }: {
-  options: Opt[]; value: string; onChange: (id: string) => void; placeholder?: string; allowClear?: boolean; emptyLabel?: string; grouped?: boolean; ariaLabel?: string;
-  onAdd?: (name: string) => Promise<Opt>; addHint?: string; nameFor?: (q: string, options: Opt[]) => string | null;
+  options: Opt[]; value: string; onChange: (id: string) => void; placeholder?: string | undefined; allowClear?: boolean; emptyLabel?: string; grouped?: boolean; ariaLabel?: string | undefined;
+  onAdd?: (name: string) => Promise<Opt>; addHint?: string | undefined; nameFor?: (q: string, options: Opt[]) => string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
