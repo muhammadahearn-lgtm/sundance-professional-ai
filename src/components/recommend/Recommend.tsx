@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useCareer } from "@/components/career/Career";
 import { MatchBadge, useAutoRecalc } from "@/components/match/Match";
 import { useJobLists } from "@/components/candidate-jobs/useJobLists";
-import { useCandidateLists } from "@/components/talent/Talent";
+import { useCandidateLists, SaveToJobControl } from "@/components/talent/Talent";
 import { ContactRecruiterButton, MessageButton } from "@/components/messages/Messages";
 import { PageHeader } from "@/components/app/AppShell";
 import { loadCandidateRecs, loadRecruiterRecs, type RecruiterRecs } from "@/lib/recommend-data";
@@ -141,7 +141,7 @@ export function RecruiterRecommendationsPage({ uid }: { uid: string }) {
               <RecCard key={r.id} r={r} extra={<div className="space-y-1 text-xs text-muted-foreground"><div className="flex flex-wrap items-center gap-2"><MatchBadge score={r.match} /><span>for {r.jobTitle}</span>{r.availability && <span>· {r.availability}</span>}</div></div>}
                 actions={<>
                   <Link to="/recruiter/candidates/$id" params={{ id: r.candidateId }} onClick={() => track("recommendation_click", r.candidateId)} className={btn}>View Profile</Link>
-                  <button onClick={() => lists.toggleSave(r.candidateId)} className={btn}>{lists.isSaved(r.candidateId) ? "Saved" : "Save Candidate"}</button>
+                  <SaveToJobControl uid={uid} candidateId={r.candidateId} name="candidate" preferJobId={r.jobId} />
                   <button disabled={busy === r.id} onClick={() => run(r.id, () => addToPipeline(uid, r.candidateId, r.jobId), "Added to pipeline")} className={btnP}>Add To Pipeline</button>
                   <MessageButton role="recruiter" candidateId={r.candidateId} jobId={r.jobId} label="Contact Candidate" className={btn} />
                 </>} />
