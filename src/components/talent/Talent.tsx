@@ -31,6 +31,8 @@ import { Item, MultiToggle } from "@/components/recruiter/shared";
 import { SearchSelect } from "@/components/ui/search-select";
 import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
 import { bestBy, rankCompare } from "@/lib/compare-rank";
+import { careerModeTag } from "@/lib/candidate-invite";
+import { InviteToApplyButton, JobMatchLens } from "./CandidateMatchLens";
 
 /** Highest score each candidate has across the recruiter's jobs. */
 export function useBestScores() {
@@ -472,8 +474,9 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
   );
 }
 
-const prof = (rows: { lookup_id: string; proficiency_level: string; years_experience: number }[], opts: { id: string; name: string }[]) =>
-  rows.length ? <div className="flex flex-wrap gap-1.5">{rows.map((r) => <span key={r.lookup_id} className="rounded-full border border-border px-3 py-1 text-xs"><strong className="font-semibold">{nameOf(opts, r.lookup_id)}</strong> · {cap(r.proficiency_level)}{r.years_experience ? ` · ${r.years_experience}y` : ""}</span>)}</div> : <span className="text-sm text-muted-foreground">—</span>;
+const TINT = { violet: "border-violet/25 bg-violet/10 text-violet", indigo: "border-indigo/25 bg-indigo/10 text-indigo", teal: "border-teal/25 bg-teal/10 text-teal" } as const;
+const prof = (rows: { lookup_id: string; proficiency_level: string; years_experience: number }[], opts: { id: string; name: string }[], tint: keyof typeof TINT = "indigo") =>
+  rows.length ? <div className="flex flex-wrap gap-1.5">{rows.map((r) => <span key={r.lookup_id} className={`rounded-full border px-3 py-1 text-xs ${TINT[tint]}`}><strong className="font-semibold">{nameOf(opts, r.lookup_id)}</strong> · {cap(r.proficiency_level)}{r.years_experience ? ` · ${r.years_experience}y` : ""}</span>)}</div> : <span className="text-sm text-muted-foreground">—</span>;
 
 /** Full recruiter-facing profile body (used by talent profile and application review). */
 export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode; stacked?: boolean }) {
@@ -494,7 +497,7 @@ export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: Cand
       <div className="min-w-0 space-y-6">
         {aside}
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
-          <Item k="Programming Languages" v={prof(d.languages, t.languages)} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Technologies" v={prof(d.technologies, t.technologies)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /></div>
+          <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Technologies" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /></div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><EducationLines e={e} /></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Certifications</h2>{d.certifications.length ? <ul className="mt-3 space-y-3">{d.certifications.map((c) => <li key={c.certification_id}><p className="font-semibold">{c.certification_name}</p><p className="text-xs text-muted-foreground">{c.issuing_organization}{c.issue_date && ` · ${c.issue_date}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Career Preferences</h2>
@@ -504,6 +507,13 @@ export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: Cand
   );
 }
 
+function CareerModePill({ p }: { p: CandidateFull["profile"] }) {
+  const tag = careerModeTag(p.career_mode);
+  const cls = tag.tone === "success" ? "bg-success/15 text-success" : tag.tone === "warning" ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground";
+  const floor = p.career_mode === "passive" && p.passive_min_salary ? formatSalaryAmount(p.passive_min_salary, p.salary_currency) : "";
+  return <p className="mt-2 flex flex-wrap items-center gap-2 text-xs"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-semibold ${cls}`}><Sparkles className="h-3 w-3" />{tag.label}</span>{floor && <span className="text-muted-foreground">Pay floor {floor}</span>}</p>;
+}
+
 export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: ReactNode }) {
   const p = d.profile;
   return (
@@ -511,6 +521,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
           <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
+          <CareerModePill p={p} />
           <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -556,17 +567,26 @@ export function RecruiterCandidatePage({ uid, id, jobId }: { uid: string; id: st
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
   const cmp = lists.isCompared(id);
+  const cd = q.data, tx = tax.data;
   return (
     <div className="space-y-6 pb-16">
+      <LensState jobId={jobId}>{(lensJob, setLensJob) => <>
       <button type="button" onClick={() => history.back()} className="text-sm text-muted-foreground hover:text-primary">← Back to search</button>
-      <ProfileHeader d={q.data} actions={<>
-        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} preferJobId={jobId} />
+      <ProfileHeader d={cd} actions={<>
+        <InviteToApplyButton uid={uid} d={cd} t={tx} jobId={lensJob} className={primaryBtn} />
+        <MessageButton role="recruiter" candidateId={id} jobId={lensJob || undefined} className={btn} />
+        <SaveToJobControl uid={uid} candidateId={id} name={cd.name ?? "candidate"} preferJobId={lensJob || jobId} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
-        <MessageButton role="recruiter" candidateId={id} className={btn} />
         <ReportButton type="user" targetId={id} /></>} />
-      <CandidateProfileBody d={q.data} t={tax.data} aside={<MatchPlaceholder />} />
+      <CandidateProfileBody d={cd} t={tx} aside={<JobMatchLens uid={uid} d={cd} t={tx} jobId={lensJob} onJob={setLensJob} />} />
+      </>}</LensState>
     </div>
   );
+}
+
+function LensState({ jobId, children }: { jobId?: string | undefined; children: (job: string, set: (j: string) => void) => ReactNode }) {
+  const [job, setJob] = useState(jobId ?? "");
+  return <>{children(job, setJob)}</>;
 }
 
 export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; initialJob?: string }) {
