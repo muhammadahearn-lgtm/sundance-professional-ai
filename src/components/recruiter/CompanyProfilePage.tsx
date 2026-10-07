@@ -9,6 +9,7 @@ import { Chips, Empty, Field, SaveBar, Section, TagInput, card, friendlyError, i
 import { BrandImg, COMPANY_SIZES, CompletionCard, HIRING_VOLUMES, Item, MultiToggle, ORG_TYPES, REGIONS, WORK_ARRANGEMENTS, initials, orgKey } from "./shared";
 import { canDemote, canRemove, filterInbox, inboxCounts, loadRequestHistory, loadTeam, removeMember, requestAdminAccess, resolveRequest, setMemberRole, type CompanyRole, type InboxTab, type RequestRecord, type TeamMember } from "@/lib/company-team";
 import type { Database } from "@/integrations/supabase/types";
+import { addCompanyEntry } from "@/lib/company-add";
 import { AdminJobs, AdminOverview, AdminPipeline } from "./CompanyAdminDashboard";
 
 type OrgType = Database["public"]["Enums"]["organization_type"];
@@ -257,7 +258,7 @@ function InfoForm({ uid, companyId, initial, onDone, submitLabel }: { uid: strin
           if (!isAdmin) {
             setSaving(false);
             toast.success(`${co.name} already exists — you've joined its team. Ask an admin for edit access.`);
-            onSaved?.();
+            onDone(true);
             return;
           }
           err = (await supabase.from("companies").update(row).eq("company_id", cid)).error;
