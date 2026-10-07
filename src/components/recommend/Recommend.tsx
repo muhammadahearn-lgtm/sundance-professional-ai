@@ -18,8 +18,8 @@ import type { Stage } from "@/lib/talent-rules";
 
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const toneCls = { success: "border-success/30 bg-success/10 text-success", primary: "border-primary/30 bg-primary-soft text-primary", warning: "border-warning/30 bg-warning/10 text-warning", muted: "border-border bg-muted text-muted-foreground" };
-const btn = "rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted";
-const btnP = "rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90";
+const btn = "inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-muted [&_svg]:h-3.5 [&_svg]:w-3.5";
+const btnP = "inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90";
 
 export function RecScore({ score }: { score: number }) {
   const t = recTier(score);
