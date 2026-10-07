@@ -20,6 +20,12 @@ export const postedAgo = (iso: string) => {
   return d <= 0 ? "Today" : d === 1 ? "Yesterday" : d < 30 ? `${d} days ago` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
+/** Discreet badge shown to candidates when the hiring company is kept confidential. */
+export function StealthBadge({ on }: { on: boolean | null | undefined }) {
+  if (!on) return null;
+  return <span title="The hiring company is kept confidential for now" className="ml-1.5 inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Confidential</span>;
+}
+
 export function CompanyLogo({ path, size = "h-12 w-12" }: { path: string | null | undefined; size?: string }) {
   return path ? <BrandImg path={path} alt="Company logo" className={`${size} shrink-0 rounded-xl object-cover`} /> : <div className={`grid ${size} shrink-0 place-items-center rounded-xl bg-primary-soft`}><Building2 className="h-5 w-5 text-primary" /></div>;
 }
@@ -118,7 +124,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, lo
         <CompanyLogo path={j.companies?.logo_url} />
         <div className="min-w-0 flex-1">
           <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
-          <p className="text-sm font-medium">{j.companies?.company_name}</p>
+          <p className="text-sm font-medium">{j.companies?.company_name}<StealthBadge on={j.is_confidential} /></p>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
             <span>{lbl(EMPLOYMENT, j.employment_type)}</span>

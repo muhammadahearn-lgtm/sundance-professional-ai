@@ -13,7 +13,7 @@ import { card, friendlyError } from "@/components/profile/parts";
 import { BrandImg, Item } from "@/components/recruiter/shared";
 import { Markdown } from "@/components/jobs/Markdown";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, formatSalary, lbl } from "@/components/jobs/shared";
-import { CompanyLogo, CompareTray, postedAgo } from "./JobCard";
+import { CompanyLogo, CompareTray, StealthBadge, postedAgo } from "./JobCard";
 import { MatchPanel, useAutoRecalc, useScores } from "@/components/match/Match";
 import { ApplyButton } from "@/components/applications/Applications";
 import { shareJob, useJobLists } from "./useJobLists";
@@ -50,7 +50,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
         <div className="p-6 pt-0">
           <div className="-mt-8"><CompanyLogo path={c?.logo_url} size="h-16 w-16 border-4 border-card" /></div>
           <h1 className="mt-3 font-display text-2xl font-extrabold sm:text-3xl">{j.job_title}</h1>
-          <p className="font-medium">{c?.company_name}</p>
+          <p className="font-medium">{c?.company_name}<StealthBadge on={j.is_confidential} /></p>
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
             <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4" />{lbl(EMPLOYMENT, j.employment_type)}</span>
@@ -92,7 +92,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
           {c && (
             <div className={`${card} p-5`}>
               <div className="flex items-center gap-3"><CompanyLogo path={c.logo_url} /><div className="min-w-0"><p className="truncate font-semibold">{c.company_name}</p><p className="text-xs text-muted-foreground">{[c.industry, c.company_size && `${c.company_size} employees`].filter(Boolean).join(" · ")}</p></div></div>
-              <p className="mt-4 line-clamp-6 whitespace-pre-line text-sm">{c.description}</p>
+              {j.is_confidential ? <p className="mt-4 text-sm text-muted-foreground">The recruiter is keeping the company name private for now. You can ask about it through in-app messages.</p> : <p className="mt-4 line-clamp-6 whitespace-pre-line text-sm">{c.description}</p>}
               {c.why_work_here && <><p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why work here</p><p className="mt-1 line-clamp-4 whitespace-pre-line text-sm">{c.why_work_here}</p></>}
               {c.website && <a href={/^https?:\/\//.test(c.website) ? c.website : `https://${c.website}`} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"><Globe className="h-4 w-4" />{c.website.replace(/^https?:\/\//, "")}</a>}
             </div>
