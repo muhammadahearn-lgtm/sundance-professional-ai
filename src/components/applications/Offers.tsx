@@ -23,8 +23,8 @@ const fromOffer = (o: Offer): OfferForm => ({ salary: o.salary_amount ? String(o
 /** Recruiter: send a new offer or revise the open one. `onSkip` advances the stage without formal terms. */
 export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSalary, defaultCurrency, onDone, onSkip, onClose }: {
   ctx: { uid: string; jobId: string; candidateId: string; applicationId: string | null };
-  candidateName: string; jobTitle: string; existing?: Offer | null; defaultSalary?: number | null; defaultCurrency?: string;
-  onDone: () => void; onSkip?: () => void; onClose: () => void;
+  candidateName: string; jobTitle: string; existing?: Offer | null; defaultSalary?: number | null | undefined; defaultCurrency?: string | undefined;
+  onDone: () => void; onSkip?: (() => void) | undefined; onClose: () => void;
 }) {
   const revising = existing?.status === "pending";
   const [f, setF] = useState<OfferForm>(revising ? fromOffer(existing!) : emptyOffer(defaultCurrency ?? "USD", defaultSalary ?? null));
@@ -42,7 +42,7 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
     if (!existing || !confirm("Withdraw this offer? The candidate will no longer be able to accept it.")) return;
     try { await withdrawOffer(existing.offer_id); toast.success("Offer Withdrawn"); onDone(); } catch (e) { toast.error(friendlyError(e, "Couldn't withdraw.")); }
   }
-  const err = (k: string) => show && errs[k] ? <p className="mt-1 text-xs text-destructive">{errs[k]}</p> : null;
+  const err = (k: keyof typeof errs) => show && errs[k] ? <p className="mt-1 text-xs text-destructive">{errs[k]}</p> : null;
   return (
     <Modal label="Job offer" onClose={onClose} wide>
       <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />{revising ? `Revision ${existing!.revision + 1}` : "Formal offer"}</span>

@@ -9,8 +9,8 @@ export const emptyOffer = (currency = "USD", salary: number | null = null): Offe
 const num = (s: string) => (s.trim() === "" ? null : Number(s.replace(/[^\d]/g, "")));
 
 /** Returns field errors; empty object means the offer can be sent. `today` is YYYY-MM-DD. */
-export function validateOffer(f: OfferForm, today: string): Record<string, string> {
-  const e: Record<string, string> = {};
+export function validateOffer(f: OfferForm, today: string): Partial<Record<"salary" | "bonus" | "startDate" | "expiresOn" | "notes" | "equity", string>> {
+  const e: Partial<Record<"salary" | "bonus" | "startDate" | "expiresOn" | "notes" | "equity", string>> = {};
   const s = num(f.salary);
   if (s === null || !Number.isFinite(s) || s <= 0) e.salary = "Enter the offered base salary.";
   else if (s > 100_000_000) e.salary = "That salary looks too large.";
