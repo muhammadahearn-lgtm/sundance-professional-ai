@@ -93,8 +93,15 @@ export function sortTalent(rows: TalentRow[], sort: string, q = ""): TalentRow[]
 }
 
 // ---------- Applications & pipeline ----------
-export const APP_STATUSES: [string, string][] = [["applied", "Applied"], ["viewed", "Viewed"], ["recruiter_contacted", "Recruiter Contacted"], ["interviewing", "Interviewing"], ["offer", "Offer"], ["hired", "Hired"], ["rejected", "Rejected"]];
-export const STAGES: [string, string][] = [["saved", "Saved"], ["contacted", "Contacted"], ["interviewing", "Interviewing"], ["shortlisted", "Shortlisted"], ["offer", "Offer"], ["hired", "Hired"], ["rejected", "Rejected"]];
+/** Human label for the "rejected" key, shown everywhere instead of "Rejected". */
+export const NOT_MOVING_FORWARD = "Not Moving Forward";
+/** Whole days since a stage change; amber after 7 days for active stages. */
+export function stageAge(stageDate: string, now = new Date()): { days: number; stale: boolean } {
+  const days = Math.max(0, Math.floor((now.getTime() - new Date(stageDate).getTime()) / 86400000));
+  return { days, stale: days >= 7 };
+}
+export const APP_STATUSES: [string, string][] = [["applied", "Applied"], ["viewed", "Viewed"], ["recruiter_contacted", "Recruiter Contacted"], ["interviewing", "Interviewing"], ["offer", "Offer"], ["hired", "Hired"], ["rejected", NOT_MOVING_FORWARD]];
+export const STAGES: [string, string][] = [["saved", "Saved"], ["contacted", "Contacted"], ["interviewing", "Interviewing"], ["shortlisted", "Shortlisted"], ["offer", "Offer"], ["hired", "Hired"], ["rejected", NOT_MOVING_FORWARD]];
 export type AppStatus = "applied" | "viewed" | "recruiter_contacted" | "interviewing" | "offer" | "hired" | "rejected";
 export type Stage = "saved" | "contacted" | "interviewing" | "shortlisted" | "offer" | "hired" | "rejected";
 
@@ -115,7 +122,7 @@ export function stageToStatus(stage: Stage): AppStatus | null {
 /** Timeline steps for the candidate; rejected ends the flow at that point. */
 export function timeline(status: AppStatus): { key: string; label: string; state: "done" | "current" | "pending" | "rejected" }[] {
   const flow = APP_STATUSES.filter(([k]) => k !== "rejected");
-  if (status === "rejected") return [...flow.slice(0, 1).map(([key, label]) => ({ key, label, state: "done" as const })), { key: "rejected", label: "Rejected", state: "rejected" as const }];
+  if (status === "rejected") return [...flow.slice(0, 1).map(([key, label]) => ({ key, label, state: "done" as const })), { key: "rejected", label: NOT_MOVING_FORWARD, state: "rejected" as const }];
   const idx = flow.findIndex(([k]) => k === status);
   return flow.map(([key, label], i) => ({ key, label, state: i < idx ? "done" : i === idx ? (key === "hired" ? "done" : "current") : "pending" }));
 }

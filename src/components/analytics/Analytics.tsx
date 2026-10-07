@@ -16,7 +16,7 @@ import { loadCandidateAnalytics, loadRecruiterAnalytics, type CandidateAnalytics
 const card = "rounded-2xl border border-border bg-card p-5 shadow-soft";
 const btn = "inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50";
 const COLORS = ["var(--primary)", "var(--success)", "var(--warning)", "var(--destructive)", "var(--muted-foreground)", "var(--primary-glow, var(--primary))"];
-const label = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const label = (s: string) => (s === "rejected" ? "Not Moving Forward" : s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
 
 // ---------- Shared UI ----------
 type Filters = { range: RangeKey; from: string; to: string; role: string; industry: string; technology: string; skill: string; location: string; company: string };

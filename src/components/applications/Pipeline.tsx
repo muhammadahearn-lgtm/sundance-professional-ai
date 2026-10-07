@@ -10,7 +10,8 @@ import { listRecruiterInterviews } from "@/lib/interviews-data";
 import { InterviewPill, ScheduleInterviewDialog } from "@/components/applications/Interviews";
 import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
-import { STAGES, type Stage } from "@/lib/talent-rules";
+import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
+import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { MatchBadge, MatchFilter, useScores } from "@/components/match/Match";
@@ -19,7 +20,7 @@ import { Avatar, Chips, ErrorBox, btn, useTaxonomy } from "@/components/talent/T
 
 const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const miniBtn = "inline-flex h-7 items-center gap-1 rounded-lg border border-border bg-card px-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:bg-muted/80 hover:text-primary disabled:opacity-50";
-const MSG: Partial<Record<Stage, string>> = { rejected: "Candidate Rejected", offer: "Offer Extended", hired: "Candidate Hired" };
+const MSG: Partial<Record<Stage, string>> = { rejected: "Marked Not Moving Forward", offer: "Offer Extended", hired: "Candidate Hired" };
 
 export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | undefined }) {
   const qc = useQueryClient();
@@ -53,8 +54,10 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const doneRounds = (c: PipelineCard) => roundsOf(c).length;
   const [sched, setSched] = useState<PipelineCard | null>(null);
 
-  async function move(c: PipelineCard, stage: Stage) {
+  const [closing, setClosing] = useState<PipelineCard | null>(null);
+  async function move(c: PipelineCard, stage: Stage, confirmed = false) {
     if (c.current_stage === stage) return;
+    if (stage === "rejected" && !confirmed) { setClosing(c); return; }
     const key = ["pipeline", uid, jobId ?? "all"];
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
     try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
@@ -118,7 +121,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
         <div ref={boardRef} onDragOver={edgeScroll} className="pipeline-scroll -mx-4 overflow-x-scroll px-4 pb-3"><div className="flex gap-4" style={{ minWidth: STAGES.length * 276 }}>
           {STAGES.map(([key, title], si) => {
             const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
-            const tone = key === "hired" ? "bg-success" : key === "rejected" ? "bg-destructive" : "bg-gradient-primary";
+            const tone = key === "hired" ? "bg-success" : key === "rejected" ? "bg-muted-foreground/40" : "bg-gradient-primary";
             return (
               <section key={key} onDragOver={(e) => e.preventDefault()} onDrop={() => { const c = cards.find((x) => x.pipeline_id === drag); if (c) move(c, key as Stage); setDrag(null); }}
                 className={`w-[16.5rem] shrink-0 rounded-2xl border bg-card/60 p-3 backdrop-blur-sm transition-all ${drag ? "border-primary/40 ring-2 ring-primary/15" : "border-border"}`} aria-label={`${title} column`}>
@@ -131,6 +134,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <div className="flex items-start gap-2">{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
+                    {!["hired", "rejected"].includes(c.current_stage) && (() => { const a = stageAge(c.stage_date); return <p className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.stale ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"}`}>{a.days === 0 ? "Updated today" : `${a.days}d in ${title}`}</p>; })()}
                     {!jobId && c.jobs?.job_title && <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
@@ -157,6 +161,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
           {activity.length ? <ul className="mt-3 space-y-2 text-sm">{activity.map((c) => <li key={c.pipeline_id} className="flex justify-between gap-2"><span><strong>{c.name}</strong> moved to {STAGES.find(([k]) => k === c.current_stage)?.[1]}</span><span className="text-xs text-muted-foreground">{fmt(c.stage_date)}</span></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No activity yet. Move applicants into the pipeline to start tracking.</p>}</div>
       </div>
 
+      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); move(c, "rejected", true); }} />}
       {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={ivOf(sched)} priorRounds={roundsOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}

@@ -19,8 +19,9 @@ import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { Avatar, CandidateProfileBody, Chips, ErrorBox, MatchPlaceholder, ProfileHeader, btn, nameOf, primaryBtn, useTaxonomy } from "@/components/talent/Talent";
 import { listApplicationInterviews } from "@/lib/interviews-data";
 import { InterviewCard } from "@/components/applications/Interviews";
+import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 
-const STATUS_STYLE: Record<string, string> = { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-destructive/10 text-destructive" };
+const STATUS_STYLE: Record<string, string> = { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
 export function AppStatusBadge({ s }: { s: string }) {
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[s] ?? "bg-muted"}`}>{label(APP_STATUSES, s)}</span>;
 }
@@ -143,11 +144,12 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
         <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+      {a.application_status === "rejected" && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
       {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
       {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
         <ol className="mt-5 space-y-4">{timeline(a.application_status as AppStatus).map((s) => (
-          <li key={s.key} className="flex items-center gap-3">{s.state === "done" ? <CheckCircle2 className="h-5 w-5 text-success" /> : s.state === "rejected" ? <XCircle className="h-5 w-5 text-destructive" /> : <Circle className={`h-5 w-5 ${s.state === "current" ? "text-primary" : "text-muted-foreground"}`} />}
+          <li key={s.key} className="flex items-center gap-3">{s.state === "done" ? <CheckCircle2 className="h-5 w-5 text-success" /> : s.state === "rejected" ? <XCircle className="h-5 w-5 text-muted-foreground" /> : <Circle className={`h-5 w-5 ${s.state === "current" ? "text-primary" : "text-muted-foreground"}`} />}
             <span className={`font-medium ${s.state === "pending" ? "text-muted-foreground" : ""}`}>{s.label}</span><span className="ml-auto text-xs text-muted-foreground">{s.state === "done" ? "✓" : s.state === "current" ? "Current" : s.state === "rejected" ? "Closed" : "Pending"}</span></li>))}</ol></div>
     </div>
   );
@@ -165,6 +167,7 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
   const rows = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!f.status || a.application_status === f.status) && (!f.since || a.application_date >= f.since) && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
+  const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   return (
     <div className="space-y-6">
@@ -185,8 +188,9 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
               <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
                 <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Candidate Moved To Pipeline")} className={btn}>Move To Pipeline</button>
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
-                {a.application_status !== "rejected" && <button onClick={() => act(() => setApplicationStatus(a.application_id, "rejected"), "Candidate Rejected")} className={`${btn} hover:border-destructive hover:text-destructive`}>Reject</button>}</div>
+                {a.application_status !== "rejected" && <button onClick={() => setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title })} className={btn}>Not Moving Forward</button>}</div>
             </article>))}</div>}
+      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); act(() => setApplicationStatus(c.id, "rejected"), "Marked Not Moving Forward"); }} />}
     </div>
   );
 }
@@ -197,12 +201,14 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
   const app = useQuery({ queryKey: ["job-application", id], queryFn: () => loadJobApplication(id) });
   const cand = useQuery({ queryKey: ["candidate-full", app.data?.candidate_id], queryFn: () => loadCandidateFull(app.data!.candidate_id), enabled: !!app.data });
   useEffect(() => { if (app.data?.application_status === "applied") markViewed(id, "applied").then(() => { app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); }).catch(() => {}); }, [app.data?.application_status]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [closingDetail, setClosingDetail] = useState(false);
   if (app.isLoading || cand.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (app.error || cand.error) return <ErrorBox msg="Unable To Load Applications" retry={() => { app.refetch(); cand.refetch(); }} />;
   if (!app.data || !cand.data || !tax.data || app.data.jobs?.recruiter_id !== uid) return <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">Access Denied</p><p className="text-sm text-muted-foreground">This application isn't available.</p><Link to="/recruiter/applications" className={`${primaryBtn} mt-4`}>Back</Link></div>;
   const a = app.data;
-  async function update(s: AppStatus) {
-    try { await setApplicationStatus(id, s); toast.success(s === "rejected" ? "Candidate Rejected" : s === "offer" ? "Offer Extended" : "Application Updated"); app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); } catch (e) { toast.error(friendlyError(e, "Unable to update.")); }
+  async function update(s: AppStatus, confirmed = false) {
+    if (s === "rejected" && !confirmed) { setClosingDetail(true); return; }
+    try { await setApplicationStatus(id, s); toast.success(s === "rejected" ? "Marked Not Moving Forward" : s === "offer" ? "Offer Extended" : "Application Updated"); app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); } catch (e) { toast.error(friendlyError(e, "Unable to update.")); }
   }
   async function toPipeline() { try { await addToPipeline(uid, a.candidate_id, a.job_id); toast.success("Candidate Moved To Pipeline"); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(e instanceof Error ? e.message : "Unable To Update Pipeline"); } }
   return (
@@ -220,6 +226,7 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
           <MatchPlaceholder />
         </aside>
       </div>
+      {closingDetail && <NotMovingForwardDialog name={cand.data.name} jobTitle={a.jobs?.job_title} onCancel={() => setClosingDetail(false)} onConfirm={() => { setClosingDetail(false); update("rejected", true); }} />}
     </div>
   );
 }

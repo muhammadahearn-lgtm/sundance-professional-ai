@@ -3,7 +3,7 @@ import { CandidateAnalyticsSnapshot } from "@/components/analytics/Analytics";
 import { NotificationWidget } from "@/components/notifications/Notifications";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Bookmark, Briefcase, CheckCircle2, FileText, Gift, MapPin, Search, Sparkles, Target, Trash2, Upload, UserCheck, XCircle } from "lucide-react";
+import { Bell, Bookmark, Briefcase, CheckCircle2, FileText, Gift, MapPin, Search, Sparkles, Target, Trash2, Upload, UserCheck, XCircle, CircleSlash } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,7 +164,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
         <Stat Icon={Target} n={m.active} label="Active" />
         <Stat Icon={Gift} n={m.offers} label="Offers" />
         <Stat Icon={CheckCircle2} n={m.hires} label="Hires" />
-        <Stat Icon={XCircle} n={m.rejected} label="Rejected" />
+        <Stat Icon={CircleSlash} n={m.rejected} label="Not Moving Forward" />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
