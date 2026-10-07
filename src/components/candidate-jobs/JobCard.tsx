@@ -145,7 +145,7 @@ function SoftGroup({ rows, names }: { rows: ReqRow[] | null | undefined; names: 
   );
 }
 
-export function JobCard({ onPreview, j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign, mine }: { onPreview?: ((id: string) => void) | undefined; mine?: Set<string> | undefined; j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
+export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign, mine }: { applied?: string | undefined; onPreview?: ((id: string) => void) | undefined; mine?: Set<string> | undefined; j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
@@ -186,7 +186,8 @@ export function JobCard({ onPreview, j, roleName, lists, onRemove, score, scoreR
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
       <div className="mt-4 flex flex-wrap gap-2">
-            <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">View Job</Link>
+            {applied ? <Link to="/candidate/applications/$id" params={{ id: applied }} className="inline-flex items-center gap-1 rounded-xl border border-success/30 bg-success/10 px-3 py-1.5 text-sm font-semibold text-success hover:border-success/60">✓ Applied · View Application</Link>
+              : <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary">View Job</Link>}
             {onPreview && <button onClick={() => onPreview(j.job_id)} className={act}><Eye className="h-4 w-4" />Quick View</button>}
             {onRemove ? <button onClick={onRemove} className={act}><BookmarkCheck className="h-4 w-4" />Remove</button>
               : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}

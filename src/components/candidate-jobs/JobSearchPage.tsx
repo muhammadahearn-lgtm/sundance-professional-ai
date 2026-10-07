@@ -41,6 +41,10 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
     ]);
     return new Set([...(l.data ?? []), ...(s.data ?? []), ...(t.data ?? [])].map((r) => r.lookup_id));
   } });
+  const appliedQ = useQuery({ queryKey: ["my-applied-jobs", uid], enabled: !!uid, staleTime: 30_000, queryFn: async () => {
+    const { data } = await supabase.from("applications").select("application_id, job_id").eq("candidate_id", uid!);
+    return Object.fromEntries((data ?? []).map((r) => [r.job_id, r.application_id])) as Record<string, string>;
+  } });
   const suggested = useQuery({ queryKey: ["candidate-suggest", uid], queryFn: async () => {
     const { data } = await supabase.from("candidate_profiles").select("target_roles, job_title, location_country, location_state, location_city, work_arrangement").eq("user_id", uid).maybeSingle();
     const { data: edu } = await supabase.from("education").select("degree_type").eq("candidate_id", uid);
@@ -115,7 +119,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
             </div>
           ) : (
             <div className={`space-y-3 ${results.isFetching ? "opacity-60" : ""}`}>
-              {results.data.rows.map((j) => <JobCard key={j.job_id} onPreview={setPreview} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} mine={mine.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} eduAlign={suggested.data ? educationAlignment(suggested.data.education, j.minimum_degree) : undefined} />)}
+              {results.data.rows.map((j) => <JobCard key={j.job_id} applied={appliedQ.data?.[j.job_id]} onPreview={setPreview} j={j} roleName={roleName(j.role_id)} lists={lists} score={scoreMap[j.job_id]} scoreRow={scoreQ.data?.find((r) => r.job_id === j.job_id)} tax={tax.data} mine={mine.data} locAlign={suggested.data?.loc ? locationAlignment(suggested.data.loc, { country: j.location_country, state: j.location_state, city: j.location_city }, j.work_arrangement, suggested.data.arrangement) : undefined} eduAlign={suggested.data ? educationAlignment(suggested.data.education, j.minimum_degree) : undefined} />)}
               {pages > 1 && (
                 <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
                   <button disabled={search.page <= 1} onClick={() => setSearch({ page: search.page - 1 })} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold disabled:opacity-40">Previous</button>
