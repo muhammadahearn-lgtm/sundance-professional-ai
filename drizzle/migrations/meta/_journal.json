@@ -337,6 +337,13 @@
       "when": 1791374153199,
       "tag": "0047_job_confidential_search",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791374176514,
+      "tag": "0048_client_company_creator_update",
+      "breakpoints": true
     }
   ]
 }
