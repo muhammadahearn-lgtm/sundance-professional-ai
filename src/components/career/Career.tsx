@@ -154,8 +154,8 @@ export function CareerPage({ uid }: { uid: string }) {
 
           <Section title="Market & Salary" desc={`Based on ${r.market.jobs} active job${r.market.jobs === 1 ? "" : "s"} on Sundance Professionals.`}>
             <div className="grid gap-4 lg:grid-cols-3">
-              <ChartCard title="Top Skills In Demand" empty={!r.market.skills.length}><Bars data={r.market.skills.slice(0, 6).map((x) => ({ name: x.name, value: x.jobs ?? 0 }))} /></ChartCard>
-              <ChartCard title="Top Technologies In Demand" empty={!r.market.technologies.length}><Bars data={r.market.technologies.slice(0, 6).map((x) => ({ name: x.name, value: x.jobs ?? 0 }))} /></ChartCard>
+              <ChartCard title="Top Skills In Demand" empty={!r.market.skills.length}><Bars data={r.market.skills.slice(0, 6).map((x) => ({ name: x.name, value: x.demand }))} /></ChartCard>
+              <ChartCard title="Top Technologies In Demand" empty={!r.market.technologies.length}><Bars data={r.market.technologies.slice(0, 6).map((x) => ({ name: x.name, value: x.demand }))} /></ChartCard>
               <ChartCard title="Most Posted Roles" empty={!r.market.roles.length}><Bars data={r.market.roles.slice(0, 6).map((x) => ({ name: x.name, value: x.jobs }))} /></ChartCard>
             </div>
             <ChartCard title="Salary Spectrum" empty={!r.salary}>
