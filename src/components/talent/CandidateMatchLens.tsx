@@ -43,11 +43,15 @@ function useReqFit(jobId: string, d: CandidateFull, t: Taxonomy) {
 function ringTone(s: number) { return s >= 90 ? "text-success" : s >= 75 ? "text-primary" : s >= 60 ? "text-warning" : "text-muted-foreground"; }
 
 function Ring({ score }: { score: number }) {
-  const r = 34, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, score));
+  const r = 35, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, score));
   return (
-    <div className={`relative h-24 w-24 ${ringTone(v)}`}>
-      <svg viewBox="0 0 80 80" className="h-full w-full -rotate-90"><circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" strokeOpacity={0.15} strokeWidth={7} /><circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" strokeWidth={7} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v / 100)} /></svg>
-      <div className="absolute inset-0 grid place-items-center"><span className="font-display text-2xl font-extrabold text-foreground">{Math.round(v)}%</span></div>
+    <div className={`relative h-24 w-24 shrink-0 ${ringTone(v)}`}>
+      <div className="pointer-events-none absolute inset-2 rounded-full bg-current opacity-15 blur-xl" aria-hidden />
+      <svg viewBox="0 0 80 80" className="relative h-full w-full -rotate-90"><circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" strokeOpacity={0.12} strokeWidth={4.5} /><circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" strokeWidth={4.5} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v / 100)} /></svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+        <span className="flex items-baseline font-display text-xl font-black tracking-tight tabular-nums text-foreground">{Math.round(v)}<span className="ml-0.5 text-xs font-semibold text-muted-foreground">%</span></span>
+        <span className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/75">Match</span>
+      </div>
     </div>
   );
 }
