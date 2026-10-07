@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bookmark, Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { Bookmark, Briefcase, MapPin, Play, Plus, Users } from "lucide-react";
 import { listSavedEntries } from "@/lib/talent-data";
 import { SearchSelect } from "@/components/ui/search-select";
 import type { Account } from "@/lib/account";
@@ -9,7 +9,7 @@ import type { JobStatus } from "@/lib/job-rules";
 import { listJobs } from "@/lib/jobs-data";
 import { Empty, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { ARRANGEMENT, StatusBadge, lbl } from "./shared";
-import { JobActionBar } from "./JobActions";
+import { JobActionBar, useJobActions } from "./JobActions";
 
 const FILTERS: [JobStatus | "all", string][] = [["all", "All Jobs"], ["active", "Published"], ["draft", "Drafts"], ["paused", "Paused"], ["closed", "Closed"]];
 const SORTS: [string, string][] = [["newest", "Newest"], ["oldest", "Oldest"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
@@ -17,6 +17,7 @@ const date = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "sh
 
 export function JobsDashboard({ account }: { account: Account }) {
   const uid = account.userId;
+  const actions = useJobActions(uid);
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
   const savedQ = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
   const sourced = (jobId: string) => (savedQ.data ?? []).filter((e) => e.job_id === jobId).length;
@@ -90,8 +91,21 @@ export function JobsDashboard({ account }: { account: Account }) {
                         <span>Last modified {new Date(j.updated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
                       </div>
                     ) : <p className="mt-1 text-xs text-muted-foreground">Created {date(j.created_at)} · Updated {date(j.updated_at)}</p>}
+                    {j.max_applications && j.job_status !== "draft" ? (() => {
+                      const cap = j.max_applications, pct = Math.min(100, Math.round((j.applications / cap) * 100)), full = j.applications >= cap;
+                      return (
+                        <div className="mt-3 max-w-sm">
+                          <div className="flex items-center justify-between text-xs"><span className="font-semibold text-foreground">{j.applications} / {cap} applicants</span><span className={full ? "font-semibold text-warning" : "text-muted-foreground"}>{full ? (j.job_status === "paused" ? "Limit reached · auto-paused" : "Limit reached") : `${cap - j.applications} spots left`}</span></div>
+                          <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted"><span className={`block h-full rounded-full ${full ? "bg-warning" : "bg-primary"}`} style={{ width: `${pct}%` }} /></span>
+                        </div>
+                      );
+                    })() : null}
                   </div>
-                  <JobActionBar uid={uid} id={j.job_id} status={j.job_status} applications={j.applications} compact />
+                  <div className="flex flex-wrap items-start gap-2">
+                    {j.job_status === "paused" && <><button onClick={() => actions.status(j.job_id, "resume")} className="inline-flex items-center gap-1.5 rounded-xl border border-primary px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary-soft"><Play className="h-4 w-4" />Resume</button>
+                      {j.max_applications && j.applications >= j.max_applications && <Link to="/recruiter/jobs/$id/edit" params={{ id: j.job_id }} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary">Raise Limit</Link>}</>}
+                    <JobActionBar uid={uid} id={j.job_id} status={j.job_status} applications={j.applications} compact />
+                  </div>
                 </div>
               </li>
             ))}
