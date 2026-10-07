@@ -256,22 +256,24 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId }: { jobId?: 
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
-      <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="relative block aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
-        <PhotoCover name={c.name} path={c.avatarPath} />
+      <div className="relative aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
+        <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="block h-full w-full" aria-label={`View ${c.name} profile`}>
+          <PhotoCover name={c.name} path={c.avatarPath} />
+        </Link>
         {score !== undefined && (row ? (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} aria-label={`${Math.round(score)}% match — view score breakdown`} className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}% Match</button>
+              <button type="button" aria-label={`${Math.round(score)}% match — view score breakdown`} className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}% Match</button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 rounded-2xl p-3 shadow-xl" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+            <PopoverContent align="start" className="w-64 rounded-2xl p-3 shadow-xl">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Match Breakdown</p>
               <GridMatchBreakdown r={row} />
             </PopoverContent>
           </Popover>
         ) : <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>)}
         {c.availability && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold shadow-soft" title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
-        {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
-      </Link>
+        {c.summary && <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
+      </div>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
         <p className="truncate text-sm">{c.jobTitle || "—"}</p><div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
