@@ -21,6 +21,7 @@ import { listApplicationInterviews } from "@/lib/interviews-data";
 import { InterviewCard } from "@/components/applications/Interviews";
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { ApplicationInsights } from "@/components/applications/ApplicationInsights";
+import { CandidateOfferCard } from "@/components/applications/Offers";
 
 const STATUS_STYLE: Record<string, string> = { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
 export function AppStatusBadge({ s }: { s: string }) {
@@ -146,6 +147,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
         <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
       {a.application_status === "rejected" && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
+      {a.job_id && <CandidateOfferCard applicationId={id} uid={uid} jobId={a.job_id} jobTitle={a.jobs?.job_title ?? "this role"} />}
       <ApplicationInsights applicationId={id} status={a.application_status} />
       {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
       {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
