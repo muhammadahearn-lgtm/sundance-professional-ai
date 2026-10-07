@@ -416,7 +416,7 @@ export function SavedCandidatesPage({ uid }: { uid: string }) {
       {entries.error || q.error ? <ErrorBox msg="Unable to load saved candidates." retry={() => { void entries.refetch(); void q.refetch(); }} /> : loading ? <div className={`${card} h-48 animate-pulse`} />
         : !items.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates yet</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Search talent</Link></div>
         : !shown.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates match these filters</p><button onClick={() => { setCo(""); setJobSel(""); setSearch(""); }} className={`${btn} mt-4`}>Clear filters</button></div>
-        : <div className="space-y-4"><p className="text-sm text-muted-foreground">{shown.length} of {items.length} saved</p>{shown.map((it) => { const c = byId.get(it.id)!; const tagged = jobOf(it.jobId); return (
+        : <div className="space-y-4"><p className="text-sm text-muted-foreground">{shown.length} of {items.length} saved</p>{shown.map((it) => { const c = byId.get(it.id)!; return (
           <div key={it.id} className="space-y-0">
             <CandidateCard c={c} t={tax.data!} lists={lists} score={selJob ? it.score ?? undefined : undefined} jobTitle={selJob?.job_title} row={selJob ? scoreRow(it.id) : undefined} />
             <div className="-mt-2 flex flex-wrap items-center gap-2 rounded-b-2xl border border-t-0 border-border bg-muted/40 px-5 pb-3 pt-4 text-sm">
@@ -425,7 +425,6 @@ export function SavedCandidatesPage({ uid }: { uid: string }) {
                 <option value="">General talent pool</option>
                 {jobs.map((j) => <option key={j.job_id} value={j.job_id}>{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
               </select>
-              {tagged && <span className="text-xs text-muted-foreground">{tagged.company_name}</span>}
               <span className="ml-auto text-xs text-muted-foreground">Saved {new Date(it.savedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
           </div>); })}</div>}
