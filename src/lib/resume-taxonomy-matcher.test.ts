@@ -30,7 +30,7 @@ describe("resume taxonomy matcher", () => {
   it("dedupes React and ReactJS to one entry", () => expect(run({ tools: ["React", "ReactJS", "react.js"] }).technologies).toHaveLength(1));
   it("unknown items are returned as unmatched, unknown languages offered as technologies", () => {
     const r = run({ tools: ["Weaviate"], programming_languages: ["Zig"] });
-    expect(r.unmatched).toEqual([{ kind: "technology", name: "Weaviate" }, { kind: "technology", name: "Zig" }]);
+    expect(r.unmatched).toEqual([{ kind: "technology", name: "Zig" }, { kind: "technology", name: "Weaviate" }]);
   });
   it("picks up known tools mentioned only in work history", () =>
     expect(names(run({ experience: [{ company_name: "A", job_title: "B", technologies_used: ["Docker", "SomeInternalTool"] }] }).technologies)).toEqual(["Docker"]));
