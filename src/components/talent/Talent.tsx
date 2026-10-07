@@ -515,7 +515,8 @@ function CareerModePill({ p }: { p: CandidateFull["profile"] }) {
 }
 
 export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: ReactNode }) {
-  const p = d.profile;
+  const p = d?.profile;
+  if (!p) return <div className={`${card} p-8 text-center`}><p className="font-display font-bold">Profile not available</p></div>;
   return (
     <div className={`${card} p-6`}>
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
