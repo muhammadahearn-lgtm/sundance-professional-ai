@@ -153,7 +153,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
       </div>
       {dlg === "accept" && <Modal label="Accept offer" onClose={() => setDlg(null)}>
         <h2 className="font-display text-lg font-extrabold">Accept this offer?</h2>
-        <p className="mt-2 text-sm text-muted-foreground">You'll be marked as hired for {jobTitle} and the hiring team will be notified right away.</p>
+        <p className="mt-2 text-sm text-muted-foreground">You'll be marked as hired for {jobTitle}. The hiring team is notified right away and the role closes to new applicants.</p>
         <div className="mt-6 flex justify-end gap-2"><button onClick={() => setDlg(null)} className={btn}>Not yet</button><button onClick={() => respond(true)} disabled={busy} className={primaryBtn}>Yes, Accept</button></div></Modal>}
       {dlg === "decline" && <Modal label="Decline offer" onClose={() => setDlg(null)}>
         <h2 className="font-display text-lg font-extrabold">Decline this offer?</h2>

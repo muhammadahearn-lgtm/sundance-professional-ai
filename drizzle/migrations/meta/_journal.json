@@ -414,6 +414,13 @@
       "when": 1791405166422,
       "tag": "0058_job_offers",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1791406338878,
+      "tag": "0059_offer_accept_hire_close",
+      "breakpoints": true
     }
   ]
 }
