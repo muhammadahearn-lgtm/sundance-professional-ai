@@ -37,7 +37,7 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ date: string } | null>(null);
-  const me = useQuery({ queryKey: ["candidate-full", uid], queryFn: () => loadCandidateFull(uid), enabled: open });
+  const me = useQuery({ queryKey: ["talent-candidate", uid], queryFn: () => loadCandidateFull(uid), enabled: open });
   const tax = useTaxonomy();
   const sq = useQuery({ queryKey: ["screening", jobId], queryFn: () => loadScreeningQuestions(jobId), enabled: open });
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -201,7 +201,7 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
   const qc = useQueryClient();
   const tax = useTaxonomy();
   const app = useQuery({ queryKey: ["job-application", id], queryFn: () => loadJobApplication(id) });
-  const cand = useQuery({ queryKey: ["candidate-full", app.data?.candidate_id], queryFn: () => loadCandidateFull(app.data!.candidate_id), enabled: !!app.data });
+  const cand = useQuery({ queryKey: ["talent-candidate", app.data?.candidate_id], queryFn: () => loadCandidateFull(app.data!.candidate_id), enabled: !!app.data });
   useEffect(() => { if (app.data?.application_status === "applied") markViewed(id, "applied").then(() => { app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); }).catch(() => {}); }, [app.data?.application_status]); // eslint-disable-line react-hooks/exhaustive-deps
   const [closingDetail, setClosingDetail] = useState(false);
   if (app.isLoading || cand.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
