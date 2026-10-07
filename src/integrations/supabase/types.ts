@@ -2032,18 +2032,21 @@ export type Database = {
       saved_candidates: {
         Row: {
           candidate_id: string
+          job_id: string | null
           recruiter_id: string
           saved_candidate_id: string
           saved_date: string
         }
         Insert: {
           candidate_id: string
+          job_id?: string | null
           recruiter_id: string
           saved_candidate_id?: string
           saved_date?: string
         }
         Update: {
           candidate_id?: string
+          job_id?: string | null
           recruiter_id?: string
           saved_candidate_id?: string
           saved_date?: string
@@ -2055,6 +2058,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "candidate_profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "saved_candidates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "saved_candidates_recruiter_id_fkey"
