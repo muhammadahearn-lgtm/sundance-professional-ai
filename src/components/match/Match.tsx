@@ -31,6 +31,12 @@ export function useScores(filter: { candidateId?: string | undefined; jobIds?: s
   });
 }
 
+function isAuthError(e: unknown) {
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  const status = (e as { status?: number } | null)?.status;
+  return status === 401 || /unauthori[sz]ed|jwt|auth session/i.test(msg);
+}
+
 export function useRecalc() {
   const qc = useQueryClient();
   const fn = useServerFn(recalculateMatches);
@@ -47,7 +53,15 @@ export function useAutoRecalc(enabled = true) {
   useEffect(() => {
     if (!enabled || done.current) return;
     done.current = true;
-    r.mutate(undefined, { onError: () => toast.error("Unable to calculate match scores") });
+    r.mutate(undefined, {
+      onError: async (e) => {
+        // Stay quiet when the person just logged out mid-refresh.
+        if (isAuthError(e)) return;
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) return;
+        toast.error("Unable to calculate match scores");
+      },
+    });
   }, [enabled, r]);
   return r;
 }
