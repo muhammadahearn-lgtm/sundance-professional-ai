@@ -28,6 +28,9 @@ export const getRouter = () => {
       onError: (error, _v, _c, mutation) => {
         if (mutation.options.onError) return;
         const msg = error instanceof Error && error.message ? error.message : "Please try again.";
+        // A request cut off by logging out isn't a failed save.
+        if ((error as { status?: number } | null)?.status === 401 || /unauthori[sz]ed/i.test(msg)) return;
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/login")) return;
         toast.error(`That didn't save. ${msg}`);
       },
     }),
