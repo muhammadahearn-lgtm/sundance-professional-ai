@@ -11,3 +11,4 @@
 - Saved candidates: one save per candidate with optional own-job tag (`saved_candidates_job_guard`); filter/sort rules in `saved-candidates.ts`; match score only when a job is selected. Why: organized pools, consistent scoring.
 - Sourcing: saves are tagged to own jobs via `saveCandidateForJob` (upsert) from Compare/Profile; job pages read the same `saved_candidates` rows. Why: one source for sourced lists.
 - Applicant pool insights: aggregate-only RPC `get_candidate_application_insights`; free-preview flag in `application-insights.ts`. Why: no applicant data leaks, one toggle to monetize.
+- Job offers live in `job_offers`; recruiters write own-job offers, candidates decide only via `respond_to_offer` RPC (accept marks application hired); rules in `offer-rules.ts`. Why: terms can't be forged, one decision path.

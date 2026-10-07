@@ -12,6 +12,8 @@ import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
+import { HireDialog, OfferDialog } from "@/components/applications/Offers";
+import { latestOffer, type Offer } from "@/lib/offers-data";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { MatchBadge, MatchFilter, useScores } from "@/components/match/Match";
@@ -55,9 +57,19 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const [sched, setSched] = useState<PipelineCard | null>(null);
 
   const [closing, setClosing] = useState<PipelineCard | null>(null);
+  const [offerFor, setOfferFor] = useState<{ c: PipelineCard; existing: Offer | null; advance: boolean } | null>(null);
+  const [hired, setHired] = useState<PipelineCard | null>(null);
+  async function openOffer(c: PipelineCard, advance: boolean) {
+    if (!c.job_id) return false;
+    let existing: Offer | null = null;
+    try { existing = await latestOffer(c.job_id, c.candidate_id); } catch { /* show empty form */ }
+    setOfferFor({ c, existing, advance }); return true;
+  }
   async function move(c: PipelineCard, stage: Stage, confirmed = false) {
     if (c.current_stage === stage) return;
     if (stage === "rejected" && !confirmed) { setClosing(c); return; }
+    if (stage === "offer" && !confirmed && c.job_id) { await openOffer(c, true); return; }
+    if (stage === "hired" && c.job_id) setHired({ ...c, current_stage: stage });
     const key = ["pipeline", uid, jobId ?? "all"];
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
     try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
@@ -140,6 +152,7 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
                       : ["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && <button type="button" onClick={() => setSched(c)} className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1 text-[11px] font-semibold transition-colors hover:border-primary hover:text-primary ${c.current_stage === "interviewing" ? "border-warning/60 text-warning" : "border-border text-muted-foreground"}`}><CalendarClock className="h-3 w-3" />{doneRounds(c) ? `Schedule Round ${Math.max(...roundsOf(c).map((r) => r.round_number ?? 1)) + 1}` : "Schedule interview"}</button>}
                     {!iv && doneRounds(c) > 0 && <p className="mt-1 text-center text-[10px] font-semibold text-muted-foreground">{doneRounds(c)} round{doneRounds(c) === 1 ? "" : "s"} completed</p>}
+                    {c.current_stage === "offer" && c.job_id && <button type="button" onClick={() => openOffer(c, false)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-success/50 px-2 py-1 text-[11px] font-semibold text-success hover:border-success">Offer terms</button>}
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
                       {next ? <button type="button" onClick={() => move(c, next[0])} className={`${miniBtn} min-w-0 flex-1 justify-center`}>{next[1]}<ArrowRight className="h-3 w-3" /></button> : <span className="flex-1" />}
@@ -162,6 +175,13 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
       </div>
 
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); move(c, "rejected", true); }} />}
+      {offerFor && offerFor.c.job_id && <OfferDialog ctx={{ uid, jobId: offerFor.c.job_id, candidateId: offerFor.c.candidate_id, applicationId: offerFor.c.applicationId ?? null }}
+        candidateName={offerFor.c.name} jobTitle={offerFor.c.jobs?.job_title ?? j?.job_title ?? "this role"} existing={offerFor.existing}
+        defaultSalary={j?.maximum_salary ?? null} defaultCurrency={j?.salary_currency}
+        onClose={() => setOfferFor(null)}
+        onSkip={offerFor.advance ? () => { const c = offerFor.c; setOfferFor(null); move(c, "offer", true); } : undefined}
+        onDone={() => { const o = offerFor; setOfferFor(null); if (o.advance) move(o.c, "offer", true); }} />}
+      {hired && hired.job_id && <HireDialog name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
       {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={ivOf(sched)} priorRounds={roundsOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}
