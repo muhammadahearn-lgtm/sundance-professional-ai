@@ -1,5 +1,6 @@
 import { equitySummary } from "@/lib/screening";
 import { useEffect } from "react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { track } from "@/lib/track";
 import { ContactRecruiterButton } from "@/components/messages/Messages";
 import { ReportButton } from "@/components/moderation/ReportButton";
@@ -21,7 +22,7 @@ import { shareJob, useJobLists } from "./useJobLists";
 
 const act = "inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary";
 
-export function CandidateJobDetail({ account, id }: { account: Account; id: string }) {
+export function CandidateJobDetail({ account, id, stacked }: { account: Account; id: string; stacked?: boolean }) {
   const lists = useJobLists(account.userId);
   const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
   const q = useQuery({ queryKey: ["candidate-job", id], queryFn: () => loadCandidateJob(id) });
@@ -44,8 +45,9 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
   const role = t.roles.find((r) => r.id === j.role_id)?.name;
 
   return (
-    <div className="space-y-6 pb-16">
-      <Link to="/candidate/jobs" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"><ArrowLeft className="h-4 w-4" />Back to search</Link>
+    <div className={stacked ? "space-y-4" : "space-y-6 pb-16"}>
+      {stacked ? <div className="flex items-center justify-between"><span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Quick view</span><Link to="/candidate/jobs/$id" params={{ id }} className="text-sm font-semibold text-primary hover:underline">Open full page</Link></div>
+      : <Link to="/candidate/jobs" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"><ArrowLeft className="h-4 w-4" />Back to search</Link>}
       <div className={`${card} overflow-hidden`}>
         {c?.banner_url ? <BrandImg path={c.banner_url} alt="Company banner" className="h-28 w-full object-cover sm:h-36" /> : <div className="h-28 bg-gradient-primary sm:h-36" />}
         <div className="p-6 pt-0">
@@ -70,7 +72,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className={stacked ? "grid gap-4" : "grid gap-6 lg:grid-cols-[1fr_320px]"}>
         <div className="min-w-0 space-y-6">
           <div className={`${card} p-6`}><Markdown text={j.job_description} /></div>
           {(j.benefits_summary || j.bonus_info || equitySummary(j)) && <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Benefits</h2>{j.bonus_info && <p className="mt-2 text-sm"><strong>Bonus:</strong> {j.bonus_info}</p>}{equitySummary(j) && <p className="mt-2 text-sm"><strong>Equity:</strong> {equitySummary(j)}{j.equity_vesting ? ` · ${j.equity_vesting}` : ""}</p>}{j.benefits_summary && <p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p>}</div>}
@@ -82,7 +84,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
           </div>
           <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Technology Stack</h2><RequirementList items={q.data.technologies} options={t.technologies} /></div>
         </div>
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <aside className={stacked ? "space-y-4" : "space-y-6 lg:sticky lg:top-6 lg:self-start"}>
           <div className={`${card} p-5`}>
             <h2 className="font-display font-bold">Job Details</h2>
             <dl className="mt-4 grid grid-cols-2 gap-4">
@@ -101,7 +103,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
           <JobMatch uid={account.userId} jobId={id} />
         </aside>
       </div>
-      <CompareTray lists={lists} />
+      {!stacked && <CompareTray lists={lists} />}
     </div>
   );
 }
@@ -111,4 +113,16 @@ function JobMatch({ uid, jobId }: { uid: string; jobId: string }) {
   const q = useScores({ candidateId: uid });
   const row = q.data?.find((x) => x.job_id === jobId);
   return <MatchPanel row={row} loading={q.isLoading} recalculating={r.isPending} onRecalc={() => r.mutate(undefined, { onSuccess: () => toast.success("Match updated") })} />;
+}
+
+/** Slide-over job preview from search: keeps filters and scroll position. */
+export function JobPreviewDrawer({ account, id, onClose }: { account: Account; id: string | null; onClose: () => void }) {
+  return (
+    <Sheet open={!!id} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" className="w-full overflow-y-auto bg-background p-5 sm:max-w-2xl">
+        <SheetHeader className="sr-only"><SheetTitle>Job quick view</SheetTitle><SheetDescription>Job details preview</SheetDescription></SheetHeader>
+        {id && <CandidateJobDetail account={account} id={id} stacked />}
+      </SheetContent>
+    </Sheet>
+  );
 }
