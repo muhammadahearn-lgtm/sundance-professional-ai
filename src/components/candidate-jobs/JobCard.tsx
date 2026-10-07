@@ -40,7 +40,7 @@ const TONE = {
   muted: { text: "text-muted-foreground", bg: "bg-muted", ring: "border-border", bar: "bg-muted-foreground" },
 };
 
-const solidTone = (s: number) => s >= 90 ? "bg-success text-success-foreground border-success" : s >= 75 ? "bg-primary text-primary-foreground border-primary" : s >= 60 ? "bg-warning text-warning-foreground border-warning" : "bg-card text-foreground border-border";
+const solidTone = (s: number) => s >= 90 ? "bg-success text-primary-foreground border-success" : s >= 75 ? "bg-primary text-primary-foreground border-primary" : s >= 60 ? "bg-warning text-primary-foreground border-warning" : "bg-card text-foreground border-border";
 
 /** Compact solid match badge; click opens a 5-factor breakdown popover (mirrors recruiter search). */
 function MatchBadgePopover({ score, row }: { score: number | undefined; row: ScoreRow | undefined }) {
