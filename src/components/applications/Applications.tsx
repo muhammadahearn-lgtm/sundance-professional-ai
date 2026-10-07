@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, FileText, GitBranch, MapPin, XCircle } from "lucide-react";
+import { loadScreeningQuestions, saveScreeningAnswers, loadScreeningAnswers } from "@/lib/applications-data";
+import { answerFit, optionsFor, validateAnswers, type ScreeningQ } from "@/lib/screening";
 import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, setApplicationStatus, withdrawApplication } from "@/lib/applications-data";
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
@@ -35,12 +37,19 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
   const [done, setDone] = useState<{ date: string } | null>(null);
   const me = useQuery({ queryKey: ["candidate-full", uid], queryFn: () => loadCandidateFull(uid), enabled: open });
   const tax = useTaxonomy();
+  const sq = useQuery({ queryKey: ["screening", jobId], queryFn: () => loadScreeningQuestions(jobId), enabled: open });
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [showErr, setShowErr] = useState(false);
+  const ansErrs = validateAnswers(sq.data ?? [], answers);
   const rule = canApply(jobStatus, !!existing.data);
 
   if (existing.data) return <Link to="/candidate/applications/$id" params={{ id: existing.data.application_id }} className={`${btn} border-success text-success`}><CheckCircle2 className="h-4 w-4" />Already Applied</Link>;
   async function submit() {
+    if (Object.keys(ansErrs).length) { setShowErr(true); toast.error("Please answer the screening questions."); return; }
     setBusy(true);
-    try { const a = await applyToJob(uid, jobId); setDone({ date: a.application_date }); toast.success("Application Submitted"); qc.invalidateQueries({ queryKey: ["my-applications"] }); }
+    try { const a = await applyToJob(uid, jobId);
+      try { await saveScreeningAnswers(a.application_id, answers); } catch { toast.error("Application sent, but your screening answers couldn't be saved."); }
+      setDone({ date: a.application_date }); toast.success("Application Submitted"); qc.invalidateQueries({ queryKey: ["my-applications"] }); }
     catch (e) { toast.error(e instanceof Error && e.message === "Already Applied" ? "Already Applied" : friendlyError(e, e instanceof Error ? e.message : "Application Failed")); }
     setBusy(false);
   }
@@ -72,6 +81,7 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
                     <fieldset><legend className="mb-2 font-semibold">Submit using</legend>
                       <label className="flex items-center gap-2"><input type="radio" checked={mode === "profile"} onChange={() => setMode("profile")} />Structured Profile</label>
                       <label className="mt-1 flex items-center gap-2"><input type="radio" checked={mode === "resume"} disabled={!p.resume_path} onChange={() => setMode("resume")} />Structured Profile + Resume{!p.resume_path && <span className="text-xs text-muted-foreground">(upload a resume first)</span>}</label></fieldset>
+                    {!!sq.data?.length && <ScreeningForm qs={sq.data} answers={answers} setAnswers={setAnswers} errs={showErr ? ansErrs : {}} />}
                     <label className="flex items-start gap-2"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} className="mt-0.5" />I confirm my profile information is accurate and I want to apply.</label>
                   </div>
                 )}
@@ -133,6 +143,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
         <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+      {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
       {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
         <ol className="mt-5 space-y-4">{timeline(a.application_status as AppStatus).map((s) => (
@@ -219,4 +230,36 @@ function AppMatch({ candidateId, jobId }: { candidateId: string; jobId: string }
   const q = useScores({ jobIds: [jobId] });
   const row = q.data?.find((x) => x.candidate_id === candidateId);
   return <MatchPanel title="Candidate Match" row={row} loading={q.isLoading} recalculating={r.isPending} onRecalc={() => r.mutate(jobId, { onSuccess: () => toast.success("Job Re-Evaluated") })} />;
+}
+
+function ScreeningForm({ qs, answers, setAnswers, errs }: { qs: ScreeningQ[]; answers: Record<string, string>; setAnswers: (f: (p: Record<string, string>) => Record<string, string>) => void; errs: Record<string, string> }) {
+  return (
+    <fieldset className="rounded-xl border border-border p-4"><legend className="px-1 text-xs font-semibold uppercase text-muted-foreground">Screening Questions</legend>
+      <div className="space-y-4">{qs.map((q, i) => {
+        const opts = optionsFor(q); const v = answers[q.id] ?? ""; const set = (x: string) => setAnswers((p) => ({ ...p, [q.id]: x }));
+        return (
+          <div key={q.id}><p className="font-medium">{i + 1}. {q.text}{q.required ? <span className="text-destructive"> *</span> : <span className="text-xs text-muted-foreground"> (optional)</span>}</p>
+            {opts.length ? <div role="radiogroup" aria-label={q.text} className="mt-2 flex flex-wrap gap-2">{opts.map((o) => <button key={o} type="button" role="radio" aria-checked={v === o} onClick={() => set(o)} className={`rounded-full border px-3 py-1 text-xs font-semibold ${v === o ? "border-primary bg-primary-soft text-primary" : "border-border hover:border-primary"}`}>{o}</button>)}</div>
+              : <textarea aria-label={q.text} rows={2} maxLength={1000} className={`${inputCls} mt-2`} value={v} onChange={(e) => set(e.target.value)} />}
+            {errs[q.id] && <p className="mt-1 text-xs text-destructive">{errs[q.id]}</p>}</div>);
+      })}</div>
+    </fieldset>
+  );
+}
+
+/** Screening Q&A for an application; recruiter view highlights answers that differ from the preferred answer. */
+export function ScreeningAnswers({ applicationId, jobId, recruiter }: { applicationId: string; jobId: string; recruiter?: boolean }) {
+  const q = useQuery({ queryKey: ["screening-answers", applicationId], queryFn: () => loadScreeningAnswers(applicationId, jobId) });
+  if (!q.data?.length) return null;
+  return (
+    <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Screening Answers</h2>
+      <dl className="mt-4 space-y-3 text-sm">{q.data.map(({ q: sq, answer }) => {
+        const fit = recruiter ? answerFit(sq, answer) : null;
+        return (<div key={sq.id}><dt className="text-muted-foreground">{sq.text}</dt>
+          <dd className="mt-0.5 flex items-center gap-2 font-medium">{answer || <span className="text-muted-foreground">Not answered</span>}
+            {fit === "match" && <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">Preferred</span>}
+            {fit === "mismatch" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">Differs from preferred ({sq.ideal})</span>}</dd></div>);
+      })}</dl>
+    </div>
+  );
 }
