@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bookmark, Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { Bookmark, Briefcase, MapPin, Play, Plus, Users } from "lucide-react";
 import { listSavedEntries } from "@/lib/talent-data";
 import { SearchSelect } from "@/components/ui/search-select";
 import type { Account } from "@/lib/account";
@@ -9,7 +9,7 @@ import type { JobStatus } from "@/lib/job-rules";
 import { listJobs } from "@/lib/jobs-data";
 import { Empty, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { ARRANGEMENT, StatusBadge, lbl } from "./shared";
-import { JobActionBar } from "./JobActions";
+import { JobActionBar, useJobActions } from "./JobActions";
 
 const FILTERS: [JobStatus | "all", string][] = [["all", "All Jobs"], ["active", "Published"], ["draft", "Drafts"], ["paused", "Paused"], ["closed", "Closed"]];
 const SORTS: [string, string][] = [["newest", "Newest"], ["oldest", "Oldest"], ["updated", "Recently Updated"], ["alpha", "Alphabetical"]];
@@ -17,6 +17,7 @@ const date = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "sh
 
 export function JobsDashboard({ account }: { account: Account }) {
   const uid = account.userId;
+  const actions = useJobActions(uid);
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
   const savedQ = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
   const sourced = (jobId: string) => (savedQ.data ?? []).filter((e) => e.job_id === jobId).length;
