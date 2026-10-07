@@ -1,7 +1,7 @@
 // Resume upload + auto-fill card. Reads the file in the browser, asks the AI to
 // structure it, matches values to governed lists, and hands the result to the parent.
 // Nothing is saved here — the candidate reviews everything before saving.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { FileText, Loader2, Sparkles, UploadCloud, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,8 @@ const STEPS: { key: Phase; label: string }[] = [
   { key: "matching", label: "Matching skills and tools" },
 ];
 
-export function ResumeUploadCard({ catalogs, onParsed, onSkip, className }: {
+export function ResumeUploadCard({ catalogs, onParsed, onSkip, className, initialFile }: {
+  initialFile?: File | null;
   catalogs: Catalogs | null;
   onParsed: (resume: ParsedResume, matched: MatchedResume) => void;
   onSkip?: () => void;
@@ -58,6 +59,12 @@ export function ResumeUploadCard({ catalogs, onParsed, onSkip, className }: {
       setPhase("error");
     }
   }
+
+  const started = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && catalogs && started.current !== initialFile) { started.current = initialFile; void handle(initialFile); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile, catalogs]);
 
   const stepIndex = STEPS.findIndex((s) => s.key === phase);
 

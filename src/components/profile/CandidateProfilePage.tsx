@@ -64,6 +64,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["candidate-full", uid], queryFn: () => loadAll(uid) });
   const [preview, setPreview] = useState(false);
   const [autofill, setAutofill] = useState(false);
+  const [autofillFile, setAutofillFile] = useState<File | null>(null);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
   const [editLinks, setEditLinks] = useState(false);
@@ -102,7 +103,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Header account={account} p={p} percent={completion.percent}
           onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
           onPreview={() => setPreview(true)} onAutofill={() => setAutofill(true)} />
-        <ResumeAutofillPanel uid={uid} profile={p} open={autofill} onOpenChange={setAutofill} />
+        <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
           {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
@@ -120,9 +121,9 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
         </Section>
 
-        <Section id="resume" title="Resume" icon={<FileText className="h-4 w-4" />}>
-          <ResumeManager uid={uid} p={p} />
-          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Want your profile fields filled from a resume instead? Use <button type="button" onClick={() => setAutofill(true)} className="font-semibold text-primary hover:underline">Auto-fill with AI</button>.</p>
+        <Section id="resume" title="Your Resume / CV" icon={<FileText className="h-4 w-4" />}>
+          <ResumeManager uid={uid} p={p} onAutofill={(f) => { setAutofillFile(f); setAutofill(true); }} />
+          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. After uploading, Sundance AI can also fill in your profile from it — or use <button type="button" onClick={() => setAutofill(true)} className="font-semibold text-primary hover:underline">Auto-fill with AI</button>.</p>
         </Section>
 
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
@@ -318,10 +319,11 @@ function PreferencesForm({ p, uid, roleNames, onDone }: { p: Profile; uid: strin
   );
 }
 
-function ResumeManager({ uid, p }: { uid: string; p: Profile }) {
+function ResumeManager({ uid, p, onAutofill }: { uid: string; p: Profile; onAutofill: (f: File) => void }) {
   const save = useSaveProfile(uid);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [offer, setOffer] = useState<File | null>(null);
 
   async function upload(file: File) {
     const bad = validateResumeFile(file);
@@ -336,6 +338,7 @@ function ResumeManager({ uid, p }: { uid: string; p: Profile }) {
     if (ok && old) await supabase.storage.from("resumes").remove([old]);
     if (!ok) await supabase.storage.from("resumes").remove([path]);
     setBusy(false);
+    if (ok) setOffer(file);
   }
   async function download() {
     if (!p.resume_path) return;
@@ -369,9 +372,19 @@ function ResumeManager({ uid, p }: { uid: string; p: Profile }) {
       ) : (
         <button onClick={() => input.current?.click()} disabled={busy} className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-border p-8 text-center hover:border-primary hover:bg-primary-soft/30">
           <Upload className="h-7 w-7 text-primary" />
-          <span className="font-semibold">{busy ? "Uploading…" : "Upload Resume"}</span>
-          <span className="text-xs text-muted-foreground">PDF or DOCX, up to 10 MB</span>
+          <span className="font-semibold">{busy ? "Uploading…" : "Attach your resume for recruiters"}</span>
+          <span className="text-xs text-muted-foreground">PDF or DOCX, up to 10 MB · Sundance AI can also auto-fill your profile from it</span>
         </button>
+      )}
+      {offer && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+          <p className="min-w-0 flex-1 text-sm"><span className="font-semibold">Resume saved.</span> Want Sundance AI to fill in your profile from it? You review everything before it's saved.</p>
+          <div className="flex gap-2">
+            <button onClick={() => setOffer(null)} className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted">No thanks</button>
+            <button onClick={() => { onAutofill(offer); setOffer(null); }} className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Yes, auto-fill</button>
+          </div>
+        </div>
       )}
     </div>
   );
