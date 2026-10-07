@@ -54,7 +54,7 @@ export function ResumeAutofillPanel({ uid, profile, open, onOpenChange, initialF
           <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Auto-fill with AI</DialogTitle>
           <DialogDescription>Add missing skills, jobs, education and certifications from your resume. You review before anything is saved.</DialogDescription>
         </DialogHeader>
-      {!review ? <ResumeUploadCard catalogs={catalogs.data ?? null} onParsed={onParsed} initialFile={initialFile} /> : (
+      {!review ? <ResumeUploadCard catalogs={catalogs.data ?? null} onParsed={onParsed} initialFile={initialFile ?? null} /> : (
         <div className="rounded-2xl border bg-card p-5">
           <h3 className="font-semibold">Review what we'll add</h3>
           {lines.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Your profile already has everything we found in this resume.</p> : (
