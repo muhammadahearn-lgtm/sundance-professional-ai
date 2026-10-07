@@ -1250,10 +1250,12 @@ export type Database = {
           bonus_info: string
           company_id: string | null
           completion_percent: number
+          confidential_label: string
           created_at: string
           custom_title: string
           employment_type: Database["public"]["Enums"]["employment_type"]
           experience_level: string
+          is_confidential: boolean
           job_description: string
           job_id: string
           job_status: Database["public"]["Enums"]["job_status"]
@@ -1281,10 +1283,12 @@ export type Database = {
           bonus_info?: string
           company_id?: string | null
           completion_percent?: number
+          confidential_label?: string
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
           experience_level?: string
+          is_confidential?: boolean
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]
@@ -1312,10 +1316,12 @@ export type Database = {
           bonus_info?: string
           company_id?: string | null
           completion_percent?: number
+          confidential_label?: string
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
           experience_level?: string
+          is_confidential?: boolean
           job_description?: string
           job_id?: string
           job_status?: Database["public"]["Enums"]["job_status"]

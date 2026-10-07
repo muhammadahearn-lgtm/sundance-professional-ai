@@ -330,6 +330,13 @@
       "when": 1791336346410,
       "tag": "0046_company_admin_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791374153199,
+      "tag": "0047_job_confidential_search",
+      "breakpoints": true
     }
   ]
 }
