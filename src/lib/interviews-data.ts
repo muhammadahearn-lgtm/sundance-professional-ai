@@ -1,6 +1,7 @@
 import { confidentialName } from "./confidential";
 import { supabase } from "@/integrations/supabase/client";
 import type { InterviewDraft, ScorecardDraft } from "./interview-rules";
+import { notifyHiringTeam } from "./hiring-team.functions";
 
 export type Interview = {
   interview_id: string; pipeline_id: string | null; application_id: string | null; recruiter_id: string; candidate_id: string; job_id: string | null;
@@ -30,6 +31,7 @@ export async function saveInterview(ctx: { uid: string; candidateId: string; job
   };
   const res = ctx.interviewId ? await supabase.from("interviews").update(row).eq("interview_id", ctx.interviewId) : await supabase.from("interviews").insert(row);
   if (res.error) throw res.error;
+  if (ctx.jobId) void notifyHiringTeam({ data: { kind: "interview", jobId: ctx.jobId, candidateId: ctx.candidateId } }).catch(() => {});
 }
 
 export async function cancelInterview(id: string) {

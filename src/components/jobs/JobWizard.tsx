@@ -15,6 +15,7 @@ import { addCompanyEntry, loadJobCompanies, newCompanyName } from "@/lib/company
 import { Field, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { MarkdownEditor } from "./Markdown";
 import { ClientCompanyPanel } from "./ClientCompanyPanel";
+import { HiringTeamPanel } from "./HiringTeamPanel";
 import { digitsOnly } from "@/lib/salary";
 import { displayJobTitle } from "@/lib/role-taxonomy";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
@@ -184,6 +185,7 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
             </Field>
           </div>
         )}
+        {step === 1 && <div className="mt-5"><HiringTeamPanel jobId={draftId} /></div>}
         {step === 2 && <><p className="mb-4 text-sm text-muted-foreground">Optional. Mark each language as Required, Preferred or Optional.</p><RequirementPicker roleName={tax.allRoles.find((r) => r.id === f.role_id)?.name} options={tax.languages} kind="language" value={f.languages} onChange={(v) => set("languages", v)} placeholder="Search languages (Python, SQL, Java…)" /></>}
         {step === 3 && <><p className="mb-4 text-sm text-muted-foreground">Add at least one technical skill.</p><RequirementPicker roleName={tax.allRoles.find((r) => r.id === f.role_id)?.name} options={tax.skills} kind="skill" otherOptions={tax.technologies} onAddOther={(id) => { if (!f.technologies.some((t) => t.id === id)) set("technologies", [...f.technologies, { id, level: "required" }]); }} value={f.skills} onChange={(v) => set("skills", v)} placeholder="Search skills (Machine Learning, System Design…)" />{errs.skills && <p className="mt-2 text-xs text-destructive">{errs.skills}</p>}
           <div className="mt-6 border-t border-border pt-5"><p className="mb-1 text-sm font-semibold">Soft Skills Requirements</p><p className="mb-4 text-sm text-muted-foreground">Optional. Shown to candidates for context only — not used in match scores.</p><RequirementPicker roleName={tax.allRoles.find((r) => r.id === f.role_id)?.name} options={tax.softSkills} kind="soft_skill" value={f.softSkills} onChange={(v) => set("softSkills", v)} placeholder="Search soft skills (Communication, Leadership…)" /></div></>}
