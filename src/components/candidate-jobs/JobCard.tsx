@@ -1,7 +1,7 @@
 import type { EducationAlignment } from "@/lib/education";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Eye } from "lucide-react";
+import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, Eye, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { JobCardRow } from "@/lib/job-search-data";
 import type { Taxonomy } from "@/lib/jobs-data";
