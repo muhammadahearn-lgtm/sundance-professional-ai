@@ -150,11 +150,9 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, lo
             </div>
           )}
         </div>
-        <div className="flex w-32 shrink-0 flex-col items-center self-stretch sm:w-40">
-          {salary && <span className="text-center text-xs font-bold text-success sm:text-sm">{salary}</span>}
-          <div className="flex flex-1 flex-col items-center justify-center py-3">
-            <MatchIntelligence score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} open={insightsOpen} onToggle={() => setInsightsOpen((value) => !value)} />
-          </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
+          {salary && <span className="whitespace-nowrap rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">{salary}</span>}
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
@@ -164,6 +162,7 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, lo
               : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}
             <button onClick={() => lists.toggleCompare(j.job_id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare"}</button>
             <button onClick={() => shareJob(j.job_id, j.job_title)} className={act} aria-label="Share job"><Share2 className="h-4 w-4" /><span className="hidden sm:inline">Share</span></button>
+            {scoreRow && <button onClick={() => setInsightsOpen((v) => !v)} aria-expanded={insightsOpen} className={`${act} ml-auto ${insightsOpen ? "border-primary text-primary" : ""}`}><Sparkles className="h-4 w-4" />Why this match<ChevronDown className={`h-3.5 w-3.5 transition-transform ${insightsOpen ? "rotate-180" : ""}`} /></button>}
       </div>
     </article>
   );
