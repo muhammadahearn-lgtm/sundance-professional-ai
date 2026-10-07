@@ -407,6 +407,13 @@
       "when": 1791403820560,
       "tag": "0057_company_catalog_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1791405166422,
+      "tag": "0058_job_offers",
+      "breakpoints": true
     }
   ]
 }

@@ -1181,6 +1181,84 @@ export type Database = {
           },
         ]
       }
+      job_offers: {
+        Row: {
+          application_id: string | null
+          candidate_id: string
+          created_at: string
+          decline_reason: string
+          equity_details: string
+          expires_on: string | null
+          job_id: string
+          notes: string
+          offer_id: string
+          recruiter_id: string
+          responded_at: string | null
+          revision: number
+          salary_amount: number | null
+          salary_currency: string
+          signing_bonus: number | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          candidate_id: string
+          created_at?: string
+          decline_reason?: string
+          equity_details?: string
+          expires_on?: string | null
+          job_id: string
+          notes?: string
+          offer_id?: string
+          recruiter_id: string
+          responded_at?: string | null
+          revision?: number
+          salary_amount?: number | null
+          salary_currency?: string
+          signing_bonus?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          candidate_id?: string
+          created_at?: string
+          decline_reason?: string
+          equity_details?: string
+          expires_on?: string | null
+          job_id?: string
+          notes?: string
+          offer_id?: string
+          recruiter_id?: string
+          responded_at?: string | null
+          revision?: number
+          salary_amount?: number | null
+          salary_currency?: string
+          signing_bonus?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["application_id"]
+          },
+          {
+            foreignKeyName: "job_offers_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       job_screening_questions: {
         Row: {
           created_at: string
@@ -2518,6 +2596,10 @@ export type Database = {
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
+      }
+      respond_to_offer: {
+        Args: { _accept: boolean; _offer: string; _reason?: string }
+        Returns: undefined
       }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv: string }
