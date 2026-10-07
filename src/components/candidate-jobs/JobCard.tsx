@@ -107,22 +107,27 @@ type ReqRow = { lookup_id: string; requirement_level: string };
 const LEVEL_ORDER: Record<string, number> = { required: 0, preferred: 1, optional: 2 };
 const BADGE = { primary: "bg-primary-soft text-primary border-primary/20", violet: "bg-violet/10 text-violet border-violet/20", teal: "bg-teal/10 text-teal border-teal/20", indigo: "bg-indigo/10 text-indigo border-indigo/20" };
 
-function ReqGroup({ title, rows, names, tone }: { title: string; rows: ReqRow[] | null | undefined; names: { id: string; name: string }[]; tone: keyof typeof BADGE }) {
-  const list = [...(rows ?? [])].sort((a, b) => (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3));
+function ReqGroup({ title, rows, names, tone, mine }: { title: string; rows: ReqRow[] | null | undefined; names: { id: string; name: string }[]; tone: keyof typeof BADGE; mine?: Set<string> | undefined }) {
+  const has = (r: ReqRow) => !!mine?.has(r.lookup_id);
+  const list = [...(rows ?? [])].sort((a, b) => Number(has(b)) - Number(has(a)) || (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3));
   if (!list.length) return null;
   const nm = (id: string) => names.find((n) => n.id === id)?.name ?? "Unknown";
+  const hit = mine ? list.filter(has).length : 0;
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}{mine && <span className={hit ? "text-primary" : ""}> · {hit}/{list.length} matched</span>}</p>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
-        {list.slice(0, 3).map((r) => <span key={r.lookup_id} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${BADGE[tone]}`}>{nm(r.lookup_id)}</span>)}
+        {list.slice(0, 3).map((r) => mine ? (has(r)
+          ? <span key={r.lookup_id} title="You have this skill" className="rounded-full border border-primary bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">✓ {nm(r.lookup_id)}</span>
+          : <span key={r.lookup_id} title="Not on your profile yet" className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{nm(r.lookup_id)}</span>)
+          : <span key={r.lookup_id} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${BADGE[tone]}`}>{nm(r.lookup_id)}</span>)}
         {list.length > 3 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 3} More</span>}
       </div>
     </div>
   );
 }
 
-export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign }: { j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
+export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, locAlign, eduAlign, mine }: { mine?: Set<string> | undefined; j: JobCardRow; roleName?: string | undefined; lists: JobLists; onRemove?: () => void; score?: number | undefined; scoreRow?: ScoreRow | undefined; tax?: Taxonomy | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
@@ -143,10 +148,10 @@ export function JobCard({ j, roleName, lists, onRemove, score, scoreRow, tax, lo
           <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{plainPreview(j.job_description)}</p>
           {tax && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <ReqGroup title="Programming Languages" rows={j.job_languages} names={tax.languages} tone="primary" />
-              <ReqGroup title="Technical Skills" rows={j.job_skills} names={tax.skills} tone="violet" />
+              <ReqGroup title="Programming Languages" rows={j.job_languages} names={tax.languages} mine={mine} tone="primary" />
+              <ReqGroup title="Technical Skills" rows={j.job_skills} names={tax.skills} mine={mine} tone="violet" />
               <ReqGroup title="Soft Skills Required" rows={j.job_soft_skills} names={tax.softSkills} tone="indigo" />
-              <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} tone="teal" />
+              <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} mine={mine} tone="teal" />
             </div>
           )}
         </div>
