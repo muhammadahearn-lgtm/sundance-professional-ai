@@ -108,7 +108,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Company Name *" error={err.company_name}><input className={inputCls} maxLength={150} value={f.company_name} onChange={(e) => set("company_name", e.target.value)} /></Field>
+        <Field label="Company Name *" error={err.company_name}><input className={inputCls} maxLength={150} list="company-catalog" autoComplete="off" value={f.company_name} onChange={(e) => pickCompany(e.target.value)} /><datalist id="company-catalog">{catalog.data?.map((c) => <option key={c.company_name} value={c.company_name} />)}</datalist></Field>
         <Field label="Job Title *" error={err.job_title}><input className={inputCls} maxLength={150} value={f.job_title} onChange={(e) => set("job_title", e.target.value)} /></Field>
         <Field label="Industry"><input className={inputCls} maxLength={100} value={f.industry} onChange={(e) => set("industry", e.target.value)} /></Field>
         <Field label="Location"><input className={inputCls} maxLength={100} value={f.location} onChange={(e) => set("location", e.target.value)} /></Field>
