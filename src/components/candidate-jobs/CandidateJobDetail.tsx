@@ -1,3 +1,4 @@
+import { equitySummary } from "@/lib/screening";
 import { useEffect } from "react";
 import { track } from "@/lib/track";
 import { ContactRecruiterButton } from "@/components/messages/Messages";
@@ -72,7 +73,7 @@ export function CandidateJobDetail({ account, id }: { account: Account; id: stri
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-6">
           <div className={`${card} p-6`}><Markdown text={j.job_description} /></div>
-          {(j.benefits_summary || j.bonus_info) && <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Benefits</h2>{j.bonus_info && <p className="mt-2 text-sm"><strong>Bonus:</strong> {j.bonus_info}</p>}{j.benefits_summary && <p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p>}</div>}
+          {(j.benefits_summary || j.bonus_info || equitySummary(j)) && <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Benefits</h2>{j.bonus_info && <p className="mt-2 text-sm"><strong>Bonus:</strong> {j.bonus_info}</p>}{equitySummary(j) && <p className="mt-2 text-sm"><strong>Equity:</strong> {equitySummary(j)}{j.equity_vesting ? ` · ${j.equity_vesting}` : ""}</p>}{j.benefits_summary && <p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p>}</div>}
           <div className={`${card} space-y-5 p-6`}>
             <h2 className="font-display text-lg font-bold">Technical Requirements</h2>
             <Item k="Programming Languages" v={<RequirementList items={q.data.languages} options={t.languages} />} />
