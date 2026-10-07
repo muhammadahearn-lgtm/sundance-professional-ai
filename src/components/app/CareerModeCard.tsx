@@ -41,7 +41,7 @@ export function CareerModeCard({ uid }: { uid: string }) {
         ))}
       </div>
       {mode === "passive" && (
-        <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); const n = Math.round(Number(floorVal)); if (floorVal && (!Number.isFinite(n) || n < 0)) return toast.error("Enter a valid amount."); void save({ passive_min_salary: floorVal ? n * 100 : null }); setFloor(null); }}>
+        <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); const n = Math.round(Number(floorVal)); if (floorVal && (!Number.isFinite(n) || n < 0)) { toast.error("Enter a valid amount."); return; } void save({ passive_min_salary: floorVal ? n * 100 : null }); setFloor(null); }}>
           <label className="flex-1 space-y-1"><span className="block text-sm font-medium">Minimum yearly pay to consider ({q.data.salary_currency || "USD"})</span>
             <Input inputMode="numeric" placeholder="e.g. 165000" value={floorVal} onChange={(e) => setFloor(e.target.value.replace(/[^\d]/g, ""))} /></label>
           <Button type="submit" variant="outline" className="rounded-full">Save floor</Button>
