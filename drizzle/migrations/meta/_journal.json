@@ -351,6 +351,13 @@
       "when": 1791374828467,
       "tag": "0049_job_stakeholders",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791375190266,
+      "tag": "0050_job_equity_screening",
+      "breakpoints": true
     }
   ]
 }

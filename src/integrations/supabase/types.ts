@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      application_screening_answers: {
+        Row: {
+          answer_text: string
+          application_id: string
+          created_at: string
+          question_id: string
+        }
+        Insert: {
+          answer_text: string
+          application_id: string
+          created_at?: string
+          question_id: string
+        }
+        Update: {
+          answer_text?: string
+          application_id?: string
+          created_at?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_screening_answers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["application_id"]
+          },
+          {
+            foreignKeyName: "application_screening_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "job_screening_questions"
+            referencedColumns: ["question_id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_date: string
@@ -1136,6 +1172,50 @@ export type Database = {
           },
         ]
       }
+      job_screening_questions: {
+        Row: {
+          created_at: string
+          ideal_answer: string
+          is_required: boolean
+          job_id: string
+          options: string[]
+          question_id: string
+          question_text: string
+          question_type: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          ideal_answer?: string
+          is_required?: boolean
+          job_id: string
+          options?: string[]
+          question_id?: string
+          question_text: string
+          question_type?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          ideal_answer?: string
+          is_required?: boolean
+          job_id?: string
+          options?: string[]
+          question_id?: string
+          question_text?: string
+          question_type?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_screening_questions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       job_skills: {
         Row: {
           job_id: string
@@ -1295,6 +1375,9 @@ export type Database = {
           created_at: string
           custom_title: string
           employment_type: Database["public"]["Enums"]["employment_type"]
+          equity_range: string
+          equity_type: string
+          equity_vesting: string
           experience_level: string
           is_confidential: boolean
           job_description: string
@@ -1328,6 +1411,9 @@ export type Database = {
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
+          equity_range?: string
+          equity_type?: string
+          equity_vesting?: string
           experience_level?: string
           is_confidential?: boolean
           job_description?: string
@@ -1361,6 +1447,9 @@ export type Database = {
           created_at?: string
           custom_title?: string
           employment_type?: Database["public"]["Enums"]["employment_type"]
+          equity_range?: string
+          equity_type?: string
+          equity_vesting?: string
           experience_level?: string
           is_confidential?: boolean
           job_description?: string
