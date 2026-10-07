@@ -101,9 +101,24 @@ export async function resumeUrl(path: string, fileName: string | null) {
 }
 
 export async function listSavedCandidates(uid: string) {
-  const { data, error } = await supabase.from("saved_candidates").select("candidate_id").eq("recruiter_id", uid).order("saved_date", { ascending: false });
+  return (await listSavedEntries(uid)).map((r) => r.candidate_id);
+}
+export type SavedEntry = { candidate_id: string; job_id: string | null; saved_date: string };
+export async function listSavedEntries(uid: string): Promise<SavedEntry[]> {
+  const { data, error } = await supabase.from("saved_candidates").select("candidate_id, job_id, saved_date").eq("recruiter_id", uid).order("saved_date", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((r) => r.candidate_id);
+  return data ?? [];
+}
+/** Tag a saved candidate to one of the recruiter's jobs, or null for the general pool. */
+export async function setSavedCandidateJob(uid: string, candidateId: string, jobId: string | null) {
+  const { error } = await supabase.from("saved_candidates").update({ job_id: jobId }).eq("recruiter_id", uid).eq("candidate_id", candidateId);
+  if (error) throw error;
+}
+/** The recruiter's own non-draft jobs with their hiring company, for saved-candidate tagging and filters. */
+export async function loadSaveJobOptions(uid: string) {
+  const { data, error } = await supabase.from("jobs").select("job_id, job_title, job_status, company_id, companies(company_name)").eq("recruiter_id", uid).neq("job_status", "draft").order("job_title");
+  if (error) throw error;
+  return (data ?? []).map((j) => ({ job_id: j.job_id, job_title: j.job_title, job_status: j.job_status, company_id: j.company_id, company_name: (j.companies as { company_name: string } | null)?.company_name ?? "Unknown company" }));
 }
 export async function listComparedCandidates(uid: string) {
   const { data, error } = await supabase.from("candidate_comparisons").select("candidate_id").eq("recruiter_id", uid).order("comparison_date");
