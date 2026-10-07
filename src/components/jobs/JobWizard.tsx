@@ -19,6 +19,7 @@ import { HiringTeamPanel } from "./HiringTeamPanel";
 import { EquityPanel, ScreeningPanel } from "./ScreeningEquityPanels";
 import { digitsOnly } from "@/lib/salary";
 import { displayJobTitle } from "@/lib/role-taxonomy";
+import { descriptionTemplate } from "@/lib/role-recommendations";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, RequirementPicker } from "./shared";
 
@@ -61,6 +62,7 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
   const navigate = useNavigate();
   const qc = useQueryClient();
   const set = <K extends keyof JobForm>(k: K, v: JobForm[K]) => { dirty.current = true; setF((p) => ({ ...p, [k]: v })); };
+  const roleName = tax.allRoles.find((r) => r.id === f.role_id)?.name;
   const withTitle = (x: JobForm) => {
     const lvl = tax.levels.find((l) => l.id === x.level_id)?.name ?? "";
     return { ...x, job_title: displayJobTitle(x.custom_title, lvl, tax.allRoles.find((r) => r.id === x.role_id)?.name), experience_level: lvl };
@@ -181,6 +183,7 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
               <Field label="Minimum Years Experience *" error={errs.minimum_years_experience}><input type="number" min={0} max={50} className={inputCls} value={f.minimum_years_experience} onChange={(e) => set("minimum_years_experience", e.target.value)} /></Field>
               <Field label="Preferred Minimum Degree (optional)" hint={<span className="text-xs text-muted-foreground">Informational — never affects match scores</span>}><select className={inputCls} value={f.minimum_degree} onChange={(e) => set("minimum_degree", e.target.value)}><option value="">No preference</option>{DEGREE_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}</select></Field>
             </div>
+            {roleName && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-primary-soft px-3 py-2 text-xs"><span className="text-muted-foreground">Start from a {roleName} template — edit it freely.</span><button type="button" onClick={() => { if (!f.job_description.trim() || window.confirm("Replace the current description with the template?")) set("job_description", descriptionTemplate(roleName)); }} className="font-semibold text-primary hover:underline">Insert role template</button></div>}
             <Field label="Job Description *" error={errs.job_description} hint={<span className={`text-xs ${f.job_description.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground"}`}>{f.job_description.length}/{DESCRIPTION_MAX}</span>}>
               <span className="block" onClick={(e) => e.preventDefault()}><MarkdownEditor value={f.job_description} onChange={(v) => set("job_description", v)} placeholder="Describe the role, responsibilities, qualifications and benefits…" /></span>
             </Field>

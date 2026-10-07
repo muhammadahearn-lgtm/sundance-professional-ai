@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendationsFor, splitRecommended } from "./role-recommendations";
+import { descriptionTemplate, recommendationsFor, splitRecommended } from "./role-recommendations";
 
 describe("role recommendations", () => {
   it("Data Scientist languages follow the spec", () => {
@@ -13,5 +13,12 @@ describe("role recommendations", () => {
     const { rec, rest } = splitRecommended(opts, ["Python", "SQL", "Julia"]);
     expect(rec.map((o) => o.name)).toEqual(["Python", "SQL"]);
     expect(rest.map((o) => o.name)).toEqual(["Ada", "Bash"]);
+  });
+  it("Frontend Engineer bundle includes React", () => {
+    expect(recommendationsFor("Frontend Engineer", "technology")).toContain("React");
+  });
+  it("description template names the role and is empty without one", () => {
+    expect(descriptionTemplate("Backend Engineer")).toContain("Backend Engineer");
+    expect(descriptionTemplate("")).toBe("");
   });
 });
