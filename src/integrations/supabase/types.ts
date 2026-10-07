@@ -1208,6 +1208,47 @@ export type Database = {
           },
         ]
       }
+      job_stakeholders: {
+        Row: {
+          created_at: string
+          email: string
+          hiring_role: string
+          job_id: string
+          name: string
+          notify_on_interview: boolean
+          notify_on_shortlist: boolean
+          stakeholder_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          hiring_role?: string
+          job_id: string
+          name: string
+          notify_on_interview?: boolean
+          notify_on_shortlist?: boolean
+          stakeholder_id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          hiring_role?: string
+          job_id?: string
+          name?: string
+          notify_on_interview?: boolean
+          notify_on_shortlist?: boolean
+          stakeholder_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_stakeholders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       job_technologies: {
         Row: {
           job_id: string
