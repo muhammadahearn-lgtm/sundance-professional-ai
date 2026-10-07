@@ -104,6 +104,41 @@ export function CareerWidget({ uid }: { uid: string }) {
   );
 }
 
+const delta = (n: number, o: number) => o ? Math.round(((n - o) / o) * 100) : null;
+function Delta({ v }: { v: number | null }) {
+  if (v == null) return <span className="text-[11px] text-muted-foreground">new this month</span>;
+  return <span className={`text-[11px] font-bold tabular-nums ${v > 0 ? "text-success" : v < 0 ? "text-destructive" : "text-muted-foreground"}`}>{v > 0 ? "▲" : v < 0 ? "▼" : "•"} {Math.abs(v)}% vs last month</span>;
+}
+
+/** Monthly Market Pulse: last 30 days of new jobs vs the 30 before. */
+function MarketPulse({ d }: { d: CareerData }) {
+  const p = d.pulse;
+  const month = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
+  return (
+    <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card p-6 shadow-soft">
+      <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
+      <div className="relative">
+        <div className="flex flex-wrap items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-lg font-bold">Market Pulse · {month}</h2>
+          <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-semibold text-primary">Monthly</span>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">How the market for your skills moved in the last 30 days — useful whether you're looking or happily employed.</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border bg-muted/30 p-4"><p className="text-xs text-muted-foreground">New jobs for your role</p><p className="text-2xl font-extrabold tabular-nums">{p.roleJobs}</p><Delta v={delta(p.roleJobs, p.prevRoleJobs)} /><p className="mt-1 text-[11px] text-muted-foreground">{p.newJobs} new jobs overall</p></div>
+          <div className="rounded-2xl border border-border bg-muted/30 p-4"><p className="text-xs text-muted-foreground">Typical pay for your role</p><p className="text-2xl font-extrabold tabular-nums">{p.medianPay != null ? money(p.medianPay) : "—"}</p>{p.medianPay != null && p.prevMedianPay != null ? <Delta v={delta(p.medianPay, p.prevMedianPay)} /> : <span className="text-[11px] text-muted-foreground">Midpoint of posted pay ranges</span>}</div>
+          <div className="rounded-2xl border border-border bg-muted/30 p-4"><p className="text-xs text-muted-foreground">Your market coverage</p><p className="text-2xl font-extrabold tabular-nums">{p.coverage}%</p><span className="text-[11px] text-muted-foreground">of this month's most-requested skills you have</span></div>
+        </div>
+        <p className="mb-2 mt-5 text-xs font-semibold uppercase text-muted-foreground">Most requested this month</p>
+        {p.rising.length ? <div className="flex flex-wrap gap-2">{p.rising.map((r) => (
+          <span key={r.id} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${r.youHave ? "border-success/30 bg-success/10 text-foreground" : "border-border bg-muted/40 text-muted-foreground"}`}>
+            {r.youHave && <span className="text-success">✓</span>}{r.name}<span className="tabular-nums opacity-70">· {r.now} job{r.now === 1 ? "" : "s"}</span>{r.prev > 0 && r.change !== 0 && <span className={r.change > 0 ? "text-success" : "text-destructive"}>{r.change > 0 ? "▲" : "▼"}{Math.abs(r.change)}%</span>}
+          </span>))}</div> : <p className="text-xs text-muted-foreground">No new jobs posted in the last 30 days yet.</p>}
+      </div>
+    </section>
+  );
+}
+
 /** Full Career Intelligence page. */
 export function CareerPage({ uid }: { uid: string }) {
   const { q, recalc } = useCareer(uid);
@@ -121,6 +156,8 @@ export function CareerPage({ uid }: { uid: string }) {
             r.salary ? `Expected pay for your profile: ${money(r.salary.expected[0])}–${money(r.salary.expected[1])}, stretch ${money(r.salary.stretch)}+.` : "Salary benchmark appears once comparable jobs list pay.",
             `${r.topMatches.length} top job match${r.topMatches.length === 1 ? "" : "es"} out of ${r.market.jobs} active jobs.`,
           ]} />
+
+          <MarketPulse d={d} />
 
           <Section title="Readiness & Insights" desc={`Skills, technologies and experience come from your top ${r.topMatches.length || "—"} job matches${r.topMatches.length ? "" : " (estimated from your profile)"}.`}>
             <div className="grid gap-4 lg:grid-cols-5">
