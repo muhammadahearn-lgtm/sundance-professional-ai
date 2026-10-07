@@ -95,8 +95,6 @@ export function sortTalent(rows: TalentRow[], sort: string, q = ""): TalentRow[]
 // ---------- Applications & pipeline ----------
 /** Human label for the "rejected" key, shown everywhere instead of "Rejected". */
 export const NOT_MOVING_FORWARD = "Not Moving Forward";
-/** Optional, respectful reasons a recruiter can note when closing a candidate for one role. */
-export const CLOSE_REASONS = ["Position filled by another candidate", "Different skills or seniority fit for this role", "Candidate withdrew or accepted another offer", "Compensation or timeline mismatch"] as const;
 /** Whole days since a stage change; amber after 7 days for active stages. */
 export function stageAge(stageDate: string, now = new Date()): { days: number; stale: boolean } {
   const days = Math.max(0, Math.floor((now.getTime() - new Date(stageDate).getTime()) / 86400000));
