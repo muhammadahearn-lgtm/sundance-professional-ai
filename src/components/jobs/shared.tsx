@@ -77,6 +77,7 @@ export function RequirementPicker({ options: baseOptions, otherOptions = [], onA
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const m = matches[0]; if (m) { onChange([...value, { id: m.id, level: "required" }]); setQ(""); } else if (newName) createNew(); } }} />
         {newName && <button type="button" disabled={busy} onClick={createNew} className="mt-2 inline-flex items-center rounded-full border border-dashed border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">+ Add “{newName}”</button>}
         {guarded && kind && <div className="mt-2"><CategoryGuardAdd q={q} kind={kind as "skill" | "technology"} options={options} otherOptions={otherOptions} onAdd={guardAdd} /></div>}
+        {recs.length > 1 && <button type="button" onClick={() => onChange([...value, ...recs.map((o) => ({ id: o.id, level: "required" as ReqLevel }))])} className="mt-2 inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary hover:opacity-90">+ Add all {recs.length} recommended for {roleName}</button>}
         {shown.length > 0 && <div className="mt-2"><RecGroups items={shown} roleName={roleName} kind={kind ?? "skill"} query={q} className="flex flex-wrap gap-1.5" render={(o) => (
           <button type="button" key={o.id} onClick={() => { onChange([...value, { id: o.id, level: "required" }]); setQ(""); }} className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary hover:text-primary">+ {o.name}</button>
         )} /></div>}
