@@ -52,9 +52,37 @@ export function Avatar({ name, size = "h-12 w-12 text-base", path }: { name?: st
   const i = safe.split(/\s+/).filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "?";
   return <div className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-primary font-display font-bold text-primary-foreground ${size}`} aria-hidden={url ? undefined : true}>{url ? <img src={url} alt={safe ? `${safe} photo` : "Profile photo"} className="h-full w-full object-cover" /> : i}</div>;
 }
-export function Chips({ ids, opts, max = 5, soft = false }: { ids: string[]; opts: { id: string; name: string }[]; max?: number; soft?: boolean }) {
+export function Chips({ ids, opts, max = 5, soft = false, match }: { ids: string[]; opts: { id: string; name: string }[]; max?: number; soft?: boolean; match?: Set<string> | undefined }) {
   if (!ids.length) return <span className="text-xs text-muted-foreground">—</span>;
-  return <div className="flex flex-wrap gap-1.5">{ids.slice(0, max).map((id) => <span key={id} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${soft ? "bg-indigo/10 text-indigo" : "bg-primary-soft text-primary"}`}>{nameOf(opts, id)}</span>)}{ids.length > max && <span className="text-xs text-muted-foreground">+{ids.length - max}</span>}</div>;
+  // When a job is selected, matching items move to the front and get a solid "match" style.
+  const list = match ? [...ids.filter((id) => match.has(id)), ...ids.filter((id) => !match.has(id))] : ids;
+  return <div className="flex flex-wrap gap-1.5">{list.slice(0, max).map((id) => {
+    const hit = !soft && match?.has(id);
+    const cls = soft ? "bg-indigo/10 text-indigo" : hit ? "bg-primary text-primary-foreground shadow-soft" : match ? "bg-muted text-muted-foreground" : "bg-primary-soft text-primary";
+    return <span key={id} title={hit ? "Matches this job's requirements" : undefined} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{hit && <Check className="h-3 w-3" aria-hidden />}{nameOf(opts, id)}</span>;
+  })}{list.length > max && <span className="text-xs text-muted-foreground">+{list.length - max}</span>}</div>;
+}
+/** Skill + technology ids the selected job asks for (any requirement level). */
+export function useJobReqIds(jobId?: string) {
+  return useQuery({
+    queryKey: ["job-req-ids", jobId],
+    enabled: !!jobId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [s, tch] = await Promise.all([
+        supabase.from("job_skills").select("lookup_id").eq("job_id", jobId!),
+        supabase.from("job_technologies").select("lookup_id").eq("job_id", jobId!),
+      ]);
+      if (s.error) throw s.error;
+      if (tch.error) throw tch.error;
+      return { skills: new Set(s.data.map((r) => r.lookup_id)), techs: new Set(tch.data.map((r) => r.lookup_id)) };
+    },
+  });
+}
+function MatchCount({ ids, match }: { ids: string[]; match?: Set<string> | undefined }) {
+  if (!match || !match.size) return null;
+  const n = ids.filter((id) => match.has(id)).length;
+  return <span className="ml-1 normal-case text-primary">· {n}/{match.size} matched</span>;
 }
 export function ErrorBox({ msg, retry }: { msg: string; retry: () => void }) {
   return <div className={`${card} p-8 text-center`} role="alert"><p className="font-semibold">{msg}</p><button onClick={retry} className={`${primaryBtn} mt-4`}>Try again</button></div>;
