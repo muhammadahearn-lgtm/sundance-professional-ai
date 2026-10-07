@@ -15,7 +15,7 @@ import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
 import { listActiveCompanyJobs, searchJobs } from "@/lib/job-search-data";
 import { DEFAULT_SEARCH, EXPERIENCE_BUCKETS, PAGE_SIZE, POPULAR_SEARCHES, SALARY_MAX, SORTS, activeFilterCount, readRecent, saveRecent, type SearchState } from "@/lib/job-search";
 import { card, friendlyError, inputCls } from "@/components/profile/parts";
-import { Slider } from "@/components/ui/slider";
+import { RangeSlider } from "@/components/ui/range-slider";
 import { ARRANGEMENT, EMPLOYMENT } from "@/components/jobs/shared";
 import { supabase } from "@/integrations/supabase/client";
 import { CompareTray, JobCard } from "./JobCard";
@@ -207,7 +207,7 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
       </Group>
       <Group title="Salary Range">
         <div className="flex justify-between text-xs font-semibold"><span>{fmt(sal[0])}</span><span>{fmt(sal[1])}</span></div>
-        <Slider className="my-4" min={0} max={SALARY_MAX} step={10000} value={sal} onValueChange={(v) => setSal([v[0] ?? 0, v[1] ?? SALARY_MAX])}
+        <RangeSlider className="my-4" min={0} max={SALARY_MAX} step={10000} value={sal} onValueChange={setSal}
           onValueCommit={(v) => p({ smin: v[0] ?? 0, smax: (v[1] ?? SALARY_MAX) >= SALARY_MAX ? 0 : v[1] ?? 0 })} aria-label="Salary range" />
         <div className="grid grid-cols-2 gap-2">
           <input type="number" aria-label="Minimum salary" className={`${inputCls} py-1.5 text-xs`} placeholder="Min" value={s.smin || ""} onChange={(e) => p({ smin: Math.max(0, Number(e.target.value) || 0) })} />
