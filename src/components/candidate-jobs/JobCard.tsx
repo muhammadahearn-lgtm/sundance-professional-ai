@@ -109,9 +109,9 @@ const LEVEL_ORDER: Record<string, number> = { required: 0, preferred: 1, optiona
 type ReqCat = "languages" | "skills" | "technologies";
 /** Category tones: violet = programming languages, indigo = technical skills, teal = tools & technologies. */
 const CAT: Record<ReqCat, { label: string; solid: string; soft: string }> = {
-  languages: { label: "Programming language", solid: "border-violet bg-violet text-primary-foreground", soft: "border-violet/20 bg-violet/10 text-violet" },
-  skills: { label: "Technical skill", solid: "border-indigo bg-indigo text-primary-foreground", soft: "border-indigo/20 bg-indigo/10 text-indigo" },
-  technologies: { label: "Tool / technology", solid: "border-teal bg-teal text-primary-foreground", soft: "border-teal/20 bg-teal/10 text-teal" },
+  languages: { label: "Programming language", solid: "border-violet/30 bg-violet/10 text-violet", soft: "border-border/60 bg-muted/40 text-muted-foreground" },
+  skills: { label: "Technical skill", solid: "border-indigo/30 bg-indigo/10 text-indigo", soft: "border-border/60 bg-muted/40 text-muted-foreground" },
+  technologies: { label: "Tool / technology", solid: "border-teal/30 bg-teal/10 text-teal", soft: "border-border/60 bg-muted/40 text-muted-foreground" },
 };
 const CAT_ORDER: ReqCat[] = ["languages", "skills", "technologies"];
 
@@ -125,7 +125,7 @@ function Requirements({ rows, names, mine }: { rows: (ReqRow & { cat: ReqCat })[
     <div className="mt-4 flex flex-wrap gap-1.5">
       {list.slice(0, 8).map((r) => has(r)
         ? <span key={r.lookup_id} title={`${CAT[r.cat].label} · Matches your profile`} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${CAT[r.cat].solid}`}>✓ {nm(r.lookup_id)}</span>
-        : <span key={r.lookup_id} title={`${CAT[r.cat].label} · Not listed on your profile`} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${CAT[r.cat].soft}`}>{nm(r.lookup_id)}</span>)}
+        : <span key={r.lookup_id} title={`${CAT[r.cat].label} · Not listed on your profile`} className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${CAT[r.cat].soft}`}>{nm(r.lookup_id)}</span>)}
       {list.length > 8 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 8} More</span>}
     </div>
   );
