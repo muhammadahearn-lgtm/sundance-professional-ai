@@ -63,6 +63,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const uid = account.userId;
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["candidate-full", uid], queryFn: () => loadAll(uid) });
   const [preview, setPreview] = useState(false);
+  const [autofill, setAutofill] = useState(false);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
   const [editLinks, setEditLinks] = useState(false);
@@ -100,8 +101,8 @@ export function CandidateProfilePage({ account }: { account: Account }) {
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} percent={completion.percent}
           onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
-          onPreview={() => setPreview(true)} />
-        <ResumeAutofillPanel uid={uid} profile={p} />
+          onPreview={() => setPreview(true)} onAutofill={() => setAutofill(true)} />
+        <ResumeAutofillPanel uid={uid} profile={p} open={autofill} onOpenChange={setAutofill} />
 
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
           {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
@@ -121,14 +122,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
 
         <Section id="resume" title="Resume" icon={<FileText className="h-4 w-4" />}>
           <ResumeManager uid={uid} p={p} />
-          <div className="mt-5 flex gap-4 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/40 p-5">
-            <Sparkles className="h-6 w-6 shrink-0 text-primary" />
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2"><p className="font-semibold">AI Resume Parsing</p><span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Future AI Feature</span></div>
-              <p className="text-sm text-muted-foreground">Soon you'll be able to fill your profile from your resume. We'll pull out your work experience, programming languages, technical skills, technologies and certifications.</p>
-              <button disabled className="cursor-not-allowed rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-semibold text-muted-foreground">Parse Resume</button>
-            </div>
-          </div>
+          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Want your profile fields filled from a resume instead? Use <button type="button" onClick={() => setAutofill(true)} className="font-semibold text-primary hover:underline">Auto-fill with AI</button>.</p>
         </Section>
 
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
@@ -206,7 +200,7 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
           <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
           <div className="flex flex-wrap gap-2">
             <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
-            <a href="#resume" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Upload className="h-4 w-4" />Upload Resume</a>
+            <button onClick={onAutofill} className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary-soft px-3.5 py-2 text-sm font-semibold text-primary hover:border-primary"><Sparkles className="h-4 w-4" />Auto-fill with AI</button>
             <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
           </div>
         </div>
