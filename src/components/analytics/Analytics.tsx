@@ -368,19 +368,33 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
           </div>
           <Section title="Your Application Journey"><div className={card}><FunnelStrip steps={[{ name: "Applied", value: m.kpis.submitted }, { name: "Viewed", value: m.kpis.viewed }, { name: "Contacted", value: m.kpis.contacts }, { name: "Interviews", value: m.kpis.interviews }, { name: "Offers", value: m.kpis.offers }, { name: "Hired", value: m.kpis.hires }]} /></div></Section>
         </div>}
-        {tab === "applications" && <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Applications By Month" empty={!m.apps.length}><Trend data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard>
-          <ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard>
-          <ChartCard title="Applications By Role" empty={!m.apps.length}><Bars data={m.byRole} /></ChartCard>
-          <ChartCard title="Applications By Company" empty={!m.apps.length}><Bars data={m.byCompany} /></ChartCard>
-          <ChartCard title="Applications By Location" empty={!m.apps.length}><Bars data={m.byLocation} /></ChartCard>
-          <ChartCard title="Applications By Work Arrangement" empty={!m.apps.length}><Donut data={m.byArrangement} /></ChartCard>
+        {tab === "applications" && <div className="space-y-4">
+          <AiBrief points={[
+            m.kpis.interviews ? `You have ${m.kpis.interviews} application${m.kpis.interviews === 1 ? "" : "s"} at interview stage or beyond — review each job's match breakdown to prepare.` : m.apps.length ? `${m.apps.length} application${m.apps.length === 1 ? " is" : "s are"} in progress; follow up through Messages to stand out.` : "No applications in this period — start with your highest-match jobs.",
+            m.byRole[0] ? `Most of your applications target ${m.byRole[0].name} roles.` : "Your target roles will appear here as you apply.",
+          ]} />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3"><ChartCard title="Applications Over Time" empty={!m.apps.length}><Trend height={240} data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard></div>
+            <div className="lg:col-span-2"><ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard></div>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ChartCard title="Target Roles" empty={!m.apps.length}><Bars data={m.byRole} /></ChartCard>
+            <ChartCard title="Target Companies" empty={!m.apps.length}><Bars data={m.byCompany} /></ChartCard>
+            <ChartCard title="Target Locations" empty={!m.apps.length}><Bars data={m.byLocation} /></ChartCard>
+          </div>
+          <ChartCard title="Work Arrangement" empty={!m.apps.length}><Bars data={m.byArrangement} /></ChartCard>
         </div>}
         {tab === "match" && <div className="space-y-4">
+          <AiBrief points={[
+            m.stats.count ? `Across ${m.stats.count} active jobs, your matches range from ${m.stats.lowest}% to ${m.stats.highest}%.` : "No match scores yet — complete your skills and tools to get scored.",
+            m.topTech[0] ? `${m.topTech[0].name} jobs fit you best, averaging ${m.topTech[0].value}%.` : "Add tools and technologies to unlock technology-level insights.",
+          ]} />
           <Stat items={[["Average Match", `${m.stats.average}%`], ["Highest Match", `${m.stats.highest}%`], ["Lowest Match", `${m.stats.lowest}%`], ["Jobs Scored", m.stats.count]]} />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3"><ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard></div>
+            <div className="lg:col-span-2"><ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard></div>
+          </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            <ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard>
-            <ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard>
             <ChartCard title="Top Matching Roles" empty={!m.topRoles.length}><Bars data={m.topRoles} unit="%" /></ChartCard>
             <ChartCard title="Top Matching Industries" empty={!m.topIndustries.length}><Bars data={m.topIndustries} unit="%" /></ChartCard>
             <ChartCard title="Top Matching Technologies" empty={!m.topTech.length}><Bars data={m.topTech} unit="%" /></ChartCard>
@@ -388,6 +402,10 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
           </div>
         </div>}
         {tab === "growth" && <div className="space-y-6">
+          <AiBrief points={[
+            m.readinessChange != null ? `Your career readiness ${m.readinessChange >= 0 ? "rose" : "dropped"} by ${Math.abs(m.readinessChange)} points this period.` : "Readiness trends appear after a few days of activity.",
+            m.added.skills + m.added.technologies ? `You added ${m.added.skills} skills and ${m.added.technologies} technologies — keep growing your stack.` : "Adding skills and tools is the fastest way to raise your match scores.",
+          ]} />
           <Stat items={[["Skills Added", m.added.skills], ["Technologies Added", m.added.technologies], ["Certifications Added", m.added.certifications], ["Readiness Change", m.readinessChange == null ? "—" : `${m.readinessChange > 0 ? "+" : ""}${m.readinessChange}`]]} />
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCard title="Career Readiness & Profile Completion Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Readiness: Math.round(Number(s.readiness_score)), Completion: Math.round(Number(s.profile_completion)) }))} keys={[{ k: "Readiness", name: "Readiness" }, { k: "Completion", name: "Profile completion %" }]} /></ChartCard>
