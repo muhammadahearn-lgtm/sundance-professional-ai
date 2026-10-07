@@ -63,10 +63,10 @@ function FilterBar({ f, set, options, onRefresh, onCsv, onExcel, refreshing }: {
   );
 }
 
-function Section({ title, children, desc }: { title: string; children: ReactNode; desc?: string | undefined }) {
+export function Section({ title, children, desc }: { title: string; children: ReactNode; desc?: string | undefined }) {
   return <section className="space-y-3"><div><h2 className="flex items-center gap-2 text-lg font-bold"><span className="h-4 w-1 rounded-full bg-gradient-primary" />{title}</h2>{desc && <p className="text-xs text-muted-foreground">{desc}</p>}</div>{children}</section>;
 }
-function ChartCard({ title, children, empty }: { title: string; children: ReactNode; empty?: boolean | undefined }) {
+export function ChartCard({ title, children, empty }: { title: string; children: ReactNode; empty?: boolean | undefined }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:border-primary/30">
       <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/10 opacity-60 blur-3xl transition-opacity group-hover:opacity-100" />
@@ -78,7 +78,7 @@ function ChartCard({ title, children, empty }: { title: string; children: ReactN
 const tooltipStyle = { borderRadius: 12, border: "1px solid var(--border)", background: "color-mix(in oklab, var(--card) 88%, transparent)", backdropFilter: "blur(12px)", boxShadow: "0 10px 30px -12px color-mix(in oklab, var(--primary) 35%, transparent)", fontSize: 12 };
 
 /** Ranked progress tracks — reads well with 1 item or 50. */
-function Bars({ data, unit = "" }: { data: { name: string; value: number }[]; unit?: string; height?: number }) {
+export function Bars({ data, unit = "" }: { data: { name: string; value: number }[]; unit?: string; height?: number }) {
   const rows = data.filter((d) => d.value > 0).length ? data : data;
   const max = Math.max(1, ...rows.map((d) => d.value));
   const total = rows.reduce((s, d) => s + d.value, 0) || 1;
@@ -101,7 +101,7 @@ function Bars({ data, unit = "" }: { data: { name: string; value: number }[]; un
   );
 }
 /** Luminous gradient area chart. */
-function Trend({ data, keys, height = 220 }: { data: Record<string, string | number | null>[]; keys: { k: string; name: string }[]; height?: number }) {
+export function Trend({ data, keys, height = 220 }: { data: Record<string, string | number | null>[]; keys: { k: string; name: string }[]; height?: number }) {
   const id = useId().replace(/:/g, "");
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -157,7 +157,7 @@ function Funnel({ data }: { data: { name: string; value: number }[] }) {
 function Rates({ data }: { data: { name: string; value: number }[] }) {
   return <div className="space-y-3">{data.map((r) => <div key={r.name}><div className="mb-1.5 flex justify-between text-xs"><span className="font-medium">{r.name}</span><b className="tabular-nums text-primary">{r.value}%</b></div><div className="h-2 overflow-hidden rounded-full bg-muted/70"><div className="h-full rounded-full bg-gradient-primary shadow-[0_0_12px_-2px_var(--primary)] transition-all duration-700" style={{ width: `${r.value}%` }} /></div></div>)}</div>;
 }
-function Stat({ items }: { items: [string, ReactNode][] }) {
+export function Stat({ items }: { items: [string, ReactNode][] }) {
   return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{items.map(([l, v]) => <div key={l} className="rounded-xl border border-primary/10 bg-gradient-to-br from-primary-soft/60 to-card px-3 py-2.5"><div className="text-lg font-extrabold tabular-nums">{v}</div><div className="text-[11px] text-muted-foreground">{l}</div></div>)}</div>;
 }
 
@@ -174,7 +174,7 @@ function Tabs<T extends string>({ tabs, value, onChange }: { tabs: [T, string, t
     </div>
   );
 }
-function AiBrief({ points }: { points: string[] }) {
+export function AiBrief({ points }: { points: string[] }) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
       <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
