@@ -674,6 +674,51 @@ export type Database = {
         }
         Relationships: []
       }
+      company_admin_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          request_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          request_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          request_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_admin_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "company_admin_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recruiter_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       company_contacts: {
         Row: {
           company_id: string
@@ -697,6 +742,45 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "companies"
             referencedColumns: ["company_id"]
+          },
+        ]
+      }
+      company_members: {
+        Row: {
+          company_id: string
+          created_at: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recruiter_profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2112,6 +2196,15 @@ export type Database = {
       }
       cert_key: { Args: { _v: string }; Returns: string }
       company_key: { Args: { _v: string }; Returns: string }
+      company_pending_admin_requests: {
+        Args: { _company: string }
+        Returns: {
+          created_at: string
+          name: string
+          request_id: string
+          user_id: string
+        }[]
+      }
       company_recruiters: {
         Args: { _company: string }
         Returns: {
@@ -2120,6 +2213,15 @@ export type Database = {
           location: string
           specialization: string
           title: string
+          user_id: string
+        }[]
+      }
+      company_team: {
+        Args: { _company: string }
+        Returns: {
+          created_at: string
+          name: string
+          role: string
           user_id: string
         }[]
       }
@@ -2151,6 +2253,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_company_admin: {
+        Args: { _company: string; _uid: string }
+        Returns: boolean
+      }
+      is_company_member: {
+        Args: { _company: string; _uid: string }
         Returns: boolean
       }
       is_conversation_participant: { Args: { _conv: string }; Returns: boolean }
