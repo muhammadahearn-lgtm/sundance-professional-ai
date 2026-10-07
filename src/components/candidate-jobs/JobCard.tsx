@@ -1,8 +1,7 @@
 import type { EducationAlignment } from "@/lib/education";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Banknote, Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
-import { Eye } from "lucide-react";
+import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, Eye, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { JobCardRow } from "@/lib/job-search-data";
 import type { Taxonomy } from "@/lib/jobs-data";
@@ -193,7 +192,7 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
-          {salary && <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold tabular-nums text-foreground/80"><Banknote className="h-3.5 w-3.5 text-muted-foreground" />{salary}</span>}
+          {salary && <span className="whitespace-nowrap text-xs font-semibold tabular-nums text-foreground/80">{salary}</span>}
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
