@@ -146,7 +146,7 @@ export function SaveToJobControl({ uid, candidateId, name, variant = "button", p
           </div>}
         </div>
         <div className="max-h-80 overflow-y-auto p-2">
-          {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">{preferred ? "✦ Job you're comparing for" : "✦ AI top match"}</p>
+          {top && <div className="mb-2"><p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-primary">{preferred ? "✦ Job you're sourcing for" : "✦ AI top match"}</p>
             <button onClick={() => pick(top.job_id)} className="w-full rounded-xl border border-primary/40 bg-primary-soft/40 p-3 text-left ring-4 ring-primary/10 transition hover:border-primary hover:shadow-md">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{top.job_title}</span>{pill(top.job_id)}</div>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{top.company_name} · {preferred ? "save for this job in one click" : "strongest fit across your active jobs"}</p>
@@ -193,7 +193,7 @@ export function SourcedCandidatesPanel({ uid, jobId }: { uid: string; jobId: str
   );
 }
 
-export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
+export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
   return (
@@ -202,7 +202,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
         <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
+            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
             <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
@@ -212,8 +212,8 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
           {c.summary && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>}
           <div className="mt-3 grid gap-2 sm:grid-cols-2"><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Skills</p><Chips ids={c.skills} opts={t.skills} max={4} /></div><div><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Top Technologies</p><Chips ids={c.techs} opts={t.technologies} max={4} /></div>{(c.softSkills?.length ?? 0) > 0 && <div className="sm:col-span-2"><p className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} /></div>}</div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={primaryBtn}>View Profile</Link>
-            <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} />
+            <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className={primaryBtn}>View Profile</Link>
+            <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} preferJobId={jobId} />
             <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare"}</button>
             <button onClick={soon("Messaging")} className={btn}><MessageSquare className="h-4 w-4" />Contact</button>
           </div>
@@ -233,25 +233,25 @@ function PhotoCover({ name, path }: { name: string; path?: string | null | undef
     : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
 }
 
-export function CandidateGridCard({ c, t, lists, score }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
+export function CandidateGridCard({ c, t, lists, score, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
   const cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
-      <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="relative block aspect-[5/4] overflow-hidden bg-muted">
+      <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="relative block aspect-[5/4] overflow-hidden bg-muted">
         <PhotoCover name={c.name} path={c.avatarPath} />
         {score !== undefined && <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
         {c.availability && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold shadow-soft" title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
         {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
       </Link>
       <div className="flex flex-1 flex-col p-4">
-        <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
+        <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
         <p className="truncate text-sm">{c.jobTitle || "—"}</p>
         <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs</span></p>
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
-          <Link to="/recruiter/candidates/$id" params={{ id: c.id }} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
-          <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" />
+          <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className={`${primaryBtn} flex-1 justify-center px-3`}>View</Link>
+          <SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" preferJobId={jobId} />
           <button onClick={() => lists.toggleCompare(c.id)} aria-pressed={cmp} aria-label="Compare candidate" title="Compare" className={`${icon} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" /></button>
           <button onClick={soon("Messaging")} aria-label="Message candidate" title="Message" className={icon}><MessageSquare className="h-4 w-4" /></button>
         </div>
@@ -266,9 +266,9 @@ function useViewMode() {
   return [v, (n: "list" | "grid") => { setV(n); localStorage.setItem("talent-view", n); }] as const;
 }
 
-function CompareTray({ lists }: { lists: Lists }) {
+function CompareTray({ lists, jobId }: { lists: Lists; jobId?: string | undefined }) {
   if (!lists.compareIds.length) return null;
-  return <div className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-elevated"><span className="text-sm font-semibold">{lists.compareIds.length} of {CANDIDATE_COMPARE_MAX} candidates selected</span><Link to="/recruiter/candidates/compare" className={primaryBtn}>Compare</Link></div>;
+  return <div className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-elevated"><span className="text-sm font-semibold">{lists.compareIds.length} of {CANDIDATE_COMPARE_MAX} candidates selected</span><Link to="/recruiter/candidates/compare" search={jobId ? { job: jobId } : {}} className={primaryBtn}>Compare</Link></div>;
 }
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
@@ -371,7 +371,7 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
     <div className="space-y-6 pb-20">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Search Talent</h1><p className="text-sm text-muted-foreground">Discover qualified candidates by skills, technologies and experience.</p></div>
-        <div className="flex gap-2"><Link to="/recruiter/candidates/saved" className={btn}><Bookmark className="h-4 w-4" />Saved ({lists.savedIds.length})</Link><Link to="/recruiter/candidates/compare" className={btn}><GitCompare className="h-4 w-4" />Compare ({lists.compareIds.length})</Link></div>
+        <div className="flex gap-2"><Link to="/recruiter/candidates/saved" className={btn}><Bookmark className="h-4 w-4" />Saved ({lists.savedIds.length})</Link><Link to="/recruiter/candidates/compare" search={selJob ? { job: selJob.job_id } : {}} className={btn}><GitCompare className="h-4 w-4" />Compare ({lists.compareIds.length})</Link></div>
       </div>
       <form onSubmit={(e) => { e.preventDefault(); set({ q: kw.trim().slice(0, 80) }); }} className={`${card} flex gap-2 p-2`}>
         <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={kw} onChange={(e) => setKw(e.target.value)} placeholder="Name, role, skill, technology, employer…" aria-label="Search candidates" className="w-full rounded-xl bg-transparent py-2.5 pl-9 pr-3 text-sm outline-none" /></div>
@@ -395,12 +395,12 @@ export function TalentSearchPage({ uid, f: raw }: { uid: string; f: TalentFilter
 {q.error || tax.error ? <ErrorBox msg="Unable To Load Candidates" retry={() => { void tax.refetch(); void q.refetch(); }} /> : q.isLoading || !t ? <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 3xl:grid-cols-3" : "space-y-4"}>{[0, 1, 2, 3].map((i) => <div key={i} className={`${card} ${view === "grid" ? "h-96" : "h-48"} animate-pulse`} />)}</div>
             : shown.length === 0 ? <div className={`${card} p-10 text-center`}><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary"><Search className="h-7 w-7" /></div><p className="mt-4 font-display text-lg font-bold">No Candidates Match Current Filters</p><p className="mt-1 text-sm text-muted-foreground">Try removing filters or broadening your keyword.</p>
                 <div className="mt-5 flex justify-center gap-2"><button onClick={() => navigate({ to: "/recruiter/candidates", search: { ...DEFAULT_TALENT, q: f.q } })} className={primaryBtn}>Clear Filters</button><button onClick={() => { setKw(""); navigate({ to: "/recruiter/candidates", search: DEFAULT_TALENT }); }} className={btn}>Return To Search</button></div></div>
-            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} />)}</div>
-            : shown.map((c) => <CandidateCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} locAlign={selJob ? locationAlignment({ country: c.country ?? "", state: c.state ?? "", city: c.city ?? "" }, { country: selJob.location_country ?? "", state: selJob.location_state ?? "", city: selJob.location_city ?? "" }, selJob.work_arrangement, c.arrangement) : undefined} eduAlign={selJob ? educationAlignment(c.education ?? [], selJob.minimum_degree) : undefined} />)}
+            : view === "grid" ? <div className="grid gap-4 sm:grid-cols-2 3xl:grid-cols-3">{shown.map((c) => <CandidateGridCard key={c.id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobId={selJob?.job_id} />)}</div>
+            : shown.map((c) => <CandidateCard key={c.id} jobId={selJob?.job_id} c={c} t={t} lists={lists} score={hasJob ? best[c.id] : undefined} jobTitle={selJob?.job_title} row={rowsBy[c.id]} locAlign={selJob ? locationAlignment({ country: c.country ?? "", state: c.state ?? "", city: c.city ?? "" }, { country: selJob.location_country ?? "", state: selJob.location_state ?? "", city: selJob.location_city ?? "" }, selJob.work_arrangement, c.arrangement) : undefined} eduAlign={selJob ? educationAlignment(c.education ?? [], selJob.minimum_degree) : undefined} />)}
           {pages > 1 && <div className="flex items-center justify-center gap-2"><button disabled={page <= 1} onClick={() => set({ page: page - 1 })} className={`${btn} disabled:opacity-40`}>Previous</button><span className="text-sm">Page {page} of {pages}</span><button disabled={page >= pages} onClick={() => set({ page: page + 1 })} className={`${btn} disabled:opacity-40`}>Next</button></div>}
         </div>
       </div>
-      <CompareTray lists={lists} />
+      <CompareTray lists={lists} jobId={selJob?.job_id} />
     </div>
   );
 }
@@ -450,7 +450,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
   );
 }
 
-export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string }) {
+export function RecruiterCandidatePage({ uid, id, jobId }: { uid: string; id: string; jobId?: string | undefined }) {
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["candidate-full", id], queryFn: () => loadCandidateFull(id) });
   const lists = useCandidateLists(uid);
@@ -461,9 +461,9 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   const cmp = lists.isCompared(id);
   return (
     <div className="space-y-6 pb-16">
-      <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
+      <button type="button" onClick={() => history.back()} className="text-sm text-muted-foreground hover:text-primary">← Back to search</button>
       <ProfileHeader d={q.data} actions={<>
-        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} />
+        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} preferJobId={jobId} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
         <MessageButton role="recruiter" candidateId={id} className={btn} />
         <ReportButton type="user" targetId={id} /></>} />
@@ -536,12 +536,12 @@ export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; ini
   );
 }
 
-export function CompareCandidatesPage({ uid }: { uid: string }) {
+export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; initialJob?: string }) {
   const lists = useCandidateLists(uid);
   useAutoRecalc();
   const ctx = useJobContext(uid);
   const [co, setCo] = useState("");
-  const [jobSel, setJobSel] = useState("");
+  const [jobSel, setJobSel] = useState(initialJob);
   const selJob = ctx.data?.jobs.find((j) => j.job_id === jobSel);
   const scoreQ = useScores(selJob ? { jobIds: [selJob.job_id] } : {});
   const bestRow = (id: string) => (scoreQ.data ?? []).filter((r) => r.candidate_id === id).sort((a, b) => Number(b.overall_match_score) - Number(a.overall_match_score))[0];
