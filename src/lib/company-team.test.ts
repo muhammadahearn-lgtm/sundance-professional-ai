@@ -48,3 +48,12 @@ describe("canRemove", () => {
     expect(canRemove("member", "c", team[2]!, team)).toBe(false);
   });
 });
+
+import { filterInbox, inboxCounts, type RequestRecord } from "./company-team";
+const r = (id: string, status: RequestRecord["status"]): RequestRecord => ({ request_id: id, user_id: id, name: id, status, created_at: "", resolved_at: null, resolved_by_name: null });
+describe("admin request inbox", () => {
+  const list = [r("1", "pending"), r("2", "approved"), r("3", "denied"), r("4", "approved")];
+  it("keeps declined requests in history", () => expect(filterInbox(list, "denied").map((x) => x.request_id)).toEqual(["3"]));
+  it("All tab shows every request", () => expect(filterInbox(list, "all")).toHaveLength(4));
+  it("counts each status", () => expect(inboxCounts(list)).toEqual({ pending: 1, approved: 2, denied: 1, all: 4 }));
+});

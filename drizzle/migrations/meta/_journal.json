@@ -316,6 +316,13 @@
       "when": 1791335890604,
       "tag": "0044_notifications_company_category",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791336074406,
+      "tag": "0045_company_admin_request_history",
+      "breakpoints": true
     }
   ]
 }

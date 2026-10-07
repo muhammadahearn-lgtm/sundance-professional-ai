@@ -7,7 +7,7 @@ import type { Account } from "@/lib/account";
 import { COMPANY_DESCRIPTION_MAX, validateCompany, validateImageFile } from "@/lib/recruiter-completion";
 import { Chips, Empty, Field, SaveBar, Section, TagInput, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { BrandImg, COMPANY_SIZES, CompletionCard, HIRING_VOLUMES, Item, MultiToggle, ORG_TYPES, REGIONS, WORK_ARRANGEMENTS, initials, orgKey } from "./shared";
-import { canDemote, canRemove, loadPendingRequests, loadTeam, myPendingRequest, removeMember, requestAdminAccess, resolveRequest, setMemberRole, type AdminRequest, type CompanyRole, type TeamMember } from "@/lib/company-team";
+import { canDemote, canRemove, filterInbox, inboxCounts, loadRequestHistory, loadTeam, removeMember, requestAdminAccess, resolveRequest, setMemberRole, type CompanyRole, type InboxTab, type RequestRecord, type TeamMember } from "@/lib/company-team";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrgType = Database["public"]["Enums"]["organization_type"];
@@ -16,7 +16,7 @@ async function load(uid: string) {
   const prof = await supabase.from("recruiter_profiles").select("company_id, company_name, company_website, industry, company_description, organization_type").eq("user_id", uid).maybeSingle();
   if (prof.error) throw prof.error;
   const cid = prof.data?.company_id;
-  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[], team: [] as TeamMember[], myRole: null as CompanyRole | null, requests: [] as AdminRequest[], myPending: false };
+  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[], team: [] as TeamMember[], myRole: null as CompanyRole | null, requests: [] as RequestRecord[], myPending: false };
   const [c, rec, roles, contact, team] = await Promise.all([
     supabase.from("companies").select("*").eq("company_id", cid).maybeSingle(),
     supabase.rpc("company_recruiters", { _company: cid }),
@@ -28,8 +28,8 @@ async function load(uid: string) {
   if (err) throw err;
   const company = c.data ? { ...c.data, contact_email: contact.data?.contact_email ?? "" } : null;
   const myRole = team.find((t) => t.user_id === uid)?.role ?? null;
-  const requests = myRole === "admin" ? await loadPendingRequests(cid) : [];
-  const myPending = myRole === "member" ? await myPendingRequest(cid, uid) : false;
+  const requests = myRole ? await loadRequestHistory(cid) : [];
+  const myPending = myRole === "member" && requests.some((x) => x.user_id === uid && x.status === "pending");
   return { r: prof.data, company, recruiters: rec.data ?? [], roleNames: (roles.data ?? []).map((x) => x.role_name), team, myRole, requests, myPending };
 }
 type Data = Awaited<ReturnType<typeof load>>;
@@ -350,7 +350,54 @@ function Picker({ busy, onFile, text }: { busy: boolean; onFile: (f: File) => vo
   );
 }
 
-function TeamSection({ companyId, uid, team, requests, myRole, myPending, onChanged }: { companyId: string; uid: string; team: TeamMember[]; requests: AdminRequest[]; myRole: CompanyRole; myPending: boolean; onChanged: () => Promise<unknown> }) {
+const TAB_LABELS: Record<InboxTab, string> = { pending: "Pending", approved: "Approved", denied: "Declined", all: "All" };
+const fmtWhen = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+
+function RequestInbox({ requests, uid, myRole, busy, act }: { requests: RequestRecord[]; uid: string; myRole: CompanyRole; busy: string; act: (id: string, fn: () => Promise<void>, ok: string) => void }) {
+  const counts = inboxCounts(requests);
+  const [tab, setTab] = useState<InboxTab>(counts.pending ? "pending" : "all");
+  const list = filterInbox(requests, tab);
+  const btn = "inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:border-primary hover:text-primary disabled:opacity-50";
+  const badge: Record<RequestRecord["status"], string> = { pending: "bg-primary-soft text-primary", approved: "bg-success/15 text-success", denied: "bg-muted text-muted-foreground" };
+  return (
+    <div className="mb-5 rounded-2xl border border-border bg-muted/20 p-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{myRole === "admin" ? "Admin Request Inbox" : "My Admin Requests"}</p>
+        <div role="tablist" className="flex flex-wrap gap-1">
+          {(Object.keys(TAB_LABELS) as InboxTab[]).map((k) => (
+            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+              {TAB_LABELS[k]} <span className="opacity-75">{counts[k]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {list.length === 0 ? <p className="px-1 py-3 text-sm text-muted-foreground">No {tab === "all" ? "" : TAB_LABELS[tab].toLowerCase() + " "}requests.</p> : (
+        <ul className="space-y-2">
+          {list.map((r) => (
+            <li key={r.request_id} className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${r.status === "pending" ? "border-primary/30 bg-primary-soft" : "border-border bg-card"}`}>
+              <div className="min-w-0">
+                <p className="text-sm"><span className="font-semibold">{r.user_id === uid ? "You" : r.name}</span> requested admin access</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Requested {fmtWhen(r.created_at)}
+                  {r.resolved_at && <> · {r.status === "approved" ? "Approved" : "Declined"} {fmtWhen(r.resolved_at)}{r.resolved_by_name ? ` by ${r.resolved_by_name}` : ""}</>}
+                </p>
+              </div>
+              {r.status === "pending" && myRole === "admin" ? (
+                <div className="flex gap-2">
+                  <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "approved", uid), `${r.name} is now an admin`)} className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50">Approve</button>
+                  <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "denied", uid), "Request declined")} className={btn}>Decline</button>
+                </div>
+              ) : <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[r.status]}`}>{r.status === "denied" ? "Declined" : r.status === "approved" ? "Approved" : "Pending"}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function TeamSection({ companyId, uid, team, requests, myRole, myPending, onChanged }: { companyId: string; uid: string; team: TeamMember[]; requests: RequestRecord[]; myRole: CompanyRole; myPending: boolean; onChanged: () => Promise<unknown> }) {
   const [busy, setBusy] = useState("");
   const act = async (id: string, fn: () => Promise<void>, ok: string) => {
     setBusy(id);
@@ -361,20 +408,7 @@ function TeamSection({ companyId, uid, team, requests, myRole, myPending, onChan
   const btn = "inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:border-primary hover:text-primary disabled:opacity-50";
   return (
     <Section title="Team & Admins" icon={<Users className="h-4 w-4" />}>
-      {myRole === "admin" && requests.length > 0 && (
-        <div className="mb-4 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin Requests</p>
-          {requests.map((r) => (
-            <div key={r.request_id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary-soft p-3">
-              <p className="text-sm"><span className="font-semibold">{r.name}</span> requested admin access</p>
-              <div className="flex gap-2">
-                <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "approved", uid), `${r.name} is now an admin`)} className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50">Approve</button>
-                <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "denied", uid), "Request declined")} className={btn}>Decline</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {(myRole === "admin" || requests.length > 0) && <RequestInbox requests={requests} uid={uid} myRole={myRole} busy={busy} act={(id, fn, ok) => void act(id, fn, ok)} />}
       <div className="space-y-2">
         {team.map((t) => {
           const [first, ...rest] = t.name.split(" ");
