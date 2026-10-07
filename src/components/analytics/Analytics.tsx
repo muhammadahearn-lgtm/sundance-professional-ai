@@ -1,8 +1,8 @@
 import { highestDegree } from "@/lib/education";
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BarChart3, Bookmark, Briefcase, ChevronDown, ChevronRight, Clock, KanbanSquare, MessageSquare, Send, Sparkles, Target, TrendingUp, Users, Download, FileSpreadsheet, FileText, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -63,61 +63,91 @@ function FilterBar({ f, set, options, onRefresh, onCsv, onExcel, refreshing }: {
   );
 }
 
-function Kpi({ n, l, hint }: { n: ReactNode; l: string; hint?: string | undefined }) {
-  return <div className="rounded-2xl border border-border bg-card p-4 shadow-soft"><div className="text-2xl font-extrabold tracking-tight">{n}</div><div className="text-xs font-medium text-muted-foreground">{l}</div>{hint && <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>}</div>;
-}
 function Section({ title, children, desc }: { title: string; children: ReactNode; desc?: string | undefined }) {
-  return <section className="space-y-3"><div><h2 className="text-lg font-bold">{title}</h2>{desc && <p className="text-xs text-muted-foreground">{desc}</p>}</div>{children}</section>;
+  return <section className="space-y-3"><div><h2 className="flex items-center gap-2 text-lg font-bold"><span className="h-4 w-1 rounded-full bg-gradient-primary" />{title}</h2>{desc && <p className="text-xs text-muted-foreground">{desc}</p>}</div>{children}</section>;
 }
 function ChartCard({ title, children, empty }: { title: string; children: ReactNode; empty?: boolean | undefined }) {
-  return <div className={card}><p className="mb-3 text-sm font-semibold">{title}</p>{empty ? <p className="grid h-48 place-items-center text-sm text-muted-foreground">No Data Available</p> : children}</div>;
-}
-function Bars({ data, unit = "", height = 220 }: { data: { name: string; value: number }[]; unit?: string; height?: number }) {
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16 }}>
-        <CartesianGrid horizontal={false} stroke="var(--border)" />
-        <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-        <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-        <Tooltip formatter={(v) => `${v}${unit}`} contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)" }} />
-        <Bar dataKey="value" fill="var(--primary)" radius={[0, 6, 6, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:border-primary/30">
+      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/10 opacity-60 blur-3xl transition-opacity group-hover:opacity-100" />
+      <p className="relative mb-4 flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-3.5 w-3.5 text-primary" />{title}</p>
+      <div className="relative">{empty ? <div className="grid h-40 place-items-center rounded-xl border border-dashed border-border bg-muted/30 text-sm text-muted-foreground">No Data Available</div> : children}</div>
+    </div>
   );
 }
+const tooltipStyle = { borderRadius: 12, border: "1px solid var(--border)", background: "color-mix(in oklab, var(--card) 88%, transparent)", backdropFilter: "blur(12px)", boxShadow: "0 10px 30px -12px color-mix(in oklab, var(--primary) 35%, transparent)", fontSize: 12 };
+
+/** Ranked progress tracks — reads well with 1 item or 50. */
+function Bars({ data, unit = "" }: { data: { name: string; value: number }[]; unit?: string; height?: number }) {
+  const rows = data.filter((d) => d.value > 0).length ? data : data;
+  const max = Math.max(1, ...rows.map((d) => d.value));
+  const total = rows.reduce((s, d) => s + d.value, 0) || 1;
+  return (
+    <ul className="space-y-3">
+      {rows.slice(0, 8).map((d, i) => (
+        <li key={d.name} className="group/row">
+          <div className="mb-1.5 flex items-center gap-2 text-sm">
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${i === 0 && d.value ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
+            <span className="min-w-0 flex-1 truncate font-medium" title={d.name}>{d.name}</span>
+            <span className="shrink-0 tabular-nums text-xs font-bold">{d.value}{unit}</span>
+            {!unit && <span className="w-10 shrink-0 text-right tabular-nums text-[11px] text-muted-foreground">{Math.round((d.value / total) * 100)}%</span>}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted/70">
+            <div className="h-full rounded-full bg-gradient-primary shadow-[0_0_12px_-2px_var(--primary)] transition-all duration-700" style={{ width: `${d.value ? Math.max(4, (d.value / max) * 100) : 0}%`, opacity: 1 - Math.min(i, 5) * 0.1 }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+/** Luminous gradient area chart. */
 function Trend({ data, keys, height = 220 }: { data: Record<string, string | number | null>[]; keys: { k: string; name: string }[]; height?: number }) {
+  const id = useId().replace(/:/g, "");
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ left: -16, right: 8 }}>
-        <CartesianGrid stroke="var(--border)" vertical={false} />
-        <XAxis dataKey="x" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-        <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)" }} />
-        {keys.map((k, i) => <Line key={k.k} type="monotone" dataKey={k.k} name={k.name} stroke={COLORS[i]} strokeWidth={2} dot={{ r: 3 }} connectNulls />)}
-      </LineChart>
+      <AreaChart data={data} margin={{ left: -20, right: 8, top: 8 }}>
+        <defs>{keys.map((k, i) => (
+          <linearGradient key={k.k} id={`${id}-${i}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={COLORS[i]} stopOpacity={0.35} /><stop offset="100%" stopColor={COLORS[i]} stopOpacity={0} />
+          </linearGradient>))}
+        </defs>
+        <CartesianGrid stroke="var(--border)" strokeDasharray="3 6" vertical={false} />
+        <XAxis dataKey="x" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" axisLine={false} tickLine={false} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" axisLine={false} tickLine={false} />
+        <Tooltip contentStyle={tooltipStyle} cursor={{ stroke: "var(--primary)", strokeOpacity: 0.3 }} />
+        {keys.map((k, i) => <Area key={k.k} type="monotone" dataKey={k.k} name={k.name} stroke={COLORS[i]} strokeWidth={2.5} fill={`url(#${id}-${i})`} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} connectNulls />)}
+      </AreaChart>
     </ResponsiveContainer>
   );
 }
+/** Radial ring with centered total + segmented ribbon legend. */
 function Donut({ data }: { data: { name: string; value: number }[] }) {
   const shown = data.filter((d) => d.value > 0);
+  const total = shown.reduce((s, d) => s + d.value, 0) || 1;
   return (
-    <div className="flex flex-col items-center gap-3 sm:flex-row">
-      <ResponsiveContainer width="100%" height={200} className="max-w-[220px]">
-        <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /></PieChart>
-      </ResponsiveContainer>
-      <ul className="space-y-1 text-sm">{shown.map((d, i) => <li key={d.name} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />{d.name}<b className="ml-auto pl-4">{d.value}</b></li>)}</ul>
+    <div className="space-y-4">
+      <div className="flex flex-col items-center gap-4 2xl:flex-row">
+        <div className="relative h-[170px] w-[170px] shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={shown.length > 1 ? 3 : 0} cornerRadius={shown.length > 1 ? 6 : 0} stroke="none" isAnimationActive={false}>{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart>
+          </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><span className="text-3xl font-extrabold tracking-tight">{total}</span><span className="text-[11px] font-medium text-muted-foreground">Total</span></div>
+        </div>
+        <ul className="w-full min-w-0 space-y-2 text-sm">{shown.map((d, i) => <li key={d.name} className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length], boxShadow: `0 0 8px ${COLORS[i % COLORS.length]}` }} /><span className="truncate">{d.name}</span><b className="ml-auto tabular-nums">{d.value}</b><span className="w-10 text-right text-[11px] text-muted-foreground">{Math.round((d.value / total) * 100)}%</span></li>)}</ul>
+      </div>
+      <div className="flex h-2 overflow-hidden rounded-full bg-muted">{shown.map((d, i) => <div key={d.name} style={{ width: `${(d.value / total) * 100}%`, background: COLORS[i % COLORS.length] }} />)}</div>
     </div>
   );
 }
 function Funnel({ data }: { data: { name: string; value: number }[] }) {
   const max = Math.max(1, data[0]?.value ?? 1);
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {data.map((d, i) => (
         <div key={d.name} className="flex items-center gap-3">
           <span className="w-24 shrink-0 text-xs font-medium text-muted-foreground">{d.name}</span>
-          <div className="relative h-8 flex-1">
-            <div className="mx-auto flex h-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground transition-all" style={{ width: `${Math.max(8, (d.value / max) * 100)}%`, opacity: 1 - i * 0.12 }}>{d.value}</div>
+          <div className="relative h-8 flex-1 rounded-lg bg-muted/40">
+            <div className="mx-auto flex h-8 items-center justify-center rounded-lg bg-gradient-primary text-xs font-bold text-primary-foreground shadow-[0_6px_20px_-8px_var(--primary)] transition-all duration-700" style={{ width: `${Math.max(8, (d.value / max) * 100)}%`, opacity: 1 - i * 0.1 }}>{d.value}</div>
           </div>
         </div>
       ))}
@@ -125,10 +155,10 @@ function Funnel({ data }: { data: { name: string; value: number }[] }) {
   );
 }
 function Rates({ data }: { data: { name: string; value: number }[] }) {
-  return <div className="space-y-3">{data.map((r) => <div key={r.name}><div className="mb-1 flex justify-between text-xs"><span>{r.name}</span><b>{r.value}%</b></div><div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${r.value}%` }} /></div></div>)}</div>;
+  return <div className="space-y-3">{data.map((r) => <div key={r.name}><div className="mb-1.5 flex justify-between text-xs"><span className="font-medium">{r.name}</span><b className="tabular-nums text-primary">{r.value}%</b></div><div className="h-2 overflow-hidden rounded-full bg-muted/70"><div className="h-full rounded-full bg-gradient-primary shadow-[0_0_12px_-2px_var(--primary)] transition-all duration-700" style={{ width: `${r.value}%` }} /></div></div>)}</div>;
 }
 function Stat({ items }: { items: [string, ReactNode][] }) {
-  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{items.map(([l, v]) => <div key={l} className="rounded-xl bg-muted/50 px-3 py-2"><div className="text-lg font-extrabold">{v}</div><div className="text-[11px] text-muted-foreground">{l}</div></div>)}</div>;
+  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{items.map(([l, v]) => <div key={l} className="rounded-xl border border-primary/10 bg-gradient-to-br from-primary-soft/60 to-card px-3 py-2.5"><div className="text-lg font-extrabold tabular-nums">{v}</div><div className="text-[11px] text-muted-foreground">{l}</div></div>)}</div>;
 }
 
 // ---------- AI-vibe layout helpers ----------
@@ -338,19 +368,33 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
           </div>
           <Section title="Your Application Journey"><div className={card}><FunnelStrip steps={[{ name: "Applied", value: m.kpis.submitted }, { name: "Viewed", value: m.kpis.viewed }, { name: "Contacted", value: m.kpis.contacts }, { name: "Interviews", value: m.kpis.interviews }, { name: "Offers", value: m.kpis.offers }, { name: "Hired", value: m.kpis.hires }]} /></div></Section>
         </div>}
-        {tab === "applications" && <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Applications By Month" empty={!m.apps.length}><Trend data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard>
-          <ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard>
-          <ChartCard title="Applications By Role" empty={!m.apps.length}><Bars data={m.byRole} /></ChartCard>
-          <ChartCard title="Applications By Company" empty={!m.apps.length}><Bars data={m.byCompany} /></ChartCard>
-          <ChartCard title="Applications By Location" empty={!m.apps.length}><Bars data={m.byLocation} /></ChartCard>
-          <ChartCard title="Applications By Work Arrangement" empty={!m.apps.length}><Donut data={m.byArrangement} /></ChartCard>
+        {tab === "applications" && <div className="space-y-4">
+          <AiBrief points={[
+            m.kpis.interviews ? `You have ${m.kpis.interviews} application${m.kpis.interviews === 1 ? "" : "s"} at interview stage or beyond — review each job's match breakdown to prepare.` : m.apps.length ? `${m.apps.length} application${m.apps.length === 1 ? " is" : "s are"} in progress; follow up through Messages to stand out.` : "No applications in this period — start with your highest-match jobs.",
+            m.byRole[0] ? `Most of your applications target ${m.byRole[0].name} roles.` : "Your target roles will appear here as you apply.",
+          ]} />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3"><ChartCard title="Applications Over Time" empty={!m.apps.length}><Trend height={240} data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard></div>
+            <div className="lg:col-span-2"><ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard></div>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ChartCard title="Target Roles" empty={!m.apps.length}><Bars data={m.byRole} /></ChartCard>
+            <ChartCard title="Target Companies" empty={!m.apps.length}><Bars data={m.byCompany} /></ChartCard>
+            <ChartCard title="Target Locations" empty={!m.apps.length}><Bars data={m.byLocation} /></ChartCard>
+          </div>
+          <ChartCard title="Work Arrangement" empty={!m.apps.length}><Bars data={m.byArrangement} /></ChartCard>
         </div>}
         {tab === "match" && <div className="space-y-4">
+          <AiBrief points={[
+            m.stats.count ? `Across ${m.stats.count} active jobs, your matches range from ${m.stats.lowest}% to ${m.stats.highest}%.` : "No match scores yet — complete your skills and tools to get scored.",
+            m.topTech[0] ? `${m.topTech[0].name} jobs fit you best, averaging ${m.topTech[0].value}%.` : "Add tools and technologies to unlock technology-level insights.",
+          ]} />
           <Stat items={[["Average Match", `${m.stats.average}%`], ["Highest Match", `${m.stats.highest}%`], ["Lowest Match", `${m.stats.lowest}%`], ["Jobs Scored", m.stats.count]]} />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3"><ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard></div>
+            <div className="lg:col-span-2"><ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard></div>
+          </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            <ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard>
-            <ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard>
             <ChartCard title="Top Matching Roles" empty={!m.topRoles.length}><Bars data={m.topRoles} unit="%" /></ChartCard>
             <ChartCard title="Top Matching Industries" empty={!m.topIndustries.length}><Bars data={m.topIndustries} unit="%" /></ChartCard>
             <ChartCard title="Top Matching Technologies" empty={!m.topTech.length}><Bars data={m.topTech} unit="%" /></ChartCard>
@@ -358,6 +402,10 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
           </div>
         </div>}
         {tab === "growth" && <div className="space-y-6">
+          <AiBrief points={[
+            m.readinessChange != null ? `Your career readiness ${m.readinessChange >= 0 ? "rose" : "dropped"} by ${Math.abs(m.readinessChange)} points this period.` : "Readiness trends appear after a few days of activity.",
+            m.added.skills + m.added.technologies ? `You added ${m.added.skills} skills and ${m.added.technologies} technologies — keep growing your stack.` : "Adding skills and tools is the fastest way to raise your match scores.",
+          ]} />
           <Stat items={[["Skills Added", m.added.skills], ["Technologies Added", m.added.technologies], ["Certifications Added", m.added.certifications], ["Readiness Change", m.readinessChange == null ? "—" : `${m.readinessChange > 0 ? "+" : ""}${m.readinessChange}`]]} />
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCard title="Career Readiness & Profile Completion Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Readiness: Math.round(Number(s.readiness_score)), Completion: Math.round(Number(s.profile_completion)) }))} keys={[{ k: "Readiness", name: "Readiness" }, { k: "Completion", name: "Profile completion %" }]} /></ChartCard>
