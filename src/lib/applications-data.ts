@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { maskJobRow } from "./confidential";
 import { namesFor } from "./talent-data";
 import { sendActivityEmail } from "./activity-email.functions";
 import { stageToStatus, type AppStatus, type Stage } from "./talent-rules";
@@ -30,13 +31,13 @@ export function notifyByEmail(kind: "application" | "message", id: string) {
 export async function listMyApplications(uid: string) {
   const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, updated_at, job_id, jobs(${JOB})`).eq("candidate_id", uid).order("application_date", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((a) => ({ ...a, jobs: a.jobs ? maskJobRow(a.jobs) : a.jobs }));
 }
 
 export async function loadMyApplication(id: string) {
   const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, updated_at, job_id, jobs(${JOB})`).eq("application_id", id).maybeSingle();
   if (error) throw error;
-  return data;
+  return data && data.jobs ? { ...data, jobs: maskJobRow(data.jobs) } : data;
 }
 
 export async function withdrawApplication(id: string) {
@@ -73,7 +74,7 @@ export type JobApplication = Awaited<ReturnType<typeof listJobApplications>>[num
 export async function loadJobApplication(id: string) {
   const { data, error } = await supabase.from("applications").select("application_id, application_date, application_status, candidate_id, job_id, jobs(job_id, job_title, recruiter_id)").eq("application_id", id).maybeSingle();
   if (error) throw error;
-  return data;
+  return data && data.jobs ? { ...data, jobs: maskJobRow(data.jobs) } : data;
 }
 
 export async function setApplicationStatus(id: string, status: AppStatus) {

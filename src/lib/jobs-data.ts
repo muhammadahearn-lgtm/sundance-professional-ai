@@ -85,7 +85,7 @@ export function toForm(d: LoadedJob): JobForm {
     location: j.location, location_country: j.location_country, location_state: j.location_state, location_city: j.location_city, minimum_years_experience: String(j.minimum_years_experience), minimum_degree: j.minimum_degree ?? "", experience_level: j.experience_level, job_description: j.job_description,
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
-    bonus_info: j.bonus_info, benefits_summary: j.benefits_summary,
+    bonus_info: j.bonus_info, benefits_summary: j.benefits_summary, is_confidential: j.is_confidential, confidential_label: j.confidential_label,
   };
 }
 
@@ -96,7 +96,7 @@ function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
     employment_type: f.employment_type as JobRow["employment_type"], work_arrangement: f.work_arrangement as JobRow["work_arrangement"],
     location: formatLocation({ country: f.location_country, state: f.location_state, city: f.location_city }) || f.location.trim(), location_country: f.location_country, location_state: normalizeLocationPart(f.location_state), location_city: normalizeLocationPart(f.location_city), minimum_years_experience: Number(f.minimum_years_experience) || 0, minimum_degree: f.minimum_degree || null, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
-    salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(),
+    salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(), is_confidential: f.is_confidential, confidential_label: f.is_confidential ? f.confidential_label.trim().slice(0, 80) : "",
   };
 }
 
