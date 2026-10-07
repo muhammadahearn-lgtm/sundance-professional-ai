@@ -29,6 +29,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   nitro: {
+    // @ts-expect-error hooks is a valid nitro option missing from the wrapper's type
     hooks: {
       // Final server bundle is produced by nitro, so patch its output files after compiling.
       compiled: async (nitro: { options: { output: { serverDir: string } } }) => {
