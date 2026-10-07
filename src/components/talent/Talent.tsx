@@ -245,14 +245,30 @@ function PhotoCover({ name, path }: { name: string; path?: string | null | undef
     : <div className="grid h-full w-full place-items-center bg-gradient-primary font-display text-5xl font-extrabold text-primary-foreground">{i}</div>;
 }
 
-export function CandidateGridCard({ c, t, lists, score, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined }) {
+/** Compact 5-factor match breakdown shown in the grid card's score popover. */
+function GridMatchBreakdown({ r }: { r: ScoreRow }) {
+  const items: [string, number, string][] = [["Languages", r.language_alignment_score, "20%"], ["Skills", r.skill_alignment_score, "30%"], ["Tools & Tech", r.technology_alignment_score, "20%"], ["Experience", r.experience_alignment_score, "20%"], ["Preferences", r.preference_alignment_score, "10%"]];
+  return <div className="space-y-2">{items.map(([l, v, w]) => <div key={l}><div className="flex justify-between text-[11px]"><span className="text-muted-foreground">{l} <span className="text-[10px]">· {w}</span></span><span className="font-semibold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1 rounded-full bg-muted"><div className="h-1 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}</div>;
+}
+
+export function CandidateGridCard({ c, t, lists, score, row, jobId }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; row?: ScoreRow | undefined }) {
   const cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
     <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
       <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="relative block aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
         <PhotoCover name={c.name} path={c.avatarPath} />
-        {score !== undefined && <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>}
+        {score !== undefined && (row ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} aria-label={`${Math.round(score)}% match — view score breakdown`} className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}% Match</button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 rounded-2xl p-3 shadow-xl" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Match Breakdown</p>
+              <GridMatchBreakdown r={row} />
+            </PopoverContent>
+          </Popover>
+        ) : <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[11px] font-bold shadow-soft backdrop-blur whitespace-nowrap ${matchTone(score)}`}>{Math.round(score)}% Match</span>)}
         {c.availability && <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-semibold shadow-soft" title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
         {c.summary && <div className="absolute inset-x-0 bottom-0 translate-y-full bg-card/95 p-3 text-xs text-muted-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
       </Link>
