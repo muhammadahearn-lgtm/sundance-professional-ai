@@ -7,7 +7,7 @@ import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { STAGES, STAGE_LABELS, filterCompanyJobs, loadCompanyJobs, summarizeCompany, type CompanyJob } from "@/lib/company-admin";
 
 const STATUS_STYLE: Record<string, string> = {
-  active: "bg-success/15 text-success", draft: "bg-muted text-muted-foreground", paused: "bg-warning/15 text-warning-foreground", closed: "bg-muted text-muted-foreground",
+  active: "bg-success/15 text-success", draft: "bg-muted text-muted-foreground", paused: "bg-warning/20 text-foreground", closed: "bg-muted text-muted-foreground",
 };
 const STATUS_OPTIONS = [{ id: "active", name: "Active" }, { id: "draft", name: "Draft" }, { id: "paused", name: "Paused" }, { id: "closed", name: "Closed" }];
 
