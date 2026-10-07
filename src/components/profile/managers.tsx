@@ -79,6 +79,14 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
   });
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
+  const catalog = useQuery({
+    queryKey: ["company-catalog"], staleTime: 3600_000,
+    queryFn: async () => (await supabase.from("companies").select("company_name, industry").eq("is_catalog", true).order("company_name")).data ?? [],
+  });
+  const pickCompany = (v: string) => {
+    const hit = catalog.data?.find((c) => c.company_name.toLowerCase() === v.trim().toLowerCase());
+    setF((p) => ({ ...p, company_name: v, industry: hit && !p.industry ? hit.industry : p.industry }));
+  };
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
   async function submit(e: FormEvent) {
     e.preventDefault();
