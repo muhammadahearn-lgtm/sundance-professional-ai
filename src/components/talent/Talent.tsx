@@ -297,16 +297,16 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
         {score !== undefined && (row ? (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" aria-label={`${Math.round(score)}% match — view score breakdown`} className={`${glassPill} left-2 text-[11px] font-bold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}% Match</button>
+              <button type="button" aria-label={`${Math.round(score)}% match — view score breakdown`} className={`${glassPill} left-2 text-[11px] font-bold transition hover:brightness-95 ${solidTone(score)}`}>{Math.round(score)}% Match</button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-64 rounded-2xl p-3 shadow-xl">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Match Breakdown</p>
               <GridMatchBreakdown r={row} />
             </PopoverContent>
           </Popover>
-        ) : <span className={`${glassPill} left-2 text-[11px] font-bold ${matchTone(score)}`}>{Math.round(score)}% Match</span>)}
-        {c.availability && <span className={`${glassPill} right-2 inline-flex items-center gap-1 bg-card/70 text-[10px] font-semibold`} title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
-        {c.summary && <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full border-t border-border/40 bg-card/70 p-3 text-xs text-foreground/80 backdrop-blur-md backdrop-saturate-150 transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
+        ) : <span className={`${glassPill} left-2 text-[11px] font-bold ${solidTone(score)}`}>{Math.round(score)}% Match</span>)}
+        {c.availability && <span className={`${glassPill} right-2 inline-flex items-center gap-1 text-[10px] font-semibold`} title={label(AVAILABILITY, c.availability)}><span className={`h-2 w-2 shrink-0 rounded-full ${availDot(c.availability)}`} /><span className="hidden @[230px]:inline">{label(AVAILABILITY, c.availability)}</span></span>}
+        {c.summary && <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full border-t border-border bg-card p-3 text-xs text-foreground transition-transform duration-300 group-hover:translate-y-0"><p className="line-clamp-3">{c.summary}</p>{c.employer && <p className="mt-1 font-semibold text-foreground">Recent: {c.jobTitle} · {c.employer}</p>}</div>}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
