@@ -662,6 +662,7 @@ export type Database = {
           hiring_regions: string[]
           hiring_volume: string
           industry: string
+          is_catalog: boolean
           logo_url: string | null
           organization_type: Database["public"]["Enums"]["organization_type"]
           preferred_work_arrangements: string[]
@@ -684,6 +685,7 @@ export type Database = {
           hiring_regions?: string[]
           hiring_volume?: string
           industry?: string
+          is_catalog?: boolean
           logo_url?: string | null
           organization_type?: Database["public"]["Enums"]["organization_type"]
           preferred_work_arrangements?: string[]
@@ -706,6 +708,7 @@ export type Database = {
           hiring_regions?: string[]
           hiring_volume?: string
           industry?: string
+          is_catalog?: boolean
           logo_url?: string | null
           organization_type?: Database["public"]["Enums"]["organization_type"]
           preferred_work_arrangements?: string[]
