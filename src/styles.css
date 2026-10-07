@@ -130,9 +130,11 @@
 .bg-card.shadow-soft:hover { border-color: color-mix(in oklab, var(--primary) 30%, var(--border)); box-shadow: var(--shadow-soft), 0 12px 32px -14px color-mix(in oklab, var(--primary) 35%, transparent); }
 @media (prefers-reduced-motion: reduce) { .bg-card.shadow-soft { transition: none; } }
 
-/* Cursor spotlight on every card (position set by useCursorGlow) */
-.bg-card[data-glow] {
-  background-image: radial-gradient(420px circle at var(--mx) var(--my), color-mix(in oklab, var(--primary) 9%, transparent), transparent 60%);
-  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
-  box-shadow: var(--shadow-soft), 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent), 0 12px 32px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+/* Card edge glow on hover, site-wide */
+.bg-card { transition: border-color .2s ease, box-shadow .2s ease; }
+@media (hover: hover) {
+  .bg-card:not([data-no-glow]):hover {
+    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+    box-shadow: var(--shadow-soft), 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent), 0 12px 32px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+  }
 }
