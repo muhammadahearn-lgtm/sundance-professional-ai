@@ -372,6 +372,20 @@
       "when": 1791398724370,
       "tag": "0052_application_insights",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1791400107282,
+      "tag": "0053_career_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791400223180,
+      "tag": "0054_hide_from_current_employer",
+      "breakpoints": true
     }
   ]
 }

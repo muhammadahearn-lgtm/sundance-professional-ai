@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { highestDegree } from "./education";
 import { loadTaxonomy } from "./jobs-data";
 import { loadCandidateFull } from "./talent-data";
+import { marketPulse } from "./market-pulse";
 import { careerReport, type MarketJob, type ScoreLite } from "./career-engine";
 
 /** Load everything the career engine needs, build the report, and store today's snapshot for trend tracking. */
@@ -9,7 +10,7 @@ export async function loadCareer(uid: string) {
   const [me, tax, jobsQ, jl, js, jt, sc] = await Promise.all([
     loadCandidateFull(uid),
     loadTaxonomy(),
-    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience, minimum_degree").eq("job_status", "active"),
+    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience, minimum_degree, published_at, job_status").in("job_status", ["active", "closed", "paused"]),
     supabase.from("job_languages").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_skills").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_technologies").select("job_id, lookup_id, requirement_level"),
@@ -27,7 +28,8 @@ export async function loadCareer(uid: string) {
     return m;
   };
   const L = by(jl.data ?? []), S = by(js.data ?? []), T = by(jt.data ?? []);
-  const jobs: MarketJob[] = (jobsQ.data ?? []).map((j) => ({
+  const allJobs = jobsQ.data ?? [];
+  const jobs: MarketJob[] = allJobs.filter((j) => j.job_status === "active").map((j) => ({
     id: j.job_id, title: j.job_title, roleId: j.role_id, minSalary: j.minimum_salary, maxSalary: j.maximum_salary, minYears: j.minimum_years_experience,
     langs: L[j.job_id] ?? [], skills: S[j.job_id] ?? [], techs: T[j.job_id] ?? [], minDegree: j.minimum_degree,
   }));
@@ -49,6 +51,10 @@ export async function loadCareer(uid: string) {
   }, { onConflict: "candidate_id,snapshot_date" });
   const hist = await supabase.from("career_snapshots").select("snapshot_date, readiness_score, average_match, profile_completion, skill_count, technology_count").eq("candidate_id", uid).order("snapshot_date", { ascending: true }).limit(30);
 
-  return { report, jobInfo, history: hist.data ?? [] };
+  const reqs = (id: string) => [...(L[id] ?? []), ...(S[id] ?? []), ...(T[id] ?? [])].map((x) => x.id);
+  const pulse = marketPulse(allJobs.map((j) => ({ publishedAt: j.published_at, roleId: j.role_id, minSalary: j.minimum_salary, maxSalary: j.maximum_salary, reqIds: reqs(j.job_id) })),
+    { roleId: p.role_id, ids: [...me.languages, ...me.skills, ...me.technologies].map((x) => x.lookup_id) }, names);
+
+  return { report, pulse, jobInfo, history: hist.data ?? [] };
 }
 export type CareerData = Awaited<ReturnType<typeof loadCareer>>;
