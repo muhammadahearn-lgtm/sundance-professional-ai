@@ -21,7 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
-import { listComparedCandidates, listSavedCandidates, listTalent, loadCandidateFull, resumeUrl, setComparedCandidate, setSavedCandidate, talentByIds, type CandidateFull } from "@/lib/talent-data";
+import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
+import { SAVED_SORTS, UNASSIGNED, filterSaved, sortSaved, type SavedItem, type SavedSort } from "@/lib/saved-candidates";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
@@ -371,15 +372,63 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
 export function SavedCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
   const tax = useTaxonomy();
-  const key = lists.savedIds.join(",");
-  const q = useQuery({ queryKey: ["talent-ids", key], queryFn: () => talentByIds(lists.savedIds) });
+  const qc = useQueryClient();
+  useAutoRecalc();
+  const entries = useQuery({ queryKey: ["saved-entries", uid, lists.savedIds.join(",")], queryFn: () => listSavedEntries(uid) });
+  const jobsQ = useQuery({ queryKey: ["save-job-options", uid], queryFn: () => loadSaveJobOptions(uid) });
+  const ids = (entries.data ?? []).map((e) => e.candidate_id);
+  const q = useQuery({ queryKey: ["talent-ids", ids.join(",")], queryFn: () => talentByIds(ids), enabled: !!entries.data });
+  const [co, setCo] = useState("");
+  const [jobSel, setJobSel] = useState("");
+  const [sort, setSort] = useState<SavedSort>("recent");
+  const [search, setSearch] = useState("");
+  const jobs = jobsQ.data ?? [];
+  const selJob = jobSel && jobSel !== UNASSIGNED ? jobs.find((j) => j.job_id === jobSel) : undefined;
+  const scoreQ = useScores(selJob ? { jobIds: [selJob.job_id] } : { jobIds: [] });
+  const scoreRow = (cid: string) => scoreQ.data?.find((r) => r.candidate_id === cid);
+  const jobOf = (id: string | null) => jobs.find((j) => j.job_id === id);
+  const companies = [...new Map(jobs.filter((j) => j.company_id).map((j) => [j.company_id!, j.company_name])).entries()].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label));
+  const jobOpts = [{ value: UNASSIGNED, label: "General talent pool (no job)" }, ...jobs.filter((j) => !co || j.company_id === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${j.company_name}` }))];
+  const effSort: SavedSort = sort === "match" && !selJob ? "recent" : sort;
+  const byId = new Map((q.data ?? []).map((c) => [c.id, c]));
+  const items: SavedItem[] = (entries.data ?? []).flatMap((e) => { const c = byId.get(e.candidate_id); if (!c) return []; const r = scoreRow(c.id); return [{ id: c.id, name: c.name, years: c.years, savedDate: e.saved_date, jobId: e.job_id, companyId: jobOf(e.job_id)?.company_id ?? null, score: r ? Number(r.overall_match_score) : null }]; });
+  const shown = sortSaved(filterSaved(items, { company: co, job: jobSel, q: search }), effSort);
+  const retag = async (cid: string, jobId: string) => {
+    try { await setSavedCandidateJob(uid, cid, jobId || null); toast.success(jobId ? `Saved for ${jobOf(jobId)?.job_title ?? "job"}` : "Moved to general talent pool"); }
+    catch (e) { toast.error(friendlyError(e, "Couldn't update. Please try again.")); }
+    await qc.invalidateQueries({ queryKey: ["saved-entries", uid] });
+  };
+  const loading = entries.isLoading || q.isLoading || !tax.data;
   return (
     <div className="space-y-6 pb-20">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
-      <h1 className="font-display text-2xl font-extrabold">Saved Candidates</h1>
-      {q.error ? <ErrorBox msg="Unable to load saved candidates." retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
-        : !q.data?.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates yet</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Search talent</Link></div>
-        : <div className="space-y-4">{q.data.map((c) => <CandidateCard key={c.id} c={c} t={tax.data} lists={lists} />)}</div>}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div><h1 className="font-display text-2xl font-extrabold">Saved Candidates</h1><p className="text-sm text-muted-foreground">{selJob ? `Match scores shown for ${selJob.job_title}.` : "Tag saves to a job, then filter by company or job."}</p></div>
+      </div>
+      <div className={`${card} grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4`}>
+        <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input aria-label="Search saved candidates by name" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name" className={`${inputCls} h-10 pl-9`} /></div>
+        <SearchSelect ariaLabel="Filter by company" value={co} onChange={(v) => { setCo(v); if (jobSel !== UNASSIGNED) setJobSel(""); }} allLabel="All companies" placeholder="Search companies..." options={companies} />
+        <SearchSelect ariaLabel="Filter by job" value={jobSel} onChange={(v) => { setJobSel(v); const j = jobs.find((x) => x.job_id === v); if (j) setCo(j.company_id ?? ""); }} allLabel="All jobs" placeholder="Search job titles..." options={jobOpts} />
+        <select aria-label="Sort saved candidates" value={effSort} onChange={(e) => setSort(e.target.value as SavedSort)} className={`${inputCls} h-10`}>
+          {SAVED_SORTS.map((s) => <option key={s.value} value={s.value} disabled={s.value === "match" && !selJob}>{s.label}{s.value === "match" && !selJob ? " (pick a job)" : ""}</option>)}
+        </select>
+      </div>
+      {entries.error || q.error ? <ErrorBox msg="Unable to load saved candidates." retry={() => { void entries.refetch(); void q.refetch(); }} /> : loading ? <div className={`${card} h-48 animate-pulse`} />
+        : !items.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates yet</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Search talent</Link></div>
+        : !shown.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates match these filters</p><button onClick={() => { setCo(""); setJobSel(""); setSearch(""); }} className={`${btn} mt-4`}>Clear filters</button></div>
+        : <div className="space-y-4"><p className="text-sm text-muted-foreground">{shown.length} of {items.length} saved</p>{shown.map((it) => { const c = byId.get(it.id)!; const tagged = jobOf(it.jobId); return (
+          <div key={it.id} className="space-y-0">
+            <CandidateCard c={c} t={tax.data!} lists={lists} score={selJob ? it.score ?? undefined : undefined} jobTitle={selJob?.job_title} row={selJob ? scoreRow(it.id) : undefined} />
+            <div className="-mt-2 flex flex-wrap items-center gap-2 rounded-b-2xl border border-t-0 border-border bg-muted/40 px-5 pb-3 pt-4 text-sm">
+              <Briefcase className="h-4 w-4 text-primary" /><span className="text-muted-foreground">Saved for:</span>
+              <select aria-label={`Job ${c.name} is saved for`} value={it.jobId ?? ""} onChange={(e) => void retag(it.id, e.target.value)} className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm">
+                <option value="">General talent pool</option>
+                {jobs.map((j) => <option key={j.job_id} value={j.job_id}>{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
+              </select>
+              {tagged && <span className="text-xs text-muted-foreground">{tagged.company_name}</span>}
+              <span className="ml-auto text-xs text-muted-foreground">Saved {new Date(it.savedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+            </div>
+          </div>); })}</div>}
       <CompareTray lists={lists} />
     </div>
   );
