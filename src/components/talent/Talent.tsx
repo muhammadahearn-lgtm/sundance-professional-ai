@@ -1,4 +1,4 @@
-import { Slider } from "@/components/ui/slider";
+import { RangeSlider } from "@/components/ui/range-slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { LocationFilter } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
@@ -727,7 +727,7 @@ function SalaryRange({ smin, smax, onCommit }: { smin: number; smax: number; onC
   const fmt = (n: number) => `$${(n / 1000).toFixed(0)}k`;
   return (
     <div className="mt-4">
-      <Slider min={0} max={SAL_MAX} step={5000} minStepsBetweenThumbs={1} value={v} onValueChange={(x) => setV([x[0] ?? 0, x[1] ?? SAL_MAX])}
+      <RangeSlider min={0} max={SAL_MAX} step={5000} value={v} onValueChange={setV}
         onValueCommit={(x) => onCommit(x[0] ?? 0, (x[1] ?? SAL_MAX) >= SAL_MAX ? 0 : (x[1] ?? 0))} aria-label="Salary range" />
       <p className="mt-2 text-xs text-muted-foreground">{fmt(v[0])} – {v[1] >= SAL_MAX ? "any" : fmt(v[1])}</p>
     </div>

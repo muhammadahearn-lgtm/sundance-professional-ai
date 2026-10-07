@@ -29,7 +29,7 @@ export function RangeSlider({ min, max, step, value, minGap, className, onValueC
   const down = (e: React.PointerEvent) => {
     const n = fromX(e.clientX);
     const [a, b] = latest.current;
-    const i: 0 | 1 = Math.abs(n - a) < Math.abs(n - b) || (n < a) ? 0 : n > b ? 1 : Math.abs(n - a) === Math.abs(n - b) ? (n < a ? 0 : 1) : 1;
+    const i: 0 | 1 = n <= a ? 0 : n >= b ? 1 : n - a < b - n ? 0 : 1;
     active.current = i;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     move(i, n);
