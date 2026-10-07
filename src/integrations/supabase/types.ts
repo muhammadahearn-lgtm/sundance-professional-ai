@@ -200,6 +200,7 @@ export type Database = {
       candidate_profiles: {
         Row: {
           availability: string
+          career_mode: string
           created_at: string
           current_employer: string
           current_level_id: string | null
@@ -216,6 +217,7 @@ export type Database = {
           location_state: string
           location_state_key: string
           locations_of_interest: string[]
+          passive_min_salary: number | null
           photo_visible: boolean
           portfolio_url: string
           programming_languages: string[]
@@ -241,6 +243,7 @@ export type Database = {
         }
         Insert: {
           availability?: string
+          career_mode?: string
           created_at?: string
           current_employer?: string
           current_level_id?: string | null
@@ -257,6 +260,7 @@ export type Database = {
           location_state?: string
           location_state_key?: string
           locations_of_interest?: string[]
+          passive_min_salary?: number | null
           photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
@@ -282,6 +286,7 @@ export type Database = {
         }
         Update: {
           availability?: string
+          career_mode?: string
           created_at?: string
           current_employer?: string
           current_level_id?: string | null
@@ -298,6 +303,7 @@ export type Database = {
           location_state?: string
           location_state_key?: string
           locations_of_interest?: string[]
+          passive_min_salary?: number | null
           photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
