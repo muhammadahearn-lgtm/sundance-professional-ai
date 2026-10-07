@@ -10,6 +10,7 @@ import { BrandImg, CompletionCard, Item } from "@/components/recruiter/shared";
 import { Markdown } from "./Markdown";
 import { ARRANGEMENT, EMPLOYMENT, RequirementList, StatusBadge, formatSalary, lbl } from "./shared";
 import { JobActionBar } from "./JobActions";
+import { SourcedCandidatesPanel } from "@/components/talent/Talent";
 
 export async function loadJobPage(id: string) {
   const [d, tax] = await Promise.all([loadJob(id), loadTaxonomy()]);
@@ -77,6 +78,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
               <Item k="Soft Skills Required" v={<RequirementList items={d.softSkills} options={d.tax.softSkills} />} />
               <Item k="Tools & Technologies" v={<RequirementList items={d.technologies} options={d.tax.technologies} />} />
             </div>
+            {j.job_status !== "draft" && <SourcedCandidatesPanel uid={account.userId} jobId={id} />}
             <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Description</h2><Markdown text={j.job_description} />
               {j.benefits_summary && <><h3 className="mt-6 font-display text-base font-bold">Benefits</h3><p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p></>}</div>
           </div>

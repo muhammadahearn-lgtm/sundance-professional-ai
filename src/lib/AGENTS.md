@@ -9,3 +9,4 @@
 - Resume auto-fill: browser extracts text (`document-text-extractor.ts`), server fn `parseResume` asks AI with a strict schema, `sanitizeParsedResume` cleans output; never writes to DB. Why: candidate reviews before save.
 - Resume matcher (`resume-taxonomy-matcher.ts`) maps parsed values to catalogs client-side; unmatched items go through normal governed add. Why: no AI-created taxonomy.
 - Saved candidates: one save per candidate with optional own-job tag (`saved_candidates_job_guard`); filter/sort rules in `saved-candidates.ts`; match score only when a job is selected. Why: organized pools, consistent scoring.
+- Sourcing: saves are tagged to own jobs via `saveCandidateForJob` (upsert) from Compare/Profile; job pages read the same `saved_candidates` rows. Why: one source for sourced lists.

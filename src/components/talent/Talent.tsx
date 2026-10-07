@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
-import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
+import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, saveCandidateForJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
 import { SAVED_SORTS, UNASSIGNED, filterSaved, sortSaved, type SavedItem, type SavedSort } from "@/lib/saved-candidates";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
 import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
@@ -87,6 +87,79 @@ export function useCandidateLists(uid: string) {
   };
 }
 type Lists = ReturnType<typeof useCandidateLists>;
+
+/** Save state + job tags for the recruiter's saved candidates, shared by Compare, Profile and Job pages. */
+export function useSavedJobs(uid: string) {
+  const qc = useQueryClient();
+  const entries = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
+  const jobs = useQuery({ queryKey: ["save-job-options", uid], queryFn: () => loadSaveJobOptions(uid) });
+  const entryOf = (cid: string) => entries.data?.find((e) => e.candidate_id === cid);
+  const saveFor = async (cid: string, jobId: string | null) => {
+    try {
+      await saveCandidateForJob(uid, cid, jobId);
+      toast.success(jobId ? `Saved for ${jobs.data?.find((j) => j.job_id === jobId)?.job_title ?? "job"}` : "Saved to general talent pool");
+    } catch (e) { toast.error(friendlyError(e, "Couldn't save. Please try again.")); }
+    await Promise.all([qc.invalidateQueries({ queryKey: ["saved-entries", uid] }), qc.invalidateQueries({ queryKey: ["saved-cands", uid] }), qc.invalidateQueries({ queryKey: ["job-sourced"] })]);
+  };
+  const unsave = async (cid: string) => {
+    try { await setSavedCandidate(uid, cid, false); toast.success("Candidate removed from saved"); } catch (e) { toast.error(friendlyError(e, "Couldn't update. Please try again.")); }
+    await Promise.all([qc.invalidateQueries({ queryKey: ["saved-entries", uid] }), qc.invalidateQueries({ queryKey: ["saved-cands", uid] }), qc.invalidateQueries({ queryKey: ["job-sourced"] })]);
+  };
+  return { jobs: jobs.data ?? [], entryOf, saveFor, unsave };
+}
+
+/** Save button with a job picker: save to general pool or tag to one of the recruiter's own jobs. */
+export function SaveToJobControl({ uid, candidateId, name }: { uid: string; candidateId: string; name: string }) {
+  const s = useSavedJobs(uid);
+  const e = s.entryOf(candidateId);
+  const val = !e ? "__none" : e.job_id ?? "";
+  return (
+    <label className={`${btn} ${e ? "border-primary text-primary" : ""} cursor-pointer`}>
+      {e ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+      <select aria-label={`Save ${name} for a job`} value={val} onChange={(ev) => { const v = ev.target.value; void (v === "__none" ? s.unsave(candidateId) : s.saveFor(candidateId, v || null)); }} className="max-w-[220px] cursor-pointer bg-transparent text-sm font-semibold outline-none">
+        <option value="__none">{e ? "Remove from saved" : "Save Candidate…"}</option>
+        <option value="">{e ? "Saved: " : ""}General talent pool</option>
+        {s.jobs.map((j) => <option key={j.job_id} value={j.job_id}>{e?.job_id === j.job_id ? "Saved for: " : ""}{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
+      </select>
+    </label>
+  );
+}
+
+/** Job page roster: candidates the recruiter saved for this job, with this job's match score and job-linked messaging. */
+export function SourcedCandidatesPanel({ uid, jobId }: { uid: string; jobId: string }) {
+  useAutoRecalc();
+  const entries = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
+  const ids = (entries.data ?? []).filter((e) => e.job_id === jobId).map((e) => e.candidate_id);
+  const q = useQuery({ queryKey: ["talent-ids", ids.join(",")], queryFn: () => talentByIds(ids), enabled: ids.length > 0 });
+  const scoreQ = useScores({ jobIds: [jobId] });
+  const score = (cid: string) => { const r = scoreQ.data?.find((x) => x.candidate_id === cid); return r ? Number(r.overall_match_score) : null; };
+  const rows = [...(q.data ?? [])].sort((a, b) => (score(b.id) ?? -1) - (score(a.id) ?? -1));
+  return (
+    <div className={`${card} p-6`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-lg font-bold">Sourced Candidates <span className="text-muted-foreground">({ids.length})</span></h2>
+        <Link to="/recruiter/candidates/saved" search={{ job: jobId }} className="text-sm font-semibold text-primary hover:underline">Open in Saved</Link>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">Talent you saved for this job. Message them to invite them to apply.</p>
+      {entries.isLoading || (ids.length > 0 && q.isLoading) ? <div className="mt-4 h-20 animate-pulse rounded-xl bg-muted" />
+        : !ids.length ? <p className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">No candidates saved for this job yet. Use "Save Candidate" on a profile or "Save for this job" in Compare.</p>
+        : <ul className="mt-4 divide-y divide-border">{rows.map((c) => (
+          <li key={c.id} className="flex flex-wrap items-center gap-3 py-3">
+            <Avatar name={c.name} path={c.avatarPath} size="h-9 w-9 text-xs" />
+            <div className="min-w-0 flex-1"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="font-semibold hover:text-primary">{c.name}</Link><p className="truncate text-xs text-muted-foreground">{[c.jobTitle, `${c.years} yrs`].filter(Boolean).join(" · ")}</p></div>
+            <MatchBadge score={score(c.id)} />
+            <MessageButton role="recruiter" candidateId={c.id} jobId={jobId} label="Message" className={btn} />
+          </li>))}</ul>}
+    </div>
+  );
+}
+
+/** Compare-page column action: save/tag the candidate for the job being compared. */
+function SaveForJobButton({ s, cid, jobId }: { s: ReturnType<typeof useSavedJobs>; cid: string; jobId: string }) {
+  const e = s.entryOf(cid);
+  if (e?.job_id === jobId) return <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1 text-xs font-semibold text-primary"><BookmarkCheck className="h-3.5 w-3.5" />Saved for this job</span>;
+  return <button onClick={() => void s.saveFor(cid, jobId)} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-semibold hover:border-primary hover:text-primary"><Bookmark className="h-3.5 w-3.5" />{e ? "Move to this job" : "Save for this job"}</button>;
+}
 
 export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
@@ -355,12 +428,12 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   if (q.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
-  const saved = lists.isSaved(id), cmp = lists.isCompared(id);
+  const cmp = lists.isCompared(id);
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
       <ProfileHeader d={q.data} actions={<>
-        <button onClick={() => lists.toggleSave(id)} className={`${btn} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save Candidate"}</button>
+        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
         <MessageButton role="recruiter" candidateId={id} className={btn} />
         <ReportButton type="user" targetId={id} /></>} />
@@ -369,7 +442,7 @@ export function RecruiterCandidatePage({ uid, id }: { uid: string; id: string })
   );
 }
 
-export function SavedCandidatesPage({ uid }: { uid: string }) {
+export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; initialJob?: string }) {
   const lists = useCandidateLists(uid);
   const tax = useTaxonomy();
   const qc = useQueryClient();
@@ -379,7 +452,7 @@ export function SavedCandidatesPage({ uid }: { uid: string }) {
   const ids = (entries.data ?? []).map((e) => e.candidate_id);
   const q = useQuery({ queryKey: ["talent-ids", ids.join(",")], queryFn: () => talentByIds(ids), enabled: !!entries.data });
   const [co, setCo] = useState("");
-  const [jobSel, setJobSel] = useState("");
+  const [jobSel, setJobSel] = useState(initialJob);
   const [sort, setSort] = useState<SavedSort>("recent");
   const [search, setSearch] = useState("");
   const jobs = jobsQ.data ?? [];
@@ -437,6 +510,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
   useAutoRecalc();
   const ctx = useJobContext(uid);
+  const savedJobs = useSavedJobs(uid);
   const [co, setCo] = useState("");
   const [jobSel, setJobSel] = useState("");
   const selJob = ctx.data?.jobs.find((j) => j.job_id === jobSel);
@@ -489,7 +563,7 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
           {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
             media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
             : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
-          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /></th>)}</tr></thead>
+          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} />{selJob && <div><SaveForJobButton s={savedJobs} cid={c.id} jobId={selJob.job_id} /></div>}</th>)}</tr></thead>
             <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
         </>}
     </div>

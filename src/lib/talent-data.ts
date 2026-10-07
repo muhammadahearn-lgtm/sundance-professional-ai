@@ -114,6 +114,11 @@ export async function setSavedCandidateJob(uid: string, candidateId: string, job
   const { error } = await supabase.from("saved_candidates").update({ job_id: jobId }).eq("recruiter_id", uid).eq("candidate_id", candidateId);
   if (error) throw error;
 }
+/** Save a candidate (or re-tag an existing save) for one of the recruiter's jobs; null = general pool. */
+export async function saveCandidateForJob(uid: string, candidateId: string, jobId: string | null) {
+  const { error } = await supabase.from("saved_candidates").upsert({ recruiter_id: uid, candidate_id: candidateId, job_id: jobId }, { onConflict: "recruiter_id,candidate_id" });
+  if (error) throw error;
+}
 /** The recruiter's own non-draft jobs with their hiring company, for saved-candidate tagging and filters. */
 export async function loadSaveJobOptions(uid: string) {
   const { data, error } = await supabase.from("jobs").select("job_id, job_title, job_status, company_id, companies(company_name)").eq("recruiter_id", uid).neq("job_status", "draft").order("job_title");

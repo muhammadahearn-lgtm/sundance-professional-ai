@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { Bookmark, Briefcase, MapPin, Plus, Users } from "lucide-react";
+import { listSavedEntries } from "@/lib/talent-data";
 import { SearchSelect } from "@/components/ui/search-select";
 import type { Account } from "@/lib/account";
 import type { JobStatus } from "@/lib/job-rules";
@@ -17,6 +18,8 @@ const date = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "sh
 export function JobsDashboard({ account }: { account: Account }) {
   const uid = account.userId;
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ["jobs", uid], queryFn: () => listJobs(uid) });
+  const savedQ = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
+  const sourced = (jobId: string) => (savedQ.data ?? []).filter((e) => e.job_id === jobId).length;
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [sort, setSort] = useState("newest");
   const [co, setCo] = useState("");
@@ -78,6 +81,7 @@ export function JobsDashboard({ account }: { account: Account }) {
                       <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4" />{j.companies?.company_name ?? "—"}</span>
                       <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{j.location} · {lbl(ARRANGEMENT, j.work_arrangement)}</span>
                       <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" />{j.applications} applications</span>
+                      {j.job_status !== "draft" && <Link to="/recruiter/candidates/saved" search={{ job: j.job_id }} className="inline-flex items-center gap-1 hover:text-primary"><Bookmark className="h-4 w-4" />{sourced(j.job_id)} sourced</Link>}
                     </div>
                     {j.job_status === "draft" ? (
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
