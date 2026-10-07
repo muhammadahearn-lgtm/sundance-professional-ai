@@ -13,6 +13,10 @@ import type { Account } from "@/lib/account";
 import { FormAlert, SuccessScreen } from "@/components/auth/AuthCard";
 import { normalizeUrl, validateLinks } from "@/lib/profile-links";
 import { addCompanyEntry } from "@/lib/company-add";
+import { ResumeUploadCard } from "@/components/profile/ResumeUploadCard";
+import { useResumeCatalogs, importResume } from "@/lib/resume-import";
+import type { ParsedResume } from "@/lib/resume-parse";
+import type { MatchedResume } from "@/lib/resume-taxonomy-matcher";
 
 const TECH_SUGGESTIONS = ["Python", "SQL", "Java", "JavaScript", "TypeScript", "AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "React", "Go", "Spark"];
 
@@ -85,7 +89,31 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     linkedin_url: "", github_url: "", portfolio_url: "",
   });
   const [proj, setProj] = useState({ title: "", project_url: "", description: "" });
+  const [method, setMethod] = useState<"choose" | "form">("choose");
+  const [resume, setResume] = useState<{ p: ParsedResume; m: MatchedResume } | null>(null);
+  const catalogs = useResumeCatalogs();
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
+
+  function applyResume(p: ParsedResume, m: MatchedResume) {
+    const names = (xs: { name: string }[]) => [...new Set(xs.map((x) => x.name))];
+    const loc = { country: m.country, state: p.location_state, city: p.location_city };
+    setF((o) => ({
+      ...o,
+      job_title: m.currentRole?.name ?? (p.job_title || o.job_title),
+      years_experience: p.years_experience != null ? String(p.years_experience) : o.years_experience,
+      location_country: loc.country || o.location_country, location_state: loc.state || o.location_state, location_city: loc.city || o.location_city,
+      location: loc.country ? formatLocation(loc) : o.location,
+      headline: (p.headline || o.headline).slice(0, 140), summary: (p.summary || o.summary).slice(0, 2000),
+      programming_languages: names(m.languages), technical_skills: names(m.skills), tools: names(m.technologies),
+      target_roles: m.targetRoles.length ? names(m.targetRoles) : m.currentRole ? [m.currentRole.name] : o.target_roles,
+      linkedin_url: p.linkedin_url || o.linkedin_url, github_url: p.github_url || o.github_url, portfolio_url: p.portfolio_url || o.portfolio_url,
+    }));
+    const pr = p.projects[0];
+    if (pr) setProj({ title: pr.title.slice(0, 120), project_url: pr.project_url, description: pr.description.slice(0, 1000) });
+    setResume({ p, m });
+    setStep(1);
+    setMethod("form");
+  }
 
   function next() {
     setError("");
@@ -114,11 +142,21 @@ export function CandidateOnboarding({ account }: { account: Account }) {
       const { error } = await supabase.from("candidate_projects").insert({ candidate_id: account.userId, title: proj.title.trim().slice(0, 120), description: proj.description.trim().slice(0, 1000), project_url: projUrl });
       if (error) e2 = error.message;
     }
+    if (!e2 && resume) { try { await importResume(account.userId, resume.p, resume.m); } catch { /* extras are optional; candidate can add them on the profile */ } }
     if (!e2) e2 = await finish();
     setSaving(false);
     if (e2) return setError("We couldn't save your profile. Please try again.");
     setDone(true);
   }
+
+  if (!done && method === "choose") return (
+    <Shell>
+      <h1 className="text-2xl font-extrabold">Let's build your profile</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Upload your resume to fill most of it in seconds, or enter your details yourself.</p>
+      <ResumeUploadCard className="mt-6" catalogs={catalogs.data ?? null} onParsed={applyResume} onSkip={() => setMethod("form")} />
+      <div className="mt-4 text-center"><Button variant="ghost" className="rounded-full" onClick={() => setMethod("form")}>Enter my details manually</Button></div>
+    </Shell>
+  );
 
   if (done) return <Shell><SuccessScreen title="You're all set" actions={<Button className="rounded-full" onClick={() => navigate({ to: "/candidate/dashboard" })}>Go to dashboard</Button>}>Your talent profile setup is complete.</SuccessScreen></Shell>;
 
@@ -128,6 +166,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
       <h1 className="mt-6 text-2xl font-extrabold">{["Professional Information", "Technical Qualifications", "Career Preferences"][step - 1]}</h1>
       <div className="mt-6 space-y-5">
         {error && <FormAlert>{error}</FormAlert>}
+        {resume && <div className="rounded-xl border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-primary">Pre-filled from your resume — please review and adjust any field. Your jobs, education and certifications from the resume are added to your profile when you finish.{resume.m.unmatched.length > 0 && <> Not on our lists yet (add them later on your profile): {resume.m.unmatched.map((u) => u.name).join(", ")}.</>}</div>}
         {step === 1 && (<>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Current Role"><Input value={f.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="Senior Data Engineer" maxLength={100} /></Field>
