@@ -35,3 +35,4 @@
 - Only `moderators` (via `is_moderator`) review `reports` and restrict via `moderate_restrict`. Why: no self-granted review power.
 - Certifications: `certification_normalize` links to `certification_catalog` via `cert_key`; custom entries candidate-only. Why: clean data.
 - Job companies: pick via `my_job_companies` or add via `add_company_entry` (dedupe by `company_key`); creator edits unclaimed clients. Why: no duplicates.
+- App navigation: sidebar lists workspaces only; sibling list pages share one entry and show tabs from `WORKSPACES` in AppShell; account links live in the sidebar footer. Why: fewer menu items, URLs unchanged.
