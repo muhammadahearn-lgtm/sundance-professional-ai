@@ -9,8 +9,10 @@ import { Chips, Empty, Field, SaveBar, Section, TagInput, card, friendlyError, i
 import { BrandImg, COMPANY_SIZES, CompletionCard, HIRING_VOLUMES, Item, MultiToggle, ORG_TYPES, REGIONS, WORK_ARRANGEMENTS, initials, orgKey } from "./shared";
 import { canDemote, canRemove, filterInbox, inboxCounts, loadRequestHistory, loadTeam, removeMember, requestAdminAccess, resolveRequest, setMemberRole, type CompanyRole, type InboxTab, type RequestRecord, type TeamMember } from "@/lib/company-team";
 import type { Database } from "@/integrations/supabase/types";
+import { AdminJobs, AdminOverview, AdminPipeline } from "./CompanyAdminDashboard";
 
 type OrgType = Database["public"]["Enums"]["organization_type"];
+type AdminTab = "overview" | "branding" | "jobs" | "pipeline" | "team";
 
 async function load(uid: string) {
   const prof = await supabase.from("recruiter_profiles").select("company_id, company_name, company_website, industry, company_description, organization_type").eq("user_id", uid).maybeSingle();
@@ -43,6 +45,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load(uid) });
   const [edit, setEdit] = useState<"info" | "why" | "hiring" | null>(null);
   const [preview, setPreview] = useState(false);
+  const [tab, setTab] = useState<AdminTab>("overview");
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ["recruiter-full", uid] })]);
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
@@ -106,15 +109,45 @@ export function CompanyProfilePage({ account }: { account: Account }) {
     <button onClick={() => setEdit(k)} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary"><Pencil className="h-4 w-4" aria-hidden /><span className="sr-only sm:not-sr-only">Edit</span></button>
   );
 
+  const pendingCount = data.requests.filter((r) => r.status === "pending").length;
+  const tabs: [AdminTab, string][] = [["overview", "Overview"], ["branding", "Branding"], ["jobs", "Jobs"], ["pipeline", "Pipeline"], ["team", "Team"]];
+  const header = (
+    <Header c={c} onUploadLogo={(f) => uploadBrand(f, "logo")} onUploadBanner={(f) => uploadBrand(f, "banner")}>
+      <button onClick={() => { setTab("branding"); setEdit("info"); setTimeout(() => document.getElementById("company-info")?.scrollIntoView({ behavior: "smooth" }), 50); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Company</button>
+      <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Company</button>
+    </Header>
+  );
+  const tabBar = (
+    <div role="tablist" aria-label="Company admin" className={`${card} flex gap-1 overflow-x-auto p-1.5`}>
+      {tabs.map(([k, l]) => (
+        <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+          className={`relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition ${tab === k ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+          {l}{k === "team" && pendingCount > 0 && <span className="ml-1.5 rounded-full bg-destructive px-1.5 text-[10px] text-destructive-foreground">{pendingCount}</span>}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (tab !== "branding") return (
+    <div className="min-w-0 space-y-6">
+      {header}
+      {tabBar}
+      {tab === "overview" && <AdminOverview companyId={c.company_id} teamSize={data.team.length} pendingRequests={pendingCount} onOpen={setTab} />}
+      {tab === "jobs" && <AdminJobs companyId={c.company_id} uid={uid} />}
+      {tab === "pipeline" && <AdminPipeline companyId={c.company_id} uid={uid} />}
+      {tab === "team" && <>
+        <TeamSection companyId={c.company_id} uid={uid} team={data.team} requests={data.requests} myRole="admin" myPending={false} onChanged={refresh} />
+        <Section title="Recruiter Directory" icon={<Users className="h-4 w-4" />}><Directory recruiters={data.recruiters} /></Section>
+      </>}
+    </div>
+  );
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
-        <Header c={c} onUploadLogo={(f) => uploadBrand(f, "logo")} onUploadBanner={(f) => uploadBrand(f, "banner")}>
-          <button onClick={() => { setEdit("info"); document.getElementById("company-info")?.scrollIntoView({ behavior: "smooth" }); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Company</button>
-          <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Company</button>
-        </Header>
+        {header}
+        {tabBar}
 
-        <TeamSection companyId={c.company_id} uid={uid} team={data.team} requests={data.requests} myRole="admin" myPending={false} onChanged={refresh} />
 
         <Section id="company-info" title="Company Information" icon={<Building2 className="h-4 w-4" />} action={editBtn("info")}>
           {edit === "info" ? (
@@ -147,10 +180,6 @@ export function CompanyProfilePage({ account }: { account: Account }) {
               <Item k="Primary Technical Roles" v={<Chips items={c.primary_technical_roles} />} /><Item k="Hiring Volume" v={c.hiring_volume} />
             </dl>
           )}
-        </Section>
-
-        <Section title="Recruiter Directory" icon={<Users className="h-4 w-4" />}>
-          <Directory recruiters={data.recruiters} />
         </Section>
       </div>
       <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
