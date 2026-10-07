@@ -531,7 +531,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
 /** Slide-over quick preview from search: full profile without leaving filtered results. */
 export function CandidatePreviewDrawer({ uid, id, jobId, onClose }: { uid: string; id: string | null; jobId?: string | undefined; onClose: () => void }) {
   const tax = useTaxonomy();
-  const q = useQuery({ queryKey: ["candidate-full", id], queryFn: () => loadCandidateFull(id!), enabled: !!id });
+  const q = useQuery({ queryKey: ["talent-candidate", id], queryFn: () => loadCandidateFull(id!), enabled: !!id });
   const lists = useCandidateLists(uid);
   useEffect(() => { if (id && q.data) track("candidate_view", id); }, [q.data, id]);
   const cmp = id ? lists.isCompared(id) : false;
@@ -542,7 +542,7 @@ export function CandidatePreviewDrawer({ uid, id, jobId, onClose }: { uid: strin
         <div className="space-y-4 p-5">
           {q.isLoading || tax.isLoading ? <div className="space-y-4"><div className={`${card} h-40 animate-pulse`} /><div className={`${card} h-96 animate-pulse`} /></div>
           : q.error || tax.error ? <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />
-          : !q.data || !tax.data || !id ? <div className={`${card} p-8 text-center`}><p className="font-display font-bold">Profile not available</p></div>
+          : !q.data?.profile || !tax.data || !id ? <div className={`${card} p-8 text-center`}><p className="font-display font-bold">Profile not available</p></div>
            : <LensState key={id} jobId={jobId}>{(lensJob, setLensJob) => <>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="h-3.5 w-3.5" />Quick view</div>
             <ProfileHeader d={q.data!} actions={<>
@@ -562,12 +562,12 @@ export function CandidatePreviewDrawer({ uid, id, jobId, onClose }: { uid: strin
 
 export function RecruiterCandidatePage({ uid, id, jobId }: { uid: string; id: string; jobId?: string | undefined }) {
   const tax = useTaxonomy();
-  const q = useQuery({ queryKey: ["candidate-full", id], queryFn: () => loadCandidateFull(id) });
+  const q = useQuery({ queryKey: ["talent-candidate", id], queryFn: () => loadCandidateFull(id) });
   const lists = useCandidateLists(uid);
   useEffect(() => { if (q.data) track("candidate_view", id); }, [q.data, id]);
   if (q.isLoading || tax.isLoading) return <div className={`${card} h-96 animate-pulse`} />;
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
-  if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
+  if (!q.data?.profile || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
   const cmp = lists.isCompared(id);
   const cd = q.data, tx = tax.data;
   return (
