@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { highestDegree } from "./education";
 import { loadTaxonomy } from "./jobs-data";
 import { loadCandidateFull } from "./talent-data";
+import { marketPulse } from "./market-pulse";
 import { careerReport, type MarketJob, type ScoreLite } from "./career-engine";
 
 /** Load everything the career engine needs, build the report, and store today's snapshot for trend tracking. */
@@ -9,7 +10,7 @@ export async function loadCareer(uid: string) {
   const [me, tax, jobsQ, jl, js, jt, sc] = await Promise.all([
     loadCandidateFull(uid),
     loadTaxonomy(),
-    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience, minimum_degree").eq("job_status", "active"),
+    supabase.from("jobs").select("job_id, job_title, role_id, minimum_salary, maximum_salary, minimum_years_experience, minimum_degree, published_at").in("job_status", ["active", "closed", "paused"]),
     supabase.from("job_languages").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_skills").select("job_id, lookup_id, requirement_level"),
     supabase.from("job_technologies").select("job_id, lookup_id, requirement_level"),
@@ -27,7 +28,8 @@ export async function loadCareer(uid: string) {
     return m;
   };
   const L = by(jl.data ?? []), S = by(js.data ?? []), T = by(jt.data ?? []);
-  const jobs: MarketJob[] = (jobsQ.data ?? []).map((j) => ({
+  const allJobs = jobsQ.data ?? [];
+  const jobs: MarketJob[] = allJobs.filter((j) => (j as { job_status?: string }).job_status !== "x").filter((_j, i) => activeIdx.has(i)).map((j) => ({
     id: j.job_id, title: j.job_title, roleId: j.role_id, minSalary: j.minimum_salary, maxSalary: j.maximum_salary, minYears: j.minimum_years_experience,
     langs: L[j.job_id] ?? [], skills: S[j.job_id] ?? [], techs: T[j.job_id] ?? [], minDegree: j.minimum_degree,
   }));
