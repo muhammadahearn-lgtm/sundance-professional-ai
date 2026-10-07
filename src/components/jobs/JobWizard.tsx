@@ -16,6 +16,7 @@ import { Field, card, friendlyError, inputCls } from "@/components/profile/parts
 import { MarkdownEditor } from "./Markdown";
 import { ClientCompanyPanel } from "./ClientCompanyPanel";
 import { HiringTeamPanel } from "./HiringTeamPanel";
+import { EquityPanel, ScreeningPanel } from "./ScreeningEquityPanels";
 import { digitsOnly } from "@/lib/salary";
 import { displayJobTitle } from "@/lib/role-taxonomy";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
@@ -197,8 +198,10 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
               <Field label="Maximum Salary" error={errs.maximum_salary}><input type="text" inputMode="numeric" pattern="[0-9]*" className={inputCls} value={f.maximum_salary} onChange={(e) => set("maximum_salary", digitsOnly(e.target.value))} placeholder="160000" /></Field>
               <Field label="Currency"><select className={inputCls} value={f.salary_currency} onChange={(e) => set("salary_currency", e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
             </div>
-            <Field label="Bonus Information"><input className={inputCls} value={f.bonus_info} onChange={(e) => set("bonus_info", e.target.value)} placeholder="Up to 15% annual bonus + equity" /></Field>
+            <Field label="Bonus Information"><input className={inputCls} value={f.bonus_info} onChange={(e) => set("bonus_info", e.target.value)} placeholder="Up to 15% annual performance bonus" /></Field>
             <Field label="Benefits Summary"><textarea rows={4} className={inputCls} value={f.benefits_summary} onChange={(e) => set("benefits_summary", e.target.value)} placeholder="Health, dental, vision, 401(k) match, unlimited PTO…" /></Field>
+            <EquityPanel v={f} errs={errs} onChange={(k, val) => set(k, val)} />
+            <ScreeningPanel value={f.screening} onChange={(v) => set("screening", v)} error={errs.screening} />
           </div>
         )}
       </div>

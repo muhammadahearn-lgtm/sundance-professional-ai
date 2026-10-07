@@ -1,4 +1,5 @@
 import { parseSalaryInput } from "./salary";
+import { validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 export type JobStatus = "draft" | "active" | "paused" | "closed";
 export type ReqLevel = "required" | "preferred" | "optional";
@@ -12,15 +13,23 @@ export type JobForm = {
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
   is_confidential: boolean; confidential_label: string;
+  equity_type: string; equity_range: string; equity_vesting: string; screening: ScreeningQ[];
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
   job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "", location_country: "", location_state: "", location_city: "",
   minimum_years_experience: "", minimum_degree: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
   minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "", is_confidential: false, confidential_label: "",
+  equity_type: "none", equity_range: "", equity_vesting: "", screening: [],
 });
 
 type Errs = Partial<Record<keyof JobForm, string>>;
+
+function validateComp(f: JobForm): Errs {
+  const e: Errs = { ...validateSalary(f), ...validateEquity(f) };
+  if (Object.keys(validateQuestions(f.screening)).length) e.screening = "Fix the highlighted screening questions.";
+  return e;
+}
 
 export function validateInfo(f: JobForm): Errs {
   const e: Errs = {};
@@ -53,12 +62,12 @@ export function validateStep(step: number, f: JobForm): Errs {
   if (step === 1) return validateInfo(f);
   if (step === 3 && !f.skills.length) return { skills: "Add at least one technical skill." };
   if (step === 4 && !f.technologies.length) return { technologies: "Add at least one technology." };
-  if (step === 5) return validateSalary(f);
+  if (step === 5) return validateComp(f);
   return {};
 }
 
 export function validateAll(f: JobForm): Errs {
-  return { ...validateInfo(f), ...validateStep(3, f), ...validateStep(4, f), ...validateSalary(f) };
+  return { ...validateInfo(f), ...validateStep(3, f), ...validateStep(4, f), ...validateComp(f) };
 }
 
 /** Quality: title 10, description 20, salary 15, skills 15, technologies 15, languages 10, experience 5, benefits 10. */

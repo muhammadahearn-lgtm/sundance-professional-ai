@@ -1,3 +1,4 @@
+import { equitySummary } from "@/lib/screening";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Building2, Eye, Lock, MapPin, Sparkles } from "lucide-react";
@@ -66,6 +67,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
                 <Item k="Role" v={role} /><Item k="Employment Type" v={lbl(EMPLOYMENT, j.employment_type)} /><Item k="Work Arrangement" v={lbl(ARRANGEMENT, j.work_arrangement)} />
                 <Item k="Minimum Experience" v={`${j.minimum_years_experience}+ years`} /><Item k="Experience Level" v={j.experience_level} /><Item k="Salary" v={formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency)} />
                 <Item k="Bonus" v={j.bonus_info} />
+                <Item k="Equity" v={[equitySummary(j), j.equity_vesting].filter(Boolean).join(" · ")} />
               </dl>
             </div>
             <div className={`${card} space-y-5 p-6`}>

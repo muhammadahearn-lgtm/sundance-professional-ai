@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formatLocation, normalizeLocationPart } from "./location";
+import type { ScreeningQ } from "./screening";
 import { draftCompletion, type JobForm, type JobStatus, type ReqItem, type ReqLevel } from "./job-rules";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -56,15 +57,16 @@ export async function listJobs(uid: string) {
 export type JobListItem = Awaited<ReturnType<typeof listJobs>>[number];
 
 export async function loadJob(id: string) {
-  const [j, l, s, t, a, ss] = await Promise.all([
+  const [j, l, s, t, a, ss, sq] = await Promise.all([
     supabase.from("jobs").select("*").eq("job_id", id).maybeSingle(),
     supabase.from("job_languages").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_skills").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("job_technologies").select("lookup_id, requirement_level").eq("job_id", id),
     supabase.from("applications").select("application_status").eq("job_id", id),
     supabase.from("job_soft_skills").select("lookup_id, requirement_level").eq("job_id", id),
+    supabase.from("job_screening_questions").select("*").eq("job_id", id).order("sort_order"),
   ]);
-  const err = [j, l, s, t, a, ss].find((x) => x.error)?.error;
+  const err = [j, l, s, t, a, ss, sq].find((x) => x.error)?.error;
   if (err) throw err;
   if (!j.data) return null;
   const map = (rows: { lookup_id: string; requirement_level: string }[] | null): ReqItem[] => (rows ?? []).map((r) => ({ id: r.lookup_id, level: r.requirement_level as ReqLevel }));
@@ -73,6 +75,7 @@ export async function loadJob(id: string) {
   const apps = a.data ?? [];
   return {
     job: j.data, company, languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data),
+    screening: (sq.data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as ScreeningQ["type"], options: r.options, ideal: r.ideal_answer, required: r.is_required })),
     stats: { applications: apps.length, interviews: apps.filter((x) => x.application_status === "interviewing").length, offers: apps.filter((x) => x.application_status === "offer").length },
   };
 }
@@ -86,6 +89,7 @@ export function toForm(d: LoadedJob): JobForm {
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
     bonus_info: j.bonus_info, benefits_summary: j.benefits_summary, is_confidential: j.is_confidential, confidential_label: j.confidential_label,
+    equity_type: j.equity_type, equity_range: j.equity_range, equity_vesting: j.equity_vesting, screening: d.screening,
   };
 }
 
@@ -97,6 +101,7 @@ function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
     location: formatLocation({ country: f.location_country, state: f.location_state, city: f.location_city }) || f.location.trim(), location_country: f.location_country, location_state: normalizeLocationPart(f.location_state), location_city: normalizeLocationPart(f.location_city), minimum_years_experience: Number(f.minimum_years_experience) || 0, minimum_degree: f.minimum_degree || null, experience_level: f.experience_level,
     job_description: f.job_description, minimum_salary: num(f.minimum_salary), maximum_salary: num(f.maximum_salary),
     salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(), is_confidential: f.is_confidential, confidential_label: f.is_confidential ? f.confidential_label.trim().slice(0, 80) : "",
+    equity_type: f.equity_type, equity_range: f.equity_type === "none" ? "" : f.equity_range.trim().slice(0, 80), equity_vesting: f.equity_type === "none" ? "" : f.equity_vesting.trim().slice(0, 160),
   };
 }
 
@@ -133,6 +138,7 @@ export async function saveJob(uid: string, f: JobForm, opts: { id?: string | und
     id = data.job_id;
   }
   await replaceLinks(id, f);
+  await saveScreening(id, f.screening);
   return id;
 }
 
@@ -145,7 +151,7 @@ export async function duplicateJob(uid: string, id: string) {
   const d = await loadJob(id);
   if (!d) throw new Error("Job not found");
   const f = toForm(d);
-  return saveJob(uid, { ...f, job_title: `${f.job_title} (Copy)` }, { status: "draft" });
+  return saveJob(uid, { ...f, job_title: `${f.job_title} (Copy)`, screening: f.screening.map((q) => ({ ...q, id: crypto.randomUUID() })) }, { status: "draft" });
 }
 
 export async function deleteJob(id: string) {
@@ -167,4 +173,16 @@ export async function listMyJobsWithCompany(uid: string) {
   const { data, error } = await supabase.from("jobs").select("job_id, job_title, company_id, companies(company_name)").eq("recruiter_id", uid).neq("job_status", "draft").order("job_title");
   if (error) throw error;
   return (data ?? []).map((j) => ({ id: j.job_id, title: j.job_title, companyId: j.company_id ?? "", company: j.companies?.company_name ?? "No company" }));
+}
+
+/** Upsert questions by id (keeps candidates' existing answers) and remove deleted ones. */
+async function saveScreening(jobId: string, qs: ScreeningQ[]) {
+  const keep = qs.filter((q) => q.text.trim());
+  const del = supabase.from("job_screening_questions").delete().eq("job_id", jobId);
+  const { error: de } = keep.length ? await del.not("question_id", "in", `(${keep.map((q) => q.id).join(",")})`) : await del;
+  if (de) throw de;
+  if (!keep.length) return;
+  const rows = keep.map((q, i) => ({ question_id: q.id, job_id: jobId, question_text: q.text.trim(), question_type: q.type, options: q.type === "choice" ? q.options.map((o) => o.trim()).filter(Boolean) : [], ideal_answer: q.ideal.trim(), is_required: q.required, sort_order: i }));
+  const { error } = await supabase.from("job_screening_questions").upsert(rows, { onConflict: "question_id" });
+  if (error) throw error;
 }

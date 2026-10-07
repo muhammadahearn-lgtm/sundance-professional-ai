@@ -133,3 +133,23 @@ export async function removeFromPipeline(id: string) {
   const { error } = await supabase.from("recruiting_pipeline").delete().eq("pipeline_id", id);
   if (error) throw error;
 }
+
+// ---------- Screening ----------
+export async function loadScreeningQuestions(jobId: string): Promise<import("./screening").ScreeningQ[]> {
+  const { data, error } = await supabase.from("job_screening_questions").select("*").eq("job_id", jobId).order("sort_order");
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as "yes_no" | "choice" | "text", options: r.options, ideal: r.ideal_answer, required: r.is_required }));
+}
+export async function saveScreeningAnswers(applicationId: string, answers: Record<string, string>) {
+  const rows = Object.entries(answers).filter(([, a]) => a.trim()).map(([question_id, a]) => ({ application_id: applicationId, question_id, answer_text: a.trim().slice(0, 1000) }));
+  if (!rows.length) return;
+  const { error } = await supabase.from("application_screening_answers").insert(rows);
+  if (error) throw error;
+}
+/** Questions with this application's answers (candidate or job owner only, via RLS). */
+export async function loadScreeningAnswers(applicationId: string, jobId: string) {
+  const [qs, a] = await Promise.all([loadScreeningQuestions(jobId), supabase.from("application_screening_answers").select("question_id, answer_text").eq("application_id", applicationId)]);
+  if (a.error) throw a.error;
+  const map = Object.fromEntries((a.data ?? []).map((r) => [r.question_id, r.answer_text]));
+  return qs.map((q) => ({ q, answer: map[q.id] ?? "" }));
+}
