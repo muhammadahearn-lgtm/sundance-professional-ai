@@ -3,7 +3,7 @@ import { namesFor } from "./talent-data";
 import { sendActivityEmail } from "./activity-email.functions";
 import { stageToStatus, type AppStatus, type Stage } from "./talent-rules";
 
-const JOB = "job_id, job_title, location, work_arrangement, job_status, role_id, companies(company_name, logo_url)";
+const JOB = "job_id, job_title, location, work_arrangement, job_status, role_id, is_confidential, confidential_label, companies(company_name, logo_url)";
 
 export async function myApplicationFor(uid: string, jobId: string) {
   const { data, error } = await supabase.from("applications").select("application_id, application_status, application_date").eq("candidate_id", uid).eq("job_id", jobId).maybeSingle();

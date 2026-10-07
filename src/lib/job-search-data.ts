@@ -1,11 +1,12 @@
 import { locationKey } from "./location";
+import { maskCompany, maskJobRow } from "./confidential";
 import { meetsMinMatch } from "./match-engine";
 import { supabase } from "@/integrations/supabase/client";
 import type { Taxonomy } from "./jobs-data";
 import type { ReqItem, ReqLevel } from "./job-rules";
 import { PAGE_SIZE, experienceRange, intersect, relevance, sanitizeKeyword, type SearchState } from "./job-search";
 
-const CARD_SELECT = "job_id, job_title, role_id, location, location_country, location_state, location_city, work_arrangement, employment_type, minimum_years_experience, minimum_degree, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level), job_soft_skills(lookup_id, requirement_level)";
+const CARD_SELECT = "job_id, job_title, role_id, location, location_country, location_state, location_city, work_arrangement, employment_type, minimum_years_experience, minimum_degree, experience_level, minimum_salary, maximum_salary, salary_currency, job_description, created_at, published_at, is_confidential, confidential_label, companies(company_id, company_name, logo_url, industry), job_languages(lookup_id, requirement_level), job_skills(lookup_id, requirement_level), job_technologies(lookup_id, requirement_level), job_soft_skills(lookup_id, requirement_level)";
 
 async function idsFor(table: "job_languages" | "job_skills" | "job_technologies", lookups: string[]) {
   if (!lookups.length) return [];
@@ -44,14 +45,14 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
     if (kw.length) or.push(`job_id.in.(${kw.join(",")})`);
     if (roleIds.length) or.push(`role_id.in.(${roleIds.join(",")})`);
     const cIds = (co.data ?? []).map((c) => c.company_id);
-    if (cIds.length) or.push(`company_id.in.(${cIds.join(",")})`);
+    if (cIds.length) or.push(`and(company_id.in.(${cIds.join(",")}),is_confidential.eq.false)`);
   }
 
   if ((ids !== null && !ids.length) || (companyIds !== null && !companyIds.length)) return { rows: [], total: 0 };
 
   let query = supabase.from("jobs").select(CARD_SELECT, { count: "exact" }).eq("job_status", "active");
   if (ids !== null) query = query.in("job_id", ids);
-  if (companyIds !== null) query = query.in("company_id", companyIds);
+  if (companyIds !== null) query = query.in("company_id", companyIds).eq("is_confidential", false);
   if (or.length) query = query.or(or.join(","));
   if (s.role) query = query.eq("role_id", s.role);
   if (s.level) query = query.eq("level_id", s.level);
@@ -76,7 +77,7 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
   if (s.sort === "match" || s.sort === "match_low" || s.mm) {
     const { data, error } = await query;
     if (error) throw error;
-    let ranked = (data ?? []).filter((r) => meetsMinMatch(scores[r.job_id], s.mm));
+    let ranked = (data ?? []).map(maskJobRow).filter((r) => meetsMinMatch(scores[r.job_id], s.mm));
     const dir = s.sort === "match_low" ? -1 : 1;
     if (s.sort === "match" || s.sort === "match_low") ranked = [...ranked].sort((a, b) => dir * ((scores[b.job_id] ?? -1) - (scores[a.job_id] ?? -1)));
     else if (s.sort === "relevant" && q) ranked = [...ranked].sort((a, b) => relevance(b.job_title, b.job_description, q) - relevance(a.job_title, a.job_description, q));
@@ -84,7 +85,7 @@ export async function searchJobs(s: SearchState, tax: Taxonomy, scores: Record<s
   }
   const { data, error, count } = await query.range(from, from + PAGE_SIZE - 1);
   if (error) throw error;
-  let rows = data ?? [];
+  let rows = (data ?? []).map(maskJobRow);
   if (s.sort === "relevant" && q) rows = [...rows].sort((a, b) => relevance(b.job_title, b.job_description, q) - relevance(a.job_title, a.job_description, q));
   return { rows, total: count ?? 0 };
 }
@@ -94,7 +95,7 @@ export async function loadCardsByIds(ids: string[]) {
   if (!ids.length) return [];
   const { data, error } = await supabase.from("jobs").select(CARD_SELECT).in("job_id", ids).eq("job_status", "active");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(maskJobRow);
 }
 
 export async function loadCandidateJob(id: string) {
@@ -109,7 +110,7 @@ export async function loadCandidateJob(id: string) {
   if (err) throw err;
   if (!j.data) return null;
   const map = (rows: { lookup_id: string; requirement_level: string }[] | null): ReqItem[] => (rows ?? []).map((r) => ({ id: r.lookup_id, level: r.requirement_level as ReqLevel }));
-  return { job: j.data, company: j.data.companies, languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data) };
+  return { job: j.data, company: maskCompany(j.data.companies, j.data), languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data) };
 }
 export type CandidateJob = NonNullable<Awaited<ReturnType<typeof loadCandidateJob>>>;
 
@@ -134,7 +135,7 @@ export async function setCompared(uid: string, jobId: string, on: boolean) {
 
 /** Companies with active jobs, each with its open job titles (for company → job pickers). */
 export async function listActiveCompanyJobs() {
-  const { data, error } = await supabase.from("jobs").select("job_id, job_title, companies(company_id, company_name)").eq("job_status", "active").order("job_title");
+  const { data, error } = await supabase.from("jobs").select("job_id, job_title, companies(company_id, company_name)").eq("job_status", "active").eq("is_confidential", false).order("job_title");
   if (error) throw error;
   const map = new Map<string, { id: string; name: string; jobs: { id: string; title: string }[] }>();
   for (const j of data ?? []) {
