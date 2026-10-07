@@ -1,3 +1,4 @@
+import { Slider } from "@/components/ui/slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { LocationFilter } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
@@ -715,6 +716,20 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
           <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><div><SaveToJobControl uid={uid} candidateId={c.id} name={c.name} variant="compact" preferJobId={selJob?.job_id} /></div></th>)}</tr></thead>
             <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
         </>}
+    </div>
+  );
+}
+
+const SAL_MAX = 400000;
+function SalaryRange({ smin, smax, onCommit }: { smin: number; smax: number; onCommit: (smin: number, smax: number) => void }) {
+  const [v, setV] = useState<number[]>([smin, smax || SAL_MAX]);
+  useEffect(() => { setV([smin, smax || SAL_MAX]); }, [smin, smax]);
+  const fmt = (n: number) => `$${(n / 1000).toFixed(0)}k`;
+  return (
+    <div className="mt-4">
+      <Slider min={0} max={SAL_MAX} step={5000} minStepsBetweenThumbs={1} value={v} onValueChange={setV}
+        onValueCommit={(x) => onCommit(x[0], x[1] >= SAL_MAX ? 0 : x[1])} aria-label="Salary range" />
+      <p className="mt-2 text-xs text-muted-foreground">{fmt(v[0])} – {v[1] >= SAL_MAX ? "any" : fmt(v[1])}</p>
     </div>
   );
 }
