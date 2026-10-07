@@ -88,6 +88,50 @@ export function useCandidateLists(uid: string) {
 }
 type Lists = ReturnType<typeof useCandidateLists>;
 
+/** Save state + job tags for the recruiter's saved candidates, shared by Compare, Profile and Job pages. */
+export function useSavedJobs(uid: string) {
+  const qc = useQueryClient();
+  const entries = useQuery({ queryKey: ["saved-entries", uid, "map"], queryFn: () => listSavedEntries(uid) });
+  const jobs = useQuery({ queryKey: ["save-job-options", uid], queryFn: () => loadSaveJobOptions(uid) });
+  const entryOf = (cid: string) => entries.data?.find((e) => e.candidate_id === cid);
+  const saveFor = async (cid: string, jobId: string | null) => {
+    try {
+      await saveCandidateForJob(uid, cid, jobId);
+      toast.success(jobId ? `Saved for ${jobs.data?.find((j) => j.job_id === jobId)?.job_title ?? "job"}` : "Saved to general talent pool");
+    } catch (e) { toast.error(friendlyError(e, "Couldn't save. Please try again.")); }
+    await Promise.all([qc.invalidateQueries({ queryKey: ["saved-entries", uid] }), qc.invalidateQueries({ queryKey: ["saved-cands", uid] }), qc.invalidateQueries({ queryKey: ["job-sourced"] })]);
+  };
+  const unsave = async (cid: string) => {
+    try { await setSavedCandidate(uid, cid, false); toast.success("Candidate removed from saved"); } catch (e) { toast.error(friendlyError(e, "Couldn't update. Please try again.")); }
+    await Promise.all([qc.invalidateQueries({ queryKey: ["saved-entries", uid] }), qc.invalidateQueries({ queryKey: ["saved-cands", uid] }), qc.invalidateQueries({ queryKey: ["job-sourced"] })]);
+  };
+  return { jobs: jobs.data ?? [], entryOf, saveFor, unsave };
+}
+
+/** Save button with a job picker: save to general pool or tag to one of the recruiter's own jobs. */
+export function SaveToJobControl({ uid, candidateId, name }: { uid: string; candidateId: string; name: string }) {
+  const s = useSavedJobs(uid);
+  const e = s.entryOf(candidateId);
+  const val = !e ? "__none" : e.job_id ?? "";
+  return (
+    <label className={`${btn} ${e ? "border-primary text-primary" : ""} cursor-pointer`}>
+      {e ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+      <select aria-label={`Save ${name} for a job`} value={val} onChange={(ev) => { const v = ev.target.value; void (v === "__none" ? s.unsave(candidateId) : s.saveFor(candidateId, v || null)); }} className="max-w-[220px] cursor-pointer bg-transparent text-sm font-semibold outline-none">
+        <option value="__none">{e ? "Remove from saved" : "Save Candidate…"}</option>
+        <option value="">{e ? "Saved: " : ""}General talent pool</option>
+        {s.jobs.map((j) => <option key={j.job_id} value={j.job_id}>{e?.job_id === j.job_id ? "Saved for: " : ""}{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
+      </select>
+    </label>
+  );
+}
+
+/** Compare-page column action: save/tag the candidate for the job being compared. */
+function SaveForJobButton({ s, cid, jobId }: { s: ReturnType<typeof useSavedJobs>; cid: string; jobId: string }) {
+  const e = s.entryOf(cid);
+  if (e?.job_id === jobId) return <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1 text-xs font-semibold text-primary"><BookmarkCheck className="h-3.5 w-3.5" />Saved for this job</span>;
+  return <button onClick={() => void s.saveFor(cid, jobId)} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-semibold hover:border-primary hover:text-primary"><Bookmark className="h-3.5 w-3.5" />{e ? "Move to this job" : "Save for this job"}</button>;
+}
+
 export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign }: { c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined }) {
   const saved = lists.isSaved(c.id), cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
