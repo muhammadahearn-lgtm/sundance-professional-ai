@@ -49,7 +49,7 @@ export function useUnreadCount() {
 }
 
 /** Start or reuse a conversation, then open it. */
-export function MessageButton({ role, candidateId, jobId, label: text, className }: { role: Role; candidateId: string; jobId?: string | null | undefined; label?: string; className?: string }) {
+export function MessageButton({ role, candidateId, jobId, label: text, className, iconOnly }: { role: Role; candidateId: string; jobId?: string | null | undefined; label?: string; className?: string; iconOnly?: boolean }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -61,7 +61,8 @@ export function MessageButton({ role, candidateId, jobId, label: text, className
     qc.invalidateQueries({ queryKey: ["inbox"] });
     nav(role === "recruiter" ? { to: "/recruiter/messages/$conversationId", params: { conversationId: data } } : { to: "/candidate/messages/$conversationId", params: { conversationId: data } });
   }
-  return <button onClick={go} disabled={busy} className={className ?? btn}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}{text ?? (role === "recruiter" ? "Message Candidate" : "Message Recruiter")}</button>;
+  const lbl = text ?? (role === "recruiter" ? "Message Candidate" : "Message Recruiter");
+  return <button type="button" onClick={go} disabled={busy} aria-label={lbl} title={lbl} className={className ?? btn}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}{!iconOnly && lbl}</button>;
 }
 
 /** Candidate "Contact Recruiter": only shown when they applied or the recruiter already wrote. */
