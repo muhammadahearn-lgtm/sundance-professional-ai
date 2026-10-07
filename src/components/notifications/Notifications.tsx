@@ -312,8 +312,8 @@ export function NotificationWidget({ uid, role }: { uid: string; role: Role }) {
   );
 }
 
-type Prefs = Record<NotificationCategory, boolean>;
-const PREF_LABELS: [NotificationCategory, string, string][] = [
+type Prefs = Record<Exclude<NotificationCategory, "company">, boolean>;
+const PREF_LABELS: [keyof Prefs, string, string][] = [
   ["application", "Application Notifications", "Submissions, status changes and saved job updates."],
   ["messaging", "Messaging Notifications", "New messages, replies and attachments."],
   ["pipeline", "Pipeline Notifications", "Stage changes and candidate availability."],
@@ -332,7 +332,7 @@ export function NotificationPreferences({ uid, role }: { uid: string; role: Role
       return (data ?? { application: true, messaging: true, pipeline: true, recommendation: true, career: true, match: true }) as Prefs;
     },
   });
-  async function set(k: NotificationCategory, v: boolean) {
+  async function set(k: keyof Prefs, v: boolean) {
     const next = { ...(q.data as Prefs), [k]: v };
     qc.setQueryData(["notification-prefs", uid], next);
     const { error } = await supabase.from("notification_preferences").upsert({ user_id: uid, ...next, updated_at: new Date().toISOString() });
