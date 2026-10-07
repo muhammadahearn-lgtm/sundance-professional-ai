@@ -1,12 +1,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Briefcase, Building2, Camera, Eye, Globe, ImagePlus, Mail, Pencil, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Building2, Camera, Eye, Globe, ImagePlus, Mail, Pencil, ShieldCheck, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { COMPANY_DESCRIPTION_MAX, validateCompany, validateImageFile } from "@/lib/recruiter-completion";
 import { Chips, Empty, Field, SaveBar, Section, TagInput, card, friendlyError, inputCls } from "@/components/profile/parts";
 import { BrandImg, COMPANY_SIZES, CompletionCard, HIRING_VOLUMES, Item, MultiToggle, ORG_TYPES, REGIONS, WORK_ARRANGEMENTS, initials, orgKey } from "./shared";
+import { canDemote, canRemove, loadPendingRequests, loadTeam, myPendingRequest, removeMember, requestAdminAccess, resolveRequest, setMemberRole, type AdminRequest, type CompanyRole, type TeamMember } from "@/lib/company-team";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrgType = Database["public"]["Enums"]["organization_type"];
@@ -15,17 +16,21 @@ async function load(uid: string) {
   const prof = await supabase.from("recruiter_profiles").select("company_id, company_name, company_website, industry, company_description, organization_type").eq("user_id", uid).maybeSingle();
   if (prof.error) throw prof.error;
   const cid = prof.data?.company_id;
-  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[] };
-  const [c, rec, roles, contact] = await Promise.all([
+  if (!cid) return { r: prof.data, company: null, recruiters: [], roleNames: [] as string[], team: [] as TeamMember[], myRole: null as CompanyRole | null, requests: [] as AdminRequest[], myPending: false };
+  const [c, rec, roles, contact, team] = await Promise.all([
     supabase.from("companies").select("*").eq("company_id", cid).maybeSingle(),
     supabase.rpc("company_recruiters", { _company: cid }),
     supabase.from("roles").select("role_name").order("role_name"),
     supabase.from("company_contacts").select("contact_email").eq("company_id", cid).maybeSingle(),
+    loadTeam(cid),
   ]);
   const err = [c, rec, roles, contact].find((x) => x.error)?.error;
   if (err) throw err;
   const company = c.data ? { ...c.data, contact_email: contact.data?.contact_email ?? "" } : null;
-  return { r: prof.data, company, recruiters: rec.data ?? [], roleNames: (roles.data ?? []).map((x) => x.role_name) };
+  const myRole = team.find((t) => t.user_id === uid)?.role ?? null;
+  const requests = myRole === "admin" ? await loadPendingRequests(cid) : [];
+  const myPending = myRole === "member" ? await myPendingRequest(cid, uid) : false;
+  return { r: prof.data, company, recruiters: rec.data ?? [], roleNames: (roles.data ?? []).map((x) => x.role_name), team, myRole, requests, myPending };
 }
 type Data = Awaited<ReturnType<typeof load>>;
 type Company = NonNullable<Data["company"]>;
@@ -65,7 +70,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   );
 
   const c = data.company;
-  const canEdit = c.created_by === uid;
+  const canEdit = data.myRole === "admin";
   const save = async (patch: CUpdate, ok: string) => {
     const { error: e } = await supabase.from("companies").update(patch).eq("company_id", c.company_id);
     if (e) { toast.error(friendlyError(e, "Failed to save company.")); return false; }
@@ -74,7 +79,12 @@ export function CompanyProfilePage({ account }: { account: Account }) {
     return true;
   };
 
-  if (preview || !canEdit) return <PublicView c={c} recruiters={data.recruiters} onBack={canEdit ? () => setPreview(false) : undefined} />;
+  if (preview || !canEdit) return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <PublicView c={c} recruiters={data.recruiters} onBack={canEdit ? () => setPreview(false) : undefined} />
+      {data.myRole && <TeamSection companyId={c.company_id} uid={uid} team={data.team} requests={data.requests} myRole={data.myRole} myPending={data.myPending} onChanged={refresh} />}
+    </div>
+  );
 
   const uploadBrand = async (file: File, kind: "logo" | "banner") => {
     const bad = validateImageFile(file);
@@ -103,6 +113,8 @@ export function CompanyProfilePage({ account }: { account: Account }) {
           <button onClick={() => { setEdit("info"); document.getElementById("company-info")?.scrollIntoView({ behavior: "smooth" }); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Company</button>
           <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Company</button>
         </Header>
+
+        <TeamSection companyId={c.company_id} uid={uid} team={data.team} requests={data.requests} myRole="admin" myPending={false} onChanged={refresh} />
 
         <Section id="company-info" title="Company Information" icon={<Building2 className="h-4 w-4" />} action={editBtn("info")}>
           {edit === "info" ? (
@@ -338,6 +350,59 @@ function Picker({ busy, onFile, text }: { busy: boolean; onFile: (f: File) => vo
   );
 }
 
+function TeamSection({ companyId, uid, team, requests, myRole, myPending, onChanged }: { companyId: string; uid: string; team: TeamMember[]; requests: AdminRequest[]; myRole: CompanyRole; myPending: boolean; onChanged: () => Promise<unknown> }) {
+  const [busy, setBusy] = useState("");
+  const act = async (id: string, fn: () => Promise<void>, ok: string) => {
+    setBusy(id);
+    try { await fn(); toast.success(ok); await onChanged(); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Something went wrong. Please try again."); }
+    finally { setBusy(""); }
+  };
+  const btn = "inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:border-primary hover:text-primary disabled:opacity-50";
+  return (
+    <Section title="Team & Admins" icon={<Users className="h-4 w-4" />}>
+      {myRole === "admin" && requests.length > 0 && (
+        <div className="mb-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin Requests</p>
+          {requests.map((r) => (
+            <div key={r.request_id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary-soft p-3">
+              <p className="text-sm"><span className="font-semibold">{r.name}</span> requested admin access</p>
+              <div className="flex gap-2">
+                <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "approved", uid), `${r.name} is now an admin`)} className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50">Approve</button>
+                <button disabled={busy === r.request_id} onClick={() => act(r.request_id, () => resolveRequest(r.request_id, "denied", uid), "Request declined")} className={btn}>Decline</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="space-y-2">
+        {team.map((t) => {
+          const [first, ...rest] = t.name.split(" ");
+          return (
+            <div key={t.user_id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border p-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft font-display text-sm font-bold text-primary">{initials(first ?? "", rest.join(" "))}</div>
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold">{t.name}{t.user_id === uid && <span className="font-normal text-muted-foreground"> (you)</span>}</p>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${t.role === "admin" ? "bg-primary-soft text-primary" : "bg-muted text-muted-foreground"}`}>{t.role === "admin" ? "Admin" : "Member"}</span>
+              {myRole === "admin" && t.user_id !== uid && (
+                <div className="flex gap-1.5">
+                  {t.role === "member"
+                    ? <button disabled={busy === t.user_id} onClick={() => act(t.user_id, () => setMemberRole(companyId, t.user_id, "admin"), `${t.name} is now an admin`)} className={btn}><ShieldCheck className="h-3.5 w-3.5" />Make Admin</button>
+                    : canDemote("admin", t, team) && <button disabled={busy === t.user_id} onClick={() => act(t.user_id, () => setMemberRole(companyId, t.user_id, "member"), `${t.name} is now a member`)} className={btn}>Remove Admin</button>}
+                  {canRemove("admin", uid, t, team) && <button disabled={busy === t.user_id} onClick={() => act(t.user_id, () => removeMember(companyId, t.user_id), `${t.name} removed from the team`)} className={btn}>Remove</button>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {myRole === "member" && (myPending
+        ? <p className="mt-4 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">Your admin request is pending review by a company admin.</p>
+        : <button disabled={busy === "req"} onClick={() => act("req", () => requestAdminAccess(companyId, uid), "Request sent to the company admins")} className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary disabled:opacity-50"><ShieldCheck className="h-4 w-4" />Request Admin Access</button>)}
+      <p className="mt-4 text-xs text-muted-foreground">Admins can edit the company profile, branding and team. Members can post jobs for this company.</p>
+    </Section>
+  );
+}
+
 function Directory({ recruiters }: { recruiters: Data["recruiters"] }) {
   if (!recruiters.length) return <Empty>No recruiters connected yet.</Empty>;
   return (
@@ -358,7 +423,7 @@ function PublicView({ c, recruiters, onBack }: { c: Company; recruiters: Data["r
           <span className="font-semibold text-primary">Preview — this is how candidates see your company</span>
           <button onClick={onBack} className="inline-flex items-center gap-1.5 rounded-xl bg-card px-3 py-1.5 font-semibold hover:text-primary"><ArrowLeft className="h-4 w-4" />Back to editing</button>
         </div>
-      ) : <p className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">Only the recruiter who created this company can edit it.</p>}
+      ) : <p className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">Only company admins can edit this profile. You can request admin access in the Team section below.</p>}
       <Header c={c} />
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">About {c.company_name}</h2><p className="mt-3 whitespace-pre-line text-sm">{c.description || "—"}</p>
         {c.contact_email && <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{c.contact_email}</p>}</div>

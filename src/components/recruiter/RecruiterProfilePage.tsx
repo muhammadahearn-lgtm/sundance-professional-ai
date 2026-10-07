@@ -10,25 +10,31 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { computeRecruiterCompletion, RECRUITER_SUMMARY_MAX, validateRecruiter } from "@/lib/recruiter-completion";
 import { Chips, Field, SaveBar, Section, TagInput, card, friendlyError, inputCls } from "@/components/profile/parts";
+import { SearchPicker } from "@/components/taxonomy/SearchPicker";
+import { addCompanyEntry, loadJobCompanies, newCompanyName } from "@/lib/company-add";
+import { isLastAdmin, loadTeam, type TeamMember } from "@/lib/company-team";
 import {
   CANDIDATE_TYPES, CONTACT_METHODS, CompletionCard, EXPERIENCE_LEVELS, INDUSTRIES, Item, MultiToggle, REGIONS, Switch, VISIBILITY, WORK_ARRANGEMENTS, BrandImg, initials,
 } from "./shared";
 
 async function load(uid: string) {
-  const [prof, acct, roles] = await Promise.all([
+  const [prof, acct, roles, companies] = await Promise.all([
     supabase.from("recruiter_profiles").select("*").eq("user_id", uid).maybeSingle(),
     supabase.from("profiles").select("first_name, last_name, email").eq("user_id", uid).maybeSingle(),
     supabase.from("roles").select("role_name").order("role_name"),
+    loadJobCompanies(),
   ]);
   const err = [prof, acct, roles].find((r) => r.error)?.error;
   if (err) throw err;
   let company = null;
+  let team: TeamMember[] = [];
   if (prof.data?.company_id) {
     const c = await supabase.from("companies").select("*").eq("company_id", prof.data.company_id).maybeSingle();
     if (c.error) throw c.error;
     company = c.data;
+    team = await loadTeam(prof.data.company_id).catch(() => []);
   }
-  return { r: prof.data, a: acct.data, company, roleNames: (roles.data ?? []).map((x) => x.role_name) };
+  return { r: prof.data, a: acct.data, company, roleNames: (roles.data ?? []).map((x) => x.role_name), companies, team };
 }
 type Data = Awaited<ReturnType<typeof load>>;
 type R = NonNullable<Data["r"]>;
@@ -99,7 +105,7 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
         </div>
 
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={editBtn("pro")}>
-          {edit === "pro" ? <ProForm uid={uid} r={r} a={a} companyName={companyName} onDone={async (ok) => { if (ok) await qc.invalidateQueries({ queryKey: key }); setEdit(null); }} /> : (
+          {edit === "pro" ? <ProForm uid={uid} r={r} a={a} companyName={companyName} companies={data.companies} team={data.team} onDone={async (ok) => { if (ok) await qc.invalidateQueries({ queryKey: key }); setEdit(null); }} /> : (
             <div className="space-y-5">
               <dl className="grid gap-5 sm:grid-cols-3">
                 <Item k="First Name" v={a.first_name} /><Item k="Last Name" v={a.last_name} /><Item k="Recruiter Title" v={r.title} />
@@ -206,8 +212,9 @@ function ArrayForm<T>({ initial, onSave, onCancel, render }: { initial: T; onSav
   );
 }
 
-function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: NonNullable<Data["a"]>; companyName: string; onDone: (ok: boolean) => void }) {
+function ProForm({ uid, r, a, companyName, companies, team, onDone }: { uid: string; r: R; a: NonNullable<Data["a"]>; companyName: string; companies: { id: string; name: string }[]; team: TeamMember[]; onDone: (ok: boolean) => void }) {
   const [f, setF] = useState({ first_name: a.first_name, last_name: a.last_name, title: r.title, company_name: companyName, location: r.location, years: String(r.years_experience), specialization: r.specialization, summary: r.professional_summary });
+  const [companyId, setCompanyId] = useState(r.company_id ?? "");
   const [loc, setLoc] = useState<LocationParts>({ country: r.location_country, state: r.location_state, city: r.location_city });
   const [errs, setErrs] = useState<ReturnType<typeof validateRecruiter>>({});
   const [saving, setSaving] = useState(false);
@@ -217,11 +224,16 @@ function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: Non
     if (!loc.country || !loc.state.trim() || !loc.city.trim()) (v as Record<string, string>)["location"] = "Country, state / province and city are required.";
     setErrs(v);
     if (Object.keys(v).length) { toast.error("Missing required fields."); return; }
+    if (r.company_id && companyId !== r.company_id && isLastAdmin(team, uid)) {
+      toast.error(`You're the only admin of ${companyName}. Promote another member in Company Profile → Team & Admins before switching companies.`);
+      return;
+    }
+    const picked = companies.find((co) => co.id === companyId);
     setSaving(true);
     const [p1, p2] = await Promise.all([
       supabase.from("profiles").update({ first_name: f.first_name.trim(), last_name: f.last_name.trim() }).eq("user_id", uid),
       supabase.from("recruiter_profiles").update({
-        title: f.title.trim(), company_name: f.company_name.trim(), location: formatLocation(loc), location_country: loc.country, location_state: loc.state, location_city: loc.city, specialization: f.specialization.trim(),
+        title: f.title.trim(), company_name: (picked?.name ?? f.company_name).trim(), company_id: companyId || null, location: formatLocation(loc), location_country: loc.country, location_state: loc.state, location_city: loc.city, specialization: f.specialization.trim(),
         years_experience: Math.max(0, Math.min(60, Number(f.years) || 0)), professional_summary: f.summary,
       }).eq("user_id", uid),
     ]);
@@ -238,7 +250,10 @@ function ProForm({ uid, r, a, companyName, onDone }: { uid: string; r: R; a: Non
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         {inp("first_name", "First Name *")}{inp("last_name", "Last Name *")}
-        {inp("title", "Recruiter Title *", { placeholder: "Senior Technical Recruiter" })}{inp("company_name", "Company *")}
+        {inp("title", "Recruiter Title *", { placeholder: "Senior Technical Recruiter" })}
+        <Field label="Company *" error={errs.company_name} hint={<span className="text-xs text-muted-foreground">Pick your company, or add a new one — duplicates are merged automatically.</span>}>
+          <SearchPicker ariaLabel="Company" options={companies} value={companyId} onChange={setCompanyId} placeholder="Search or add a company" nameFor={newCompanyName} addHint="Existing names are reused automatically (e.g. “Acme Inc.” = “Acme”)." onAdd={addCompanyEntry} />
+        </Field>
         <LocationFields required error={(errs as Record<string, string | undefined>)["location"]} value={loc} onChange={setLoc} />
         {inp("years", "Years Recruiting Experience", { type: "number" })}
         {inp("specialization", "Primary Specialization *", { placeholder: "Software Engineers" })}
