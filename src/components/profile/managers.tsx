@@ -14,7 +14,9 @@ import { addTaxonomyEntry, canAddTaxonomy, KIND_LABEL, newEntryName, type Taxono
 import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, TagInput, type Proficiency } from "./parts";
+import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, type Proficiency } from "./parts";
+import { TagPicker, TextPicker } from "@/components/taxonomy/TextPicker";
+import { newCompanyName } from "@/lib/company-add";
 
 type Exp = Tables<"work_experience">;
 type Edu = Tables<"education">;
@@ -83,6 +85,10 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
     queryKey: ["company-catalog"], staleTime: 3600_000,
     queryFn: async () => (await supabase.from("companies").select("company_name, industry").eq("is_catalog", true).order("company_name")).data ?? [],
   });
+  const techs = useQuery({
+    queryKey: ["technology-names"], staleTime: 3600_000,
+    queryFn: async () => ((await supabase.from("technologies").select("technology_name").order("technology_name")).data ?? []).map((t) => t.technology_name),
+  });
   const pickCompany = (v: string) => {
     const hit = catalog.data?.find((c) => c.company_name.toLowerCase() === v.trim().toLowerCase());
     setF((p) => ({ ...p, company_name: v, industry: hit && !p.industry ? hit.industry : p.industry }));
@@ -108,7 +114,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Company Name *" error={err.company_name}><input className={inputCls} maxLength={150} list="company-catalog" autoComplete="off" value={f.company_name} onChange={(e) => pickCompany(e.target.value)} /><datalist id="company-catalog">{catalog.data?.map((c) => <option key={c.company_name} value={c.company_name} />)}</datalist></Field>
+        <Field label="Company Name *" error={err.company_name}><TextPicker ariaLabel="Company name" options={(catalog.data ?? []).map((c) => c.company_name)} value={f.company_name} onChange={pickCompany} placeholder="Search companies…" nameFor={newCompanyName} addHint="Not listed? Add your employer — it's saved to your profile." /></Field>
         <Field label="Job Title *" error={err.job_title}><input className={inputCls} maxLength={150} value={f.job_title} onChange={(e) => set("job_title", e.target.value)} /></Field>
         <Field label="Industry"><input className={inputCls} maxLength={100} value={f.industry} onChange={(e) => set("industry", e.target.value)} /></Field>
         <Field label="Location"><input className={inputCls} maxLength={100} value={f.location} onChange={(e) => set("location", e.target.value)} /></Field>
@@ -118,7 +124,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.current_position} onChange={(e) => set("current_position", e.target.checked)} className="h-4 w-4 accent-primary" /> I currently work here</label>
       <Field label="Responsibilities"><textarea rows={3} maxLength={2000} className={inputCls} value={f.responsibilities} onChange={(e) => set("responsibilities", e.target.value)} /></Field>
       <Field label="Achievements"><textarea rows={2} maxLength={2000} className={inputCls} value={f.achievements} onChange={(e) => set("achievements", e.target.value)} /></Field>
-      <Field label="Technologies Used"><TagInput value={f.technologies_used} onChange={(v) => set("technologies_used", v)} placeholder="Type and press Enter" /></Field>
+      <Field label="Technologies Used"><TagPicker ariaLabel="Technologies used" options={techs.data ?? []} value={f.technologies_used} onChange={(v) => set("technologies_used", v)} placeholder="Search tools & technologies…" max={60} /></Field>
       <SaveBar saving={saving} onCancel={onCancel} />
     </form>
   );
@@ -177,8 +183,8 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Degree Type *" error={err.degree_type}><SearchPicker ariaLabel="Degree type" options={DEGREE_OPTS} value={f.degree_type} onChange={(v) => setF({ ...f, degree_type: v })} placeholder="Select degree type" />{!item?.degree_type && item?.degree && <p className="mt-1 text-xs text-muted-foreground">Previously entered: {item.degree}</p>}</Field>
-        <Field label="Field Of Study *" error={err.field_of_study}><input list="edu-fields" className={inputCls} maxLength={100} value={f.field_of_study} placeholder="e.g. Computer Science" onChange={(e) => setF({ ...f, field_of_study: e.target.value })} /><datalist id="edu-fields">{fields.map((x) => <option key={x} value={x} />)}</datalist></Field>
-        <Field label="Institution *" error={err.institution_name}><input list="edu-schools" className={inputCls} maxLength={150} value={f.institution_name} placeholder="e.g. University Of New Hampshire" onChange={(e) => setF({ ...f, institution_name: e.target.value })} /><datalist id="edu-schools">{schools.map((x) => <option key={x} value={x} />)}</datalist></Field>
+        <Field label="Field Of Study *" error={err.field_of_study}><TextPicker ariaLabel="Field of study" options={fields} value={f.field_of_study} max={100} placeholder="e.g. Computer Science" onChange={(v) => setF({ ...f, field_of_study: v })} addHint="Not listed? Add your major." /></Field>
+        <Field label="Institution *" error={err.institution_name}><TextPicker ariaLabel="Institution" options={schools} value={f.institution_name} placeholder="e.g. University Of New Hampshire" onChange={(v) => setF({ ...f, institution_name: v })} addHint="Not listed? Add your school." /></Field>
         <Field label="Graduation Year" error={err.graduation_year}><input inputMode="numeric" maxLength={4} placeholder="2024" className={inputCls} value={f.graduation_year} onChange={(e) => setF({ ...f, graduation_year: e.target.value.replace(/\D/g, "").slice(0, 4) })} /></Field>
       </div>
       <SaveBar saving={saving} onCancel={onCancel} />

@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+import { TagPicker } from "@/components/taxonomy/TextPicker";
+import { addRoleEntry, newRoleName } from "@/lib/role-add";
 import { LocationFields } from "@/components/location/LocationFields";
 import { formatLocation } from "@/lib/location";
 import { CURRENCIES, digitsOnly, parseSalaryInput } from "@/lib/salary";
@@ -92,6 +95,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
   const [method, setMethod] = useState<"choose" | "form">("choose");
   const [resume, setResume] = useState<{ p: ParsedResume; m: MatchedResume } | null>(null);
   const catalogs = useResumeCatalogs();
+  const roleNames = useQuery({ queryKey: ["role-names"], staleTime: 3600_000, queryFn: async () => ((await supabase.from("roles").select("role_name").eq("is_active", true).order("sort_order")).data ?? []).map((r) => r.role_name) });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
 
   function applyResume(p: ParsedResume, m: MatchedResume) {
@@ -187,7 +191,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
           <Field label="Tools & Technologies"><MultiSelect value={f.tools} onChange={(v) => set("tools", v)} suggestions={["AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "Airflow"]} /></Field>
         </>)}
         {step === 3 && (<>
-          <Field label="Target Roles"><MultiSelect value={f.target_roles} onChange={(v) => set("target_roles", v)} suggestions={["Data Engineer", "ML Engineer", "Software Engineer", "Data Scientist", "AI Engineer"]} /></Field>
+          <Field label="Target Roles"><TagPicker ariaLabel="Target roles" options={roleNames.data ?? []} value={f.target_roles} onChange={(v) => set("target_roles", v)} placeholder="Search 120+ roles…" nameFor={newRoleName} onAdd={async (n) => (await addRoleEntry(n)).name} addHint="Seniority goes in your level, so “Senior” is left out." /></Field>
           <Field label="Desired Minimum Salary"><div className="flex gap-2"><Input type="text" inputMode="numeric" pattern="[0-9]*" value={f.salary_amount} onChange={(e) => set("salary_amount", digitsOnly(e.target.value))} placeholder="60000" /><select aria-label="Currency" className="h-10 w-28 rounded-md border border-input bg-background px-3 text-sm" value={f.salary_currency} onChange={(e) => set("salary_currency", e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div></Field>
           <Field label="Availability"><Choice value={f.availability} onChange={(v) => set("availability", v)} options={[["active", "Actively Looking"], ["open", "Open To Opportunities"], ["not_looking", "Not Looking"]] as const} /></Field>
           <Field label="Preferred Work Arrangement"><Choice value={f.work_arrangement} onChange={(v) => set("work_arrangement", v)} options={[["remote", "Remote"], ["hybrid", "Hybrid"], ["onsite", "On-Site"]] as const} /></Field>
