@@ -722,13 +722,13 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
 
 const SAL_MAX = 400000;
 function SalaryRange({ smin, smax, onCommit }: { smin: number; smax: number; onCommit: (smin: number, smax: number) => void }) {
-  const [v, setV] = useState<number[]>([smin, smax || SAL_MAX]);
+  const [v, setV] = useState<[number, number]>([smin, smax || SAL_MAX]);
   useEffect(() => { setV([smin, smax || SAL_MAX]); }, [smin, smax]);
   const fmt = (n: number) => `$${(n / 1000).toFixed(0)}k`;
   return (
     <div className="mt-4">
-      <Slider min={0} max={SAL_MAX} step={5000} minStepsBetweenThumbs={1} value={v} onValueChange={setV}
-        onValueCommit={(x) => onCommit(x[0], x[1] >= SAL_MAX ? 0 : x[1])} aria-label="Salary range" />
+      <Slider min={0} max={SAL_MAX} step={5000} minStepsBetweenThumbs={1} value={v} onValueChange={(x) => setV([x[0] ?? 0, x[1] ?? SAL_MAX])}
+        onValueCommit={(x) => onCommit(x[0] ?? 0, (x[1] ?? SAL_MAX) >= SAL_MAX ? 0 : (x[1] ?? 0))} aria-label="Salary range" />
       <p className="mt-2 text-xs text-muted-foreground">{fmt(v[0])} – {v[1] >= SAL_MAX ? "any" : fmt(v[1])}</p>
     </div>
   );
