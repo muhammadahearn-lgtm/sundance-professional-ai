@@ -567,17 +567,18 @@ export function RecruiterCandidatePage({ uid, id, jobId }: { uid: string; id: st
   if (q.error || tax.error) return <ErrorBox msg={friendlyError(q.error ?? tax.error, "Unable to load this candidate.")} retry={() => { q.refetch(); tax.refetch(); }} />;
   if (!q.data || !tax.data) return <div className={`${card} mx-auto max-w-xl p-10 text-center`}><p className="font-display text-lg font-bold">Profile not available</p><p className="mt-1 text-sm text-muted-foreground">This candidate is private or no longer on Sundance Professionals.</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Back to search</Link></div>;
   const cmp = lists.isCompared(id);
+  const cd = q.data, tx = tax.data;
   return (
     <div className="space-y-6 pb-16">
       <LensState jobId={jobId}>{(lensJob, setLensJob) => <>
       <button type="button" onClick={() => history.back()} className="text-sm text-muted-foreground hover:text-primary">← Back to search</button>
-      <ProfileHeader d={q.data} actions={<>
-        <InviteToApplyButton uid={uid} d={q.data} t={tax.data} jobId={lensJob} className={primaryBtn} />
+      <ProfileHeader d={cd} actions={<>
+        <InviteToApplyButton uid={uid} d={cd} t={tx} jobId={lensJob} className={primaryBtn} />
         <MessageButton role="recruiter" candidateId={id} jobId={lensJob || undefined} className={btn} />
-        <SaveToJobControl uid={uid} candidateId={id} name={q.data.name ?? "candidate"} preferJobId={lensJob || jobId} />
+        <SaveToJobControl uid={uid} candidateId={id} name={cd.name ?? "candidate"} preferJobId={lensJob || jobId} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
         <ReportButton type="user" targetId={id} /></>} />
-      <CandidateProfileBody d={q.data} t={tax.data} aside={<JobMatchLens uid={uid} d={q.data} t={tax.data} jobId={lensJob} onJob={setLensJob} />} />
+      <CandidateProfileBody d={cd} t={tx} aside={<JobMatchLens uid={uid} d={cd} t={tx} jobId={lensJob} onJob={setLensJob} />} />
       </>}</LensState>
     </div>
   );
