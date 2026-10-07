@@ -28,6 +28,26 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  nitro: {
+    hooks: {
+      // Final server bundle is produced by nitro, so patch its output files after compiling.
+      compiled: async (nitro: { options: { output: { serverDir: string } } }) => {
+        const fs = await import("node:fs/promises");
+        const walk = async (dir: string): Promise<void> => {
+          for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+            const f = path.join(dir, e.name);
+            if (e.isDirectory()) await walk(f);
+            else if (/\.m?js$/.test(e.name)) {
+              const c = await fs.readFile(f, "utf8");
+              if (/createRequire|\be\(import\.meta\.url\)/.test(c) && c.includes("(import.meta.url)"))
+                await fs.writeFile(f, c.replace(/\(import\.meta\.url\)/g, '(import.meta.url||"file:///")'));
+            }
+          }
+        };
+        await walk(nitro.options.output.serverDir);
+      },
+    },
+  },
   vite: {
     plugins: [safeImportMetaUrl],
     resolve: {
