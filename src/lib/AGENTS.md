@@ -7,3 +7,4 @@
 - Interviews: recruiter writes own, candidate reads own; scorecards recruiter-only; rules: `interview-rules.ts`. Why: private.
 - Confidential jobs masked in candidate loaders via `confidential.ts`. Why: one masking path.
 - Resume auto-fill: browser extracts text (`document-text-extractor.ts`), server fn `parseResume` asks AI with a strict schema, `sanitizeParsedResume` cleans output; never writes to DB. Why: candidate reviews before save.
+- Resume matcher (`resume-taxonomy-matcher.ts`) maps parsed values to catalogs client-side; unmatched items go through normal governed add. Why: no AI-created taxonomy.
