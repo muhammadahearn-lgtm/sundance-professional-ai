@@ -116,7 +116,7 @@ function ReqGroup({ title, rows, names, tone, mine }: { title: string; rows: Req
   const hit = mine ? list.filter(has).length : 0;
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}{mine && <span className={hit ? "text-primary" : ""}> · {hit}/{list.length} matched</span>}</p>
+      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {list.slice(0, 3).map((r) => mine ? (has(r)
           ? <span key={r.lookup_id} title="You have this skill" className="rounded-full border border-primary bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">✓ {nm(r.lookup_id)}</span>
