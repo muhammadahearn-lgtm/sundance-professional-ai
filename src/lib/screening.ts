@@ -6,10 +6,26 @@ export const MAX_QUESTIONS = 8;
 export const QUESTION_MAX = 300;
 export const ANSWER_MAX = 1000;
 
-export const PRESETS: { key: string; label: string; q: Omit<ScreeningQ, "id"> }[] = [
-  { key: "visa", label: "Visa sponsorship", q: { text: "Do you require visa sponsorship to work in this location?", type: "yes_no", options: [], ideal: "No", required: true } },
-  { key: "arrangement", label: "Work arrangement", q: { text: "Are you comfortable with this role's remote / hybrid / on-site policy?", type: "yes_no", options: [], ideal: "Yes", required: true } },
-  { key: "notice", label: "Start date", q: { text: "What is your availability to start?", type: "choice", options: ["Immediately", "2 weeks", "1 month", "2+ months"], ideal: "", required: true } },
+export type PresetGroup = "logistics" | "experience" | "fit";
+export const PRESET_GROUPS: { key: PresetGroup; label: string }[] = [
+  { key: "logistics", label: "Logistics" },
+  { key: "experience", label: "Experience" },
+  { key: "fit", label: "Pay & Communication" },
+];
+const yn = (text: string, ideal: string, required = true): Omit<ScreeningQ, "id"> => ({ text, type: "yes_no", options: [], ideal, required });
+
+export const PRESETS: { key: string; group: PresetGroup; label: string; q: Omit<ScreeningQ, "id"> }[] = [
+  { key: "visa", group: "logistics", label: "Visa sponsorship", q: yn("Do you require visa sponsorship now or in the future to work in this location?", "No") },
+  { key: "authorization", group: "logistics", label: "Work authorization", q: yn("Are you legally authorized to work in this role's location?", "Yes") },
+  { key: "arrangement", group: "logistics", label: "Work arrangement", q: yn("Are you comfortable with this role's remote / hybrid / on-site policy?", "Yes") },
+  { key: "notice", group: "logistics", label: "Start date", q: { text: "What is your availability to start?", type: "choice", options: ["Immediately", "2 weeks", "1 month", "2+ months"], ideal: "", required: true } },
+  { key: "timezone", group: "logistics", label: "Timezone overlap", q: yn("Can you work at least 4 hours a day overlapping with our core timezone?", "Yes") },
+  { key: "years", group: "experience", label: "Years of experience", q: { text: "How many years of professional experience do you have in this role's core area?", type: "choice", options: ["1–2 years", "3–5 years", "6–8 years", "8+ years"], ideal: "", required: true } },
+  { key: "portfolio", group: "experience", label: "Portfolio / GitHub", q: { text: "Share a link to your GitHub, portfolio, or recent work.", type: "text", options: [], ideal: "", required: false } },
+  { key: "scale", group: "experience", label: "Production systems", q: yn("Have you built and operated production systems at scale?", "Yes", false) },
+  { key: "leadership", group: "experience", label: "Mentoring / leadership", q: yn("Have you mentored teammates or led technical initiatives?", "Yes", false) },
+  { key: "salary", group: "fit", label: "Salary alignment", q: yn("Does the posted salary range meet your expectations?", "Yes") },
+  { key: "english", group: "fit", label: "Business English", q: yn("Are you comfortable communicating daily in professional English, written and spoken?", "Yes") },
 ];
 
 export const newId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
