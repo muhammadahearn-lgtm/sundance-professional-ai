@@ -41,13 +41,25 @@ const TONE = {
   muted: { text: "text-muted-foreground", bg: "bg-muted", ring: "border-border", bar: "bg-muted-foreground" },
 };
 
-const solidTone = (s: number) => s >= 90 ? "bg-success text-primary-foreground border-success" : s >= 75 ? "bg-primary text-primary-foreground border-primary" : s >= 60 ? "bg-warning text-primary-foreground border-warning" : "bg-card text-foreground border-border";
+/** Soft category tints instead of solid fills: quiet, readable, same language as the skill chips. */
+const softTone = (s: number) => s >= 90 ? "border-success/30 bg-success/10 text-success" : s >= 75 ? "border-primary/30 bg-primary-soft text-primary" : s >= 60 ? "border-warning/30 bg-warning/10 text-warning" : "border-border bg-muted text-muted-foreground";
 
-/** Compact solid match badge; click opens a 5-factor breakdown popover (mirrors recruiter search). */
+/** 16px dial that fills with the match percentage — the "calculated score" cue. */
+function ScoreRing({ s }: { s: number }) {
+  const r = 6, c = 2 * Math.PI * r, pct = Math.min(100, Math.max(0, s));
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 shrink-0 -rotate-90">
+      <circle cx="8" cy="8" r={r} fill="none" stroke="currentColor" strokeOpacity="0.22" strokeWidth="2.5" />
+      <circle cx="8" cy="8" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
+    </svg>
+  );
+}
+
+/** Compact soft-tinted match badge with a score ring; click opens a 5-factor breakdown popover (mirrors recruiter search). */
 function MatchBadgePopover({ score, row }: { score: number | undefined; row: ScoreRow | undefined }) {
   if (score == null) return <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground" title="Complete your profile to see how you match"><Sparkles className="h-3.5 w-3.5" />No score yet</span>;
   const s = Math.round(score), tier = matchTier(s);
-  const pill = <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-bold shadow-md ${solidTone(s)}`}><Sparkles className="h-3.5 w-3.5" />{s}% Match</span>;
+  const pill = <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums ${softTone(s)}`}><ScoreRing s={s} />{s}% Match</span>;
   if (!row) return pill;
   const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Tools & Tech", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
   return (
@@ -181,7 +193,7 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
-          {salary && <span className="whitespace-nowrap rounded-full bg-success/10 px-2.5 py-1 text-xs font-bold text-success">{salary}</span>}
+          {salary && <span className="whitespace-nowrap rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-success">{salary}</span>}
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
