@@ -129,11 +129,11 @@ function Donut({ data }: { data: { name: string; value: number }[] }) {
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <div className="relative h-[170px] w-[170px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={shown.length > 1 ? 3 : 0} cornerRadius={6} stroke="none">{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart>
+            <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={shown.length > 1 ? 3 : 0} cornerRadius={shown.length > 1 ? 6 : 0} stroke="none">{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><span className="text-3xl font-extrabold tracking-tight">{total}</span><span className="text-[11px] font-medium text-muted-foreground">Total</span></div>
         </div>
-        <ul className="w-full space-y-2 text-sm">{shown.map((d, i) => <li key={d.name} className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length], boxShadow: `0 0 8px ${COLORS[i % COLORS.length]}` }} /><span className="truncate">{d.name}</span><b className="ml-auto tabular-nums">{d.value}</b><span className="w-10 text-right text-[11px] text-muted-foreground">{Math.round((d.value / total) * 100)}%</span></li>)}</ul>
+        <ul className="w-full min-w-0 space-y-2 text-sm">{shown.map((d, i) => <li key={d.name} className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length], boxShadow: `0 0 8px ${COLORS[i % COLORS.length]}` }} /><span className="truncate">{d.name}</span><b className="ml-auto tabular-nums">{d.value}</b><span className="w-10 text-right text-[11px] text-muted-foreground">{Math.round((d.value / total) * 100)}%</span></li>)}</ul>
       </div>
       <div className="flex h-2 overflow-hidden rounded-full bg-muted">{shown.map((d, i) => <div key={d.name} style={{ width: `${(d.value / total) * 100}%`, background: COLORS[i % COLORS.length] }} />)}</div>
     </div>
