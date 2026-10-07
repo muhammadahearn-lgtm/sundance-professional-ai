@@ -151,7 +151,7 @@ export async function duplicateJob(uid: string, id: string) {
   const d = await loadJob(id);
   if (!d) throw new Error("Job not found");
   const f = toForm(d);
-  return saveJob(uid, { ...f, job_title: `${f.job_title} (Copy)` }, { status: "draft" });
+  return saveJob(uid, { ...f, job_title: `${f.job_title} (Copy)`, screening: f.screening.map((q) => ({ ...q, id: crypto.randomUUID() })) }, { status: "draft" });
 }
 
 export async function deleteJob(id: string) {
