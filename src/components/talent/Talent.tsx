@@ -542,7 +542,6 @@ export function CompareCandidatesPage({ uid }: { uid: string }) {
   const lists = useCandidateLists(uid);
   useAutoRecalc();
   const ctx = useJobContext(uid);
-  const savedJobs = useSavedJobs(uid);
   const [co, setCo] = useState("");
   const [jobSel, setJobSel] = useState("");
   const selJob = ctx.data?.jobs.find((j) => j.job_id === jobSel);

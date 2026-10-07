@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useCareer } from "@/components/career/Career";
 import { MatchBadge, useAutoRecalc } from "@/components/match/Match";
 import { useJobLists } from "@/components/candidate-jobs/useJobLists";
-import { useCandidateLists } from "@/components/talent/Talent";
+import { useCandidateLists, SaveToJobControl } from "@/components/talent/Talent";
 import { ContactRecruiterButton, MessageButton } from "@/components/messages/Messages";
 import { PageHeader } from "@/components/app/AppShell";
 import { loadCandidateRecs, loadRecruiterRecs, type RecruiterRecs } from "@/lib/recommend-data";
