@@ -126,10 +126,10 @@ function Donut({ data }: { data: { name: string; value: number }[] }) {
   const total = shown.reduce((s, d) => s + d.value, 0) || 1;
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-4 sm:flex-row">
+      <div className="flex flex-col items-center gap-4 2xl:flex-row">
         <div className="relative h-[170px] w-[170px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={shown.length > 1 ? 3 : 0} cornerRadius={shown.length > 1 ? 6 : 0} stroke="none">{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart>
+            <PieChart><Pie data={shown} dataKey="value" nameKey="name" innerRadius={58} outerRadius={78} paddingAngle={shown.length > 1 ? 3 : 0} cornerRadius={shown.length > 1 ? 6 : 0} stroke="none" isAnimationActive={false}>{shown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tooltipStyle} /></PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><span className="text-3xl font-extrabold tracking-tight">{total}</span><span className="text-[11px] font-medium text-muted-foreground">Total</span></div>
         </div>
