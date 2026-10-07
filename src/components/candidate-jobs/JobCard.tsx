@@ -193,7 +193,7 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <MatchBadgePopover score={score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined)} row={scoreRow} />
-          {salary && <span className="whitespace-nowrap rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-success">{salary}</span>}
+          {salary && <span className="whitespace-nowrap rounded-full border border-border bg-muted/60 px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground/80">{salary}</span>}
         </div>
       </div>
       <MatchInsights row={scoreRow} open={insightsOpen} locAlign={locAlign} eduAlign={eduAlign} />
