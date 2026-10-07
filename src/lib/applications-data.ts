@@ -46,6 +46,33 @@ export async function withdrawApplication(id: string) {
   if (error) throw error;
 }
 
+/** Upload a resume from the Apply dialog and attach it to the candidate profile. */
+export async function uploadResumeForApply(uid: string, file: File, oldPath: string | null) {
+  const safe = file.name.replace(/[^\w.-]+/g, "_").slice(-80);
+  const path = `${uid}/${Date.now()}-${safe}`;
+  const { error } = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || "application/octet-stream" });
+  if (error) throw error;
+  const { error: e2 } = await supabase.from("candidate_profiles").update({ resume_path: path, resume_file_name: file.name, resume_uploaded_at: new Date().toISOString() }).eq("user_id", uid);
+  if (e2) { await supabase.storage.from("resumes").remove([path]); throw e2; }
+  if (oldPath) await supabase.storage.from("resumes").remove([oldPath]);
+  return path;
+}
+
+/** Send the optional intro note as the first message to the hiring team. */
+export async function sendIntroNote(uid: string, jobId: string, body: string) {
+  const { data, error } = await supabase.rpc("start_conversation", { _candidate: uid, _job: jobId });
+  if (error || !data) throw error ?? new Error("Unable to start conversation");
+  const { error: e2 } = await supabase.from("messages").insert({ conversation_id: data, sender_id: uid, sender_type: "candidate", message_body: body });
+  if (e2) throw e2;
+}
+
+/** Pending offers for the signed-in candidate (application ids). */
+export async function myPendingOfferApps(uid: string) {
+  const { data, error } = await supabase.from("job_offers").select("application_id").eq("candidate_id", uid).eq("status", "pending");
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.application_id));
+}
+
 /** Recruiter: applications to own jobs, with candidate summary data. */
 export async function listJobApplications(uid: string) {
   const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, candidate_id, job_id, jobs!inner(job_id, job_title, location, role_id, recruiter_id, company_id, companies(company_name))`).eq("jobs.recruiter_id", uid).order("application_date", { ascending: false });

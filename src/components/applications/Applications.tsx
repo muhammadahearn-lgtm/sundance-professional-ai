@@ -7,10 +7,16 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, FileText, GitBranch, MapPin, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Send, Sparkles, Upload, XCircle } from "lucide-react";
+import { loadTaxonomy } from "@/lib/jobs-data";
+import { loadCandidateJob } from "@/lib/job-search-data";
+import { listMyInterviews } from "@/lib/interviews-data";
+import { CompanyLogo } from "@/components/candidate-jobs/JobCard";
+import { HUB_TABS, INTRO_NOTE_MAX, hubCounts, matchesTab, nextStep, type HubTab } from "@/lib/application-hub";
+import { validateResumeFile } from "@/lib/profile-completion";
 import { loadScreeningQuestions, saveScreeningAnswers, loadScreeningAnswers } from "@/lib/applications-data";
 import { answerFit, optionsFor, validateAnswers, type ScreeningQ } from "@/lib/screening";
-import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, setApplicationStatus, withdrawApplication } from "@/lib/applications-data";
+import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, myPendingOfferApps, sendIntroNote, setApplicationStatus, uploadResumeForApply, withdrawApplication } from "@/lib/applications-data";
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
 import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components/profile/parts";
@@ -43,6 +49,17 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
   const sq = useQuery({ queryKey: ["screening", jobId], queryFn: () => loadScreeningQuestions(jobId), enabled: open });
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showErr, setShowErr] = useState(false);
+  const [note, setNote] = useState("");
+  const [uploading, setUploading] = useState(false);
+  async function attach(file: File | undefined) {
+    if (!file) return;
+    const bad = validateResumeFile(file);
+    if (bad) { toast.error(bad); return; }
+    setUploading(true);
+    try { await uploadResumeForApply(uid, file, me.data?.profile?.resume_path ?? null); await me.refetch(); setMode("resume"); toast.success("Resume attached"); }
+    catch (e) { toast.error(friendlyError(e, "Resume upload failed. Please try again.")); }
+    setUploading(false);
+  }
   const ansErrs = validateAnswers(sq.data ?? [], answers);
   const rule = canApply(jobStatus, !!existing.data);
 
@@ -52,6 +69,7 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
     setBusy(true);
     try { const a = await applyToJob(uid, jobId);
       try { await saveScreeningAnswers(a.application_id, answers); } catch { toast.error("Application sent, but your screening answers couldn't be saved."); }
+      if (note.trim()) { try { await sendIntroNote(uid, jobId, note.trim()); } catch { toast.error("Application sent, but your note couldn't be delivered."); } }
       setDone({ date: a.application_date }); toast.success("Application Submitted"); qc.invalidateQueries({ queryKey: ["my-applications"] }); }
     catch (e) { toast.error(e instanceof Error && e.message === "Already Applied" ? "Already Applied" : friendlyError(e, e instanceof Error ? e.message : "Application Failed")); }
     setBusy(false);
@@ -83,7 +101,15 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
                       <p className="mt-2"><strong>Resume:</strong> {p.resume_file_name ?? "None uploaded"}</p></div>
                     <fieldset><legend className="mb-2 font-semibold">Submit using</legend>
                       <label className="flex items-center gap-2"><input type="radio" checked={mode === "profile"} onChange={() => setMode("profile")} />Structured Profile</label>
-                      <label className="mt-1 flex items-center gap-2"><input type="radio" checked={mode === "resume"} disabled={!p.resume_path} onChange={() => setMode("resume")} />Structured Profile + Resume{!p.resume_path && <span className="text-xs text-muted-foreground">(upload a resume first)</span>}</label></fieldset>
+                      <label className="mt-1 flex items-center gap-2"><input type="radio" checked={mode === "resume"} disabled={!p.resume_path} onChange={() => setMode("resume")} />Structured Profile + Resume</label>
+                      <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void attach(e.dataTransfer.files[0]); }} className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-primary/40 bg-primary-soft/40 p-4 transition-colors hover:bg-primary-soft">
+                        <Upload className="h-5 w-5 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1"><span className="block font-semibold">{uploading ? "Uploading…" : p.resume_path ? "Replace your resume" : "Attach a resume"}</span><span className="block text-xs text-muted-foreground">{p.resume_path ? `Current: ${p.resume_file_name}` : "Drop a PDF or Word file here, or click to choose. It's saved to your profile too."}</span></span>
+                        <input type="file" accept=".pdf,.doc,.docx" className="sr-only" disabled={uploading} onChange={(e) => { void attach(e.target.files?.[0]); e.target.value = ""; }} />
+                      </label></fieldset>
+                    <div><label htmlFor="intro-note" className="font-semibold">Note to the hiring team <span className="font-normal text-muted-foreground">(optional)</span></label>
+                      <textarea id="intro-note" value={note} maxLength={INTRO_NOTE_MAX} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Why this role excites you, in a sentence or two." className={`${inputCls} mt-1.5 resize-none`} />
+                      <p className="mt-1 text-right text-xs text-muted-foreground">{note.length}/{INTRO_NOTE_MAX} · sent as your first message</p></div>
                     {!!sq.data?.length && <ScreeningForm qs={sq.data} answers={answers} setAnswers={setAnswers} errs={showErr ? ansErrs : {}} />}
                     <label className="flex items-start gap-2"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} className="mt-0.5" />I confirm my profile information is accurate and I want to apply.</label>
                   </div>
@@ -100,28 +126,77 @@ export function ApplyButton({ uid, jobId, jobStatus, jobTitle, company }: { uid:
 
 export function CandidateApplicationsPage({ uid }: { uid: string }) {
   const q = useQuery({ queryKey: ["my-applications", uid], queryFn: () => listMyApplications(uid) });
-  const [co, setCo] = useState(""), [jt, setJt] = useState("");
+  const ivs = useQuery({ queryKey: ["my-interviews-hub", uid], queryFn: () => listMyInterviews(uid, "candidate") });
+  const offers = useQuery({ queryKey: ["my-pending-offers", uid], queryFn: () => myPendingOfferApps(uid) });
+  const [tab, setTab] = useState<HubTab>("all");
+  const [co, setCo] = useState("");
   const all = q.data ?? [];
+  const counts = hubCounts(all.map((a) => a.application_status));
   const companies = [...new Set(all.map((a) => a.jobs?.companies?.company_name).filter((x): x is string => !!x))].sort();
-  const titles = [...new Set(all.filter((a) => !co || a.jobs?.companies?.company_name === co).map((a) => a.jobs?.job_title).filter((x): x is string => !!x))].sort();
-  const rows = all.filter((a) => (!co || a.jobs?.companies?.company_name === co) && (!jt || a.jobs?.job_title === jt));
+  const rows = all.filter((a) => matchesTab(a.application_status, tab) && (!co || a.jobs?.companies?.company_name === co));
+  const now = Date.now();
+  const nextIv = (appId: string) => (ivs.data ?? []).find((i) => i.application_id === appId && new Date(i.scheduled_at).getTime() > now);
+  const stats = [
+    { k: "In Review", v: counts.active, icon: Clock, tone: "text-primary bg-primary-soft" },
+    { k: "Interviewing", v: counts.interviewing, icon: CalendarDays, tone: "text-warning bg-warning/15" },
+    { k: "Offers", v: counts.offers, icon: Sparkles, tone: "text-success bg-success/15" },
+    { k: "Total Submitted", v: counts.all, icon: Send, tone: "text-foreground bg-muted" },
+  ];
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Track every application in one place.</p></div>
-        {all.length > 0 && <div className="flex flex-wrap gap-2">
-          <select aria-label="Filter by company" value={co} onChange={(e) => { setCo(e.target.value); setJt(""); }} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All companies</option>{companies.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-          <select aria-label="Filter by job" value={jt} onChange={(e) => setJt(e.target.value)} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All jobs</option>{titles.map((t) => <option key={t} value={t}>{t}</option>)}</select>
-        </div>}</div>
-      {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading ? <div className={`${card} h-48 animate-pulse`} />
-        : !all.length ? <div className={`${card} p-10 text-center`}><FileText className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-display text-lg font-bold">No applications yet</p><Link to="/candidate/jobs" className={`${primaryBtn} mt-4`}>Browse jobs</Link></div>
-        : !rows.length ? <div className={`${card} p-8 text-center text-sm text-muted-foreground`}>No applications match these filters. <button onClick={() => { setCo(""); setJt(""); }} className="font-semibold text-primary">Clear filters</button></div>
-        : <div className={`${card} divide-y divide-border`}>{rows.map((a) => (
-            <div key={a.application_id} className="flex flex-wrap items-center gap-4 p-5">
-              <div className="min-w-0 flex-1"><p className="font-display font-bold">{a.jobs ? <Link to="/candidate/jobs/$id" params={{ id: a.job_id }} className="hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> : "Job removed"}</p><p className="text-sm text-muted-foreground">{a.jobs?.companies?.company_name}</p>
-                <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.jobs?.location}</span>{a.jobs && <span>{lbl(ARRANGEMENT, a.jobs.work_arrangement)}</span>}<span>Applied {fmt(a.application_date)}</span></p></div>
-              <AppStatusBadge s={a.application_status} />
-              <div className="flex gap-2"><Link to="/candidate/applications/$id" params={{ id: a.application_id }} className={btn}>View Details</Link>{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}</div>
-            </div>))}</div>}
+      <div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Every role you've applied to, and what happens next.</p></div>
+      {all.length > 0 && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{stats.map((s) => (
+        <div key={s.k} className={`${card} flex items-center gap-3 p-4`}><span className={`grid h-10 w-10 place-items-center rounded-xl ${s.tone}`}><s.icon className="h-5 w-5" /></span><div><p className="font-display text-2xl font-extrabold leading-none">{s.v}</p><p className="mt-1 text-xs text-muted-foreground">{s.k}</p></div></div>))}</div>}
+      {all.length > 0 && <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Filter applications" className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-card p-1">{HUB_TABS.map((t) => (
+          <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)} className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors ${tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{t.label}<span className="ml-1.5 text-xs opacity-75">{counts[t.key]}</span></button>))}</div>
+        {companies.length > 1 && <select aria-label="Filter by company" value={co} onChange={(e) => setCo(e.target.value)} className="rounded-xl border border-input bg-background px-3 py-2 text-sm"><option value="">All companies</option>{companies.map((c) => <option key={c} value={c}>{c}</option>)}</select>}
+      </div>}
+      {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading ? <div className="grid gap-3">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-28 animate-pulse`} />)}</div>
+        : !all.length ? <div className={`${card} p-10 text-center`}><FileText className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-display text-lg font-bold">No applications yet</p><p className="mt-1 text-sm text-muted-foreground">Find a role that fits and apply in a couple of clicks.</p><Link to="/candidate/jobs" className={`${primaryBtn} mt-4`}>Browse jobs</Link></div>
+        : !rows.length ? <div className={`${card} p-8 text-center text-sm text-muted-foreground`}>Nothing here yet. <button onClick={() => { setTab("all"); setCo(""); }} className="font-semibold text-primary">Show all applications</button></div>
+        : <div className="grid gap-3">{rows.map((a) => {
+            const iv = nextIv(a.application_id), offer = offers.data?.has(a.application_id) ?? false;
+            const step = nextStep(a.application_status, !!iv, offer);
+            return (
+              <div key={a.application_id} className={`${card} flex flex-wrap items-center gap-4 p-5 transition-shadow hover:shadow-md ${offer ? "border-success/40" : ""}`}>
+                <CompanyLogo path={a.jobs?.companies?.logo_url} size="h-12 w-12" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2"><Link to="/candidate/applications/$id" params={{ id: a.application_id }} className="font-display font-bold hover:text-primary">{a.jobs?.job_title ?? "Job removed"}</Link><AppStatusBadge s={a.application_status} /></div>
+                  <p className="text-sm text-muted-foreground">{a.jobs?.companies?.company_name}</p>
+                  <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">{a.jobs?.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{a.jobs.location}</span>}{a.jobs && <span>{lbl(ARRANGEMENT, a.jobs.work_arrangement)}</span>}<span>Applied {fmt(a.application_date)}</span></p>
+                  <p className={`mt-2 inline-flex items-center gap-1.5 text-xs font-semibold ${offer ? "text-success" : iv ? "text-warning" : "text-primary"}`}><Sparkles className="h-3.5 w-3.5" />{step}{iv && ` · ${new Date(iv.scheduled_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {offer ? <Link to="/candidate/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>Review Offer</Link>
+                    : <Link to="/candidate/applications/$id" params={{ id: a.application_id }} className={btn}>View Timeline</Link>}
+                  {a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}
+                </div>
+              </div>);
+          })}</div>}
+    </div>
+  );
+}
+
+function PrepCard({ jobId }: { jobId: string }) {
+  const tax = useQuery({ queryKey: ["taxonomy"], queryFn: loadTaxonomy, staleTime: 5 * 60_000 });
+  const q = useQuery({ queryKey: ["candidate-job", jobId], queryFn: () => loadCandidateJob(jobId) });
+  if (!q.data || !tax.data) return null;
+  const name = (ids: { id: string }[], opts: { id: string; name: string }[]) => ids.map((x) => opts.find((o) => o.id === x.id)?.name).filter(Boolean).slice(0, 8) as string[];
+  const stack = [...name(q.data.languages, tax.data.languages), ...name(q.data.skills, tax.data.skills), ...name(q.data.technologies, tax.data.technologies)].slice(0, 12);
+  const c = q.data.company;
+  return (
+    <div className={`${card} relative overflow-hidden p-6`}>
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Lightbulb className="h-5 w-5 text-primary" />Interview Prep</h2>
+      <p className="mt-1 text-sm text-muted-foreground">A quick refresher on what this team cares about.</p>
+      {stack.length > 0 && <><p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Core stack to brush up on</p><div className="mt-2 flex flex-wrap gap-1.5">{stack.map((s) => <span key={s} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{s}</span>)}</div></>}
+      {c && !q.data.job.is_confidential && (c.why_work_here || c.description) && <><p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">About {c.company_name}</p><p className="mt-1 line-clamp-4 whitespace-pre-line text-sm">{c.why_work_here || c.description}</p></>}
+      <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
+        <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Prepare one project story for each core skill above.</li>
+        <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Re-read your screening answers below so your story stays consistent.</li>
+        <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Bring two questions about the team and how success is measured.</li>
+      </ul>
     </div>
   );
 }
@@ -149,6 +224,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       {a.application_status === "rejected" && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
       {a.job_id && <CandidateOfferCard applicationId={id} uid={uid} jobId={a.job_id} jobTitle={a.jobs?.job_title ?? "this role"} />}
       <ApplicationInsights applicationId={id} status={a.application_status} />
+      {a.job_id && ["applied", "viewed", "recruiter_contacted", "interviewing"].includes(a.application_status) && <PrepCard jobId={a.job_id} />}
       {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
       {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
