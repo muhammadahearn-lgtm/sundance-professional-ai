@@ -2,6 +2,7 @@ import type { EducationAlignment } from "@/lib/education";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { JobCardRow } from "@/lib/job-search-data";
 import type { Taxonomy } from "@/lib/jobs-data";
 import { plainPreview } from "@/lib/job-search";
@@ -39,18 +40,25 @@ const TONE = {
   muted: { text: "text-muted-foreground", bg: "bg-muted", ring: "border-border", bar: "bg-muted-foreground" },
 };
 
-function MatchIntelligence({ score, row, open, onToggle }: { score: number | undefined; row: ScoreRow | undefined; open: boolean; onToggle: () => void }) {
-  if (score == null) return <div className="max-w-44 text-right text-xs text-muted-foreground"><Sparkles className="mr-1 inline h-3.5 w-3.5" />Match score unavailable — complete your profile to see how you match.</div>;
-  const s = Math.round(score), tier = matchTier(s), t = TONE[tier.tone];
+const solidTone = (s: number) => s >= 90 ? "bg-success text-success-foreground border-success" : s >= 75 ? "bg-primary text-primary-foreground border-primary" : s >= 60 ? "bg-warning text-warning-foreground border-warning" : "bg-card text-foreground border-border";
+
+/** Compact solid match badge; click opens a 5-factor breakdown popover (mirrors recruiter search). */
+function MatchBadgePopover({ score, row }: { score: number | undefined; row: ScoreRow | undefined }) {
+  if (score == null) return <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground" title="Complete your profile to see how you match"><Sparkles className="h-3.5 w-3.5" />No score yet</span>;
+  const s = Math.round(score), tier = matchTier(s);
+  const pill = <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-bold shadow-md ${solidTone(s)}`}><Sparkles className="h-3.5 w-3.5" />{s}% Match</span>;
+  if (!row) return pill;
+  const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Tools & Tech", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
   return (
-    <div className="flex flex-col items-center text-center">
-      <div className={`flex h-28 w-28 shrink-0 flex-col items-center justify-center rounded-full border-[3px] ${t.ring} ${t.bg}`}>
-        <p className={`font-display text-3xl font-extrabold leading-none ${t.text}`}>{s}%</p>
-        {row && <Button type="button" variant="link" size="sm" onClick={onToggle} aria-expanded={open} aria-label={`Detail: ${s}% match insights`} className={`mt-1 h-6 gap-0.5 px-1 text-xs ${t.text}`}>Detail<ChevronDown className={`!h-3 !w-3 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></Button>}
-      </div>
-      <p className="mt-1 text-xs font-bold text-foreground">Match Score</p>
-      <p className={`text-xs font-semibold ${t.text}`}>{tier.label}</p>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild><button type="button" aria-label={`${s}% match — view breakdown`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{pill}</button></PopoverTrigger>
+      <PopoverContent align="end" className="w-72">
+        <div className="flex items-center justify-between"><p className="font-display text-sm font-bold">Match Breakdown</p><span className="text-xs font-semibold text-muted-foreground">{tier.label}</span></div>
+        <div className="mt-3 space-y-2.5">
+          {bars.map(([l, v, w]) => <div key={l}><div className="flex justify-between text-xs"><span className="font-medium">{l} <span className="text-muted-foreground">· {w}%</span></span><span className="font-bold">{Math.round(Number(v))}%</span></div><div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-gradient-primary" style={{ width: `${Number(v)}%` }} /></div></div>)}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
