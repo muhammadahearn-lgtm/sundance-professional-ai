@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { maskJobRow } from "./confidential";
 import { namesFor } from "./talent-data";
 import { sendActivityEmail } from "./activity-email.functions";
+import { notifyHiringTeam } from "./hiring-team.functions";
 import { stageToStatus, type AppStatus, type Stage } from "./talent-rules";
 
 const JOB = "job_id, job_title, location, work_arrangement, job_status, role_id, is_confidential, confidential_label, companies(company_name, logo_url)";
@@ -119,10 +120,13 @@ export async function addToPipeline(uid: string, candidateId: string, jobId: str
 
 /** Move a card and keep the linked application status in sync. */
 export async function moveStage(card: Pick<PipelineCard, "pipeline_id" | "applicationId">, stage: Stage) {
-  const { error } = await supabase.from("recruiting_pipeline").update({ current_stage: stage }).eq("pipeline_id", card.pipeline_id);
+  const { data: row, error } = await supabase.from("recruiting_pipeline").update({ current_stage: stage }).eq("pipeline_id", card.pipeline_id).select("job_id, candidate_id").maybeSingle();
   if (error) throw error;
   const st = stageToStatus(stage);
   if (st && card.applicationId) await setApplicationStatus(card.applicationId, st);
+  if (row?.job_id && (stage === "shortlisted" || stage === "offer" || stage === "hired")) {
+    void notifyHiringTeam({ data: { kind: "stage", jobId: row.job_id, candidateId: row.candidate_id, stage } }).catch(() => {});
+  }
 }
 
 export async function removeFromPipeline(id: string) {
