@@ -2195,6 +2195,26 @@ export type Database = {
         Returns: boolean
       }
       cert_key: { Args: { _v: string }; Returns: string }
+      company_admin_jobs: {
+        Args: { _company: string }
+        Returns: {
+          applicants: number
+          contacted: number
+          created_at: string
+          hired: number
+          interviewing: number
+          job_id: string
+          job_status: string
+          job_title: string
+          offer: number
+          published_at: string
+          recruiter_id: string
+          recruiter_name: string
+          rejected: number
+          saved: number
+          shortlisted: number
+        }[]
+      }
       company_admin_request_history: {
         Args: { _company: string }
         Returns: {
