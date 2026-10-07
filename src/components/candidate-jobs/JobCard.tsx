@@ -106,23 +106,41 @@ function MatchInsights({ row, open, locAlign, eduAlign }: { row: ScoreRow | unde
 
 type ReqRow = { lookup_id: string; requirement_level: string };
 const LEVEL_ORDER: Record<string, number> = { required: 0, preferred: 1, optional: 2 };
-const BADGE = { primary: "bg-primary-soft text-primary border-primary/20", violet: "bg-violet/10 text-violet border-violet/20", teal: "bg-teal/10 text-teal border-teal/20", indigo: "bg-indigo/10 text-indigo border-indigo/20" };
+type ReqCat = "languages" | "skills" | "technologies";
+/** Category tones: violet = programming languages, indigo = technical skills, teal = tools & technologies. */
+const CAT: Record<ReqCat, { label: string; solid: string; soft: string }> = {
+  languages: { label: "Programming language", solid: "border-violet bg-violet text-primary-foreground", soft: "border-violet/20 bg-violet/10 text-violet" },
+  skills: { label: "Technical skill", solid: "border-indigo bg-indigo text-primary-foreground", soft: "border-indigo/20 bg-indigo/10 text-indigo" },
+  technologies: { label: "Tool / technology", solid: "border-teal bg-teal text-primary-foreground", soft: "border-teal/20 bg-teal/10 text-teal" },
+};
+const CAT_ORDER: ReqCat[] = ["languages", "skills", "technologies"];
 
-function ReqGroup({ title, rows, names, tone, mine }: { title: string; rows: ReqRow[] | null | undefined; names: { id: string; name: string }[]; tone: keyof typeof BADGE; mine?: Set<string> | undefined }) {
+/** One fluid requirement row: languages, skills and technologies together, tinted by category, matched items first with a ✓. */
+function Requirements({ rows, names, mine }: { rows: (ReqRow & { cat: ReqCat })[]; names: { id: string; name: string }[]; mine?: Set<string> | undefined }) {
+  if (!rows.length) return null;
   const has = (r: ReqRow) => !!mine?.has(r.lookup_id);
-  const list = [...(rows ?? [])].sort((a, b) => Number(has(b)) - Number(has(a)) || (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3));
+  const list = [...rows].sort((a, b) => Number(has(b)) - Number(has(a)) || (LEVEL_ORDER[a.requirement_level] ?? 3) - (LEVEL_ORDER[b.requirement_level] ?? 3) || CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat));
+  const nm = (id: string) => names.find((n) => n.id === id)?.name ?? "Unknown";
+  return (
+    <div className="mt-4 flex flex-wrap gap-1.5">
+      {list.slice(0, 8).map((r) => has(r)
+        ? <span key={r.lookup_id} title={`${CAT[r.cat].label} · Matches your profile`} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${CAT[r.cat].solid}`}>✓ {nm(r.lookup_id)}</span>
+        : <span key={r.lookup_id} title={`${CAT[r.cat].label} · Not listed on your profile`} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${CAT[r.cat].soft}`}>{nm(r.lookup_id)}</span>)}
+      {list.length > 8 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 8} More</span>}
+    </div>
+  );
+}
+
+/** Display-only soft skills; they never feed match scores, so they stay neutral and separate. */
+function SoftGroup({ rows, names }: { rows: ReqRow[] | null | undefined; names: { id: string; name: string }[] }) {
+  const list = rows ?? [];
   if (!list.length) return null;
   const nm = (id: string) => names.find((n) => n.id === id)?.name ?? "Unknown";
   return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{title}</p>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
-        {list.slice(0, 3).map((r) => mine ? (has(r)
-          ? <span key={r.lookup_id} title="You have this skill" className="rounded-full border border-primary bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">✓ {nm(r.lookup_id)}</span>
-          : <span key={r.lookup_id} title="Not on your profile yet" className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{nm(r.lookup_id)}</span>)
-          : <span key={r.lookup_id} className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${BADGE[tone]}`}>{nm(r.lookup_id)}</span>)}
-        {list.length > 3 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 3} More</span>}
-      </div>
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Soft skills</span>
+      {list.slice(0, 4).map((r) => <span key={r.lookup_id} title="Soft skill" className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{nm(r.lookup_id)}</span>)}
+      {list.length > 4 && <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">+{list.length - 4} More</span>}
     </div>
   );
 }
@@ -147,12 +165,18 @@ export function JobCard({ onPreview, j, roleName, lists, onRemove, score, scoreR
           </div>
           <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{plainPreview(j.job_description)}</p>
           {tax && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <ReqGroup title="Programming Languages" rows={j.job_languages} names={tax.languages} mine={mine} tone="primary" />
-              <ReqGroup title="Technical Skills" rows={j.job_skills} names={tax.skills} mine={mine} tone="violet" />
-              <ReqGroup title="Soft Skills Required" rows={j.job_soft_skills} names={tax.softSkills} tone="indigo" />
-              <ReqGroup title="Tools & Technologies" rows={j.job_technologies} names={tax.technologies} mine={mine} tone="teal" />
-            </div>
+            <>
+              <Requirements
+                rows={[
+                  ...(j.job_languages ?? []).map((r) => ({ ...r, cat: "languages" as const })),
+                  ...(j.job_skills ?? []).map((r) => ({ ...r, cat: "skills" as const })),
+                  ...(j.job_technologies ?? []).map((r) => ({ ...r, cat: "technologies" as const })),
+                ]}
+                names={[...tax.languages, ...tax.skills, ...tax.technologies]}
+                mine={mine}
+              />
+              <SoftGroup rows={j.job_soft_skills} names={tax.softSkills} />
+            </>
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
