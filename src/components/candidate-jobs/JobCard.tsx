@@ -27,8 +27,15 @@ export function StealthBadge({ on }: { on: boolean | null | undefined }) {
   return <span title="The hiring company is kept confidential for now" className="ml-1.5 inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Confidential</span>;
 }
 
-export function CompanyLogo({ path, size = "h-12 w-12" }: { path: string | null | undefined; size?: string }) {
-  return path ? <BrandImg path={path} alt="Company logo" className={`${size} shrink-0 rounded-xl object-cover`} /> : <div className={`grid ${size} shrink-0 place-items-center rounded-xl bg-primary-soft`}><Building2 className="h-5 w-5 text-primary" /></div>;
+export function monogram(name: string | null | undefined) {
+  const w = (name ?? "").replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+  return (w.length > 1 ? w[0]!.charAt(0) + w[1]!.charAt(0) : (w[0] ?? "").slice(0, 2)).toUpperCase();
+}
+
+export function CompanyLogo({ path, name, size = "h-12 w-12" }: { path: string | null | undefined; name?: string | null | undefined; size?: string }) {
+  if (path) return <BrandImg path={path} alt="Company logo" className={`${size} shrink-0 rounded-xl object-cover`} />;
+  const m = monogram(name);
+  return <div className={`grid ${size} shrink-0 place-items-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/25 to-primary-soft font-display text-sm font-bold tracking-wide text-primary`}>{m || <Building2 className="h-5 w-5" />}</div>;
 }
 
 const act = "inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary";
@@ -161,9 +168,9 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
   return (
-    <article className={`${card} p-5 transition-shadow hover:shadow-md`}>
+    <article className={`${card} p-5 transition-all duration-200 hover:border-primary/45 hover:shadow-md dark:hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent),0_8px_30px_-12px_color-mix(in_oklab,var(--primary)_45%,transparent)]`}>
       <div className="flex items-start gap-4">
-        <CompanyLogo path={j.companies?.logo_url} />
+        <CompanyLogo path={j.companies?.logo_url} name={j.is_confidential ? null : j.companies?.company_name} />
         <div className="min-w-0 flex-1">
           <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold leading-tight hover:text-primary">{j.job_title}</Link>
           <p className="text-sm font-medium">{j.companies?.company_name}<StealthBadge on={j.is_confidential} /></p>
@@ -201,8 +208,8 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
               : <Link to="/candidate/jobs/$id" params={{ id: j.job_id }} className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary">View Job</Link>}
             {onPreview && <button onClick={() => onPreview(j.job_id)} className={act}><Eye className="h-4 w-4" />Quick View</button>}
             {onRemove ? <button onClick={onRemove} className={act}><BookmarkCheck className="h-4 w-4" />Remove</button>
-              : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}
-            <button onClick={() => lists.toggleCompare(j.job_id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare"}</button>
+              : <button onClick={() => lists.toggleSave(j.job_id)} aria-pressed={saved} className={`${act} ${saved ? "border-primary bg-primary-soft text-primary" : ""}`}>{saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}{saved ? "Saved" : "Save"}</button>}
+            <button onClick={() => lists.toggleCompare(j.job_id)} aria-pressed={compared} className={`${act} ${compared ? "border-primary bg-primary-soft text-primary" : ""}`}><GitCompare className="h-4 w-4" />{compared ? "Comparing" : "Compare"}</button>
             <button onClick={() => shareJob(j.job_id, j.job_title)} className={act} aria-label="Share job"><Share2 className="h-4 w-4" /><span className="hidden sm:inline">Share</span></button>
             {scoreRow && <button onClick={() => setInsightsOpen((v) => !v)} aria-expanded={insightsOpen} className={`${act} ml-auto ${insightsOpen ? "border-primary text-primary" : ""}`}><Sparkles className="h-4 w-4" />Why this match<ChevronDown className={`h-3.5 w-3.5 transition-transform ${insightsOpen ? "rotate-180" : ""}`} /></button>}
       </div>
@@ -213,7 +220,7 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
 export function CompareTray({ lists }: { lists: JobLists }) {
   if (!lists.compareIds.length) return null;
   return (
-    <div className="fixed inset-x-0 bottom-4 z-30 mx-auto flex w-fit items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-lg">
+    <div className="fixed inset-x-0 bottom-4 z-30 mx-auto flex w-fit items-center gap-3 rounded-full border border-border/80 bg-card/90 px-4 py-2 shadow-elevated backdrop-blur-md supports-[backdrop-filter]:bg-card/75">
       <GitCompare className="h-4 w-4 text-primary" /><span className="text-sm font-semibold">{lists.compareIds.length} of 4 selected</span>
       <Link to="/candidate/jobs/compare" className="rounded-full bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground">Compare</Link>
     </div>
