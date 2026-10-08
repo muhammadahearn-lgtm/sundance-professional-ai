@@ -1,6 +1,6 @@
 import { PDFDocument, PDFString, rgb, type PDFImage, type PDFPage, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import notoFontUrl from "@/assets/fonts/NotoSans-Variable.ttf?url";
+import notoFontUrl from "@/assets/fonts/NotoSans-Regular.ttf?url";
 import type { StandardResumeSection, StandardResumeSnapshot } from "./standard-resume";
 import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks } from "./standard-resume";
 import { resumeIconSvg, svgToPng, type ResumeIconKey } from "./resume-icons";
