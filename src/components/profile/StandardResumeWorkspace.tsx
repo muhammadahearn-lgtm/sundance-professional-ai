@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
@@ -84,7 +84,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
     <Dialog open={editor} onOpenChange={setEditor}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl"><DialogHeader><DialogTitle>Create Sundance Standard Resume</DialogTitle><DialogDescription>Choose what appears, preview it, then publish an immutable numbered version. Personal email, salary, availability, and match scores are never included.</DialogDescription></DialogHeader>
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]"><div className="space-y-5">
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={includePhoto} onChange={(e) => setIncludePhoto(e.target.checked)} className="mt-1 accent-primary" /><span><span className="block text-sm font-semibold">Include profile photo</span><span className="text-xs text-muted-foreground">Off by default. Photos may increase bias and are not customary in every region.</span></span></label>
-        <div><p className="mb-2 text-sm font-semibold">Sections to include</p><ul className="space-y-1.5">{DEFAULT_STANDARD_RESUME_SECTIONS.map((section) => <li key={section}><label className="flex items-center gap-2 rounded-lg border border-border px-2 py-2 text-sm"><input type="checkbox" checked={sections.includes(section)} onChange={() => toggleSection(section)} className="accent-primary" /><span className="flex-1">{STANDARD_RESUME_SECTION_LABELS[section]}</span></label></li>)}</ul><p className="mt-2 text-xs text-muted-foreground">Laid out on one A4 page: skills and languages on the left; profile, experience and education on the right.</p></div>
+        <div><p className="mb-2 text-sm font-semibold">Sections to include</p><ul className="space-y-1.5">{DEFAULT_STANDARD_RESUME_SECTIONS.map((section) => <li key={section}><label className="flex items-center gap-2 rounded-lg border border-border px-2 py-2 text-sm"><input type="checkbox" checked={sections.includes(section)} onChange={() => toggleSection(section)} className="accent-primary" /><span className="flex-1">{STANDARD_RESUME_SECTION_LABELS[section]}</span></label></li>)}</ul><p className="mt-2 text-xs text-muted-foreground">Fits one A4 page for most profiles (two for long careers): your {RESUME_LIMITS.fullExperience} most recent roles in full, older roles on one line, and your {RESUME_LIMITS.certifications} latest certifications.</p></div>
         {data.softSkillRows.length > 0 && <div><p className="text-sm font-semibold">Top soft skills <span className="font-normal text-muted-foreground">({softSkills.length}/{STANDARD_RESUME_MAX_SOFT_SKILLS})</span></p><div className="mt-2 flex flex-wrap gap-1.5">{data.softSkillRows.map((s) => <button key={s.name} type="button" onClick={() => toggleSoft(s.name)} className={`rounded-full border px-2.5 py-1 text-xs ${softSkills.includes(s.name) ? "border-primary bg-primary-soft text-primary" : "border-border"}`}>{s.name}</button>)}</div></div>}
         <div className="flex gap-2"><Button variant="outline" onClick={() => setPreview(true)}><Eye className="h-4 w-4" />Preview</Button><Button disabled={publishing} onClick={publish}>{publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}Publish v{nextStandardResumeVersion(data.standardResumes.map((v) => v.version_number))}</Button></div>
       </div><ResumeDocument snapshot={snapshot} sections={sections} includePhoto={includePhoto} photoUrl={avatarUrl} /></div>
@@ -97,8 +97,9 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
 function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapshot: StandardResumeSnapshot; sections: StandardResumeSection[]; includePhoto: boolean; photoUrl: string | null }) {
   const has = (s: StandardResumeSection) => sections.includes(s);
   const H = ({ children }: { children: React.ReactNode }) => <h3 className="mb-2.5 border-b border-primary/20 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">{children}</h3>;
-  const edu = has("education") ? snapshot.education : []; const certs = has("certifications") ? snapshot.certifications : [];
-  const exp = has("experience") ? snapshot.experience : []; const proj = has("projects") ? snapshot.projects : [];
+  const b = budgetResume(snapshot);
+  const edu = has("education") ? b.education : []; const certs = has("certifications") ? b.certifications : [];
+  const exp = has("experience") ? b.experience : []; const earlier = has("experience") ? b.earlier : []; const proj = has("projects") ? b.projects : [];
   const groups: [string, string[]][] = [
     ["Technical skills", has("skills") ? snapshot.skills : []],
     ["Programming languages", has("programming_languages") ? snapshot.programmingLanguages : []],
@@ -122,6 +123,7 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
         {has("summary") && snapshot.summary && <section><H>PROFILE SUMMARY</H><p>{snapshot.summary}</p></section>}
         {(exp.length > 0 || proj.length > 0) && <section><H>{exp.length && proj.length ? "Experience & Projects" : exp.length ? "Experience" : "Projects"}</H><div className="space-y-3.5">
           {exp.map((e, i) => <div key={`x${i}`}><div className="flex items-baseline justify-between gap-3"><p className="text-[13px] font-semibold">{e.title}</p><span className="shrink-0 text-[10px] text-muted-foreground">{resumePeriod(e)}</span></div><p className="text-[11px] text-muted-foreground">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-1">{e.responsibilities}</p>}{e.technologies.length > 0 && <p className="mt-1 text-[10px] text-muted-foreground">{e.technologies.join(" · ")}</p>}</div>)}
+          {earlier.length > 0 && <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">Earlier experience: </span>{earlier.map(earlierRoleLine).join(" · ")}</p>}
           {proj.length > 0 && exp.length > 0 && <p className="pt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Projects</p>}
           {proj.map((p, i) => <div key={`p${i}`}><p className="font-semibold">{p.title}</p>{p.description && <p>{p.description}</p>}{p.technologies.length > 0 && <p className="text-[10px] text-muted-foreground">{p.technologies.join(" · ")}</p>}</div>)}
         </div></section>}
