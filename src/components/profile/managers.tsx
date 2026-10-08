@@ -16,7 +16,8 @@ import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, type Proficiency } from "./parts";
-import { TagPicker, TextPicker } from "@/components/taxonomy/TextPicker";
+import { KNOWN_INSTITUTIONS, resolveInstitution } from "@/lib/institution-aliases";
+import { TagPicker, TextPicker, newTextName } from "@/components/taxonomy/TextPicker";
 import { newCompanyName } from "@/lib/company-add";
 
 type Exp = Tables<"work_experience">;
@@ -162,7 +163,8 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
   const [saving, setSaving] = useState(false);
   const sugg = useQuery({ queryKey: ["education-suggestions"], queryFn: async () => { const { data } = await supabase.rpc("education_suggestions"); return data ?? []; } });
   const fields = [...new Set([...COMMON_FIELDS, ...(sugg.data ?? []).filter((s) => s.kind === "field").map((s) => s.name)])].sort();
-  const schools = [...new Set((sugg.data ?? []).filter((s) => s.kind === "institution").map((s) => s.name))].sort();
+  const schools = [...new Set([...KNOWN_INSTITUTIONS, ...(sugg.data ?? []).filter((s) => s.kind === "institution").map((s) => s.name)])].sort();
+  const schoolName = (q: string, o: { name: string }[]) => resolveInstitution(q) ?? newTextName(q, o);
   async function submit(e: FormEvent) {
     e.preventDefault();
     const er: Partial<Record<keyof typeof f, string>> = {};
