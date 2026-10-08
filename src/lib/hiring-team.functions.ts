@@ -23,6 +23,14 @@ export const notifyHiringTeam = createServerFn({ method: "POST" })
     const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
     if (!job || job.recruiter_id !== context.userId) return { sent: 0 };
 
+    // The candidate must actually be connected to this job (applied or in
+    // the pipeline) before we read their name or email the hiring team.
+    const [{ data: app }, { data: pipe }] = await Promise.all([
+      supabaseAdmin.from("applications").select("application_id").eq("job_id", data.jobId).eq("candidate_id", data.candidateId).maybeSingle(),
+      supabaseAdmin.from("recruiting_pipeline").select("pipeline_id").eq("job_id", data.jobId).eq("candidate_id", data.candidateId).maybeSingle(),
+    ]);
+    if (!app && !pipe) return { sent: 0 };
+
     const flag = data.kind === "stage" ? "notify_on_shortlist" : "notify_on_interview";
     const { data: team } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email").eq("job_id", data.jobId).eq(flag, true);
     if (!team?.length) return { sent: 0 };
