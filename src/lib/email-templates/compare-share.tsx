@@ -16,6 +16,7 @@ interface Props {
   jobTitle?: string
   candidates?: CompareEmailCandidate[]
   actionUrl?: string
+  imageUrl?: string
 }
 
 const initials = (n: string) => n.split(/\s+/).map((p) => p.charAt(0)).join('').slice(0, 2).toUpperCase() || 'C'
@@ -50,7 +51,7 @@ const Card = ({ c, rank }: { c: CompareEmailCandidate; rank: number }) => (
   </Section>
 )
 
-const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], actionUrl }: Props) => {
+const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], actionUrl, imageUrl }: Props) => {
   const sorted = [...candidates].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   const top = sorted[0]
   return (
