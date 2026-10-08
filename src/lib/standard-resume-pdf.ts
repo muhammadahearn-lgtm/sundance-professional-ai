@@ -46,11 +46,10 @@ class Column {
   }
   bullets(items: string[], size = 9) {
     if (items.length <= 1) { this.text(items[0] ?? "", size); return; }
-    const full = this.width, x0 = this.x;
     for (const item of items) {
       this.need(size * 1.4);
-      this.page.drawText("•", { x: x0 + 1, y: this.y - size, size, font: this.font, color: blue });
-      this.x = x0 + 10; this.width = full - 10; this.text(item, size); this.x = x0; this.width = full;
+      this.page.drawText("•", { x: this.x + 1, y: this.y - size, size, font: this.font, color: blue });
+      this.x += 10; this.width -= 10; this.text(item, size); this.x -= 10; this.width += 10;
       this.y -= 1;
     }
   }
