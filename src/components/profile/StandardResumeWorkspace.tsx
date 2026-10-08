@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_KEEP_VERSIONS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_KEEP_VERSIONS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumeFileName, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import { CandidateResumeAccessPanel } from "./ResumeAccess";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
@@ -72,7 +72,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
     setPublishing(false);
   }
   async function setChoice(value: ResumeChoice) { const { error } = await supabase.from("candidate_profiles").update({ recruiter_resume_choice: value }).eq("user_id", account.userId); if (error) { toast.error("Couldn't update the recruiter download choice."); return; } toast.success(value === "standard" ? "Recruiters will receive your Sundance resume" : "Recruiters will receive your original resume"); await qc.invalidateQueries({ queryKey: ["candidate-full", account.userId] }); }
-  async function download(v: Version) { const { data: signed, error } = await supabase.storage.from("resumes").createSignedUrl(v.pdf_path, 60, { download: `Sundance-Standard-Resume-v${v.version_number}.pdf` }); if (error || !signed) { toast.error("Resume download isn't available."); return; } window.open(signed.signedUrl, "_blank", "noopener"); }
+  async function download(v: Version) { const { data: signed, error } = await supabase.storage.from("resumes").createSignedUrl(v.pdf_path, 60, { download: resumeFileName(`${account.firstName} ${account.lastName}`) }); if (error || !signed) { toast.error("Resume download isn't available."); return; } window.open(signed.signedUrl, "_blank", "noopener"); }
 
   return <div className="space-y-4">
     <CandidateResumeAccessPanel uid={account.userId} requireRequest={data.profile.require_resume_request ?? true} />
