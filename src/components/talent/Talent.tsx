@@ -1,3 +1,4 @@
+import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { LocationFilter } from "@/components/location/LocationFields";
@@ -482,9 +483,7 @@ const prof = (rows: { lookup_id: string; proficiency_level: string; years_experi
 /** Full recruiter-facing profile body (used by talent profile and application review). */
 export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode; stacked?: boolean }) {
   const p = d.profile;
-  const [busy, setBusy] = useState(false);
   const resume = recruiterResume(d);
-  async function download() { if (!resume) return; setBusy(true); try { window.open(await resumeUrl(resume.path, resume.fileName), "_blank", "noopener"); } catch (e) { toast.error(friendlyError(e, "Resume not available.")); } setBusy(false); }
   return (
     <div className={stacked ? "grid gap-4" : "grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"}>
       <div className="min-w-0 space-y-6">
