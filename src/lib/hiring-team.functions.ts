@@ -81,7 +81,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
-    const { buildCompareSummary } = await import("./compare-share");
+    const { shortName } = await import("./compare-share");
     const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
     if (!job || job.recruiter_id !== context.userId) throw new Error("Only the recruiter who posted this job can share it.");
     for (const id of data.candidateIds) {
@@ -101,13 +101,13 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
       const det = (s?.details ?? {}) as { strengths?: string[] };
       return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.user_id === id)?.job_title ?? "", years: cps?.find((x) => x.user_id === id)?.years_experience ?? null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
     });
-    const summary = buildCompareSummary(job.job_title, list);
+    const candidates = list.map((c) => ({ name: shortName(c.firstName, c.lastName), jobTitle: c.jobTitle, years: c.years, score: c.score, strengths: c.strengths.slice(0, 3) }));
     const stamp = Date.now();
     let sent = 0;
     for (const m of team) {
       try {
-        const r = await sendTemplateEmail("activity-alert", m.email, {
-          templateData: { title: `Candidate comparison — ${job.job_title}`, message: `Hi ${m.name}, your recruiter would like your opinion on these candidates:\n\n${summary}`, actionUrl: SITE, actionLabel: "About Sundance Professionals" },
+        const r = await sendTemplateEmail("compare-share", m.email, {
+          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;
