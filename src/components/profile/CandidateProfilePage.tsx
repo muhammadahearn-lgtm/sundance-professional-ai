@@ -157,11 +157,11 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
           <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
         </Section>
+        <Section id="technologies" title="Technologies & Tools" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
+          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_technologies" options={data.techOpts} otherOptions={data.skillOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
+        </Section>
         <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
           <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_skills" options={data.skillOpts} otherOptions={data.techOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
-        </Section>
-        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
-          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_technologies" options={data.techOpts} otherOptions={data.skillOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
         </Section>
         <Section id="soft-skills" title="Soft Skills" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
           <SoftSkillManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
@@ -482,8 +482,8 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
           <section className={`${card} space-y-5 p-6`}>
             <h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Programming Languages</p>{lk(data.languages)}</div>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technologies & Tools</p>{lk(data.technologies)}</div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technical Skills</p>{lk(data.skills)}</div>
-            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technologies</p>{lk(data.technologies)}</div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} /></div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Spoken Languages</p><Chips items={data.spokenLanguages.map((x) => `${x.language_name} · ${x.proficiency.replaceAll("_", " ")}`)} /></div>
           </section>

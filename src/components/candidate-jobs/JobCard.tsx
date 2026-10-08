@@ -80,7 +80,7 @@ function MatchInsights({ row, open, locAlign, eduAlign }: { row: ScoreRow | unde
   const req = new Set(d.missing.requiredMissing);
   const missing = [...d.missing.languages, ...d.missing.skills, ...d.missing.technologies].sort((a, b) => Number(req.has(b)) - Number(req.has(a)));
   const steps = nextSteps(d);
-  const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Programming Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Tools & Technologies", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
+  const bars: [string, number, number][] = [["Skills", row.skill_alignment_score, MATCH_WEIGHTS.skills], ["Programming Languages", row.language_alignment_score, MATCH_WEIGHTS.languages], ["Technologies & Tools", row.technology_alignment_score, MATCH_WEIGHTS.technologies], ["Experience", row.experience_alignment_score, MATCH_WEIGHTS.experience], ["Preferences", row.preference_alignment_score, MATCH_WEIGHTS.preferences]];
   return (
     <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
       <div className="overflow-hidden">

@@ -76,13 +76,13 @@ export function CandidateJobDetail({ account, id, stacked }: { account: Account;
         <div className="min-w-0 space-y-6">
           <div className={`${card} p-6`}><Markdown text={j.job_description} /></div>
           {(j.benefits_summary || j.bonus_info || equitySummary(j)) && <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Benefits</h2>{j.bonus_info && <p className="mt-2 text-sm"><strong>Bonus:</strong> {j.bonus_info}</p>}{equitySummary(j) && <p className="mt-2 text-sm"><strong>Equity:</strong> {equitySummary(j)}{j.equity_vesting ? ` · ${j.equity_vesting}` : ""}</p>}{j.benefits_summary && <p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p>}</div>}
+          <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Technologies & Tools</h2><RequirementList items={q.data.technologies} options={t.technologies} /></div>
           <div className={`${card} space-y-5 p-6`}>
             <h2 className="font-display text-lg font-bold">Technical Requirements</h2>
             <Item k="Programming Languages" v={<RequirementList items={q.data.languages} options={t.languages} />} />
             <Item k="Technical Skills" v={<RequirementList items={q.data.skills} options={t.skills} />} />
             <Item k="Soft Skills Required" v={<RequirementList items={q.data.softSkills} options={t.softSkills} />} />
           </div>
-          <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Technology Stack</h2><RequirementList items={q.data.technologies} options={t.technologies} /></div>
         </div>
         <aside className={stacked ? "space-y-4" : "space-y-6 lg:sticky lg:top-6 lg:self-start"}>
           <div className={`${card} p-5`}>

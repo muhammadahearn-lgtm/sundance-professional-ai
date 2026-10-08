@@ -161,7 +161,7 @@ function RecruiterDashboard() {
 }
 
 function CandidateProfile() {
-  const groups: [string, string[]][] = [["Programming Languages", ["Python", "SQL", "R"]], ["Technical Skills", ["Machine Learning", "Deep Learning", "Data Modeling"]], ["Tools & Technologies", ["PyTorch", "TensorFlow", "Apache Spark", "AWS"]]];
+  const groups: [string, string[]][] = [["Programming Languages", ["Python", "SQL", "R"]], ["Technologies & Tools", ["PyTorch", "TensorFlow", "Apache Spark", "AWS"]], ["Technical Skills", ["Machine Learning", "Deep Learning", "Data Modeling"]]];
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className={`${card} text-center`}>

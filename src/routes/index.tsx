@@ -151,7 +151,7 @@ function Solution() {
 }
 
 function SkillFirst() {
-  const focus = ["Technical Skills", "Programming Languages", "Technologies", "Relevant Experience", "Career Readiness", "Match Intelligence"];
+  const focus = ["Programming Languages", "Technologies & Tools", "Technical Skills", "Relevant Experience", "Career Readiness", "Match Intelligence"];
   const Flow = ({ title, steps, good }: { title: string; steps: string[]; good?: boolean }) => (
     <div className={`rounded-3xl border p-8 ${good ? "border-primary/30 bg-card shadow-elevated" : "border-border bg-muted"}`}>
       <div className={`text-sm font-semibold ${good ? "text-primary" : "text-muted-foreground"}`}>{title}</div>

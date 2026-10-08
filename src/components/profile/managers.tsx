@@ -125,7 +125,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.current_position} onChange={(e) => set("current_position", e.target.checked)} className="h-4 w-4 accent-primary" /> I currently work here</label>
       <Field label="Responsibilities"><textarea rows={3} maxLength={2000} className={inputCls} value={f.responsibilities} onChange={(e) => set("responsibilities", e.target.value)} /></Field>
-      <Field label="Technologies Used"><TagPicker ariaLabel="Technologies used" options={techs.data ?? []} value={f.technologies_used} onChange={(v) => set("technologies_used", v)} placeholder="Search tools & technologies…" max={60} /></Field>
+      <Field label="Technologies Used"><TagPicker ariaLabel="Technologies used" options={techs.data ?? []} value={f.technologies_used} onChange={(v) => set("technologies_used", v)} placeholder="Search technologies & tools…" max={60} /></Field>
       <SaveBar saving={saving} onCancel={onCancel} />
     </form>
   );
