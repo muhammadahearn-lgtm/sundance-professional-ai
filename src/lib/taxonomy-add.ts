@@ -22,7 +22,7 @@ export function crossCategoryMatch<T extends { name: string }>(input: string, ot
   return otherOptions.find((o) => taxonomyKey(o.name) === k) ?? null;
 }
 
-export const KIND_LABEL: Record<"skill" | "technology", string> = { skill: "Technical Skills", technology: "Tools & Technologies" };
+export const KIND_LABEL: Record<"skill" | "technology", string> = { skill: "Technical Skills", technology: "Technologies & Tools" };
 
 /** Creates (or reuses) a shared list entry; the database normalizes the name. */
 export async function addTaxonomyEntry(kind: TaxonomyKind, name: string): Promise<string> {

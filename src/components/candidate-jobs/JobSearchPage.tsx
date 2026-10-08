@@ -196,8 +196,8 @@ function Filters({ tax, s, set, onApply, onHide }: { tax: Taxonomy; s: SearchSta
       <Group title="Role"><SearchPicker ariaLabel="Role filter" grouped options={tax.roles} value={s.role} onChange={(v) => p({ role: v })} placeholder="Search role" emptyLabel="All roles" /></Group>
       <Group title="Level"><SearchPicker ariaLabel="Level filter" options={tax.levels} value={s.level ?? ""} onChange={(v) => p({ level: v })} placeholder="Search level" emptyLabel="All levels" /></Group>
       <Group title="Programming Languages" open={false}><CheckList options={tax.languages} value={s.langs} onChange={(v) => p({ langs: v })} /></Group>
+      <Group title="Technologies & Tools" open={false}><CheckList options={tax.technologies} value={s.techs} onChange={(v) => p({ techs: v })} /></Group>
       <Group title="Technical Skills" open={false}><CheckList options={tax.skills} value={s.skills} onChange={(v) => p({ skills: v })} /></Group>
-      <Group title="Tools & Technologies" open={false}><CheckList options={tax.technologies} value={s.techs} onChange={(v) => p({ techs: v })} /></Group>
       <Group title="Work Arrangement"><CheckList options={ARRANGEMENT.map(([id, name]) => ({ id, name }))} value={s.arr} onChange={(v) => p({ arr: v })} /></Group>
       <Group title="Employment Type"><CheckList options={EMPLOYMENT.map(([id, name]) => ({ id, name }))} value={s.emp} onChange={(v) => p({ emp: v })} /></Group>
       <Group title="Experience">

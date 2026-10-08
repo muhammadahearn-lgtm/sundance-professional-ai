@@ -11,7 +11,7 @@ type Kind = "skill" | "technology";
 type Opt = { id: string; name: string };
 
 const HINT: Record<Kind, string> = {
-  skill: "Skills are concepts you practice (Machine Learning, API Design). Libraries, frameworks and cloud services like JAX, Docker or AWS go under Tools & Technologies.",
+  skill: "Skills are concepts you practice (Machine Learning, API Design). Libraries, frameworks and cloud services like JAX, Docker or AWS go under Technologies & Tools.",
   technology: "Tools are things you install, import or log into (JAX, Docker, AWS). Concepts like Machine Learning or API Design go under Technical Skills.",
 };
 

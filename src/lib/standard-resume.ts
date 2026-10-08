@@ -19,7 +19,7 @@ export const DEFAULT_STANDARD_RESUME_SECTIONS: StandardResumeSection[] = [
 
 export const STANDARD_RESUME_SECTION_LABELS: Record<StandardResumeSection, string> = {
   summary: "Professional Summary", experience: "Work Experience", skills: "Technical Skills",
-  technologies: "Tools & Technologies", programming_languages: "Programming Languages",
+  technologies: "Technologies & Tools", programming_languages: "Programming Languages",
   soft_skills: "Top Soft Skills", education: "Education", certifications: "Certifications",
   spoken_languages: "Spoken Languages", projects: "Projects",
 };

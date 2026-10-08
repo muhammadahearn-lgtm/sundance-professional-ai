@@ -190,8 +190,8 @@ export function CandidateOnboarding({ account }: { account: Account }) {
         </>)}
         {step === 2 && (<>
           <Field label="Programming Languages"><MultiSelect value={f.programming_languages} onChange={(v) => set("programming_languages", v)} suggestions={["Python", "SQL", "Java", "JavaScript", "TypeScript", "Go", "Scala", "C#"]} /></Field>
+          <Field label="Technologies & Tools"><MultiSelect value={f.tools} onChange={(v) => set("tools", v)} suggestions={["AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "Airflow"]} /></Field>
           <Field label="Technical Skills"><MultiSelect value={f.technical_skills} onChange={(v) => set("technical_skills", v)} suggestions={["Machine Learning", "Data Modeling", "ETL", "System Design", "APIs", "React"]} /></Field>
-          <Field label="Tools & Technologies"><MultiSelect value={f.tools} onChange={(v) => set("tools", v)} suggestions={["AWS", "Azure", "Snowflake", "Databricks", "Docker", "Kubernetes", "Airflow"]} /></Field>
         </>)}
         {step === 3 && (<>
           <Field label="Target Roles"><TagPicker ariaLabel="Target roles" options={roleNames.data ?? []} value={f.target_roles} onChange={(v) => set("target_roles", v)} placeholder="Search 120+ roles…" nameFor={newRoleName} onAdd={async (n) => (await addRoleEntry(n)).name} addHint="Seniority goes in your level, so “Senior” is left out." /></Field>
