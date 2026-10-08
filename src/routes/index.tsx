@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow, SectionHeading, PricingCards } from "@/components/site/shared";
 import hero from "@/assets/hero.jpg";
 import { PreviewBody } from "@/components/site/ProductPreviewMocks";
+import { CompareShowcase } from "@/components/site/CompareShowcase";
 
 const TITLE = "Sundance Professionals — Free Skill-First Tech Hiring Platform";
 const DESC = "Skill-first match scores, job and candidate comparison, a hiring pipeline and an interviews hub for tech professionals and recruiters. Free during early access.";
@@ -35,6 +36,7 @@ function Index() {
       <Hero />
       <ComingSoonNotice />
       <Solution />
+      <CompareShowcase />
       <SkillFirst />
       <AudienceSplit />
       <Intelligence />
