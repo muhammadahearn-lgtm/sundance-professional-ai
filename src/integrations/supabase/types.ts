@@ -222,6 +222,7 @@ export type Database = {
           portfolio_url: string
           programming_languages: string[]
           recruiter_resume_choice: string
+          require_resume_request: boolean
           resume_file_name: string | null
           resume_path: string | null
           resume_uploaded_at: string | null
@@ -266,6 +267,7 @@ export type Database = {
           portfolio_url?: string
           programming_languages?: string[]
           recruiter_resume_choice?: string
+          require_resume_request?: boolean
           resume_file_name?: string | null
           resume_path?: string | null
           resume_uploaded_at?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           portfolio_url?: string
           programming_languages?: string[]
           recruiter_resume_choice?: string
+          require_resume_request?: boolean
           resume_file_name?: string | null
           resume_path?: string | null
           resume_uploaded_at?: string | null
@@ -2127,6 +2130,82 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_access_requests: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          expires_at: string | null
+          message: string
+          recruiter_id: string
+          request_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          expires_at?: string | null
+          message?: string
+          recruiter_id: string
+          request_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          expires_at?: string | null
+          message?: string
+          recruiter_id?: string
+          request_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_access_requests_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      resume_downloads: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          download_id: string
+          reason: string
+          recruiter_id: string
+          resume_kind: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          download_id?: string
+          reason: string
+          recruiter_id: string
+          resume_kind: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          download_id?: string
+          reason?: string
+          recruiter_id?: string
+          resume_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_downloads_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           category: string
@@ -2627,6 +2706,10 @@ export type Database = {
       job_is_active: { Args: { _job: string }; Returns: boolean }
       location_key: { Args: { _v: string }; Returns: string }
       location_title: { Args: { _v: string }; Returns: string }
+      log_resume_download: {
+        Args: { _candidate: string; _kind: string }
+        Returns: string
+      }
       mark_conversation_read: { Args: { _conv: string }; Returns: undefined }
       mark_messages_delivered: { Args: never; Returns: undefined }
       moderate_restrict: {
@@ -2670,16 +2753,39 @@ export type Database = {
           views: number
         }[]
       }
+      my_resume_activity: {
+        Args: never
+        Returns: {
+          company_name: string
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          message: string
+          reason: string
+          recruiter_name: string
+          status: string
+        }[]
+      }
       owns_job: { Args: { _job: string }; Returns: boolean }
       person_name: { Args: { _uid: string }; Returns: string }
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
       }
+      request_resume_access: {
+        Args: { _candidate: string; _message: string }
+        Returns: string
+      }
+      respond_resume_request: {
+        Args: { _approve: boolean; _request: string }
+        Returns: undefined
+      }
       respond_to_offer: {
         Args: { _accept: boolean; _offer: string; _reason?: string }
         Returns: undefined
       }
+      resume_access_reason: { Args: { _candidate: string }; Returns: string }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv: string }
         Returns: undefined
