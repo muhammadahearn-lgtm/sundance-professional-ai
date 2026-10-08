@@ -442,6 +442,13 @@
       "when": 1791470323667,
       "tag": "0062_resume_access_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1791470358850,
+      "tag": "0063_resume_request_notification_category",
+      "breakpoints": true
     }
   ]
 }
