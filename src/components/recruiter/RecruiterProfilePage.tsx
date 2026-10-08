@@ -100,12 +100,15 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Profile</button>
             <Link to="/recruiter/company" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Building2 className="h-4 w-4" />View Company Profile</Link>
           </div>
         </div>
 
-        <ProfileTabBar value={tab} onChange={setTab} tabs={[
+        <ProfileTabBar value={tab} onChange={setTab} action={
+          <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold shadow-soft hover:bg-muted">
+            <Eye className="h-4 w-4" aria-hidden /><span className="sr-only sm:not-sr-only">Preview Profile</span>
+          </button>
+        } tabs={[
           { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !r.title || !r.location || !r.professional_summary },
           { key: "focus", label: "Recruiting Focus", icon: <Target className="h-4 w-4" />, incomplete: !r.specialization || !r.industry_specializations.length },
           { key: "settings", label: "Visibility & Alerts", icon: <Bell className="h-4 w-4" /> },
