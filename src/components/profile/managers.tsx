@@ -1,3 +1,4 @@
+import { optionMatches } from "@/lib/taxonomy-aliases";
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
@@ -327,7 +328,7 @@ export function LookupManager({ uid, table, options, otherOptions = [], rows, no
   const [busy, setBusy] = useState(false);
   const plural = noun === "technology" ? "technologies" : noun + "s";
   const chosen = new Set(rows.map((r) => r.lookup_id));
-  const matches = options.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q.toLowerCase()) || (o.group ?? "").toLowerCase().includes(q.toLowerCase())));
+  const matches = options.filter((o) => !chosen.has(o.id) && optionMatches(o, q));
 
   async function run(p: PromiseLike<{ error: unknown }>, ok: string) {
     setBusy(true);
