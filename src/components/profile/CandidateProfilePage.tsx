@@ -210,29 +210,27 @@ function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 text-sm">{v || "—"}</dd></div>;
 }
 
-function Header({ account, p, percent, onPreview }: { account: Account; p: Profile; percent: number; onPreview: () => void }) {
+function Header({ account, p }: { account: Account; p: Profile }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
   const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
   return (
     <div className={`${card} overflow-hidden`}>
-      <div className="h-24 bg-gradient-hero" />
-      <div className="px-5 pb-6 sm:px-6">
-        <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
+      <div className="h-16 bg-gradient-hero" />
+      <div className="px-5 pb-5 pt-1 sm:px-6">
+        <div className="-mt-10 flex items-end justify-between gap-4">
           <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
-          <div className="flex flex-wrap gap-2">
-            <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
-          </div>
         </div>
-        <h1 className="mt-4 font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
-        <p className="font-medium">{p.job_title || "Add your current role"}</p>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="font-display text-xl font-extrabold">{account.firstName} {account.lastName}</h1>
+          <p className="text-sm font-medium text-muted-foreground">{p.job_title || "Add your current role"}</p>
+        </div>
         {p.headline && <p className="text-sm text-muted-foreground">{p.headline}</p>}
         <BannerLinks uid={account.userId} p={p} />
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(p.availability)}`}>{label(AVAILABILITY, p.availability)}</span>
-          <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">Profile Completion {percent}%</span>
         </div>
       </div>
     </div>
