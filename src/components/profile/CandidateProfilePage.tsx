@@ -93,7 +93,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     jobTitle: p.job_title, headline: p.headline, location: p.location, yearsExperience: p.years_experience, summary: p.summary,
     experienceCount: data.experience.length, educationCount: data.education.length, certificationCount: data.certifications.length,
     skillCount: data.skills.length, languageCount: data.languages.length, technologyCount: data.technologies.length,
-    targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path,
+    targetRoleCount: p.target_roles.length, salaryExpectation: formatSalaryAmount(p.salary_amount, p.salary_currency), hasResume: !!p.resume_path || data.standardResumes.length > 0,
   });
   const missing = missingRequired({ jobTitle: p.job_title, headline: p.headline, location: p.location, skillCount: data.skills.length, technologyCount: data.technologies.length, targetRoleCount: p.target_roles.length });
 
@@ -118,7 +118,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !p.job_title || !p.headline || !p.location || !p.target_roles.length },
           { key: "experience", label: "Experience & Education", icon: <Briefcase className="h-4 w-4" />, incomplete: !data.experience.length || !data.education.length },
           { key: "skills", label: "Skills & Languages", icon: <Wrench className="h-4 w-4" />, incomplete: !data.skills.length || !data.technologies.length },
-          { key: "resume", label: "Resume & Visibility", icon: <FileText className="h-4 w-4" />, incomplete: !p.resume_path },
+          { key: "resume", label: "Resume & Visibility", icon: <FileText className="h-4 w-4" />, incomplete: !p.resume_path && !data.standardResumes.length },
         ]} />
 
         {tab === "about" && <>
