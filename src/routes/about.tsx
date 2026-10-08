@@ -3,6 +3,7 @@ import { Target, Brain, Zap, Eye, Compass, Telescope } from "lucide-react";
 import { PageHero, SectionHeading } from "@/components/site/shared";
 
 export const Route = createFileRoute("/about")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "About Sundance Professionals — Mission, Vision & Principles" },

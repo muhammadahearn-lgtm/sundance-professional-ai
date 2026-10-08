@@ -15,6 +15,7 @@ const TITLE = "Sundance Professionals — Free Skill-First Tech Hiring Platform"
 const DESC = "Skill-first match scores, job and candidate comparison, a hiring pipeline and an interviews hub for tech professionals and recruiters. Free during early access.";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
       { title: TITLE },

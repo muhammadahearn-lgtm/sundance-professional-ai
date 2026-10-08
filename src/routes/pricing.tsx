@@ -3,6 +3,7 @@ import { Check, Minus } from "lucide-react";
 import { PageHero, PricingCards } from "@/components/site/shared";
 
 export const Route = createFileRoute("/pricing")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
       { title: "Pricing — Free Early Access | Sundance Professionals" },

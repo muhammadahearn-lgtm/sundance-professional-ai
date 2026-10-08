@@ -8,6 +8,7 @@ import { friendlyAuthError, validateNewPassword } from "@/lib/auth-rules";
 import { AuthCard, FormAlert, SuccessScreen } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Set New Password — Sundance Professionals" },

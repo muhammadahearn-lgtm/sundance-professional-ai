@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AuthCard } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/unauthorized")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Access Denied — Sundance Professionals" },
