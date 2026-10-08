@@ -68,10 +68,11 @@ const SIDE_MEMBERS: Record<"education" | "skills", StandardResumeSection[]> = {
   skills: ["skills", "programming_languages", "technologies", "soft_skills", "spoken_languages"],
 };
 export function splitResumeColumns(sections: StandardResumeSection[]): { side: ResumeBlock[]; main: ResumeBlock[] } {
-  const side: ResumeBlock[] = (["education", "skills"] as const).filter((b) => SIDE_MEMBERS[b].some((s) => sections.includes(s)));
+  const side: ResumeBlock[] = SIDE_MEMBERS.skills.some((s) => sections.includes(s)) ? ["skills"] : [];
   const main: ResumeBlock[] = [];
   if (sections.includes("summary")) main.push("summary");
   if (sections.includes("experience") || sections.includes("projects")) main.push("experience");
+  if (SIDE_MEMBERS.education.some((s) => sections.includes(s))) main.push("education");
   return { side, main };
 }
 
