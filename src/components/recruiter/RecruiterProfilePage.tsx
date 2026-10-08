@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 import { computeRecruiterCompletion, RECRUITER_SUMMARY_MAX, validateRecruiter } from "@/lib/recruiter-completion";
 import { Chips, Field, SaveBar, Section, TagInput, card, friendlyError, inputCls } from "@/components/profile/parts";
+import { ProfileTabBar, useProfileTab } from "@/components/profile/ProfileTabs";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
 import { addCompanyEntry, loadJobCompanies, newCompanyName } from "@/lib/company-add";
 import { isLastAdmin, loadTeam, type TeamMember } from "@/lib/company-team";
@@ -48,6 +49,7 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
   const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load(uid) });
   const [preview, setPreview] = useState(false);
   const [edit, setEdit] = useState<"pro" | "spec" | "ind" | "focus" | null>(null);
+  const [tab, setTab] = useProfileTab(["about", "focus", "settings"] as const, "about");
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -98,13 +100,19 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => { setEdit("pro"); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
+            <button onClick={() => { setTab("about"); setEdit("pro"); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Profile</button>
             <Link to="/recruiter/company" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Building2 className="h-4 w-4" />View Company Profile</Link>
           </div>
         </div>
 
-        <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={editBtn("pro")}>
+        <ProfileTabBar value={tab} onChange={setTab} tabs={[
+          { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !r.title || !r.location || !r.professional_summary },
+          { key: "focus", label: "Recruiting Focus", icon: <Target className="h-4 w-4" />, incomplete: !r.specialization || !r.industry_specializations.length },
+          { key: "settings", label: "Visibility & Alerts", icon: <Bell className="h-4 w-4" /> },
+        ]} />
+
+        {tab === "about" && <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={editBtn("pro")}>
           {edit === "pro" ? <ProForm uid={uid} r={r} a={a} companyName={companyName} companies={data.companies} team={data.team} onDone={async (ok) => { if (ok) await qc.invalidateQueries({ queryKey: key }); setEdit(null); }} /> : (
             <div className="space-y-5">
               <dl className="grid gap-5 sm:grid-cols-3">
@@ -114,8 +122,9 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
               <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Professional Summary</dt><p className="mt-1 whitespace-pre-line text-sm">{r.professional_summary || "—"}</p></div>
             </div>
           )}
-        </Section>
+        </Section>}
 
+        {tab === "focus" && <>
         <Section title="Recruiting Specialization" icon={<Target className="h-4 w-4" />} action={editBtn("spec")}>
           {edit === "spec" ? (
             <ArrayForm initial={{ specialization: r.specialization, secondary: r.secondary_specializations, types: r.preferred_candidate_types }} onCancel={() => setEdit(null)}
@@ -163,7 +172,9 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
             </dl>
           )}
         </Section>
+        </>}
 
+        {tab === "settings" && <>
         <Section title="Communication Preferences" icon={<Bell className="h-4 w-4" />}>
           <div className="space-y-3">
             <Field label="Preferred Contact Method">
@@ -193,6 +204,7 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
             })}
           </div>
         </Section>
+        </>}
       </div>
       <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
         <CompletionCard percent={percent} suggestions={suggestions} />

@@ -24,6 +24,7 @@ import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } fro
 import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 import { SpokenLanguageAddButton, SpokenLanguagesManager } from "./SpokenLanguagesManager";
 import { StandardResumeWorkspace, type StandardResumeData } from "./StandardResumeWorkspace";
+import { ProfileTabBar, useProfileTab } from "./ProfileTabs";
 
 type Lk = { lookup_id: string; proficiency_level: Proficiency; years_experience: number };
 
@@ -76,6 +77,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [editPrefs, setEditPrefs] = useState(false);
   const [editLinks, setEditLinks] = useState(false);
   const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "spoken" | "skill" | "soft" | "tech" | "proj" | null>(null);
+  const [tab, setTab] = useProfileTab(["about", "experience", "skills", "resume"] as const, "about");
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -108,10 +110,18 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} percent={completion.percent}
-          onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
+          onEdit={() => { setTab("about"); setEditPro(true); }}
           onPreview={() => setPreview(true)} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
+        <ProfileTabBar value={tab} onChange={setTab} tabs={[
+          { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !p.job_title || !p.headline || !p.location || !p.target_roles.length },
+          { key: "experience", label: "Experience & Education", icon: <Briefcase className="h-4 w-4" />, incomplete: !data.experience.length || !data.education.length },
+          { key: "skills", label: "Skills & Languages", icon: <Wrench className="h-4 w-4" />, incomplete: !data.skills.length || !data.technologies.length },
+          { key: "resume", label: "Resume & Visibility", icon: <FileText className="h-4 w-4" />, incomplete: !p.resume_path },
+        ]} />
+
+        {tab === "about" && <>
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
           {editPro ? <ProfessionalForm p={p} uid={uid} onDone={() => setEditPro(false)} /> : (
             <div className="space-y-5">
@@ -123,17 +133,12 @@ export function CandidateProfilePage({ account }: { account: Account }) {
             </div>
           )}
         </Section>
-
-        <Section id="links" title="LinkedIn, GitHub & Portfolio" icon={<Globe className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
-          {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
+        <Section id="preferences" title="Career Preferences" icon={<Target className="h-4 w-4" />} action={!editPrefs && editBtn(() => setEditPrefs(true))}>
+          {editPrefs ? <PreferencesForm p={p} uid={uid} roleNames={data.roleNames} onDone={() => setEditPrefs(false)} /> : <PrefsView p={p} />}
         </Section>
+        </>}
 
-        <Section id="resume" title="Your Resume / CV" icon={<FileText className="h-4 w-4" />}>
-          <ResumeManager uid={uid} p={p} onAutofill={(f) => { setAutofillFile(f); setAutofill(true); }} />
-          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
-          <div className="mt-5 border-t border-border pt-5"><StandardResumeWorkspace account={account} data={data as StandardResumeData} /></div>
-        </Section>
-
+        {tab === "experience" && <>
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
           <ExperienceManager uid={uid} items={data.experience} adding={adding === "exp"} setAdding={(v) => setAdding(v ? "exp" : null)} />
         </Section>
@@ -146,31 +151,40 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Section id="certifications" title="Certifications" icon={<Award className="h-4 w-4" />} action={adding !== "cert" && addBtn("Add Certification", () => setAdding("cert"))}>
           <CertificationManager uid={uid} items={data.certifications} adding={adding === "cert"} setAdding={(v) => setAdding(v ? "cert" : null)} />
         </Section>
+        </>}
 
+        {tab === "skills" && <>
         <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
           <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
+        </Section>
+        <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
+          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_skills" options={data.skillOpts} otherOptions={data.techOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
+        </Section>
+        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
+          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_technologies" options={data.techOpts} otherOptions={data.skillOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
+        </Section>
+        <Section id="soft-skills" title="Soft Skills" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
+          <SoftSkillManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
         </Section>
         <Section id="spoken-languages" title="Spoken Languages" icon={<Globe className="h-4 w-4" />} action={adding !== "spoken" && <SpokenLanguageAddButton onClick={() => setAdding("spoken")} />}>
           <SpokenLanguagesManager uid={uid} items={data.spokenLanguages} adding={adding === "spoken"} setAdding={(v) => setAdding(v ? "spoken" : null)} />
           <p className="mt-3 text-xs text-muted-foreground">Spoken languages appear on your profile and Sundance resume. They never affect match or ranking scores.</p>
         </Section>
-        <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
-          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_skills" options={data.skillOpts} otherOptions={data.techOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
-        </Section>
-        <Section id="soft-skills" title="Soft Skills" icon={<HeartHandshake className="h-4 w-4" />} action={adding !== "soft" && addBtn("Add Soft Skill", () => setAdding("soft"))}>
-          <SoftSkillManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} options={data.softOpts ?? []} selected={data.softSkills ?? []} adding={adding === "soft"} setAdding={(v) => setAdding(v ? "soft" : null)} />
-        </Section>
-        <Section id="technologies" title="Technologies" icon={<Cpu className="h-4 w-4" />} action={adding !== "tech" && addBtn("Add Technology", () => setAdding("tech"))}>
-          <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_technologies" options={data.techOpts} otherOptions={data.skillOpts} rows={data.technologies} noun="technology" required successMsg="Technologies updated" adding={adding === "tech"} setAdding={(v) => setAdding(v ? "tech" : null)} />
-        </Section>
+        </>}
 
-        <Section id="preferences" title="Career Preferences" icon={<Target className="h-4 w-4" />} action={!editPrefs && editBtn(() => setEditPrefs(true))}>
-          {editPrefs ? <PreferencesForm p={p} uid={uid} roleNames={data.roleNames} onDone={() => setEditPrefs(false)} /> : <PrefsView p={p} />}
+        {tab === "resume" && <>
+        <Section id="resume" title="Your Resume / CV" icon={<FileText className="h-4 w-4" />}>
+          <ResumeManager uid={uid} p={p} onAutofill={(f) => { setAutofillFile(f); setAutofill(true); }} />
+          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
+          <div className="mt-5 border-t border-border pt-5"><StandardResumeWorkspace account={account} data={data as StandardResumeData} /></div>
         </Section>
-
+        <Section id="links" title="LinkedIn, GitHub & Portfolio" icon={<Globe className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
+          {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
+        </Section>
         <Section id="visibility" title="Profile Visibility" icon={<ShieldCheck className="h-4 w-4" />}>
           <VisibilityControls uid={uid} p={p} />
         </Section>
+        </>}
       </div>
 
       <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
