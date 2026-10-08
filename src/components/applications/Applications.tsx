@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { formatSalaryAmount } from "@/lib/salary";
 import { SearchSelect } from "@/components/ui/search-select";
 import { MessageButton } from "@/components/messages/Messages";
@@ -348,6 +350,36 @@ export function ScreeningAnswers({ applicationId, jobId, recruiter }: { applicat
             {fit === "match" && <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">Preferred</span>}
             {fit === "mismatch" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">Differs from preferred ({sq.ideal})</span>}</dd></div>);
       })}</dl>
+    </div>
+  );
+}
+
+/** Recruiter card shown to the candidate once they're in the hiring pipeline (DB-gated by application_hiring_lead). */
+function HiringLeadCard({ applicationId, status }: { applicationId: string; status: string }) {
+  const open = ["recruiter_contacted", "interviewing", "offer", "hired"].includes(status);
+  const q = useQuery({
+    queryKey: ["hiring-lead", applicationId, status],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("application_hiring_lead", { _application_id: applicationId });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+  if (!open || !q.data) return null;
+  const r = q.data;
+  const meta = [r.specialization, r.years_experience ? `${r.years_experience} years recruiting` : ""].filter(Boolean).join(" · ");
+  return (
+    <div className={`${card} p-6`}>
+      <h2 className="font-display text-lg font-bold">Your Hiring Lead</h2>
+      <div className="mt-4 flex items-center gap-4">
+        <ProfilePhoto uid={r.recruiter_id} path={r.avatar_path} initials={`${r.first_name?.[0] ?? ""}${r.last_name?.[0] ?? ""}`.toUpperCase() || "R"} className="h-14 w-14 text-lg" />
+        <div className="min-w-0">
+          <p className="font-semibold">{r.first_name} {r.last_name}</p>
+          <p className="text-sm text-muted-foreground">{[r.title, r.company_name].filter(Boolean).join(" at ")}</p>
+          {meta && <p className="text-xs text-muted-foreground">{meta}</p>}
+        </div>
+      </div>
     </div>
   );
 }
