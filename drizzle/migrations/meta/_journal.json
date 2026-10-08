@@ -428,6 +428,13 @@
       "when": 1791463192026,
       "tag": "0060_standard_resume_versions_and_spoken_languages",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1791463298765,
+      "tag": "0061_protect_published_standard_resume_files",
+      "breakpoints": true
     }
   ]
 }
