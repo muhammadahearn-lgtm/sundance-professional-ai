@@ -16,7 +16,8 @@ import { locationAlignment, type LocationAlignment } from "@/lib/location";
 import { meetsMinMatch } from "@/lib/match-engine";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { shortName } from "@/lib/compare-share";
 import { toast } from "sonner";
 import { Bookmark, BookmarkCheck, Briefcase, Check, ChevronDown, Download, Eye, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -700,6 +701,22 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
   const coName = (id: string | null) => ctx.data?.companies.find((c) => c.company_id === id)?.company_name ?? "";
   const jobOpts = (ctx.data?.jobs ?? []).filter((j) => !co || j.company_id === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${coName(j.company_id)}` }));
   const hl = (id: string) => (top?.id === id && cands.length > 1 ? "bg-primary-soft/40" : "");
+  // Snapshot mode: privacy-safe names (first + last initial), private rows and buttons hidden.
+  const shotRef = useRef<HTMLDivElement>(null);
+  const [shot, setShot] = useState(false);
+  const dn = (name: string) => { if (!shot) return name; const [f = "", ...r] = name.trim().split(/\s+/); return shortName(f, r.join(" ")); };
+  const capture = async () => {
+    setShot(true);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try {
+      const el = shotRef.current;
+      if (!el) return undefined;
+      const { toPng } = await import("html-to-image");
+      const bg = getComputedStyle(document.body).backgroundColor;
+      return await toPng(el, { pixelRatio: 2, backgroundColor: bg, width: el.scrollWidth, filter: (n) => !(n instanceof HTMLElement && n.dataset['shareHide'] !== undefined) });
+    } catch (e) { console.error("snapshot failed", e); return undefined; }
+    finally { setShot(false); }
+  };
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/candidates" className="text-sm text-muted-foreground hover:text-primary">← Back to search</Link>
@@ -713,25 +730,29 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
       {q.error ? <ErrorBox msg="Unable to load comparison." retry={() => q.refetch()} /> : q.isLoading || !t ? <div className={`${card} h-48 animate-pulse`} />
         : cands.length < 2 ? <div className={`${card} p-10 text-center`}><GitCompare className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 font-display text-lg font-bold">Select at least 2 candidates to compare</p><p className="mt-1 text-sm text-muted-foreground">You can compare up to {CANDIDATE_COMPARE_MAX}.</p>{cands.map((c) => <button key={c.id} onClick={() => lists.toggleCompare(c.id)} className={`${btn} mt-3`}>Remove {c.name}</button>)}<Link to="/recruiter/candidates" className={`${primaryBtn} ml-2 mt-4`}>Search talent</Link></div>
         : <>
-          <ShareWithTeam jobId={selJob?.job_id} candidateIds={cands.map((c) => c.id)} />
-          {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
+          <ShareWithTeam jobId={selJob?.job_id} candidateIds={cands.map((c) => c.id)} capture={capture} />
+          <div ref={shotRef} className="space-y-6 bg-background">
+          {top && topC ? <AiTopPick title={dn(topC.name)} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
             media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
             : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
-          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><div><SaveToJobControl uid={uid} candidateId={c.id} name={c.name} variant="compact" preferJobId={selJob?.job_id} /></div></th>)}</tr></thead>
-            <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
+          <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button data-share-hide onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{dn(c.name)}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><div data-share-hide><SaveToJobControl uid={uid} candidateId={c.id} name={c.name} variant="compact" preferJobId={selJob?.job_id} /></div></th>)}</tr></thead>
+            <tbody>{rows.filter(([l]) => !shot || !SHARE_PRIVATE_ROWS.has(l)).map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
+          </div>
         </>}
     </div>
   );
 }
 
-function ShareWithTeam({ jobId, candidateIds }: { jobId?: string | undefined; candidateIds: string[] }) {
+const SHARE_PRIVATE_ROWS = new Set(["Employer", "Location", "Desired Minimum Salary"]);
+function ShareWithTeam({ jobId, candidateIds, capture }: { jobId?: string | undefined; candidateIds: string[]; capture: () => Promise<string | undefined> }) {
   const share = useServerFn(shareCompareWithTeam);
   const [busy, setBusy] = useState(false);
   const run = async () => {
     if (!jobId) return;
     setBusy(true);
     try {
-      const r = await share({ data: { jobId, candidateIds: candidateIds.slice(0, 4) } });
+      const image = await capture();
+      const r = await share({ data: { jobId, candidateIds: candidateIds.slice(0, 4), ...(image && image.length < 8_000_000 ? { image } : {}) } });
       if (!r.team) toast.info("This job has no hiring team yet. Add them on the job page.");
       else toast.success(`Comparison sent to ${r.sent} of ${r.team} hiring team member${r.team === 1 ? "" : "s"}.`);
     } catch (e) { toast.error(friendlyError(e, "Could not share the comparison.")); }

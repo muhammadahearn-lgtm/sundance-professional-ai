@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Body, Button, Column, Container, Head, Heading, Html, Preview, Row, Section, Text } from '@react-email/components'
+import { Body, Button, Column, Container, Head, Heading, Html, Img, Preview, Row, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 // Privacy-safe: callers pass first name + last initial only. No email/phone/links/salary.
@@ -16,6 +16,7 @@ interface Props {
   jobTitle?: string
   candidates?: CompareEmailCandidate[]
   actionUrl?: string
+  imageUrl?: string
 }
 
 const initials = (n: string) => n.split(/\s+/).map((p) => p.charAt(0)).join('').slice(0, 2).toUpperCase() || 'C'
@@ -50,7 +51,7 @@ const Card = ({ c, rank }: { c: CompareEmailCandidate; rank: number }) => (
   </Section>
 )
 
-const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], actionUrl }: Props) => {
+const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], actionUrl, imageUrl }: Props) => {
   const sorted = [...candidates].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   const top = sorted[0]
   return (
@@ -65,7 +66,16 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], 
             {recipientName ? `Hi ${recipientName}, y` : 'Y'}our recruiter would like your opinion on these candidates.
           </Text>
 
-          {top ? (
+          {imageUrl ? (
+            <Section style={{ margin: '0 0 20px' }}>
+              <a href={imageUrl}>
+                <Img src={imageUrl} alt={`Candidate comparison for ${jobTitle}`} width="552" style={{ width: '100%', maxWidth: '552px', border: '1px solid #e2e8f0', borderRadius: '12px' }} />
+              </a>
+              <Text style={{ ...muted, margin: '6px 0 0' }}>Tap the picture to open it full size.</Text>
+            </Section>
+          ) : null}
+
+          {imageUrl ? null : top ? (
             <Section style={spotlight}>
               <Text style={spotLabel}>★ AI TOP PICK</Text>
               <Row>
@@ -91,10 +101,12 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [], 
             </Section>
           ) : null}
 
+          {imageUrl ? null : <>
           <Text style={sectionLabel}>All candidates, best match first</Text>
           {sorted.map((c, i) => (
             <Card key={`${c.name}-${i}`} c={c} rank={i + 1} />
           ))}
+          </>}
 
           <Section style={ask}>
             <Text style={{ ...text, margin: 0, fontWeight: 600, color: '#151a33' }}>
