@@ -41,3 +41,11 @@ describe("responsibilityItems", () => {
     expect(responsibilityItems("Built the payments platform.")).toEqual(["Built the payments platform."]);
   });
 });
+
+import { resumeLinks } from "./standard-resume";
+describe("resumeLinks", () => {
+  it("adds https and drops empty, mailto and unsafe links", () => {
+    expect(resumeLinks({ links: [{ label: "LinkedIn", url: "linkedin.com/in/me" }, { label: "GitHub", url: "" }, { label: "X", url: "mailto:a@b.c" }, { label: "Bad", url: "javascript:alert(1)" }] }))
+      .toEqual([{ label: "LinkedIn", url: "https://linkedin.com/in/me" }]);
+  });
+});

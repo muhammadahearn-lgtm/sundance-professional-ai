@@ -1,8 +1,8 @@
-import { PDFDocument, rgb, type PDFPage, type PDFFont } from "pdf-lib";
+import { PDFDocument, PDFString, rgb, type PDFPage, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import notoFontUrl from "@/assets/fonts/NotoSans-Variable.ttf?url";
 import type { StandardResumeSection, StandardResumeSnapshot } from "./standard-resume";
-import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems } from "./standard-resume";
+import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks } from "./standard-resume";
 
 type Photo = { bytes: ArrayBuffer; type: string } | null;
 // A4 portrait in points.
@@ -12,6 +12,14 @@ const GAP = 22;
 const navy = rgb(0.082, 0.102, 0.2), blue = rgb(0.184, 0.357, 0.878), muted = rgb(0.38, 0.42, 0.5), sideBg = rgb(0.955, 0.965, 0.99), rule = rgb(0.86, 0.89, 0.97);
 
 function clean(v: string) { return v.replace(/\s+/g, " ").trim(); }
+
+function addLink(doc: PDFDocument, page: PDFPage, x: number, y: number, w: number, h: number, url: string) {
+  const annot = doc.context.register(doc.context.obj({
+    Type: "Annot", Subtype: "Link", Rect: [x, y, x + w, y + h], Border: [0, 0, 0],
+    A: { Type: "Action", S: "URI", URI: PDFString.of(url) },
+  }));
+  page.node.addAnnot(annot);
+}
 
 async function browserImageAsPng(photo: NonNullable<Photo>): Promise<ArrayBuffer | null> {
   if (photo.type.includes("png") || photo.type.includes("jpeg") || photo.type.includes("jpg")) return null;
@@ -83,7 +91,23 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   const header = new Column(pages, addPage, font, M + photoW, W - M * 2 - photoW, H - M);
   header.text(snapshot.name, 22, navy, 1.2);
   header.text(snapshot.headline, 11, blue, 1.4);
-  if (snapshot.location) header.text(snapshot.location, 8.5, muted);
+  // Location + clickable profile links on one line (email is never included for privacy).
+  const links = resumeLinks(snapshot);
+  if (snapshot.location || links.length) {
+    const size = 8.5; let x = header.x; const y = header.y - size;
+    if (snapshot.location) { first.drawText(snapshot.location, { x, y, size, font, color: muted }); x += font.widthOfTextAtSize(snapshot.location, size) + 12; }
+    for (const l of links) {
+      const badge = l.label === "LinkedIn" ? "in" : l.label === "GitHub" ? "gh" : "www";
+      const bw = font.widthOfTextAtSize(badge, 6) + 6;
+      first.drawRectangle({ x, y: y - 2, width: bw, height: 10, color: blue });
+      first.drawText(badge, { x: x + 3, y: y + 0.5, size: 6, font, color: rgb(1, 1, 1) });
+      const tw = font.widthOfTextAtSize(l.label, size);
+      first.drawText(l.label, { x: x + bw + 3, y, size, font, color: blue });
+      addLink(doc, first, x, y - 2, bw + 3 + tw, 11, l.url);
+      x += bw + 3 + tw + 12;
+    }
+    header.y -= size * 1.4;
+  }
   const headerBottom = Math.min(header.y, photoW ? H - M - 64 : header.y) - 12;
   first.drawLine({ start: { x: M, y: headerBottom }, end: { x: W - M, y: headerBottom }, thickness: 1.5, color: blue });
   const top = headerBottom - 14;
