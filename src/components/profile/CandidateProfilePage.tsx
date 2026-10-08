@@ -13,7 +13,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Globe, FolderGit2,
+  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Globe, FolderGit2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
@@ -176,14 +176,6 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
           <div className="mt-5 border-t border-border pt-5"><StandardResumeWorkspace account={account} data={data as StandardResumeData} /></div>
         </Section>
-        <div id="visibility" className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
-          <p className="flex items-center gap-2 text-sm">
-            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
-            <span className="font-semibold">Visibility:</span>
-            <span className="text-muted-foreground">{p.visibility_status === "private" ? "Private (Applications Only)" : "Open to Talent Search"}{p.hide_from_current_employer ? " · Hidden from current employer" : ""}</span>
-          </p>
-          <Link to="/candidate/settings" hash="privacy" className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary">Manage in Settings</Link>
-        </div>
         </>}
       </div>
 
