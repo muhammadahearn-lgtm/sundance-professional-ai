@@ -724,7 +724,7 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
   );
 }
 
-function ShareWithTeam({ jobId, candidateIds }: { jobId?: string; candidateIds: string[] }) {
+function ShareWithTeam({ jobId, candidateIds }: { jobId?: string | undefined; candidateIds: string[] }) {
   const share = useServerFn(shareCompareWithTeam);
   const [busy, setBusy] = useState(false);
   const run = async () => {
