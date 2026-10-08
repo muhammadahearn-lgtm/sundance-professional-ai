@@ -236,7 +236,7 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
-          <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(p.availability)}`}>{label(AVAILABILITY, p.availability)}</span>
           <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">Profile Completion {percent}%</span>
         </div>
       </div>
@@ -449,7 +449,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
-          <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(p.availability)}`}>{label(AVAILABILITY, p.availability)}</span>
         </div>
         <div className="mt-4"><LinkBadges p={p} /></div>
       </section>

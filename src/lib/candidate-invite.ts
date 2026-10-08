@@ -10,6 +10,6 @@ export type CareerModeTag = { label: string; tone: "success" | "warning" | "mute
 /** Recruiter-facing tag for a candidate's career mode. */
 export function careerModeTag(mode: string | null | undefined): CareerModeTag {
   if (mode === "passive") return { label: "Open to Exceptional Roles", tone: "warning" };
-  if (mode === "not_looking") return { label: "Not Looking Right Now", tone: "muted" };
+  if (mode === "not_looking") return { label: "Employed & Not Looking", tone: "muted" };
   return { label: "Actively Looking", tone: "success" };
 }
