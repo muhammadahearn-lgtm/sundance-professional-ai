@@ -12,6 +12,6 @@ describe("inviteMessage", () => {
 });
 
 describe("careerModeTag", () => {
-  it("maps passive mode to Open to Exceptional Roles", () => expect(careerModeTag("passive").label).toBe("Open to Exceptional Roles"));
+  it("maps passive mode to Open to the Right Opportunity", () => expect(careerModeTag("passive").label).toBe("Open to the Right Opportunity"));
   it("defaults to Actively Looking", () => expect(careerModeTag(undefined).label).toBe("Actively Looking"));
 });

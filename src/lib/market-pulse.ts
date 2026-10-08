@@ -31,7 +31,7 @@ export function marketPulse(jobs: PulseJob[], my: { roleId: string | null; ids: 
 
 export const CAREER_MODES = [
   { value: "active", label: "Actively Looking", desc: "Recruiters see you're open to new roles now." },
-  { value: "passive", label: "Open to Exceptional Roles", desc: "Employed, but open to the right offer. Recruiters see your pay floor." },
+  { value: "passive", label: "Open to the Right Opportunity", desc: "Employed, but open to the right offer. Recruiters see your pay floor." },
   { value: "not_looking", label: "Employed & Not Looking", desc: "Keep your profile and Market Pulse — just not available right now." },
 ] as const;
 export type CareerMode = (typeof CAREER_MODES)[number]["value"];

@@ -143,7 +143,7 @@ export function SettingsPage({ account }: { account: Account }) {
           <NotificationPreferences uid={account.userId} role={account.role} />
         </Card></div>
         {account.role === "candidate" && (
-          <Card title="Career Mode" desc="Got hired? Stay quietly visible for exceptional roles while keeping your Market Pulse.">
+          <Card title="Career Mode" desc="Got hired? Stay quietly visible for the right opportunity while keeping your Market Pulse.">
             <CareerModeCard uid={account.userId} />
           </Card>
         )}

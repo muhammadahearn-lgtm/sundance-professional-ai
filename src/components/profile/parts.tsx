@@ -5,7 +5,7 @@ import { friendlyAuthError } from "@/lib/auth-rules";
 export const card = "rounded-2xl border border-border bg-card shadow-soft";
 export const inputCls = "w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
 
-export const AVAILABILITY: [string, string][] = [["active", "Actively Looking"], ["open", "Open to Exceptional Roles"], ["not_looking", "Employed & Not Looking"]];
+export const AVAILABILITY: [string, string][] = [["active", "Actively Looking"], ["open", "Open to the Right Opportunity"], ["not_looking", "Employed & Not Looking"]];
 export const availTone = (v: string) => (v === "active" ? "bg-success/15 text-success" : v === "open" ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground");
 export const ARRANGEMENTS: [string, string][] = [["remote", "Remote"], ["hybrid", "Hybrid"], ["onsite", "On-Site"]];
 export const PROFICIENCY = ["beginner", "intermediate", "advanced", "expert"] as const;
