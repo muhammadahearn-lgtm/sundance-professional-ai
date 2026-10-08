@@ -13,3 +13,4 @@
 - Applicant pool insights: aggregate-only RPC `get_candidate_application_insights`; free-preview flag in `application-insights.ts`. Why: no applicant data leaks, one toggle to monetize.
 - Job offers live in `job_offers`; recruiters write own-job offers, candidates decide only via `respond_to_offer` RPC (accept hires the candidate, moves their card to Hired, closes the job and marks other open applicants Not Moving Forward, atomically); rules in `offer-rules.ts`. Why: terms can't be forged, one decision path.
 - Candidate Applications hub tabs/next-step rules live in `application-hub.ts`; the optional apply intro note is sent as the first message via `start_conversation`, not stored on applications. Why: no schema change, recruiter sees it in chat.
+- Standard resumes: immutable snapshots/PDFs; photo opt-in; recruiter gets candidate choice with fallback. Spoken languages are display-only, never scored.

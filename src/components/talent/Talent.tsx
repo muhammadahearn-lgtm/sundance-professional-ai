@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
 import { loadTaxonomy, type Taxonomy } from "@/lib/jobs-data";
-import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, saveCandidateForJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
+import { listComparedCandidates, listSavedCandidates, listSavedEntries, listTalent, loadCandidateFull, loadSaveJobOptions, recruiterResume, resumeUrl, setComparedCandidate, setSavedCandidate, setSavedCandidateJob, saveCandidateForJob, talentByIds, type CandidateFull } from "@/lib/talent-data";
 import { SAVED_SORTS, UNASSIGNED, filterSaved, groupPickerJobs, sortSaved, topPickJob, type SavedItem, type SavedSort } from "@/lib/saved-candidates";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -483,7 +483,8 @@ const prof = (rows: { lookup_id: string; proficiency_level: string; years_experi
 export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode; stacked?: boolean }) {
   const p = d.profile;
   const [busy, setBusy] = useState(false);
-  async function download() { if (!p.resume_path) return; setBusy(true); try { window.open(await resumeUrl(p.resume_path, p.resume_file_name), "_blank", "noopener"); } catch (e) { toast.error(friendlyError(e, "Resume not available.")); } setBusy(false); }
+  const resume = recruiterResume(d);
+  async function download() { if (!resume) return; setBusy(true); try { window.open(await resumeUrl(resume.path, resume.fileName), "_blank", "noopener"); } catch (e) { toast.error(friendlyError(e, "Resume not available.")); } setBusy(false); }
   return (
     <div className={stacked ? "grid gap-4" : "grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"}>
       <div className="min-w-0 space-y-6">
@@ -493,12 +494,12 @@ export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: Cand
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Work Experience</h2>
           {d.experience.length ? <ol className="mt-4 space-y-5">{d.experience.map((e) => <li key={e.experience_id} className="border-l-2 border-primary/30 pl-4"><p className="font-semibold">{e.job_title} · {e.company_name}</p><p className="text-xs text-muted-foreground">{[e.location, e.industry, `${e.start_date ?? "?"} – ${e.current_position ? "Present" : e.end_date ?? "?"}`].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{e.responsibilities}</p>}{e.achievements && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.achievements}</p>}{e.technologies_used.length > 0 && <p className="mt-1 text-xs">Tech: {e.technologies_used.join(", ")}</p>}</li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No experience listed.</p>}</div>
         <div className={`${card} p-6`}><h2 className="mb-4 font-display text-lg font-bold">Projects</h2><ProjectList items={d.projects ?? []} /></div>
-        <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-6`}><div><h2 className="font-display text-lg font-bold">Resume</h2><p className="text-sm text-muted-foreground">{p.resume_file_name ?? "No resume uploaded"}</p></div>{p.resume_path && <button onClick={download} disabled={busy} className={btn}><Download className="h-4 w-4" />Download</button>}</div>
+        <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-6`}><div><h2 className="font-display text-lg font-bold">Resume</h2><p className="text-sm text-muted-foreground">{resume ? resume.kind === "standard" ? `Sundance Standard Resume · v${resume.version}` : resume.fileName : "No resume shared"}</p>{resume?.kind === "standard" && <p className="mt-1 text-xs font-semibold text-primary">Candidate-selected standardized version</p>}</div>{resume && <button onClick={download} disabled={busy} className={btn}><Download className="h-4 w-4" />Download PDF</button>}</div>
       </div>
       <div className="min-w-0 space-y-6">
         {aside}
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
-          <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Technologies" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /></div>
+          <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Technologies" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Spoken Languages" v={d.spokenLanguages.length ? d.spokenLanguages.map((x) => `${x.language_name} · ${cap(x.proficiency.replaceAll("_", " "))}`).join(", ") : "—"} /></div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><EducationLines e={e} /></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Certifications</h2>{d.certifications.length ? <ul className="mt-3 space-y-3">{d.certifications.map((c) => <li key={c.certification_id}><p className="font-semibold">{c.certification_name}</p><p className="text-xs text-muted-foreground">{c.issuing_organization}{c.issue_date && ` · ${c.issue_date}`}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Career Preferences</h2>

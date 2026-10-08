@@ -221,6 +221,7 @@ export type Database = {
           photo_visible: boolean
           portfolio_url: string
           programming_languages: string[]
+          recruiter_resume_choice: string
           resume_file_name: string | null
           resume_path: string | null
           resume_uploaded_at: string | null
@@ -264,6 +265,7 @@ export type Database = {
           photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
+          recruiter_resume_choice?: string
           resume_file_name?: string | null
           resume_path?: string | null
           resume_uploaded_at?: string | null
@@ -307,6 +309,7 @@ export type Database = {
           photo_visible?: boolean
           portfolio_url?: string
           programming_languages?: string[]
+          recruiter_resume_choice?: string
           resume_file_name?: string | null
           resume_path?: string | null
           resume_uploaded_at?: string | null
@@ -468,6 +471,38 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "soft_skills"
             referencedColumns: ["soft_skill_id"]
+          },
+        ]
+      }
+      candidate_spoken_languages: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          language_name: string
+          proficiency: string
+          spoken_language_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          language_name: string
+          proficiency: string
+          spoken_language_id?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          language_name?: string
+          proficiency?: string
+          spoken_language_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_spoken_languages_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2253,6 +2288,50 @@ export type Database = {
           soft_skill_name?: string
         }
         Relationships: []
+      }
+      standard_resume_versions: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          include_photo: boolean
+          pdf_path: string
+          published_at: string
+          section_order: string[]
+          snapshot: Json
+          standard_resume_id: string
+          version_number: number
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          include_photo?: boolean
+          pdf_path: string
+          published_at?: string
+          section_order?: string[]
+          snapshot: Json
+          standard_resume_id?: string
+          version_number: number
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          include_photo?: boolean
+          pdf_path?: string
+          published_at?: string
+          section_order?: string[]
+          snapshot?: Json
+          standard_resume_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standard_resume_versions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       technical_skills: {
         Row: {
