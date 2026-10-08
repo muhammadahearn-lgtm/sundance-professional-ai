@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ExternalLink, Github, Globe, Linkedin, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, Github, Globe, Linkedin, Pencil, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeUrl, validateLinks, type LinkKey } from "@/lib/profile-links";
 import { Field, SaveBar, TagInput, inputCls } from "./parts";
@@ -132,6 +133,35 @@ export function ProjectsManager({ uid, items, adding, setAdding }: { uid: string
           <button aria-label={`Delete ${x.title}`} onClick={() => remove(x.project_id)} className="rounded-lg p-1.5 text-destructive hover:bg-destructive/5"><Trash2 className="h-4 w-4" /></button>
         </span>
       )} />
+    </div>
+  );
+}
+
+/** Compact icon links for the profile banner, with a quick-edit dialog. */
+export function BannerLinks({ uid, p }: { uid: string; p: Links }) {
+  const [open, setOpen] = useState(false);
+  const keys = (Object.keys(NAMES) as LinkKey[]).filter((k) => p[k]);
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {keys.map((k) => { const I = ICONS[k]; return (
+        <a key={k} href={p[k]} target="_blank" rel="noopener noreferrer" aria-label={NAMES[k]} title={NAMES[k]}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+          <I className="h-3.5 w-3.5" />{NAMES[k]}
+        </a>
+      ); })}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <button type="button" aria-label="Edit links" className={keys.length
+            ? "inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:border-primary hover:text-primary"}>
+            {keys.length ? <Pencil className="h-3.5 w-3.5" /> : <><Plus className="h-3.5 w-3.5" />Add LinkedIn, GitHub or Portfolio</>}
+          </button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader><DialogTitle>Your Links</DialogTitle></DialogHeader>
+          <LinksForm uid={uid} p={p} onDone={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

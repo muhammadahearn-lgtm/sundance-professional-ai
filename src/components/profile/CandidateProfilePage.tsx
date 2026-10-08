@@ -20,7 +20,7 @@ import type { Account } from "@/lib/account";
 import { computeCompletion, missingRequired, validateProfessional, validateResumeFile, SUMMARY_MAX } from "@/lib/profile-completion";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
-import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } from "./links-projects";
+import { BannerLinks, LinkBadges, ProjectList, ProjectsManager, type Project } from "./links-projects";
 import { ARRANGEMENTS, AVAILABILITY, availTone, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 import { SpokenLanguageAddButton, SpokenLanguagesManager } from "./SpokenLanguagesManager";
 import { StandardResumeWorkspace, type StandardResumeData } from "./StandardResumeWorkspace";
@@ -75,7 +75,6 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [autofillFile, setAutofillFile] = useState<File | null>(null);
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
-  const [editLinks, setEditLinks] = useState(false);
   const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "spoken" | "skill" | "soft" | "tech" | "proj" | null>(null);
   const [tab, setTab] = useProfileTab(["about", "experience", "skills", "resume"] as const, "about");
 
@@ -177,8 +176,6 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
           <div className="mt-5 border-t border-border pt-5"><StandardResumeWorkspace account={account} data={data as StandardResumeData} /></div>
         </Section>
-        <Section id="links" title="LinkedIn, GitHub & Portfolio" icon={<Globe className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
-          {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
         </Section>
         <div id="visibility" className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
           <p className="flex items-center gap-2 text-sm">
@@ -236,6 +233,7 @@ function Header({ account, p, percent, onPreview }: { account: Account; p: Profi
         <h1 className="mt-4 font-display text-2xl font-extrabold">{account.firstName} {account.lastName}</h1>
         <p className="font-medium">{p.job_title || "Add your current role"}</p>
         {p.headline && <p className="text-sm text-muted-foreground">{p.headline}</p>}
+        <BannerLinks uid={account.userId} p={p} />
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
