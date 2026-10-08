@@ -314,7 +314,7 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
       </div>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
-        <p className="truncate text-sm">{c.jobTitle || "—"}</p><div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
+        <p className="truncate text-sm">{c.jobTitle || "—"}</p>{c.headline && <p className="truncate text-xs font-medium text-primary" title={c.headline}>{c.headline}</p>}<div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
         <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs</span>{c.salary && <span>Expects {c.salary}</span>}</p>
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
@@ -522,7 +522,8 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
     <div className={`${card} p-6`}>
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
-          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span></p>
+          {p.headline && <p className="text-sm font-medium text-primary">{p.headline}</p>}
+          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}{p.work_arrangement === "remote" && " · Open to Remote"}</span><span>{p.years_experience} yrs experience</span></p>
           <CareerModePill p={p} />
           <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
