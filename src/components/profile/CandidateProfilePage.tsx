@@ -110,7 +110,6 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} percent={completion.percent}
-          onEdit={() => { setTab("about"); setEditPro(true); }}
           onPreview={() => setPreview(true)} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
@@ -215,7 +214,7 @@ function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 text-sm">{v || "—"}</dd></div>;
 }
 
-function Header({ account, p, percent, onEdit, onPreview }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void }) {
+function Header({ account, p, percent, onPreview }: { account: Account; p: Profile; percent: number; onPreview: () => void }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
   const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
@@ -226,7 +225,6 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
           <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
           <div className="flex flex-wrap gap-2">
-            <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
           </div>
         </div>
