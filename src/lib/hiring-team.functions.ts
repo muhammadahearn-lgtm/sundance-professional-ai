@@ -91,10 +91,11 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     const { data: team } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email").eq("job_id", data.jobId);
     if (!team?.length) return { sent: 0, team: 0 };
     const { formatSalaryAmount } = await import("./salary");
-    const [{ data: profs }, { data: cps }, { data: scores }] = await Promise.all([
+    const [{ data: profs }, { data: cps }, { data: scores }, { data: langs }] = await Promise.all([
       supabaseAdmin.from("profiles").select("user_id, first_name, last_name").in("user_id", data.candidateIds),
       supabaseAdmin.from("candidate_profiles").select("user_id, job_title, years_experience, current_employer, location, availability, work_arrangement, salary_amount, salary_currency").in("user_id", data.candidateIds),
       supabaseAdmin.from("match_scores").select("candidate_id, overall_match_score, details").eq("job_id", data.jobId).in("candidate_id", data.candidateIds),
+      supabaseAdmin.from("candidate_languages").select("candidate_id, programming_languages(language_name)").in("candidate_id", data.candidateIds),
     ]);
     const AVAIL: Record<string, string> = { active: "Actively Looking", open: "Open to the Right Opportunity", not_looking: "Employed & Not Looking" };
     const ARR: Record<string, string> = { remote: "Remote", hybrid: "Hybrid", onsite: "On-Site" };
@@ -112,6 +113,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
         salary: cp ? formatSalaryAmount(cp.salary_amount, cp.salary_currency) : "",
         score: s ? Number(s.overall_match_score) : null,
         strengths: (det.strengths ?? []).slice(0, 4),
+        languages: (langs ?? []).filter((l) => l.candidate_id === id).map((l) => (l.programming_languages as { language_name?: string } | null)?.language_name ?? "").filter(Boolean),
       };
     });
     const stamp = Date.now();
