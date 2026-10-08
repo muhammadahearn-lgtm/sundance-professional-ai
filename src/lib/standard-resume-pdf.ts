@@ -79,15 +79,29 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   // Sidebar
   for (const block of side) {
     if (block === "skills") {
+      const langs = sections.includes("spoken_languages") ? snapshot.spokenLanguages : [];
       const groups: [string, string[]][] = [
         ["Technical skills", sections.includes("skills") ? snapshot.skills : []],
         ["Programming languages", sections.includes("programming_languages") ? snapshot.programmingLanguages : []],
         ["Tools & technologies", sections.includes("technologies") ? snapshot.technologies : []],
         ["Soft skills", sections.includes("soft_skills") ? snapshot.softSkills : []],
-        ["Languages", sections.includes("spoken_languages") ? snapshot.spokenLanguages.map((l) => `${l.name} (${l.proficiency})`) : []],
       ];
       const filled = groups.filter(([, v]) => v.length);
-      if (filled.length) { s.heading("Skills & Languages"); filled.forEach(([label, v]) => { s.sub(label); s.text(v.join(" · "), 8.5); s.space(5); }); }
+      if (filled.length || langs.length) {
+        s.heading("Skills & Languages");
+        filled.forEach(([label, v]) => { s.sub(label); s.text(v.join(" · "), 8.5); s.space(5); });
+        if (langs.length) {
+          if (filled.length) s.space(3);
+          s.sub("Languages");
+          langs.forEach((l) => {
+            s.need(18);
+            const pw = font.widthOfTextAtSize(l.proficiency, 8);
+            s.page.drawText(l.proficiency, { x: s.x + s.width - pw, y: s.y - 10, size: 8, font, color: muted });
+            const full = s.width; s.width = full - (pw + 10); s.text(l.name, 8.5); s.width = full;
+            s.space(4);
+          });
+        }
+      }
     }
   }
 
