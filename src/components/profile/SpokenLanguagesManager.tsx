@@ -5,16 +5,17 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { TextPicker } from "@/components/taxonomy/TextPicker";
 import { SPOKEN_LANGUAGE_LEVELS, spokenLanguageLevelLabel, type SpokenLanguageLevel } from "@/lib/standard-resume";
+import { SPOKEN_LANGUAGE_CATALOG, normalizeSpokenLanguage } from "@/lib/spoken-languages";
 import { friendlyError, inputCls } from "./parts";
 
 export type SpokenLanguage = { spoken_language_id: string; language_name: string; proficiency: string };
-const COMMON = ["English", "Spanish", "French", "German", "Portuguese", "Arabic", "Mandarin Chinese", "Hindi", "Bengali", "Japanese", "Korean", "Italian", "Dutch", "Swedish", "Norwegian", "Danish", "Polish", "Turkish", "Vietnamese", "Urdu"];
+const COMMON = SPOKEN_LANGUAGE_CATALOG;
 
 export function SpokenLanguagesManager({ uid, items, adding, setAdding }: { uid: string; items: SpokenLanguage[]; adding: boolean; setAdding: (v: boolean) => void }) {
   const qc = useQueryClient(); const [name, setName] = useState(""); const [level, setLevel] = useState<SpokenLanguageLevel>("professional"); const [busy, setBusy] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
   async function add() {
-    const clean = name.trim(); if (clean.length < 2) { toast.error("Enter a spoken language."); return; }
+    const clean = normalizeSpokenLanguage(name); if (items.some((i) => i.language_name.toLowerCase() === clean.toLowerCase())) { toast.error(`${clean} is already on your list.`); return; } if (clean.length < 2) { toast.error("Enter a spoken language."); return; }
     setBusy(true); const { error } = await supabase.from("candidate_spoken_languages").insert({ candidate_id: uid, language_name: clean, proficiency: level }); setBusy(false);
     if (error) { toast.error(friendlyError(error, "Couldn't add that language.")); return; }
     toast.success("Spoken language added"); setName(""); setAdding(false); void refresh();
@@ -22,7 +23,7 @@ export function SpokenLanguagesManager({ uid, items, adding, setAdding }: { uid:
   async function remove(id: string) { const { error } = await supabase.from("candidate_spoken_languages").delete().eq("spoken_language_id", id); if (error) { toast.error("Couldn't remove that language."); return; } toast.success("Spoken language removed"); void refresh(); }
   return <div className="space-y-4">
     {adding && <div className="grid gap-3 rounded-xl border border-primary/30 bg-primary-soft/30 p-4 sm:grid-cols-[1fr_200px_auto]">
-      <TextPicker ariaLabel="Spoken language" options={COMMON.filter((x) => !items.some((i) => i.language_name.toLowerCase() === x.toLowerCase()))} value={name} onChange={setName} placeholder="Search or add a language…" addHint="Not listed? Add the language you speak." />
+      <TextPicker ariaLabel="Spoken language" options={COMMON.filter((x) => !items.some((i) => i.language_name.toLowerCase() === x.toLowerCase()))} value={name} onChange={(v) => setName(normalizeSpokenLanguage(v))} placeholder="Search or add a language…" addHint="Not listed? Add the language you speak." />
       <select aria-label="Spoken language proficiency" className={inputCls} value={level} onChange={(e) => setLevel(e.target.value as SpokenLanguageLevel)}>{SPOKEN_LANGUAGE_LEVELS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
       <div className="flex gap-2"><button type="button" onClick={() => setAdding(false)} className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">Cancel</button><button type="button" onClick={add} disabled={busy} className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Add</button></div>
     </div>}
