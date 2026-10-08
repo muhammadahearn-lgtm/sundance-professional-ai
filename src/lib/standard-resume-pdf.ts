@@ -1,8 +1,9 @@
-import { PDFDocument, PDFString, rgb, type PDFPage, type PDFFont } from "pdf-lib";
+import { PDFDocument, PDFString, rgb, type PDFImage, type PDFPage, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import notoFontUrl from "@/assets/fonts/NotoSans-Variable.ttf?url";
 import type { StandardResumeSection, StandardResumeSnapshot } from "./standard-resume";
 import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks } from "./standard-resume";
+import { resumeIconSvg, svgToPng, type ResumeIconKey } from "./resume-icons";
 
 type Photo = { bytes: ArrayBuffer; type: string } | null;
 // A4 portrait in points.
@@ -97,15 +98,23 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   if (snapshot.location || links.length) {
     const size = 8.5; let x = header.x; const y = header.y - size;
     if (snapshot.location) { first.drawText(snapshot.location, { x, y, size, font, color: muted }); x += font.widthOfTextAtSize(snapshot.location, size) + 12; }
+    // Real LinkedIn / GitHub / Portfolio logos, rasterized once and embedded as PNGs.
+    const iconKey = (label: string): ResumeIconKey => label === "LinkedIn" ? "linkedin" : label === "GitHub" ? "github" : "globe";
+    const icons = new Map<ResumeIconKey, PDFImage>();
     for (const l of links) {
-      const badge = l.label === "LinkedIn" ? "in" : l.label === "GitHub" ? "gh" : "www";
-      const bw = font.widthOfTextAtSize(badge, 6) + 6;
-      first.drawRectangle({ x, y: y - 2, width: bw, height: 10, color: blue });
-      first.drawText(badge, { x: x + 3, y: y + 0.5, size: 6, font, color: rgb(1, 1, 1) });
+      const key = iconKey(l.label);
+      if (icons.has(key)) continue;
+      const png = await svgToPng(resumeIconSvg(key, "#334155"));
+      if (png) icons.set(key, await doc.embedPng(png));
+    }
+    for (const l of links) {
+      const img = icons.get(iconKey(l.label));
+      const iw = img ? 9 * (img.width / img.height) : 0;
+      if (img) first.drawImage(img, { x, y: y - 1.5, width: iw, height: 9 });
       const tw = font.widthOfTextAtSize(l.label, size);
-      first.drawText(l.label, { x: x + bw + 3, y, size, font, color: blue });
-      addLink(doc, first, x, y - 2, bw + 3 + tw, 11, l.url);
-      x += bw + 3 + tw + 12;
+      first.drawText(l.label, { x: x + (img ? iw + 3 : 0), y, size, font, color: blue });
+      addLink(doc, first, x, y - 2, (img ? iw + 3 : 0) + tw, 11, l.url);
+      x += (img ? iw + 3 : 0) + tw + 12;
     }
     header.y -= size * 1.4;
   }
