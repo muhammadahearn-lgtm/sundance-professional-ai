@@ -60,3 +60,22 @@ export function validSoftSkillSelection(ids: string[]): boolean {
 export function spokenLanguageLevelLabel(level: string): string {
   return SPOKEN_LANGUAGE_LEVELS.find(([key]) => key === level)?.[1] ?? level;
 }
+
+/** Two-column A4 layout: sidebar = education/certs + skills/languages; main = profile + experience/projects. */
+export type ResumeBlock = "summary" | "experience" | "education" | "skills";
+const SIDE_MEMBERS: Record<"education" | "skills", StandardResumeSection[]> = {
+  education: ["education", "certifications"],
+  skills: ["skills", "programming_languages", "technologies", "soft_skills", "spoken_languages"],
+};
+export function splitResumeColumns(sections: StandardResumeSection[]): { side: ResumeBlock[]; main: ResumeBlock[] } {
+  const side: ResumeBlock[] = (["education", "skills"] as const).filter((b) => SIDE_MEMBERS[b].some((s) => sections.includes(s)));
+  const main: ResumeBlock[] = [];
+  if (sections.includes("summary")) main.push("summary");
+  if (sections.includes("experience") || sections.includes("projects")) main.push("experience");
+  return { side, main };
+}
+
+export function resumePeriod(v: { start: string | null; end: string | null; current: boolean }): string {
+  const f = (d: string | null) => d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
+  return [f(v.start), v.current ? "Present" : f(v.end)].filter(Boolean).join(" – ");
+}
