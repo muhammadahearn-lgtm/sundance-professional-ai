@@ -2,7 +2,7 @@ import { formatSalaryAmount } from "./salary";
 import { supabase } from "@/integrations/supabase/client";
 import { computeCompletion } from "./profile-completion";
 import type { TalentRow } from "./talent-rules";
-import { chosenResume, type ResumeChoice, type StandardResumeSnapshot } from "./standard-resume";
+import { chosenResume, resumeFileName, type ResumeChoice, type StandardResumeSnapshot } from "./standard-resume";
 
 type Profile = { user_id: string; job_title: string; current_employer: string; location: string; location_country?: string; location_state?: string; location_city?: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; current_level_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null; recruiter_resume_choice: string };
 

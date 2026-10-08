@@ -1,6 +1,8 @@
 export const STANDARD_RESUME_PREMIUM_PREVIEW = true;
 export const STANDARD_RESUME_MAX_SOFT_SKILLS = 5;
 export const STANDARD_RESUME_KEEP_VERSIONS = 3;
+/** Download name built from the candidate's name, e.g. "Muhammad-Ahearn-Resume.pdf". */
+export function resumeFileName(name: string) { const base = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); return `${base || "Candidate"}-Resume.pdf`; }
 
 export const SPOKEN_LANGUAGE_LEVELS = [
   ["native_bilingual", "Native"],

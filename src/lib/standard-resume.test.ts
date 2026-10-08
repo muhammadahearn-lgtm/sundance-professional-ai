@@ -50,3 +50,10 @@ describe("resumeLinks", () => {
       .toEqual([{ label: "LinkedIn", url: "https://linkedin.com/in/me" }]);
   });
 });
+
+import { resumeFileName as rf } from "./standard-resume";
+import { test as t2, expect as e2 } from "vitest";
+t2("resume download name uses the candidate's name", () => {
+  e2(rf("Muhammad Ahearn")).toBe("Muhammad-Ahearn-Resume.pdf");
+  e2(rf("  ")).toBe("Candidate-Resume.pdf");
+});

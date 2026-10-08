@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_KEEP_VERSIONS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_KEEP_VERSIONS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumeFileName, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import { CandidateResumeAccessPanel } from "./ResumeAccess";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
