@@ -34,6 +34,8 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
 import { bestBy, rankCompare } from "@/lib/compare-rank";
 import { careerModeTag } from "@/lib/candidate-invite";
+import { useServerFn } from "@tanstack/react-start";
+import { shareCompareWithTeam } from "@/lib/hiring-team.functions";
 import { InviteToApplyButton, JobMatchLens } from "./CandidateMatchLens";
 
 /** Highest score each candidate has across the recruiter's jobs. */
@@ -711,12 +713,34 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
       {q.error ? <ErrorBox msg="Unable to load comparison." retry={() => q.refetch()} /> : q.isLoading || !t ? <div className={`${card} h-48 animate-pulse`} />
         : cands.length < 2 ? <div className={`${card} p-10 text-center`}><GitCompare className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 font-display text-lg font-bold">Select at least 2 candidates to compare</p><p className="mt-1 text-sm text-muted-foreground">You can compare up to {CANDIDATE_COMPARE_MAX}.</p>{cands.map((c) => <button key={c.id} onClick={() => lists.toggleCompare(c.id)} className={`${btn} mt-3`}>Remove {c.name}</button>)}<Link to="/recruiter/candidates" className={`${primaryBtn} ml-2 mt-4`}>Search talent</Link></div>
         : <>
+          <ShareWithTeam jobId={selJob?.job_id} candidateIds={cands.map((c) => c.id)} />
           {top && topC ? <AiTopPick title={topC.name} subtitle={[topC.jobTitle, `${topC.years} yrs experience`].filter(Boolean).join(" · ")} score={Number(top.score)} lead={lead}
             media={<Avatar name={topC.name} path={topC.avatarPath} size="h-10 w-10 text-sm" />} context={`strongest of ${cands.length} candidates ${scope}`} reasons={det(top.id).strengths ?? []} />
             : <div className={`${card} flex items-center gap-2 border-dashed p-4 text-sm text-muted-foreground`}><Sparkles className="h-4 w-4 text-primary" />No match scores yet {scope} — the AI top pick appears once scores are ready.</div>}
           <div className={`${card} overflow-x-auto`}><table className="w-full min-w-[640px] border-collapse text-sm"><thead><tr>{cands.map((c, i) => <th key={c.id} className={`min-w-[200px] ${i > 0 ? "border-l border-border" : ""} p-4 text-left align-top font-normal ${hl(c.id)}`}><div className="flex items-start justify-between gap-2"><Avatar name={c.name} path={c.avatarPath} size="h-10 w-10 text-sm" /><button onClick={() => lists.toggleCompare(c.id)} aria-label="Remove from comparison" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><X className="h-4 w-4" /></button></div><Link to="/recruiter/candidates/$id" params={{ id: c.id }} className="mt-2 block font-display font-bold hover:text-primary">{c.name}</Link><RankPill rank={ranks[c.id]} score={scoreOf(c.id)} /><div><SaveToJobControl uid={uid} candidateId={c.id} name={c.name} variant="compact" preferJobId={selJob?.job_id} /></div></th>)}</tr></thead>
             <tbody>{rows.map(([l, fn]) => <tr key={l} className="border-t border-border">{cands.map((c, i) => <td key={c.id} className={`${i > 0 ? "border-l border-border" : ""} p-4 align-top ${hl(c.id)}`}><div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{l}</div>{fn(c) || "—"}{best[l] === c.id && <BestTag />}</td>)}</tr>)}</tbody></table></div>
         </>}
+    </div>
+  );
+}
+
+function ShareWithTeam({ jobId, candidateIds }: { jobId?: string; candidateIds: string[] }) {
+  const share = useServerFn(shareCompareWithTeam);
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (!jobId) return;
+    setBusy(true);
+    try {
+      const r = await share({ data: { jobId, candidateIds: candidateIds.slice(0, 4) } });
+      if (!r.team) toast.info("This job has no hiring team yet. Add them on the job page.");
+      else toast.success(`Comparison sent to ${r.sent} of ${r.team} hiring team member${r.team === 1 ? "" : "s"}.`);
+    } catch (e) { toast.error(friendlyError(e, "Could not share the comparison.")); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
+      <p className="text-sm text-muted-foreground">{jobId ? "Ask your hiring team which candidate to invite. They get names (first name + last initial), match scores and strengths only — never emails or contact details." : "Pick a job above to share this comparison with its hiring team."}</p>
+      <button onClick={run} disabled={!jobId || busy} className={`${primaryBtn} disabled:opacity-50`}>{busy ? "Sending…" : "Share with Hiring Team"}</button>
     </div>
   );
 }

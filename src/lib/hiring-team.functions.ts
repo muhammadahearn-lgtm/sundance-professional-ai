@@ -92,14 +92,14 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     if (!team?.length) return { sent: 0, team: 0 };
     const [{ data: profs }, { data: cps }, { data: scores }] = await Promise.all([
       supabaseAdmin.from("profiles").select("user_id, first_name, last_name").in("user_id", data.candidateIds),
-      supabaseAdmin.from("candidate_profiles").select("candidate_id, job_title").in("candidate_id", data.candidateIds),
+      supabaseAdmin.from("candidate_profiles").select("user_id, job_title, years_experience").in("user_id", data.candidateIds),
       supabaseAdmin.from("match_scores").select("candidate_id, overall_match_score, details").eq("job_id", data.jobId).in("candidate_id", data.candidateIds),
     ]);
     const list = data.candidateIds.map((id) => {
       const p = profs?.find((x) => x.user_id === id);
       const s = scores?.find((x) => x.candidate_id === id);
       const det = (s?.details ?? {}) as { strengths?: string[] };
-      return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.candidate_id === id)?.job_title ?? "", years: null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
+      return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.user_id === id)?.job_title ?? "", years: cps?.find((x) => x.user_id === id)?.years_experience ?? null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
     });
     const summary = buildCompareSummary(job.job_title, list);
     const stamp = Date.now();
