@@ -27,9 +27,14 @@ async function browserImageAsPng(photo: NonNullable<Photo>): Promise<ArrayBuffer
 /** A column that flows across pages independently. */
 class Column {
   y: number; pageIndex = 0;
-  constructor(private pages: PDFPage[], private addPage: () => PDFPage, private font: PDFFont, public x: number, public width: number, startY: number) { this.y = startY; }
+  constructor(private pages: PDFPage[], private addPage: () => PDFPage, private font: PDFFont, public x: number, public width: number, startY: number, private widenOnNewPage = false) { this.y = startY; }
   get page() { return this.pages[this.pageIndex]!; }
-  need(h: number) { if (this.y - h >= M) return; this.pageIndex++; if (!this.pages[this.pageIndex]) this.addPage(); this.y = H - M; }
+  need(h: number) {
+    if (this.y - h >= M) return;
+    this.pageIndex++; if (!this.pages[this.pageIndex]) this.addPage(); this.y = H - M;
+    // Main column uses the full page width after page 1 (no sidebar there).
+    if (this.widenOnNewPage && this.pageIndex === 1) { const shift = this.x - M; this.x -= shift; this.width += shift; }
+  }
   wrap(text: string, size: number) {
     const words = clean(text).split(" ").filter(Boolean); const lines: string[] = []; let line = "";
     for (const w of words) { const next = line ? `${line} ${w}` : w; if (this.font.widthOfTextAtSize(next, size) <= this.width) line = next; else { if (line) lines.push(line); line = w; } }
