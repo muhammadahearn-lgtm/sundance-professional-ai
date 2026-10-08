@@ -75,7 +75,8 @@ class Column {
 
 export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, sections: StandardResumeSection[], photo: Photo): Promise<Uint8Array> {
   const doc = await PDFDocument.create(); doc.registerFontkit(fontkit);
-  const font = await doc.embedFont(await fetch(notoFontUrl).then((r) => r.arrayBuffer()), { subset: true });
+  // subset:false — fontkit's subsetter produces a subset that poppler/Ghostscript/pdf.js render as missing glyphs; the full static font renders everywhere.
+  const font = await doc.embedFont(await fetch(notoFontUrl).then((r) => r.arrayBuffer()), { subset: false });
   const pages: PDFPage[] = [];
   // Only page 1 gets the tinted sidebar; skills finish there, so later pages stay clean white.
   const addPage = () => { const p = doc.addPage([W, H]); if (!pages.length) p.drawRectangle({ x: 0, y: 0, width: M + SIDE_W + GAP / 2, height: H, color: sideBg }); pages.push(p); return p; };
