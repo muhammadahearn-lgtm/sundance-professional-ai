@@ -39,8 +39,19 @@ class Column {
     if (!clean(value)) return;
     for (const line of this.wrap(value, size)) { this.need(size * lh); this.page.drawText(line, { x: this.x, y: this.y - size, size, font: this.font, color }); this.y -= size * lh; }
   }
+  bullets(items: string[], size = 9) {
+    if (items.length <= 1) { this.text(items[0] ?? "", size); return; }
+    const full = this.width, x0 = this.x;
+    for (const item of items) {
+      this.need(size * 1.4);
+      this.page.drawText("•", { x: x0 + 1, y: this.y - size, size, font: this.font, color: blue });
+      this.x = x0 + 10; this.width = full - 10; this.text(item, size); this.x = x0; this.width = full;
+      this.y -= 1;
+    }
+  }
   heading(label: string) {
-    this.need(40); this.y -= 6;
+    // Keep-with-next: reserve room for the heading plus its first item so it never sits alone at the page bottom.
+    this.need(72); this.y -= 6;
     this.page.drawText(label.toUpperCase(), { x: this.x, y: this.y - 8.5, size: 8.5, font: this.font, color: blue });
     this.y -= 14; this.page.drawLine({ start: { x: this.x, y: this.y }, end: { x: this.x + this.width, y: this.y }, thickness: 0.8, color: rule }); this.y -= 8;
   }
@@ -52,7 +63,8 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   const doc = await PDFDocument.create(); doc.registerFontkit(fontkit);
   const font = await doc.embedFont(await fetch(notoFontUrl).then((r) => r.arrayBuffer()), { subset: true });
   const pages: PDFPage[] = [];
-  const addPage = () => { const p = doc.addPage([W, H]); p.drawRectangle({ x: 0, y: 0, width: M + SIDE_W + GAP / 2, height: H, color: sideBg }); pages.push(p); return p; };
+  // Only page 1 gets the tinted sidebar; skills finish there, so later pages stay clean white.
+  const addPage = () => { const p = doc.addPage([W, H]); if (!pages.length) p.drawRectangle({ x: 0, y: 0, width: M + SIDE_W + GAP / 2, height: H, color: sideBg }); pages.push(p); return p; };
   const first = addPage();
 
   // Header (full width, sits on top of both columns)
