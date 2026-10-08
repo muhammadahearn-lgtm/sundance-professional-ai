@@ -21,7 +21,7 @@ import { computeCompletion, missingRequired, validateProfessional, validateResum
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
 import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } from "./links-projects";
-import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
+import { ARRANGEMENTS, AVAILABILITY, availTone, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 import { SpokenLanguageAddButton, SpokenLanguagesManager } from "./SpokenLanguagesManager";
 import { StandardResumeWorkspace, type StandardResumeData } from "./StandardResumeWorkspace";
 import { ProfileTabBar, useProfileTab } from "./ProfileTabs";

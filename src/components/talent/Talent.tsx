@@ -28,7 +28,7 @@ import { SAVED_SORTS, UNASSIGNED, filterSaved, groupPickerJobs, sortSaved, topPi
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
-import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
+import { ARRANGEMENTS, AVAILABILITY, availTone, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
 import { SearchSelect } from "@/components/ui/search-select";
 import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
@@ -522,7 +522,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
     <div className={`${card} p-6`}>
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
-          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
+          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span></p>
           <CareerModePill p={p} />
           <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}
