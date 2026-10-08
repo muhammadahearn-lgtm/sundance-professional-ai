@@ -119,7 +119,7 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
         </div></section>}
       </aside>
       <main className="space-y-5 px-6 py-5">
-        {has("summary") && snapshot.summary && <section><H>Profile</H><p>{snapshot.summary}</p></section>}
+        {has("summary") && snapshot.summary && <section><H>PROFILE SUMMARY</H><p>{snapshot.summary}</p></section>}
         {(exp.length > 0 || proj.length > 0) && <section><H>{exp.length && proj.length ? "Experience & Projects" : exp.length ? "Experience" : "Projects"}</H><div className="space-y-3.5">
           {exp.map((e, i) => <div key={`x${i}`}><div className="flex items-baseline justify-between gap-3"><p className="text-[13px] font-semibold">{e.title}</p><span className="shrink-0 text-[10px] text-muted-foreground">{resumePeriod(e)}</span></div><p className="text-[11px] text-muted-foreground">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-1">{e.responsibilities}</p>}{e.technologies.length > 0 && <p className="mt-1 text-[10px] text-muted-foreground">{e.technologies.join(" · ")}</p>}</div>)}
           {proj.length > 0 && exp.length > 0 && <p className="pt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Projects</p>}
