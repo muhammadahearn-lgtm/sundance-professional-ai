@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Eye, FileBadge2, Loader2, Sparkles } from "lucide-react";
+import { Check, Download, Eye, FileBadge2, Github, Globe, Linkedin, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
