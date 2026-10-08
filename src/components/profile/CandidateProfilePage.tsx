@@ -405,29 +405,41 @@ function ResumeManager({ uid, p, onAutofill }: { uid: string; p: Profile; onAuto
 }
 
 const VIS: [string, string, string][] = [
-  ["public", "Public", "Visible to platform users."],
-  ["recruiter_searchable", "Recruiter Searchable", "Visible in recruiter search results."],
-  ["private", "Private", "Hidden from recruiter searches."],
+  ["recruiter_searchable", "Open to Talent Search", "Verified recruiters on Sundance can discover your profile and reach out with opportunities."],
+  ["private", "Private (Applications Only)", "Hidden from recruiter search. Only hiring teams for jobs you apply to can see your profile."],
 ];
 
 function VisibilityControls({ uid, p }: { uid: string; p: Profile }) {
   const save = useSaveProfile(uid);
+  // Legacy "public" behaves exactly like talent search.
+  const current = p.visibility_status === "private" ? "private" : "recruiter_searchable";
+  const [employer, setEmployer] = useState("");
+  const needsEmployer = p.hide_from_current_employer && !p.current_employer?.trim();
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {VIS.map(([k, l, d]) => (
-          <button key={k} type="button" onClick={() => k !== p.visibility_status && save({ visibility_status: k as Profile["visibility_status"] }, "Visibility updated")}
-            className={`rounded-xl border p-4 text-left transition-colors ${p.visibility_status === k ? "border-primary bg-primary-soft" : "border-border hover:border-primary/50"}`}>
-            <p className={`flex items-center gap-1.5 font-semibold ${p.visibility_status === k ? "text-primary" : ""}`}>{k === "private" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}{l}</p>
+          <button key={k} type="button" aria-pressed={current === k} onClick={() => k !== current && save({ visibility_status: k as Profile["visibility_status"] }, "Visibility updated")}
+            className={`rounded-xl border p-4 text-left transition-colors ${current === k ? "border-primary bg-primary-soft" : "border-border hover:border-primary/50"}`}>
+            <p className={`flex items-center gap-1.5 font-semibold ${current === k ? "text-primary" : ""}`}>{k === "private" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}{l}</p>
             <p className="mt-1 text-xs text-muted-foreground">{d}</p>
           </button>
         ))}
       </div>
-      <label className="flex items-start gap-3 rounded-xl border border-border p-4">
-        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-primary" checked={p.hide_from_current_employer}
-          onChange={(e) => save({ hide_from_current_employer: e.target.checked }, e.target.checked ? "Hidden from current employer" : "Current employer protection disabled")} />
-        <span><span className="block text-sm font-semibold">Hide From Current Employer</span><span className="text-xs text-muted-foreground">Recruiters from {p.current_employer || "your current employer"} won't see your profile.</span></span>
-      </label>
+      <p className="text-xs text-muted-foreground">Your profile is never public on the internet or visible to other candidates. Applying to a job always lets that hiring team review your profile.</p>
+      <div className="rounded-xl border border-border p-4">
+        <label className="flex items-start gap-3">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-primary" checked={p.hide_from_current_employer}
+            onChange={(e) => save({ hide_from_current_employer: e.target.checked }, e.target.checked ? "Hidden from current employer" : "Current employer protection disabled")} />
+          <span><span className="block text-sm font-semibold">Hide From Current Employer</span><span className="text-xs text-muted-foreground">{p.current_employer?.trim() ? `Recruiters from ${p.current_employer} won't see your profile.` : "Add your current employer so we know who to hide you from."}</span></span>
+        </label>
+        {needsEmployer && (
+          <form className="mt-3 flex flex-wrap gap-2 pl-7" onSubmit={(e) => { e.preventDefault(); const v = employer.trim(); if (v) save({ current_employer: v }, "Current employer saved"); }}>
+            <input className={`${inputCls} flex-1`} placeholder="Your current company" value={employer} onChange={(e) => setEmployer(e.target.value)} aria-label="Current employer" />
+            <button type="submit" disabled={!employer.trim()} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">Save</button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
