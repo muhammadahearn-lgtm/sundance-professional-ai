@@ -108,11 +108,14 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
-        <Header account={account} p={p} percent={completion.percent}
-          onPreview={() => setPreview(true)} />
+        <Header account={account} p={p} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
-        <ProfileTabBar value={tab} onChange={setTab} tabs={[
+        <ProfileTabBar value={tab} onChange={setTab} action={
+          <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold shadow-soft hover:bg-muted">
+            <Eye className="h-4 w-4" aria-hidden /><span className="sr-only sm:not-sr-only">Preview Profile</span>
+          </button>
+        } tabs={[
           { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !p.job_title || !p.headline || !p.location || !p.target_roles.length },
           { key: "experience", label: "Experience & Education", icon: <Briefcase className="h-4 w-4" />, incomplete: !data.experience.length || !data.education.length },
           { key: "skills", label: "Skills & Languages", icon: <Wrench className="h-4 w-4" />, incomplete: !data.skills.length || !data.technologies.length },
