@@ -122,8 +122,10 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
           {proj.length > 0 && exp.length > 0 && <p className="pt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Projects</p>}
           {proj.map((p, i) => <div key={`p${i}`}><p className="font-semibold">{p.title}</p>{p.description && <p>{p.description}</p>}{p.technologies.length > 0 && <p className="text-[10px] text-muted-foreground">{p.technologies.join(" · ")}</p>}</div>)}
         </div></section>}
-        {(edu.length > 0 || certs.length > 0) && <section><H>{certs.length ? "Education & Certifications" : "Education"}</H><div className="space-y-2">
+        {edu.length > 0 && <section><H>Education</H><div className="space-y-2">
           {edu.map((e, i) => <div key={`e${i}`}><div className="flex items-baseline justify-between gap-3"><p className="font-semibold">{[e.degree, e.field].filter(Boolean).join(" in ")}</p><span className="shrink-0 text-[10px] text-muted-foreground">{e.year ?? ""}</span></div><p className="text-[11px] text-muted-foreground">{e.institution}</p></div>)}
+        </div></section>}
+        {certs.length > 0 && <section><H>Certifications</H><div className="space-y-2">
           {certs.map((c, i) => <div key={`c${i}`}><div className="flex items-baseline justify-between gap-3"><p className="font-semibold">{c.name}</p><span className="shrink-0 text-[10px] text-muted-foreground">{c.issued?.slice(0, 4) ?? ""}</span></div><p className="text-[11px] text-muted-foreground">{c.issuer}</p></div>)}
         </div></section>}
       </main>
