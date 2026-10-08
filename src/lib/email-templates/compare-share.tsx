@@ -71,7 +71,7 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
             <Section style={spot}>
               <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}><tbody><tr>
                 <td style={{ width: '104px', verticalAlign: 'middle' }}>
-                  <table role="presentation" width={92} height={92} cellPadding={0} cellSpacing={0} style={ring}><tbody><tr>
+                  <table role="presentation" width={92} cellPadding={0} cellSpacing={0} style={ring}><tbody><tr>
                     <td align="center" valign="middle" width={92} height={86} style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
                       <div style={crown}>♛</div>
                       <div style={{ fontSize: '22px', fontWeight: 700, color: '#1f8a4c', lineHeight: '24px', margin: 0 }}>{pct(top.score)}</div>
