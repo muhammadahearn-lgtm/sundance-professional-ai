@@ -80,3 +80,25 @@ export function resumePeriod(v: { start: string | null; end: string | null; curr
   const f = (d: string | null) => d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
   return [f(v.start), v.current ? "Present" : f(v.end)].filter(Boolean).join(" – ");
 }
+
+/** Page budget: keeps most resumes to one A4 page and senior ones to a clean two. */
+export const RESUME_LIMITS = { fullExperience: 4, certifications: 4, projects: 2, education: 3 } as const;
+type Exp = StandardResumeSnapshot["experience"][number];
+const expKey = (e: Exp) => `${e.current ? "9" : "0"}${e.end ?? e.start ?? ""}${e.start ?? ""}`;
+export function budgetResume(s: StandardResumeSnapshot) {
+  const exp = [...s.experience].sort((a, b) => expKey(b).localeCompare(expKey(a)));
+  const certs = [...s.certifications].sort((a, b) => (b.issued ?? "").localeCompare(a.issued ?? ""));
+  return {
+    experience: exp.slice(0, RESUME_LIMITS.fullExperience),
+    earlier: exp.slice(RESUME_LIMITS.fullExperience),
+    certifications: certs.slice(0, RESUME_LIMITS.certifications),
+    projects: s.projects.slice(0, RESUME_LIMITS.projects),
+    education: s.education.slice(0, RESUME_LIMITS.education),
+  };
+}
+/** "Engineer, Acme (2014–2016)" — compact line for older roles. */
+export function earlierRoleLine(e: Exp): string {
+  const yrs = [e.start?.slice(0, 4), e.current ? "Present" : e.end?.slice(0, 4)].filter(Boolean);
+  const range = yrs.length === 2 && yrs[0] === yrs[1] ? yrs[0] : yrs.join("–");
+  return `${e.title}${e.company ? `, ${e.company}` : ""}${range ? ` (${range})` : ""}`;
+}
