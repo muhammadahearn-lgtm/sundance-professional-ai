@@ -1,14 +1,13 @@
 import { NotificationPreferences } from "@/components/notifications/Notifications";
 import { CareerModeCard } from "./CareerModeCard";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -29,12 +28,37 @@ function Card({ title, desc, children, danger }: { title: string; desc?: string;
   );
 }
 
-function Toggle({ label, desc, defaultChecked }: { label: string; desc: string; defaultChecked?: boolean | undefined }) {
+/** Read-only summary of real visibility settings, linking to the single place they're edited. */
+function PrivacySummary({ account }: { account: Account }) {
+  const isCand = account.role === "candidate";
+  const q = useQuery({
+    queryKey: ["privacy-summary", account.userId],
+    enabled: isCand,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("candidate_profiles").select("visibility_status, hide_from_current_employer").eq("user_id", account.userId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const rows: [string, string][] = isCand
+    ? [
+        ["Profile visibility", !q.data ? "…" : q.data.visibility_status === "private" ? "Private (Applications Only)" : "Open to Talent Search"],
+        ["Hide from my current employer", !q.data ? "…" : q.data.hide_from_current_employer ? "On" : "Off"],
+      ]
+    : [["Profile visibility & alerts", "Managed on your recruiter profile"]];
   return (
-    <label className="flex items-center justify-between gap-4 py-2">
-      <span><span className="block text-sm font-medium">{label}</span><span className="block text-xs text-muted-foreground">{desc}</span></span>
-      <Switch aria-label={label} defaultChecked={defaultChecked ?? false} />
-    </label>
+    <div className="space-y-3">
+      <dl className="divide-y divide-border rounded-xl border border-border">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+            <dt className="font-medium">{k}</dt><dd className="text-muted-foreground">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to={isCand ? "/candidate/profile" : "/recruiter/profile"} search={{ tab: isCand ? "resume" : "settings" } as never}>Manage visibility</Link>
+      </Button>
+    </div>
   );
 }
 
@@ -123,13 +147,8 @@ export function SettingsPage({ account }: { account: Account }) {
             <CareerModeCard uid={account.userId} />
           </Card>
         )}
-        <Card title="Privacy Settings">
-          {account.role === "candidate" ? (<>
-            <Toggle label="Visible to recruiters" desc="Let recruiters find your profile in talent search." defaultChecked />
-            <Toggle label="Show current employer" desc="Display your current company on your profile." />
-          </>) : (<>
-            <Toggle label="Show my profile to candidates" desc="Candidates can see your name and company when you contact them." defaultChecked />
-          </>)}
+        <Card title="Privacy Settings" desc="Your visibility is managed in one place on your profile.">
+          <PrivacySummary account={account} />
         </Card>
         <Card title="Delete Account" desc="Permanently delete your account and all associated data. This cannot be undone." danger>
           <ul className="mb-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">

@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { CAREER_MODES, type CareerMode } from "@/lib/market-pulse";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 
 /** Career mode (active / passive / not looking), passive pay floor, and hide-from-current-employer. */
 export function CareerModeCard({ uid }: { uid: string }) {
@@ -47,10 +46,6 @@ export function CareerModeCard({ uid }: { uid: string }) {
           <Button type="submit" variant="outline" className="rounded-full">Save floor</Button>
         </form>
       )}
-      <label className="flex items-center justify-between gap-4 rounded-xl p-3 hover:bg-muted/50">
-        <span><span className="block text-sm font-semibold">Hide from my current employer</span><span className="block text-xs text-muted-foreground">Recruiters at the company you list as current employer won't find you.</span></span>
-        <Switch aria-label="Hide from my current employer" checked={q.data.hide_from_current_employer} onCheckedChange={(v) => void save({ hide_from_current_employer: v })} />
-      </label>
     </div>
   );
 }
