@@ -28,7 +28,7 @@ import { SAVED_SORTS, UNASSIGNED, filterSaved, groupPickerJobs, sortSaved, topPi
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CANDIDATE_COMPARE_MAX, DEFAULT_TALENT, EXPERIENCE_BUCKETS, TALENT_INDUSTRIES, TALENT_PAGE_SIZE, effectiveTalentSort, isMatchSort, talentSortOptions, matchesTalent, sortTalent, talentFilterCount, type TalentFilters, type TalentRow } from "@/lib/talent-rules";
-import { ARRANGEMENTS, AVAILABILITY, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
+import { ARRANGEMENTS, AVAILABILITY, availTone, card, cap, friendlyError, inputCls, label } from "@/components/profile/parts";
 import { Item, MultiToggle } from "@/components/recruiter/shared";
 import { SearchSelect } from "@/components/ui/search-select";
 import { AiTopPick, BestTag, RankPill } from "@/components/compare/AiTopPick";
@@ -249,7 +249,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link><span className="ml-2 align-middle"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></span>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
-            <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.availability === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
+            <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(c.availability)}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
           <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs experience</span>{c.salary && <span>Expects {c.salary}</span>}</p>
           {row && <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}><div className="overflow-hidden"><AlignmentRow r={row} />{locAlign && <div className="mt-2 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Location Fit</span><LocationAlignmentBadge value={locAlign} /></div>}{eduAlign && <div className="mt-2 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Education Fit</span><EducationAlignmentBadge value={eduAlign} /></div>}</div></div>}
@@ -270,7 +270,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
 }
 
 const matchTone = (s: number) => (s >= 90 ? "bg-success/15 text-success" : s >= 75 ? "bg-primary-soft text-primary" : s >= 60 ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground");
-const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? "bg-primary" : "bg-muted-foreground");
+const availDot = (a: string) => (a === "active" ? "bg-success" : a === "open" ? "bg-warning" : "bg-muted-foreground");
 /** Solid, high-contrast pill floating over grid card photos (readable on any photo color). */
 const glassPill = "absolute top-2 rounded-full border border-border bg-card px-2 py-1 text-foreground shadow-md whitespace-nowrap";
 /** Opaque score tone: solid fill + contrasting text. */
@@ -522,7 +522,7 @@ export function ProfileHeader({ d, actions }: { d: CandidateFull; actions?: Reac
     <div className={`${card} p-6`}>
       <div className="flex flex-wrap items-start gap-4"><Avatar name={d.name} path={d.avatarPath} size="h-16 w-16 text-xl" />
         <div className="min-w-0 flex-1"><h1 className="font-display text-2xl font-extrabold">{d.name}</h1><p>{p.job_title}{p.current_employer && <span className="text-muted-foreground"> · {p.current_employer}</span>}</p>
-          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span><span>{label(AVAILABILITY, p.availability)}</span></p>
+          <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location || "—"}</span><span>{p.years_experience} yrs experience</span></p>
           <CareerModePill p={p} />
           <div className="mt-3"><LinkBadges p={p} /></div></div></div>
       {actions && <div className="mt-5 flex flex-wrap gap-2">{actions}</div>}

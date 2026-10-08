@@ -21,7 +21,7 @@ import { computeCompletion, missingRequired, validateProfessional, validateResum
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
 import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } from "./links-projects";
-import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
+import { ARRANGEMENTS, AVAILABILITY, availTone, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
 import { SpokenLanguageAddButton, SpokenLanguagesManager } from "./SpokenLanguagesManager";
 import { StandardResumeWorkspace, type StandardResumeData } from "./StandardResumeWorkspace";
 import { ProfileTabBar, useProfileTab } from "./ProfileTabs";
@@ -236,7 +236,7 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
-          <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(p.availability)}`}>{label(AVAILABILITY, p.availability)}</span>
           <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">Profile Completion {percent}%</span>
         </div>
       </div>
@@ -302,7 +302,7 @@ function PrefsView({ p }: { p: Profile }) {
     <dl className="grid gap-5 sm:grid-cols-2">
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target Roles</dt><Chips items={p.target_roles} /></div>
       <Item k="Desired Minimum Salary" v={formatSalaryAmount(p.salary_amount, p.salary_currency)} />
-      <Item k="Availability" v={label(AVAILABILITY, p.availability)} />
+      <Item k="Career Mode" v={label(AVAILABILITY, p.availability)} />
       <Item k="Preferred Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} />
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Locations Of Interest</dt><Chips items={p.locations_of_interest} /></div>
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target Industries</dt><Chips items={p.target_industries} /></div>
@@ -335,7 +335,7 @@ function PreferencesForm({ p, uid, roleNames, onDone }: { p: Profile; uid: strin
     <form onSubmit={submit} className="space-y-5">
       <Field label="Target Roles *" error={err}><TagInput value={f.target_roles} onChange={(v) => setF({ ...f, target_roles: v })} options={roleNames} placeholder="Search roles…" /></Field>
       <Field label="Desired Minimum Salary" error={salErr}><div className="flex gap-2"><input className={inputCls} type="text" inputMode="numeric" pattern="[0-9]*" placeholder="60000" value={f.salary_amount} onChange={(e) => setF({ ...f, salary_amount: digitsOnly(e.target.value) })} /><select aria-label="Currency" className={`${inputCls} w-28`} value={f.salary_currency} onChange={(e) => setF({ ...f, salary_currency: e.target.value })}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div></Field>
-      <div className="space-y-1.5"><p className="text-sm font-medium">Availability</p>{choice(AVAILABILITY, f.availability, (v) => setF({ ...f, availability: v }))}</div>
+      <div className="space-y-1.5"><p className="text-sm font-medium">Career Mode</p>{choice(AVAILABILITY, f.availability, (v) => setF({ ...f, availability: v }))}</div>
       <div className="space-y-1.5"><p className="text-sm font-medium">Preferred Work Arrangement</p>{choice(ARRANGEMENTS, f.work_arrangement, (v) => setF({ ...f, work_arrangement: v }))}</div>
       <Field label="Locations Of Interest"><TagInput value={f.locations_of_interest} onChange={(v) => setF({ ...f, locations_of_interest: v })} placeholder="e.g. Boston, MA — press Enter" /></Field>
       <Field label="Target Industries"><TagInput value={f.target_industries} onChange={(v) => setF({ ...f, target_industries: v })} placeholder="e.g. Healthcare — press Enter" /></Field>
@@ -449,7 +449,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
           {p.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{p.location}</span>}
           <span>{p.years_experience} Years Experience</span>
-          <span className="rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-semibold text-success">{label(AVAILABILITY, p.availability)}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(p.availability)}`}>{label(AVAILABILITY, p.availability)}</span>
         </div>
         <div className="mt-4"><LinkBadges p={p} /></div>
       </section>
