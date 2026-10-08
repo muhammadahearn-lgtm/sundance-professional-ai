@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Check, Download, Eye, FileBadge2, Loader2, Sparkles } from "lucide-react";
+import { Check, Download, Eye, FileBadge2, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
@@ -46,7 +46,6 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
   const [softSkills, setSoftSkills] = useState(data.softSkillRows.slice(0, STANDARD_RESUME_MAX_SOFT_SKILLS).map((x) => x.name));
   const latest = data.standardResumes[0]; const snapshot = useMemo(() => buildSnapshot(account, data, softSkills), [account, data, softSkills]);
   const choice = data.profile.recruiter_resume_choice as ResumeChoice;
-  const move = (index: number, delta: -1 | 1) => setSections((current) => { const out = [...current]; const to = index + delta; if (to < 0 || to >= out.length) return current; [out[index], out[to]] = [out[to] as StandardResumeSection, out[index] as StandardResumeSection]; return out; });
   const toggleSection = (section: StandardResumeSection) => setSections((current) => current.includes(section) ? current.filter((s) => s !== section) : [...current, section]);
   const toggleSoft = (name: string) => setSoftSkills((current) => current.includes(name) ? current.filter((x) => x !== name) : current.length >= STANDARD_RESUME_MAX_SOFT_SKILLS ? (toast.error(`Choose up to ${STANDARD_RESUME_MAX_SOFT_SKILLS} soft skills.`), current) : [...current, name]);
 
