@@ -100,7 +100,6 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => { setTab("about"); setEdit("pro"); }} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Profile</button>
             <Link to="/recruiter/company" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Building2 className="h-4 w-4" />View Company Profile</Link>
           </div>

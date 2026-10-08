@@ -226,7 +226,6 @@ function Header({ account, p, percent, onEdit, onPreview }: { account: Account; 
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
           <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
           <div className="flex flex-wrap gap-2">
-            <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
             <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
           </div>
         </div>
