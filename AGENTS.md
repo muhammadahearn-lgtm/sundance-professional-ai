@@ -15,7 +15,7 @@
 - Role areas (`/candidate/*`, `/recruiter/*`) sit under `_authenticated` and use `roleGuard` (src/lib/role-guard.ts) for cross-role blocking and onboarding redirects. Why: one gate per area.
 - Onboarding completes only via `complete_onboarding` RPC. Why: checks profile exists.
 - candidate/recruiter_profiles.user_id = candidate_id/recruiter_id everywhere. Why: no redesign.
-- Taxonomy: languages fixed; others added only via `add_taxonomy_entry` (dedupe, cross-category lock); UI `CategoryGuardAdd`. Why: clean data.
+- Taxonomy: languages fixed; others added only via `add_taxonomy_entry` (dedupe, cross-category lock); `CategoryGuardAdd` resolves aliases/typos and AI-checks spelling. Why: clean data.
 - match_scores is written only by the server (service role); users can only read their own or their jobs' scores. Why: scores can't be faked.
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Company editing needs `is_company_admin` (`company_members`). Requests via `company_admin_requests` (approve promotes; last admin protected). Team via `company_team`; admin dashboard reads counts-only `company_admin_jobs`. Why: no orphaned companies.

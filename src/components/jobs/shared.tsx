@@ -1,3 +1,4 @@
+import { optionMatches } from "@/lib/taxonomy-aliases";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { recommendationsFor, splitRecommended } from "@/lib/role-recommendations";
 import { useState } from "react";
@@ -66,7 +67,7 @@ export function RequirementPicker({ options: baseOptions, otherOptions = [], onA
     setBusy(false);
   };
   const chosen = new Set(value.map((v) => v.id));
-  const matches = options.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q.toLowerCase()) || (o.group ?? "").toLowerCase().includes(q.toLowerCase()))).slice(0, q ? 12 : 16);
+  const matches = options.filter((o) => !chosen.has(o.id) && optionMatches(o, q)).slice(0, q ? 12 : 16);
   const recs = q.trim() ? [] : splitRecommended(options.filter((o) => !chosen.has(o.id)), recommendationsFor(roleName, kind ?? "skill")).rec;
   const shown = [...recs, ...matches.filter((m) => !recs.includes(m))];
   const name = (id: string) => options.find((o) => o.id === id)?.name ?? "Unknown";

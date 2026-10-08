@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type ClassifyResult = { category: "skill" | "technology"; reason: string; failed?: boolean };
+export type ClassifyResult = { category: "skill" | "technology"; reason: string; canonicalName?: string; valid?: boolean; failed?: boolean };
 
 const SCHEMA = {
   type: "object",
@@ -9,14 +9,18 @@ const SCHEMA = {
   properties: {
     category: { type: "string", enum: ["skill", "technology"] },
     reason: { type: "string" },
+    canonical_name: { type: "string" },
+    valid: { type: "boolean" },
   },
-  required: ["category", "reason"],
+  required: ["category", "reason", "canonical_name", "valid"],
 };
 
 const INSTRUCTIONS = `You classify tech terms for a hiring platform into exactly one bucket.
 "technology" = an instrument you install, import, or log into: libraries, frameworks, SDKs, databases, cloud platforms/services, software products, developer tools (e.g. JAX, PyTorch, Docker, AWS Lambda, PostgreSQL, Jira, Snowflake).
 "skill" = a concept, discipline, methodology, or practice (e.g. Machine Learning, Distributed Systems, API Design, Data Modeling, CI/CD, System Design).
-Reply with the category and one short plain-English sentence (max 20 words) saying what the term is.`;
+Also return canonical_name: the official, most common industry spelling and capitalization (e.g. "fastapi" -> "FastAPI", "nodejs" -> "Node.js", "XL" -> "Excel", "k8s" -> "Kubernetes"; fix obvious typos; expand slang/abbreviations to the standard name; no version numbers; max 60 chars).
+valid = false if the term is not a recognized professional technical skill or software/tool (gibberish, a sentence, a personality trait or soft skill like "hard worker", a person or company name, a joke).
+Reply with the category, canonical_name, valid, and one short plain-English sentence (max 20 words) saying what the term is (or why it isn't valid).`;
 
 /** Suggests whether a brand-new term is a Technical Skill or a Tool & Technology. Never blocks adding. */
 export const classifyTaxonomyTerm = createServerFn({ method: "POST" })
@@ -60,9 +64,10 @@ export const classifyTaxonomyTerm = createServerFn({ method: "POST" })
           try { const ev = JSON.parse(payload); if (ev.type === "response.output_text.delta" && typeof ev.delta === "string") text += ev.delta; } catch { /* ignore */ }
         }
       }
-      const parsed = JSON.parse(text) as { category?: string; reason?: string };
+      const parsed = JSON.parse(text) as { category?: string; reason?: string; canonical_name?: string; valid?: boolean };
       if (parsed.category !== "skill" && parsed.category !== "technology") return fallback;
-      return { category: parsed.category, reason: String(parsed.reason ?? "").slice(0, 160) };
+      const canon = String(parsed.canonical_name ?? "").trim().replace(/\s+/g, " ").slice(0, 60);
+      return { category: parsed.category, reason: String(parsed.reason ?? "").slice(0, 160), canonicalName: canon || data.name, valid: parsed.valid !== false };
     } catch (e) {
       console.error("classify error", e);
       return fallback;
