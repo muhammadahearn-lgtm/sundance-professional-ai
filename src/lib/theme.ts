@@ -21,7 +21,7 @@ function apply(pref: ThemePref) {
   root.classList.add("theme-switching");
   root.classList.toggle("dark", dark);
   root.style.colorScheme = dark ? "dark" : "light";
-  window.setTimeout(() => root.classList.remove("theme-switching"), 50);
+  window.setTimeout(() => root.classList.remove("theme-switching"), 300);
 }
 
 export function setTheme(pref: ThemePref) {
