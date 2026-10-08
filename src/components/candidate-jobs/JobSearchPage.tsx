@@ -148,7 +148,7 @@ export function JobSearchPage({ account, search, setSearch }: Props) {
 }
 
 function Chip({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="rounded-full border border-border px-2.5 py-0.5 hover:border-primary hover:text-primary">{children}</button>;
+  return <button type="button" onClick={onClick} className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary">{children}</button>;
 }
 
 function Group({ title, children, open: o = true }: { title: string; children: ReactNode; open?: boolean }) {
