@@ -66,3 +66,52 @@ export const notifyHiringTeam = createServerFn({ method: "POST" })
     }
     return { sent };
   });
+
+const shareInput = z.object({ jobId: z.string().uuid(), candidateIds: z.array(z.string().uuid()).min(2).max(4) });
+
+/**
+ * Email the job's hiring team a privacy-safe comparison (first name + last
+ * initial, role, experience, match score, strengths). Built server-side from
+ * the database — never from client text — and only for candidates the
+ * posting recruiter is allowed to see.
+ */
+export const shareCompareWithTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => shareInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const { buildCompareSummary } = await import("./compare-share");
+    const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
+    if (!job || job.recruiter_id !== context.userId) throw new Error("Only the recruiter who posted this job can share it.");
+    for (const id of data.candidateIds) {
+      const { data: ok } = await context.supabase.rpc("recruiter_can_view_candidate", { _candidate: id });
+      if (!ok) throw new Error("One of these candidates is not visible to you.");
+    }
+    const { data: team } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email").eq("job_id", data.jobId);
+    if (!team?.length) return { sent: 0, team: 0 };
+    const [{ data: profs }, { data: cps }, { data: scores }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("user_id, first_name, last_name").in("user_id", data.candidateIds),
+      supabaseAdmin.from("candidate_profiles").select("candidate_id, job_title").in("candidate_id", data.candidateIds),
+      supabaseAdmin.from("match_scores").select("candidate_id, overall_match_score, details").eq("job_id", data.jobId).in("candidate_id", data.candidateIds),
+    ]);
+    const list = data.candidateIds.map((id) => {
+      const p = profs?.find((x) => x.user_id === id);
+      const s = scores?.find((x) => x.candidate_id === id);
+      const det = (s?.details ?? {}) as { strengths?: string[] };
+      return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.candidate_id === id)?.job_title ?? "", years: null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
+    });
+    const summary = buildCompareSummary(job.job_title, list);
+    const stamp = Date.now();
+    let sent = 0;
+    for (const m of team) {
+      try {
+        const r = await sendTemplateEmail("activity-alert", m.email, {
+          templateData: { title: `Candidate comparison — ${job.job_title}`, message: `Hi ${m.name}, your recruiter would like your opinion on these candidates:\n\n${summary}`, actionUrl: SITE, actionLabel: "About Sundance Professionals" },
+          idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
+        });
+        if (r.sent) sent++;
+      } catch (e) { console.error("compare share email failed", e); }
+    }
+    return { sent, team: team.length };
+  });
