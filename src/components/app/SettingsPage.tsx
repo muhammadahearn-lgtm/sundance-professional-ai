@@ -1,5 +1,6 @@
 import { NotificationPreferences } from "@/components/notifications/Notifications";
 import { CareerModeCard } from "./CareerModeCard";
+import { VisibilityControls } from "@/components/profile/CandidateProfilePage";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,38 +29,31 @@ function Card({ title, desc, children, danger }: { title: string; desc?: string;
   );
 }
 
-/** Read-only summary of real visibility settings, linking to the single place they're edited. */
-function PrivacySummary({ account }: { account: Account }) {
+/** Candidates edit visibility here (single editor); recruiters are linked to their profile tab. */
+function PrivacySettings({ account }: { account: Account }) {
   const isCand = account.role === "candidate";
   const q = useQuery({
     queryKey: ["privacy-summary", account.userId],
     enabled: isCand,
     queryFn: async () => {
-      const { data, error } = await supabase.from("candidate_profiles").select("visibility_status, hide_from_current_employer").eq("user_id", account.userId).maybeSingle();
+      const { data, error } = await supabase.from("candidate_profiles").select("visibility_status, hide_from_current_employer, current_employer").eq("user_id", account.userId).maybeSingle();
       if (error) throw error;
       return data;
     },
   });
-  const rows: [string, string][] = isCand
-    ? [
-        ["Profile visibility", !q.data ? "…" : q.data.visibility_status === "private" ? "Private (Applications Only)" : "Open to Talent Search"],
-        ["Hide from my current employer", !q.data ? "…" : q.data.hide_from_current_employer ? "On" : "Off"],
-      ]
-    : [["Profile visibility & alerts", "Managed on your recruiter profile"]];
-  return (
-    <div className="space-y-3">
-      <dl className="divide-y divide-border rounded-xl border border-border">
-        {rows.map(([k, v]) => (
-          <div key={k} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-            <dt className="font-medium">{k}</dt><dd className="text-muted-foreground">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <Button asChild variant="outline" className="rounded-full">
-        <Link to={isCand ? "/candidate/profile" : "/recruiter/profile"} search={{ tab: isCand ? "resume" : "settings" } as never}>Manage visibility</Link>
-      </Button>
-    </div>
-  );
+  if (!isCand) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm">
+        <span>Profile visibility & alerts are managed on your recruiter profile.</span>
+        <Button asChild variant="outline" className="rounded-full">
+          <Link to="/recruiter/profile" search={{ tab: "settings" } as never}>Manage visibility</Link>
+        </Button>
+      </div>
+    );
+  }
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!q.data) return <p className="text-sm text-muted-foreground">Finish your profile to manage visibility.</p>;
+  return <VisibilityControls uid={account.userId} p={q.data} />;
 }
 
 export function SettingsPage({ account }: { account: Account }) {
@@ -142,14 +136,14 @@ export function SettingsPage({ account }: { account: Account }) {
         <div id="notification-preferences"><Card title="Notification Preferences" desc="Choose which notifications you receive. Changes save automatically.">
           <NotificationPreferences uid={account.userId} role={account.role} />
         </Card></div>
+        <div id="privacy" className="scroll-mt-6"><Card title="Privacy & Visibility" desc={account.role === "candidate" ? "Control who can discover your profile." : undefined}>
+          <PrivacySettings account={account} />
+        </Card></div>
         {account.role === "candidate" && (
           <Card title="Career Mode" desc="Got hired? Stay quietly visible for the right opportunity while keeping your Market Pulse.">
             <CareerModeCard uid={account.userId} />
           </Card>
         )}
-        <Card title="Privacy Settings" desc="Your visibility is managed in one place on your profile.">
-          <PrivacySummary account={account} />
-        </Card>
         <Card title="Delete Account" desc="Permanently delete your account and all associated data. This cannot be undone." danger>
           <ul className="mb-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             <li>Removed: your sign-in, profile, photo, {account.role === "candidate" ? "resume, skills, experience, projects, saved jobs and applications" : "recruiter profile, company images, jobs and saved candidates"}, and reports you sent.</li>

@@ -117,7 +117,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
           { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !p.job_title || !p.headline || !p.location || !p.target_roles.length },
           { key: "experience", label: "Experience & Education", icon: <Briefcase className="h-4 w-4" />, incomplete: !data.experience.length || !data.education.length },
           { key: "skills", label: "Skills & Languages", icon: <Wrench className="h-4 w-4" />, incomplete: !data.skills.length || !data.technologies.length },
-          { key: "resume", label: "Resume & Visibility", icon: <FileText className="h-4 w-4" />, incomplete: !p.resume_path && !data.standardResumes.length },
+          { key: "resume", label: "Resume", icon: <FileText className="h-4 w-4" />, incomplete: !p.resume_path && !data.standardResumes.length },
         ]} />
 
         {tab === "about" && <>
@@ -180,9 +180,14 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Section id="links" title="LinkedIn, GitHub & Portfolio" icon={<Globe className="h-4 w-4" />} action={!editLinks && editBtn(() => setEditLinks(true))}>
           {editLinks ? <LinksForm uid={uid} p={p} onDone={() => setEditLinks(false)} /> : <LinkBadges p={p} empty="Add your LinkedIn, GitHub or portfolio so recruiters can learn more about you." />}
         </Section>
-        <Section id="visibility" title="Profile Visibility" icon={<ShieldCheck className="h-4 w-4" />}>
-          <VisibilityControls uid={uid} p={p} />
-        </Section>
+        <div id="visibility" className={`${card} flex flex-wrap items-center justify-between gap-3 p-4`}>
+          <p className="flex items-center gap-2 text-sm">
+            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
+            <span className="font-semibold">Visibility:</span>
+            <span className="text-muted-foreground">{p.visibility_status === "private" ? "Private (Applications Only)" : "Open to Talent Search"}{p.hide_from_current_employer ? " · Hidden from current employer" : ""}</span>
+          </p>
+          <Link to="/candidate/settings" hash="privacy" className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary">Manage in Settings</Link>
+        </div>
         </>}
       </div>
 
@@ -248,7 +253,10 @@ function useSaveProfile(uid: string) {
     const { error } = await supabase.from("candidate_profiles").update(patch).eq("user_id", uid);
     if (error) { toast.error(friendlyError(error, "Profile save failed. Please try again.")); return false; }
     toast.success(ok);
-    await qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["candidate-full", uid] }),
+      qc.invalidateQueries({ queryKey: ["privacy-summary", uid] }),
+    ]);
     return true;
   };
 }
@@ -407,7 +415,10 @@ const VIS: [string, string, string][] = [
   ["private", "Private (Applications Only)", "Hidden from recruiter search. Only hiring teams for jobs you apply to can see your profile."],
 ];
 
-function VisibilityControls({ uid, p }: { uid: string; p: Profile }) {
+export type VisibilityProfile = Pick<Profile, "visibility_status" | "hide_from_current_employer" | "current_employer">;
+
+/** The single editor for candidate visibility; rendered on the Settings page. */
+export function VisibilityControls({ uid, p }: { uid: string; p: VisibilityProfile }) {
   const save = useSaveProfile(uid);
   // Legacy "public" behaves exactly like talent search.
   const current = p.visibility_status === "private" ? "private" : "recruiter_searchable";
