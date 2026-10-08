@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
 import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { CandidateResumeAccessPanel } from "./ResumeAccess";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
 type Named = { name: string };
-type Profile = { user_id: string; headline: string; location: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; resume_path: string | null; resume_file_name: string | null; recruiter_resume_choice: string };
+type Profile = { user_id: string; headline: string; location: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; resume_path: string | null; resume_file_name: string | null; recruiter_resume_choice: string; require_resume_request?: boolean };
 type Experience = { job_title: string; company_name: string; location: string; start_date: string | null; end_date: string | null; current_position: boolean; responsibilities: string; technologies_used: string[] };
 type Education = { institution_name: string; degree: string; degree_type: string | null; field_of_study: string; graduation_year: number | null };
 type Certification = { certification_name: string; issuing_organization: string; issue_date: string | null };
@@ -70,6 +71,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
   async function download(v: Version) { const { data: signed, error } = await supabase.storage.from("resumes").createSignedUrl(v.pdf_path, 60, { download: `Sundance-Standard-Resume-v${v.version_number}.pdf` }); if (error || !signed) { toast.error("Resume download isn't available."); return; } window.open(signed.signedUrl, "_blank", "noopener"); }
 
   return <div className="space-y-4">
+    <CandidateResumeAccessPanel uid={account.userId} requireRequest={data.profile.require_resume_request ?? true} />
     <div className="grid gap-3 md:grid-cols-2">
       <div className="rounded-xl border border-border p-4"><div className="flex items-start gap-3"><FileBadge2 className="mt-0.5 h-5 w-5 text-primary" /><div><p className="font-semibold">Sundance Standard Resume</p><p className="text-xs text-muted-foreground">Consistent, ATS-friendly, and built only from profile details you confirmed.</p></div><span className="ml-auto rounded-full bg-primary-soft px-2 py-1 text-[10px] font-bold uppercase text-primary">Premium Preview</span></div>
         {latest ? <div className="mt-4 flex flex-wrap items-center gap-2"><span className="text-sm font-semibold">Published v{latest.version_number}</span><span className="text-xs text-muted-foreground">{new Date(latest.published_at).toLocaleDateString()}</span><Button size="sm" variant="outline" onClick={() => { setPreview(true); }}><Eye className="h-4 w-4" />Preview</Button><Button size="sm" variant="outline" onClick={() => download(latest)}><Download className="h-4 w-4" />PDF</Button></div> : <p className="mt-4 text-sm text-muted-foreground">Create your first polished version when your profile is ready.</p>}
