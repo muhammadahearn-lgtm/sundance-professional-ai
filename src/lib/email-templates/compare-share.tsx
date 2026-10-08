@@ -71,11 +71,13 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
             <Section style={spot}>
               <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}><tbody><tr>
                 <td style={{ width: '104px', verticalAlign: 'middle' }}>
-                  <div style={ring}>
-                    <div style={crown}>♛</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#1f8a4c', lineHeight: '1' }}>{pct(top.score)}</div>
-                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#334155', letterSpacing: '0.5px', marginTop: '3px' }}>MATCH</div>
-                  </div>
+                  <table role="presentation" width={92} height={92} cellPadding={0} cellSpacing={0} style={ring}><tbody><tr>
+                    <td align="center" valign="middle" width={92} height={86} style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
+                      <div style={crown}>♛</div>
+                      <div style={{ fontSize: '22px', fontWeight: 700, color: '#1f8a4c', lineHeight: '24px', margin: 0 }}>{pct(top.score)}</div>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#334155', letterSpacing: '0.5px', lineHeight: '12px', margin: 0 }}>MATCH</div>
+                    </td>
+                  </tr></tbody></table>
                 </td>
                 <td style={{ verticalAlign: 'middle', paddingLeft: '14px' }}>
                   <span style={aiTag}>✦ AI TOP PICK</span>
@@ -160,8 +162,8 @@ const brand = { fontSize: '14px', fontWeight: 700, color: '#2f5be0', margin: '0 
 const h1 = { fontSize: '22px', fontWeight: 700, color: '#151a33', margin: '0 0 10px' }
 const text = { fontSize: '15px', color: '#3d4366', lineHeight: '1.6', margin: '0 0 20px' }
 const spot = { border: '1px solid #dbe4fb', borderRadius: '16px', padding: '20px', margin: '0 0 20px', background: 'linear-gradient(90deg, #f2fbf5 0%, #ffffff 55%, #eef1fe 100%)', backgroundColor: '#f8fafc' }
-const ring = { position: 'relative' as const, width: '92px', height: '92px', borderRadius: '999px', border: '3px solid #2f5be0', backgroundColor: '#ffffff', textAlign: 'center' as const, paddingTop: '26px', boxSizing: 'border-box' as const }
-const crown = { position: 'absolute' as const, top: '-8px', right: '-6px', width: '26px', height: '26px', lineHeight: '26px', borderRadius: '999px', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '14px', textAlign: 'center' as const }
+const ring = { width: '92px', height: '92px', borderRadius: '999px', border: '3px solid #2f5be0', backgroundColor: '#ffffff', borderCollapse: 'separate' as const }
+const crown = { fontSize: '14px', lineHeight: '16px', color: '#2f5be0', margin: '0 0 1px' }
 const aiTag = { display: 'inline-block', backgroundColor: '#e8eefc', color: '#2f5be0', fontSize: '11px', fontWeight: 700, borderRadius: '999px', padding: '3px 10px', letterSpacing: '0.4px' }
 const reason = { display: 'inline-block', border: '1px solid #e2e8f0', backgroundColor: '#ffffff', color: '#151a33', fontSize: '13px', borderRadius: '999px', padding: '6px 14px', margin: '0 6px 6px 0' }
 const tableBox = { border: '1px solid #e2e8f0', borderRadius: '16px', borderCollapse: 'separate' as const, borderSpacing: 0, overflow: 'hidden' }
