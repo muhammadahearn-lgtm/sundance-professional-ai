@@ -112,15 +112,14 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
       const edu = sections.includes("education") ? snapshot.education : [];
       const certs = sections.includes("certifications") ? snapshot.certifications : [];
       if (edu.length || certs.length) {
-        m.heading(certs.length ? (edu.length ? "Education & Certifications" : "Certifications") : "Education");
         const row = (title: string, right: string, sub: string) => {
           m.need(26);
           if (right) { const w = font.widthOfTextAtSize(right, 8.5); m.page.drawText(right, { x: m.x + m.width - w, y: m.y - 10, size: 8.5, font, color: muted }); }
           const full = m.width; m.width = full - (right ? font.widthOfTextAtSize(right, 8.5) + 12 : 0); m.text(title, 10); m.width = full;
           m.text(sub, 8.5, muted); m.space(5);
         };
-        edu.forEach((e) => row([e.degree, e.field].filter(Boolean).join(" in "), e.year ? String(e.year) : "", e.institution));
-        certs.forEach((c) => row(c.name, c.issued?.slice(0, 4) ?? "", c.issuer));
+        if (edu.length) { m.heading("Education"); edu.forEach((e) => row([e.degree, e.field].filter(Boolean).join(" in "), e.year ? String(e.year) : "", e.institution)); }
+        if (certs.length) { m.heading("Certifications"); certs.forEach((c) => row(c.name, c.issued?.slice(0, 4) ?? "", c.issuer)); }
       }
     }
   }
