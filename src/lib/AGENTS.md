@@ -16,3 +16,4 @@
 - Standard resumes: immutable snapshots/PDFs; photo opt-in; recruiter gets candidate choice with fallback. Spoken languages are display-only, never scored.
 - Resume PDF (`standard-resume-pdf.ts`) embeds static `NotoSans-Regular.ttf` with `subset:false`; pdf-lib/fontkit subsetting or variable fonts render as missing glyphs in poppler/Ghostscript/pdf.js. Why: downloadable resume must read in every viewer.
 - Standard resume retention: after publish, `prune_standard_resume_versions` deletes rows beyond the newest N (`STANDARD_RESUME_KEEP_VERSIONS`) and the client removes their PDFs. Why: bounded storage, unlimited publishing.
+- Appearance (light/dark/system) is a browser-only preference in localStorage via `src/lib/theme.ts`, applied by an inline head script before paint; colors come only from `.dark` tokens in styles.css. Why: no flash, no DB writes.

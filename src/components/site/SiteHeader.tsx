@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "@/components/app/ThemeControls";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,6 +41,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {session ? (<>
             <Button variant="ghost" size="sm" onClick={signOut}>Log out</Button>
             <Button asChild size="sm" className="rounded-full px-4"><Link to={dash}>Dashboard</Link></Button>
@@ -48,9 +50,10 @@ export function SiteHeader() {
             <Button asChild size="sm" className="rounded-full px-4"><Link to="/register">Get Started</Link></Button>
           </>)}
         </div>
-        <button className="md:hidden p-2" aria-label="Toggle menu" onClick={() => setOpen(!open)}>
+        <div className="flex items-center md:hidden"><ThemeToggle />
+        <button className="p-2" aria-label="Toggle menu" onClick={() => setOpen(!open)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        </button></div>
       </div>
       {open && (
         <div className="border-t border-border bg-background md:hidden">

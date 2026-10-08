@@ -1,5 +1,6 @@
 import { NotificationPreferences } from "@/components/notifications/Notifications";
 import { CareerModeCard } from "./CareerModeCard";
+import { AppearancePicker } from "./ThemeControls";
 import { VisibilityControls } from "@/components/profile/CandidateProfilePage";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -133,6 +134,9 @@ export function SettingsPage({ account }: { account: Account }) {
             <Button type="submit" className="rounded-full">Update Password</Button>
           </form>
         </Card>
+        <div id="appearance" className="scroll-mt-6"><Card title="Appearance" desc="Choose how Sundance looks to you. System follows your device setting.">
+          <AppearancePicker />
+        </Card></div>
         <div id="notification-preferences"><Card title="Notification Preferences" desc="Choose which notifications you receive. Changes save automatically.">
           <NotificationPreferences uid={account.userId} role={account.role} />
         </Card></div>

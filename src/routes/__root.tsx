@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { areaForPath } from "@/lib/auth-rules";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineBanner } from "@/components/app/RouteStates";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -92,8 +93,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>

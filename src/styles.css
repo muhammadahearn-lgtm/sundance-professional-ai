@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -78,6 +78,45 @@
   --shadow-soft: 0 1px 2px oklch(0.2 0.03 260 / 0.04), 0 8px 24px -8px oklch(0.2 0.03 260 / 0.08);
   --shadow-elevated: 0 2px 4px oklch(0.2 0.03 260 / 0.04), 0 24px 48px -16px oklch(0.45 0.15 260 / 0.22);
 }
+
+/* Deep Midnight Navy — dark appearance */
+.dark {
+  --background: oklch(0.155 0.03 266);
+  --foreground: oklch(0.95 0.01 260);
+  --card: oklch(0.195 0.035 266);
+  --card-foreground: oklch(0.95 0.01 260);
+  --popover: oklch(0.21 0.036 266);
+  --popover-foreground: oklch(0.95 0.01 260);
+  --primary: oklch(0.66 0.18 262);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-soft: oklch(0.28 0.07 264);
+  --secondary: oklch(0.24 0.035 266);
+  --secondary-foreground: oklch(0.92 0.01 260);
+  --muted: oklch(0.235 0.032 266);
+  --muted-foreground: oklch(0.72 0.025 262);
+  --accent: oklch(0.27 0.06 264);
+  --accent-foreground: oklch(0.86 0.09 262);
+  --success: oklch(0.72 0.15 155);
+  --warning: oklch(0.82 0.14 80);
+  --violet: oklch(0.7 0.16 295);
+  --teal: oklch(0.72 0.1 190);
+  --indigo: oklch(0.7 0.13 275);
+  --destructive: oklch(0.66 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.29 0.035 266);
+  --input: oklch(0.32 0.035 266);
+  --ring: oklch(0.66 0.18 262);
+  --ink: oklch(0.11 0.03 266);
+  --ink-foreground: oklch(0.96 0.005 260);
+  --gradient-primary: linear-gradient(135deg, oklch(0.6 0.2 262), oklch(0.66 0.15 238));
+  --gradient-hero: radial-gradient(60% 60% at 70% 20%, oklch(0.3 0.09 262 / 0.6) 0%, transparent 70%),
+    radial-gradient(40% 50% at 10% 10%, oklch(0.28 0.06 230 / 0.5) 0%, transparent 70%);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -8px oklch(0 0 0 / 0.45);
+  --shadow-elevated: 0 2px 4px oklch(0 0 0 / 0.3), 0 24px 48px -16px oklch(0.45 0.15 262 / 0.35);
+}
+
+/* Smooth colour change when switching appearance */
+.theme-switching, .theme-switching * { transition: background-color .25s ease, border-color .25s ease, color .2s ease !important; }
 
 @utility bg-gradient-primary { background-image: var(--gradient-primary); }
 @utility bg-gradient-hero { background-image: var(--gradient-hero); }

@@ -14,6 +14,7 @@ import {
 import { NotificationBell, NotificationNavBadge, NotificationsLive } from "@/components/notifications/Notifications";
 import { useUnreadCount } from "@/components/messages/Messages";
 import { Logo } from "@/components/site/Logo";
+import { ThemeToggle } from "./ThemeControls";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
 
@@ -168,6 +169,7 @@ export function AppShell({ account }: { account: Account }) {
             <div className="min-w-0"><Logo /></div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             {!onboarding && <NotificationBell uid={account.userId} role={account.role} />}
             <span className="hidden rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold capitalize text-primary sm:inline">{account.role}</span>
             <DropdownMenu>
