@@ -12,6 +12,7 @@ export interface CompareEmailCandidate {
   availability?: string
   arrangement?: string
   salary?: string
+  languages?: string[]
   score?: number | null
   strengths?: string[]
 }
@@ -54,6 +55,7 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
     ['Availability', (c) => c.availability || '—'],
     ['Work Arrangement', (c) => c.arrangement || '—'],
     ['Desired Minimum Salary', (c) => c.salary || '—'],
+    ['Languages', (c) => c.languages?.length ? c.languages.slice(0, 8).map((l) => <span key={l} style={langChip}>{l}</span>) : '—'],
     ['Strengths', (c) => c.strengths?.length ? c.strengths.slice(0, 4).map((s) => <div key={s} style={{ fontSize: '12px' }}>✓ {s}</div>) : '—'],
   ]
 
@@ -71,11 +73,13 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
             <Section style={spot}>
               <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}><tbody><tr>
                 <td style={{ width: '104px', verticalAlign: 'middle' }}>
-                  <div style={ring}>
-                    <div style={crown}>♛</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#1f8a4c', lineHeight: '1' }}>{pct(top.score)}</div>
-                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#334155', letterSpacing: '0.5px', marginTop: '3px' }}>MATCH</div>
-                  </div>
+                  <table role="presentation" cellPadding={0} cellSpacing={0} style={ringTable}><tbody><tr>
+                    <td align="center" valign="middle" style={ringCell}>
+                      <div style={{ fontSize: '12px', lineHeight: '14px', color: '#2f5be0' }}>♛</div>
+                      <div style={{ fontSize: '22px', fontWeight: 700, color: '#1f8a4c', lineHeight: '24px' }}>{pct(top.score)}</div>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#334155', letterSpacing: '0.5px', lineHeight: '12px' }}>MATCH</div>
+                    </td>
+                  </tr></tbody></table>
                 </td>
                 <td style={{ verticalAlign: 'middle', paddingLeft: '14px' }}>
                   <span style={aiTag}>✦ AI TOP PICK</span>
@@ -111,10 +115,10 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
                   </td>
                 ))}
               </tr>
-              {rows.map(([label, fn]) => (
+              {rows.map(([label, fn], r) => (
                 <tr key={label}>
                   {sorted.map((c, i) => (
-                    <td key={`${label}-${i}`} style={{ ...cell(i), backgroundColor: i === 0 ? '#f3f6fe' : '#ffffff' }}>
+                    <td key={`${label}-${i}`} style={{ ...cell(i), backgroundColor: i === 0 ? '#f3f6fe' : '#ffffff', ...(r === rows.length - 1 ? { borderBottom: '1px solid #e2e8f0', borderBottomLeftRadius: i === 0 ? '16px' : 0, borderBottomRightRadius: i === sorted.length - 1 ? '16px' : 0 } : {}) }}>
                       <div style={rowLabel}>{label}</div>
                       <div style={val}>{fn(c, i)}</div>
                     </td>
@@ -144,7 +148,7 @@ export const template = {
     recipientName: 'Alex',
     jobTitle: 'Data Scientist',
     candidates: [
-      { name: 'Muhammad A.', jobTitle: 'Data Scientist', employer: 'Sundance Professionals', location: 'Boston, Massachusetts, United States', years: 2, availability: 'Actively Looking', arrangement: 'Hybrid', salary: '$60,000 USD', score: 100, strengths: ['Python (required) matches', 'SQL (required) matches', 'R (required) matches'] },
+      { name: 'Muhammad A.', jobTitle: 'Data Scientist', employer: 'Sundance Professionals', location: 'Boston, Massachusetts, United States', years: 2, availability: 'Actively Looking', arrangement: 'Hybrid', salary: '$60,000 USD', languages: ['Python', 'SQL', 'R'], score: 100, strengths: ['Python (required) matches', 'SQL (required) matches', 'R (required) matches'] },
       { name: 'Jordan T.', jobTitle: 'Data Engineer', employer: '', location: 'Boston, Massachusetts, United States', years: 8, availability: 'Actively Looking', arrangement: 'Remote', salary: '', score: 51, strengths: ['SQL (required) matches'] },
       { name: 'Priya S.', jobTitle: 'Backend Engineer', employer: 'Databricks', location: 'Austin, Texas, United States', years: 4, availability: 'Actively Looking', arrangement: 'Hybrid', salary: '$135,000 USD', score: 33, strengths: [] },
       { name: 'Alex R.', jobTitle: 'Senior Frontend Engineer', employer: 'Stripe', location: 'San Francisco, California, United States', years: 7, availability: 'Actively Looking', arrangement: 'Remote', salary: '$165,000 USD', score: 24, strengths: [] },
@@ -160,8 +164,9 @@ const brand = { fontSize: '14px', fontWeight: 700, color: '#2f5be0', margin: '0 
 const h1 = { fontSize: '22px', fontWeight: 700, color: '#151a33', margin: '0 0 10px' }
 const text = { fontSize: '15px', color: '#3d4366', lineHeight: '1.6', margin: '0 0 20px' }
 const spot = { border: '1px solid #dbe4fb', borderRadius: '16px', padding: '20px', margin: '0 0 20px', background: 'linear-gradient(90deg, #f2fbf5 0%, #ffffff 55%, #eef1fe 100%)', backgroundColor: '#f8fafc' }
-const ring = { position: 'relative' as const, width: '92px', height: '92px', borderRadius: '999px', border: '3px solid #2f5be0', backgroundColor: '#ffffff', textAlign: 'center' as const, paddingTop: '26px', boxSizing: 'border-box' as const }
-const crown = { position: 'absolute' as const, top: '-8px', right: '-6px', width: '26px', height: '26px', lineHeight: '26px', borderRadius: '999px', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '14px', textAlign: 'center' as const }
+const ringTable = { width: '92px', height: '92px', borderRadius: '50%', border: '3px solid #2f5be0', backgroundColor: '#ffffff', borderCollapse: 'separate' as const }
+const ringCell = { width: '86px', height: '86px', textAlign: 'center' as const, verticalAlign: 'middle' as const, padding: 0 }
+const langChip = { display: 'inline-block', backgroundColor: '#f1f5f9', color: '#334155', fontSize: '11px', borderRadius: '999px', padding: '2px 8px', margin: '0 4px 4px 0' }
 const aiTag = { display: 'inline-block', backgroundColor: '#e8eefc', color: '#2f5be0', fontSize: '11px', fontWeight: 700, borderRadius: '999px', padding: '3px 10px', letterSpacing: '0.4px' }
 const reason = { display: 'inline-block', border: '1px solid #e2e8f0', backgroundColor: '#ffffff', color: '#151a33', fontSize: '13px', borderRadius: '999px', padding: '6px 14px', margin: '0 6px 6px 0' }
 const tableBox = { border: '1px solid #e2e8f0', borderRadius: '16px', borderCollapse: 'separate' as const, borderSpacing: 0, overflow: 'hidden' }
