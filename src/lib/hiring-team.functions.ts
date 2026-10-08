@@ -67,7 +67,7 @@ export const notifyHiringTeam = createServerFn({ method: "POST" })
     return { sent };
   });
 
-const shareInput = z.object({ jobId: z.string().uuid(), candidateIds: z.array(z.string().uuid()).min(2).max(4) });
+const shareInput = z.object({ jobId: z.string().uuid(), candidateIds: z.array(z.string().uuid()).min(2).max(4), image: z.string().startsWith("data:image/png;base64,").max(8_000_000).optional() });
 
 /**
  * Email the job's hiring team a privacy-safe comparison (first name + last
@@ -103,11 +103,21 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     });
     const candidates = list.map((c) => ({ name: shortName(c.firstName, c.lastName), jobTitle: c.jobTitle, years: c.years, score: c.score, strengths: c.strengths.slice(0, 3) }));
     const stamp = Date.now();
+    // Optional on-screen snapshot: stored privately, shared via a 30-day signed link.
+    let imageUrl: string | undefined;
+    if (data.image) {
+      try {
+        const bytes = Uint8Array.from(atob(data.image.replace(/^data:image\/png;base64,/, "")), (ch) => ch.charCodeAt(0));
+        const path = `${context.userId}/${data.jobId}-${stamp}.png`;
+        const up = await supabaseAdmin.storage.from("compare-snapshots").upload(path, bytes, { contentType: "image/png" });
+        if (!up.error) imageUrl = (await supabaseAdmin.storage.from("compare-snapshots").createSignedUrl(path, 60 * 60 * 24 * 30)).data?.signedUrl;
+      } catch (e) { console.error("snapshot upload failed", e); }
+    }
     let sent = 0;
     for (const m of team) {
       try {
         const r = await sendTemplateEmail("compare-share", m.email, {
-          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE },
+          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE, imageUrl },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;
