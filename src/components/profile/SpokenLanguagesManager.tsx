@@ -14,7 +14,7 @@ export function SpokenLanguagesManager({ uid, items, adding, setAdding }: { uid:
   const qc = useQueryClient(); const [name, setName] = useState(""); const [level, setLevel] = useState<SpokenLanguageLevel>("professional"); const [busy, setBusy] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ["candidate-full", uid] });
   async function add() {
-    const clean = name.trim(); if (clean.length < 2) return toast.error("Enter a spoken language.");
+    const clean = name.trim(); if (clean.length < 2) { toast.error("Enter a spoken language."); return; }
     setBusy(true); const { error } = await supabase.from("candidate_spoken_languages").insert({ candidate_id: uid, language_name: clean, proficiency: level }); setBusy(false);
     if (error) { toast.error(friendlyError(error, "Couldn't add that language.")); return; }
     toast.success("Spoken language added"); setName(""); setAdding(false); void refresh();
