@@ -2,7 +2,7 @@ import { PDFDocument, rgb, type PDFPage, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import notoFontUrl from "@/assets/fonts/NotoSans-Variable.ttf?url";
 import type { StandardResumeSection, StandardResumeSnapshot } from "./standard-resume";
-import { splitResumeColumns, resumePeriod } from "./standard-resume";
+import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine } from "./standard-resume";
 
 type Photo = { bytes: ArrayBuffer; type: string } | null;
 // A4 portrait in points.
@@ -73,6 +73,7 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   const top = headerBottom - 14;
 
   const { side, main } = splitResumeColumns(sections);
+  const b = budgetResume(snapshot);
   const s = new Column(pages, addPage, font, M, SIDE_W - 6, top);
   const m = new Column(pages, addPage, font, M + SIDE_W + GAP, W - M * 2 - SIDE_W - GAP, top);
 
@@ -107,24 +108,30 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
 
   // Main
   for (const block of main) {
-    if (block === "summary" && snapshot.summary) { m.heading("Profile"); m.text(snapshot.summary, 9.5, navy, 1.45); }
+    if (block === "summary" && snapshot.summary) { m.heading("Profile Summary"); m.text(snapshot.summary, 9.5, navy, 1.45); }
     if (block === "experience") {
-      const exp = sections.includes("experience") ? snapshot.experience : [];
-      const proj = sections.includes("projects") ? snapshot.projects : [];
+      const exp = sections.includes("experience") ? b.experience : [];
+      const earlier = sections.includes("experience") ? b.earlier : [];
+      const proj = sections.includes("projects") ? b.projects : [];
       if (exp.length || proj.length) {
         m.heading(proj.length && exp.length ? "Experience & Projects" : exp.length ? "Experience" : "Projects");
         exp.forEach((e) => {
-          m.need(40); m.text(e.title, 10.5); m.text([e.company, e.location].filter(Boolean).join(" · ") + (resumePeriod(e) ? `   ${resumePeriod(e)}` : ""), 8.5, muted);
+          m.need(40);
+          const period = resumePeriod(e), pw = period ? font.widthOfTextAtSize(period, 8.5) : 0;
+          if (period) m.page.drawText(period, { x: m.x + m.width - pw, y: m.y - 10, size: 8.5, font, color: muted });
+          const full = m.width; m.width = full - (pw ? pw + 12 : 0); m.text(e.title, 10.5); m.width = full;
+          m.text([e.company, e.location].filter(Boolean).join(" · "), 8.5, muted);
           m.space(2); m.text(e.responsibilities, 9);
           if (e.technologies.length) m.text(e.technologies.join(" · "), 8, muted);
           m.space(8);
         });
+        if (earlier.length) { m.need(24); m.text(`Earlier experience: ${earlier.map(earlierRoleLine).join(" · ")}`, 8.5, muted); m.space(6); }
         if (proj.length) { if (exp.length) m.sub("Projects"); proj.forEach((p) => { m.need(30); m.text(p.title, 10); m.text(p.description, 9); if (p.technologies.length) m.text(p.technologies.join(" · "), 8, muted); m.space(6); }); }
       }
     }
     if (block === "education") {
-      const edu = sections.includes("education") ? snapshot.education : [];
-      const certs = sections.includes("certifications") ? snapshot.certifications : [];
+      const edu = sections.includes("education") ? b.education : [];
+      const certs = sections.includes("certifications") ? b.certifications : [];
       if (edu.length || certs.length) {
         const row = (title: string, right: string, sub: string) => {
           m.need(26);
@@ -138,6 +145,11 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
     }
   }
 
+  // Page footers on multi-page resumes so printed pages stay in order.
+  if (pages.length > 1) pages.forEach((p, i) => {
+    const label = `${clean(snapshot.name)} · Page ${i + 1} of ${pages.length}`;
+    p.drawText(label, { x: W - M - font.widthOfTextAtSize(label, 7), y: M / 2 - 3, size: 7, font, color: muted });
+  });
   doc.setTitle(`${snapshot.name} — Sundance Standard Resume`); doc.setAuthor(snapshot.name); doc.setSubject("Professional resume generated from candidate-confirmed profile information");
   return doc.save();
 }
