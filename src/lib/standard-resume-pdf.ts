@@ -78,11 +78,6 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
 
   // Sidebar
   for (const block of side) {
-    if (block === "education" && (snapshot.education.length || snapshot.certifications.length)) {
-      s.heading(sections.includes("certifications") && snapshot.certifications.length ? "Education & Certifications" : "Education");
-      snapshot.education.forEach((e) => { s.text([e.degree, e.field].filter(Boolean).join(" in "), 9); s.text([e.institution, e.year].filter(Boolean).join(" · "), 8, muted); s.space(5); });
-      if (sections.includes("certifications")) snapshot.certifications.forEach((c) => { s.text(c.name, 9); s.text([c.issuer, c.issued?.slice(0, 4)].filter(Boolean).join(" · "), 8, muted); s.space(5); });
-    }
     if (block === "skills") {
       const groups: [string, string[]][] = [
         ["Technical skills", sections.includes("skills") ? snapshot.skills : []],
@@ -111,6 +106,21 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
           m.space(8);
         });
         if (proj.length) { if (exp.length) m.sub("Projects"); proj.forEach((p) => { m.need(30); m.text(p.title, 10); m.text(p.description, 9); if (p.technologies.length) m.text(p.technologies.join(" · "), 8, muted); m.space(6); }); }
+      }
+    }
+    if (block === "education") {
+      const edu = sections.includes("education") ? snapshot.education : [];
+      const certs = sections.includes("certifications") ? snapshot.certifications : [];
+      if (edu.length || certs.length) {
+        m.heading(certs.length ? (edu.length ? "Education & Certifications" : "Certifications") : "Education");
+        const row = (title: string, right: string, sub: string) => {
+          m.need(26);
+          if (right) { const w = font.widthOfTextAtSize(right, 8.5); m.page.drawText(right, { x: m.x + m.width - w, y: m.y - 10, size: 8.5, font, color: muted }); }
+          const full = m.width; m.width = full - (right ? font.widthOfTextAtSize(right, 8.5) + 12 : 0); m.text(title, 10); m.width = full;
+          m.text(sub, 8.5, muted); m.space(5);
+        };
+        edu.forEach((e) => row([e.degree, e.field].filter(Boolean).join(" in "), e.year ? String(e.year) : "", e.institution));
+        certs.forEach((c) => row(c.name, c.issued?.slice(0, 4) ?? "", c.issuer));
       }
     }
   }
