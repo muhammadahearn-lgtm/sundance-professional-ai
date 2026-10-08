@@ -31,3 +31,13 @@ describe("resume page budget", () => {
   });
   it("formats an earlier role line", () => { expect(_e(job("Dev", "2014-01-01", "2016-05-01"))).toBe("Dev, Co (2014–2016)"); });
 });
+
+import { responsibilityItems } from "./standard-resume";
+describe("responsibilityItems", () => {
+  it("splits bulleted lines and strips markers", () => {
+    expect(responsibilityItems("- Led team\n• Cut load time 40%\n\n2) Hired 5")).toEqual(["Led team", "Cut load time 40%", "Hired 5"]);
+  });
+  it("keeps a single paragraph as one item", () => {
+    expect(responsibilityItems("Built the payments platform.")).toEqual(["Built the payments platform."]);
+  });
+});

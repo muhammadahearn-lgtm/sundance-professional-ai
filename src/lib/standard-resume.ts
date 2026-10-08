@@ -96,6 +96,10 @@ export function budgetResume(s: StandardResumeSnapshot) {
     education: s.education.slice(0, RESUME_LIMITS.education),
   };
 }
+/** Splits responsibilities into bullet items (one per line, leading -, *, • stripped). Single paragraph → one item. */
+export function responsibilityItems(text: string): string[] {
+  return (text ?? "").split(/\r?\n/).map((l) => l.replace(/^\s*(?:[-*•▪–]|\d+[.)])\s*/, "").trim()).filter(Boolean);
+}
 /** "Engineer, Acme (2014–2016)" — compact line for older roles. */
 export function earlierRoleLine(e: Exp): string {
   const yrs = [e.start?.slice(0, 4), e.current ? "Present" : e.end?.slice(0, 4)].filter(Boolean);
