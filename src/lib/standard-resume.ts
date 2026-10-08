@@ -1,5 +1,6 @@
 export const STANDARD_RESUME_PREMIUM_PREVIEW = true;
 export const STANDARD_RESUME_MAX_SOFT_SKILLS = 5;
+export const STANDARD_RESUME_KEEP_VERSIONS = 3;
 
 export const SPOKEN_LANGUAGE_LEVELS = [
   ["native_bilingual", "Native"],

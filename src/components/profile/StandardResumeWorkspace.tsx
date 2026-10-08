@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_KEEP_VERSIONS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import { CandidateResumeAccessPanel } from "./ResumeAccess";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
@@ -64,6 +64,9 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
       const saved = await supabase.from("standard_resume_versions").insert({ candidate_id: account.userId, version_number: version, snapshot, pdf_path: path, include_photo: includePhoto, section_order: sections }).select("standard_resume_id").single();
       if (saved.error) { await supabase.storage.from("resumes").remove([path]); throw saved.error; }
       if (!latest) await supabase.from("candidate_profiles").update({ recruiter_resume_choice: "standard" }).eq("user_id", account.userId);
+      const pruned = await supabase.rpc("prune_standard_resume_versions", { _keep: STANDARD_RESUME_KEEP_VERSIONS });
+      const oldPaths = (pruned.data ?? []) as unknown as string[];
+      if (oldPaths.length) await supabase.storage.from("resumes").remove(oldPaths);
       toast.success(`Sundance Standard Resume v${version} published`); setEditor(false); await qc.invalidateQueries({ queryKey: ["candidate-full", account.userId] });
     } catch { toast.error("We couldn't publish the resume. Please try again."); }
     setPublishing(false);
