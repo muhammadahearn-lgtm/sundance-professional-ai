@@ -463,6 +463,13 @@
       "when": 1791472561901,
       "tag": "0065_application_hiring_lead",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1791486256509,
+      "tag": "0066_prune_standard_resume_versions",
+      "breakpoints": true
     }
   ]
 }

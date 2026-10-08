@@ -2782,6 +2782,10 @@ export type Database = {
       }
       owns_job: { Args: { _job: string }; Returns: boolean }
       person_name: { Args: { _uid: string }; Returns: string }
+      prune_standard_resume_versions: {
+        Args: { _keep?: number }
+        Returns: string[]
+      }
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
