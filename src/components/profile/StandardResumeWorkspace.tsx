@@ -85,7 +85,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
     <Dialog open={editor} onOpenChange={setEditor}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl"><DialogHeader><DialogTitle>Create Sundance Standard Resume</DialogTitle><DialogDescription>Choose what appears, preview it, then publish an immutable numbered version. Personal email, salary, availability, and match scores are never included.</DialogDescription></DialogHeader>
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]"><div className="space-y-5">
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={includePhoto} onChange={(e) => setIncludePhoto(e.target.checked)} className="mt-1 accent-primary" /><span><span className="block text-sm font-semibold">Include profile photo</span><span className="text-xs text-muted-foreground">Off by default. Photos may increase bias and are not customary in every region.</span></span></label>
-        <div><p className="mb-2 text-sm font-semibold">Sections & order</p><ol className="space-y-1.5">{sections.map((section, index) => <li key={section} className="flex items-center gap-2 rounded-lg border border-border px-2 py-2 text-sm"><input type="checkbox" checked onChange={() => toggleSection(section)} className="accent-primary" /><span className="flex-1">{STANDARD_RESUME_SECTION_LABELS[section]}</span><button aria-label={`Move ${STANDARD_RESUME_SECTION_LABELS[section]} up`} disabled={!index} onClick={() => move(index, -1)}><ArrowUp className="h-4 w-4" /></button><button aria-label={`Move ${STANDARD_RESUME_SECTION_LABELS[section]} down`} disabled={index === sections.length - 1} onClick={() => move(index, 1)}><ArrowDown className="h-4 w-4" /></button></li>)}</ol>{DEFAULT_STANDARD_RESUME_SECTIONS.filter((s) => !sections.includes(s)).map((s) => <button key={s} onClick={() => toggleSection(s)} className="mr-2 mt-2 text-xs font-semibold text-primary">+ {STANDARD_RESUME_SECTION_LABELS[s]}</button>)}</div>
+        <div><p className="mb-2 text-sm font-semibold">Sections to include</p><ul className="space-y-1.5">{DEFAULT_STANDARD_RESUME_SECTIONS.map((section) => <li key={section}><label className="flex items-center gap-2 rounded-lg border border-border px-2 py-2 text-sm"><input type="checkbox" checked={sections.includes(section)} onChange={() => toggleSection(section)} className="accent-primary" /><span className="flex-1">{STANDARD_RESUME_SECTION_LABELS[section]}</span></label></li>)}</ul><p className="mt-2 text-xs text-muted-foreground">Laid out on one A4 page: education and skills on the left, profile and experience on the right.</p></div>
         {data.softSkillRows.length > 0 && <div><p className="text-sm font-semibold">Top soft skills <span className="font-normal text-muted-foreground">({softSkills.length}/{STANDARD_RESUME_MAX_SOFT_SKILLS})</span></p><div className="mt-2 flex flex-wrap gap-1.5">{data.softSkillRows.map((s) => <button key={s.name} type="button" onClick={() => toggleSoft(s.name)} className={`rounded-full border px-2.5 py-1 text-xs ${softSkills.includes(s.name) ? "border-primary bg-primary-soft text-primary" : "border-border"}`}>{s.name}</button>)}</div></div>}
         <div className="flex gap-2"><Button variant="outline" onClick={() => setPreview(true)}><Eye className="h-4 w-4" />Preview</Button><Button disabled={publishing} onClick={publish}>{publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}Publish v{nextStandardResumeVersion(data.standardResumes.map((v) => v.version_number))}</Button></div>
       </div><ResumeDocument snapshot={snapshot} sections={sections} includePhoto={includePhoto} photoUrl={avatarUrl} /></div>
@@ -96,14 +96,38 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
 }
 
 function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapshot: StandardResumeSnapshot; sections: StandardResumeSection[]; includePhoto: boolean; photoUrl: string | null }) {
-  const content: Record<StandardResumeSection, React.ReactNode> = {
-    summary: snapshot.summary && <p>{snapshot.summary}</p>,
-    experience: <div className="space-y-4">{snapshot.experience.map((e, i) => <div key={`${e.company}-${i}`}><p className="font-semibold">{e.title} · {e.company}</p><p className="text-xs text-muted-foreground">{[e.location, e.start && `${e.start.slice(0, 7)} – ${e.current ? "Present" : e.end?.slice(0, 7) ?? ""}`].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-1">{e.responsibilities}</p>}{e.achievements && <p className="mt-1 text-muted-foreground">Achievements: {e.achievements}</p>}</div>)}</div>,
-    skills: <p>{snapshot.skills.join(" • ")}</p>, technologies: <p>{snapshot.technologies.join(" • ")}</p>, programming_languages: <p>{snapshot.programmingLanguages.join(" • ")}</p>, soft_skills: <p>{snapshot.softSkills.join(" • ")}</p>,
-    education: <div className="space-y-2">{snapshot.education.map((e, i) => <p key={`${e.institution}-${i}`}><strong>{[e.degree, e.field].filter(Boolean).join(" in ")}</strong><br /><span className="text-muted-foreground">{e.institution}{e.year ? ` · ${e.year}` : ""}</span></p>)}</div>,
-    certifications: <div className="space-y-2">{snapshot.certifications.map((c, i) => <p key={`${c.name}-${i}`}><strong>{c.name}</strong><br /><span className="text-muted-foreground">{[c.issuer, c.issued].filter(Boolean).join(" · ")}</span></p>)}</div>,
-    spoken_languages: <p>{snapshot.spokenLanguages.map((l) => `${l.name} — ${l.proficiency}`).join(" • ")}</p>,
-    projects: <div className="space-y-2">{snapshot.projects.map((p, i) => <p key={`${p.title}-${i}`}><strong>{p.title}</strong>{p.description && <> · {p.description}</>}</p>)}</div>,
-  };
-  return <article className="mx-auto min-h-[760px] w-full max-w-[720px] bg-card p-8 text-sm text-foreground shadow-elevated sm:p-12"><header className="flex gap-6 border-b-2 border-primary pb-5"><div className="flex-1"><h2 className="font-display text-3xl font-extrabold">{snapshot.name}</h2><p className="mt-1 text-base font-semibold text-primary">{snapshot.headline}</p><p className="mt-2 text-xs text-muted-foreground">{[snapshot.location, ...snapshot.links.map((l) => l.url.replace(/^https?:\/\//, ""))].filter(Boolean).join(" • ")}</p></div>{includePhoto && photoUrl && <img src={photoUrl} alt="" className="h-20 w-20 rounded-sm object-cover" />}</header><div className="mt-5 space-y-5">{sections.map((section) => content[section] && <section key={section}><h3 className="mb-2 border-b border-primary/20 pb-1 text-xs font-bold uppercase text-primary">{STANDARD_RESUME_SECTION_LABELS[section]}</h3>{content[section]}</section>)}</div></article>;
+  const has = (s: StandardResumeSection) => sections.includes(s);
+  const H = ({ children }: { children: React.ReactNode }) => <h3 className="mb-2.5 border-b border-primary/20 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">{children}</h3>;
+  const edu = has("education") ? snapshot.education : []; const certs = has("certifications") ? snapshot.certifications : [];
+  const exp = has("experience") ? snapshot.experience : []; const proj = has("projects") ? snapshot.projects : [];
+  const groups: [string, string[]][] = [
+    ["Technical skills", has("skills") ? snapshot.skills : []],
+    ["Programming languages", has("programming_languages") ? snapshot.programmingLanguages : []],
+    ["Tools & technologies", has("technologies") ? snapshot.technologies : []],
+    ["Soft skills", has("soft_skills") ? snapshot.softSkills : []],
+    ["Languages", has("spoken_languages") ? snapshot.spokenLanguages.map((l) => `${l.name} (${l.proficiency})`) : []],
+  ].filter(([, v]) => (v as string[]).length) as [string, string[]][];
+  return <article className="mx-auto aspect-[210/297] w-full max-w-[720px] overflow-hidden bg-card text-[12px] leading-relaxed text-foreground shadow-elevated">
+    <header className="flex items-center gap-5 border-b-2 border-primary px-8 pb-5 pt-8">
+      {includePhoto && photoUrl && <img src={photoUrl} alt="" className="h-16 w-16 rounded-sm object-cover" />}
+      <div><h2 className="font-display text-2xl font-extrabold leading-tight">{snapshot.name}</h2><p className="text-sm font-semibold text-primary">{snapshot.headline}</p>{snapshot.location && <p className="mt-0.5 text-[11px] text-muted-foreground">{snapshot.location}</p>}</div>
+    </header>
+    <div className="grid h-full grid-cols-[32%_1fr]">
+      <aside className="space-y-5 bg-primary-soft/40 px-6 py-5">
+        {(edu.length > 0 || certs.length > 0) && <section><H>{certs.length ? "Education & Certifications" : "Education"}</H><div className="space-y-2">
+          {edu.map((e, i) => <div key={`e${i}`}><p className="font-semibold">{[e.degree, e.field].filter(Boolean).join(" in ")}</p><p className="text-[11px] text-muted-foreground">{[e.institution, e.year].filter(Boolean).join(" · ")}</p></div>)}
+          {certs.map((c, i) => <div key={`c${i}`}><p className="font-semibold">{c.name}</p><p className="text-[11px] text-muted-foreground">{[c.issuer, c.issued?.slice(0, 4)].filter(Boolean).join(" · ")}</p></div>)}
+        </div></section>}
+        {groups.length > 0 && <section><H>Skills & Languages</H><div className="space-y-2.5">{groups.map(([label, v]) => <div key={label}><p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p>{v.join(" · ")}</p></div>)}</div></section>}
+      </aside>
+      <main className="space-y-5 px-6 py-5">
+        {has("summary") && snapshot.summary && <section><H>Profile</H><p>{snapshot.summary}</p></section>}
+        {(exp.length > 0 || proj.length > 0) && <section><H>{exp.length && proj.length ? "Experience & Projects" : exp.length ? "Experience" : "Projects"}</H><div className="space-y-3.5">
+          {exp.map((e, i) => <div key={`x${i}`}><div className="flex items-baseline justify-between gap-3"><p className="text-[13px] font-semibold">{e.title}</p><span className="shrink-0 text-[10px] text-muted-foreground">{resumePeriod(e)}</span></div><p className="text-[11px] text-muted-foreground">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-1">{e.responsibilities}</p>}{e.achievements && <p className="mt-1">Achievements: {e.achievements}</p>}{e.technologies.length > 0 && <p className="mt-1 text-[10px] text-muted-foreground">{e.technologies.join(" · ")}</p>}</div>)}
+          {proj.length > 0 && exp.length > 0 && <p className="pt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Projects</p>}
+          {proj.map((p, i) => <div key={`p${i}`}><p className="font-semibold">{p.title}</p>{p.description && <p>{p.description}</p>}{p.technologies.length > 0 && <p className="text-[10px] text-muted-foreground">{p.technologies.join(" · ")}</p>}</div>)}
+        </div></section>}
+      </main>
+    </div>
+  </article>;
 }
