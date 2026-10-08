@@ -110,7 +110,6 @@ export function CandidateProfilePage({ account }: { account: Account }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} percent={completion.percent}
-          onEdit={() => { setTab("about"); setEditPro(true); }}
           onPreview={() => setPreview(true)} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
@@ -215,7 +214,7 @@ function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 text-sm">{v || "—"}</dd></div>;
 }
 
-function Header({ account, p, percent, onEdit, onPreview }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void }) {
+function Header({ account, p, percent, onPreview }: { account: Account; p: Profile; percent: number; onPreview: () => void }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
   const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
