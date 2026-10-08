@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
   { id: "collect", title: "Information We Collect", body: <>
     <ul>
       <li><strong>Account details:</strong> name, email address, password (stored securely, never visible to us), and account type.</li>
-      <li><strong>Candidate profiles:</strong> headline, location, roles, skills, languages, technologies, soft skills, experience, education, certifications, salary expectations, availability, links, projects, resume and optional photo.</li>
+      <li><strong>Candidate profiles:</strong> headline, location, roles, skills, programming and spoken languages, technologies, soft skills, experience, education, certifications, salary expectations, availability, links, projects, resume and optional photo.</li>
       <li><strong>Recruiter and company profiles:</strong> job title, company details, logo, banner, optional company contact email and job postings.</li>
       <li><strong>Activity:</strong> applications, saved jobs and candidates, pipeline stages, messages, reports, notifications and basic usage events such as profile or job views.</li>
     </ul>
@@ -36,6 +36,10 @@ const sections: LegalSection[] = [
     <li>Reports are private between the reporter and moderators.</li>
   </ul> },
   { id: "storage", title: "Storage & Security", body: <p>Photos, resumes, company images and message attachments are stored in private storage and shared only through short-lived secure links. Access rules are enforced on our servers, not just in the app. No system is perfectly secure, so please use a strong, unique password.</p> },
+  { id: "standard-resume", title: "Sundance Standard Resumes", body: <>
+    <p>Candidates may generate a standardized resume from profile information they have confirmed. Published versions are preserved as numbered snapshots so later profile edits do not silently change a document a recruiter received.</p>
+    <p>Candidates choose whether recruiters receive their original upload or their latest Sundance Standard Resume. Including a profile photo is optional and off by default. Standard resumes exclude personal email, salary expectations, availability and match scores.</p>
+  </> },
   { id: "rights", title: "Your Choices & Rights", body: <ul>
     <li>Edit or remove profile information at any time.</li>
     <li>Turn off talent-search visibility as a candidate.</li>

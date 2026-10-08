@@ -14,6 +14,18 @@ function period(v: { start: string | null; end: string | null; current: boolean 
   return [f(v.start), v.current ? "Present" : f(v.end)].filter(Boolean).join(" – ");
 }
 
+async function browserImageAsPng(photo: NonNullable<Photo>): Promise<ArrayBuffer | null> {
+  if (photo.type.includes("png") || photo.type.includes("jpeg") || photo.type.includes("jpg")) return null;
+  try {
+    const blob = new Blob([photo.bytes], { type: photo.type });
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement("canvas"); canvas.width = bitmap.width; canvas.height = bitmap.height;
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0); bitmap.close();
+    const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    return png ? png.arrayBuffer() : null;
+  } catch { return null; }
+}
+
 export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, sections: StandardResumeSection[], photo: Photo): Promise<Uint8Array> {
   const doc = await PDFDocument.create(); doc.registerFontkit(fontkit);
   const fontBytes = await fetch(notoFontUrl).then((r) => r.arrayBuffer());
@@ -37,7 +49,8 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   let photoWidth = 0;
   if (photo) {
     try {
-      const img = photo.type.includes("png") ? await doc.embedPng(photo.bytes) : await doc.embedJpg(photo.bytes);
+      const converted = await browserImageAsPng(photo);
+      const img = photo.type.includes("png") || converted ? await doc.embedPng(converted ?? photo.bytes) : await doc.embedJpg(photo.bytes);
       const dim = img.scaleToFit(60, 60); page.drawImage(img, { x: PAGE.width - PAGE.margin - 60, y: y - 58, width: dim.width, height: dim.height }); photoWidth = 78;
     } catch { photoWidth = 0; }
   }
