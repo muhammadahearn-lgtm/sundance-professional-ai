@@ -22,11 +22,13 @@ import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { CertificationManager, EducationManager, ExperienceManager, LookupManager, SoftSkillManager, type LookupRow } from "./managers";
 import { LinkBadges, LinksForm, ProjectList, ProjectsManager, type Project } from "./links-projects";
 import { ARRANGEMENTS, AVAILABILITY, Chips, Field, SaveBar, Section, TagInput, card, cap, friendlyError, inputCls, label, type Proficiency } from "./parts";
+import { SpokenLanguageAddButton, SpokenLanguagesManager } from "./SpokenLanguagesManager";
+import { StandardResumeWorkspace, type StandardResumeData } from "./StandardResumeWorkspace";
 
 type Lk = { lookup_id: string; proficiency_level: Proficiency; years_experience: number };
 
 async function loadAll(uid: string) {
-  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj] = await Promise.all([
+  const [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj, spoken, standard] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", uid).maybeSingle(),
     supabase.from("work_experience").select("*").eq("candidate_id", uid),
     supabase.from("education").select("*").eq("candidate_id", uid),
@@ -41,8 +43,10 @@ async function loadAll(uid: string) {
     supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", uid),
     supabase.from("soft_skills").select("soft_skill_id, soft_skill_name").order("soft_skill_name"),
     supabase.from("candidate_projects").select("project_id, title, description, project_url, technologies").eq("candidate_id", uid).order("created_at"),
+    supabase.from("candidate_spoken_languages").select("spoken_language_id, language_name, proficiency").eq("candidate_id", uid).order("language_name"),
+    supabase.from("standard_resume_versions").select("standard_resume_id, version_number, snapshot, pdf_path, include_photo, section_order, published_at").eq("candidate_id", uid).order("version_number", { ascending: false }),
   ]);
-  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj].find((r) => r.error)?.error;
+  const err = [p, exp, edu, cert, langs, skills, techs, rl, ll, sl, tl, cs, ssl, pj, spoken, standard].find((r) => r.error)?.error;
   if (err) throw err;
   const langOpts = (ll.data ?? []).map((x) => ({ id: x.language_id, name: x.language_name }));
   const skillOpts = (sl.data ?? []).map((x) => ({ id: x.skill_id, name: x.skill_name }));
@@ -54,7 +58,9 @@ async function loadAll(uid: string) {
     languages: join(langs.data as Lk[] | null, langOpts), skills: join(skills.data as Lk[] | null, skillOpts), technologies: join(techs.data as Lk[] | null, techOpts),
     roleNames: (rl.data ?? []).map((r) => r.role_name), roleById: Object.fromEntries((rl.data ?? []).map((r) => [r.role_id, r.role_name])) as Record<string, string>, langOpts, skillOpts, techOpts,
     softSkills: (cs.data ?? []).map((x) => x.lookup_id), softOpts: (ssl.data ?? []).map((x) => ({ id: x.soft_skill_id, name: x.soft_skill_name })),
+    softSkillRows: (cs.data ?? []).map((x) => ({ name: (ssl.data ?? []).find((o) => o.soft_skill_id === x.lookup_id)?.soft_skill_name ?? "" })).filter((x) => x.name),
     projects: (pj.data ?? []) as Project[],
+    spokenLanguages: spoken.data ?? [], standardResumes: standard.data ?? [],
   };
 }
 type Data = Awaited<ReturnType<typeof loadAll>>;
@@ -69,7 +75,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   const [editPro, setEditPro] = useState(false);
   const [editPrefs, setEditPrefs] = useState(false);
   const [editLinks, setEditLinks] = useState(false);
-  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "skill" | "soft" | "tech" | "proj" | null>(null);
+  const [adding, setAdding] = useState<"exp" | "edu" | "cert" | "lang" | "spoken" | "skill" | "soft" | "tech" | "proj" | null>(null);
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className={`${card} h-40 animate-pulse`} />)}</div>;
   if (error || !data) return (
@@ -125,6 +131,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         <Section id="resume" title="Your Resume / CV" icon={<FileText className="h-4 w-4" />}>
           <ResumeManager uid={uid} p={p} onAutofill={(f) => { setAutofillFile(f); setAutofill(true); }} />
           <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
+          <div className="mt-5 border-t border-border pt-5"><StandardResumeWorkspace account={account} data={data as StandardResumeData} /></div>
         </Section>
 
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
@@ -142,6 +149,10 @@ export function CandidateProfilePage({ account }: { account: Account }) {
 
         <Section id="languages" title="Programming Languages" icon={<Code2 className="h-4 w-4" />} action={adding !== "lang" && addBtn("Add Language", () => setAdding("lang"))}>
           <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_languages" options={data.langOpts} rows={data.languages} noun="language" successMsg="Languages updated" adding={adding === "lang"} setAdding={(v) => setAdding(v ? "lang" : null)} />
+        </Section>
+        <Section id="spoken-languages" title="Spoken Languages" icon={<Globe className="h-4 w-4" />} action={adding !== "spoken" && <SpokenLanguageAddButton onClick={() => setAdding("spoken")} />}>
+          <SpokenLanguagesManager uid={uid} items={data.spokenLanguages} adding={adding === "spoken"} setAdding={(v) => setAdding(v ? "spoken" : null)} />
+          <p className="mt-3 text-xs text-muted-foreground">Spoken languages appear on your profile and Sundance resume. They never affect match or ranking scores.</p>
         </Section>
         <Section id="skills" title="Technical Skills" icon={<Wrench className="h-4 w-4" />} action={adding !== "skill" && addBtn("Add Skill", () => setAdding("skill"))}>
           <LookupManager roleName={data.roleById?.[data.profile?.role_id ?? ""] ?? data.roleById?.[data.profile?.target_role_id ?? ""]} uid={uid} table="candidate_skills" options={data.skillOpts} otherOptions={data.techOpts} rows={data.skills} noun="skill" required successMsg="Skills updated" adding={adding === "skill"} setAdding={(v) => setAdding(v ? "skill" : null)} />
@@ -448,6 +459,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technical Skills</p>{lk(data.skills)}</div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Technologies</p>{lk(data.technologies)}</div>
             <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Soft Skills</p><Chips items={(data.softSkills ?? []).map((id) => (data.softOpts ?? []).find((o) => o.id === id)?.name ?? "").filter(Boolean)} /></div>
+            <div><p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Spoken Languages</p><Chips items={data.spokenLanguages.map((x) => `${x.language_name} · ${x.proficiency.replaceAll("_", " ")}`)} /></div>
           </section>
           {block("Education", data.education.length ? <ul className="space-y-3">{data.education.map((x) => <li key={x.education_id}><EducationLines e={x} /></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
           {block("Certifications", data.certifications.length ? <ul className="space-y-3">{data.certifications.map((x) => <li key={x.certification_id}><p className="font-semibold">{x.certification_name}</p><p className="text-xs text-muted-foreground">{x.issuing_organization}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">—</p>)}
