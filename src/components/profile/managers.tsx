@@ -16,6 +16,7 @@ import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, type Proficiency } from "./parts";
+import { KNOWN_FIELDS, resolveFieldOfStudy } from "@/lib/education-field-aliases";
 import { KNOWN_INSTITUTIONS, resolveInstitution } from "@/lib/institution-aliases";
 import { TagPicker, TextPicker, newTextName } from "@/components/taxonomy/TextPicker";
 import { newCompanyName } from "@/lib/company-add";
@@ -162,8 +163,9 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
   const sugg = useQuery({ queryKey: ["education-suggestions"], queryFn: async () => { const { data } = await supabase.rpc("education_suggestions"); return data ?? []; } });
-  const fields = [...new Set([...COMMON_FIELDS, ...(sugg.data ?? []).filter((s) => s.kind === "field").map((s) => s.name)])].sort();
+  const fields = [...new Set([...COMMON_FIELDS, ...KNOWN_FIELDS, ...(sugg.data ?? []).filter((s) => s.kind === "field").map((s) => s.name)])].sort();
   const schools = [...new Set([...KNOWN_INSTITUTIONS, ...(sugg.data ?? []).filter((s) => s.kind === "institution").map((s) => s.name)])].sort();
+  const fieldName = (q: string, o: { name: string }[]) => resolveFieldOfStudy(q) ?? newTextName(q, o, 100);
   const schoolName = (q: string, o: { name: string }[]) => resolveInstitution(q) ?? newTextName(q, o);
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -184,7 +186,7 @@ function EducationForm({ uid, item, onDone, onCancel }: { uid: string; item?: Ed
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-primary/30 bg-primary-soft/30 p-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Degree Type *" error={err.degree_type}><SearchPicker ariaLabel="Degree type" options={DEGREE_OPTS} value={f.degree_type} onChange={(v) => setF({ ...f, degree_type: v })} placeholder="Select degree type" />{!item?.degree_type && item?.degree && <p className="mt-1 text-xs text-muted-foreground">Previously entered: {item.degree}</p>}</Field>
-        <Field label="Field Of Study *" error={err.field_of_study}><TextPicker ariaLabel="Field of study" options={fields} value={f.field_of_study} max={100} placeholder="e.g. Computer Science" onChange={(v) => setF({ ...f, field_of_study: v })} addHint="Not listed? Add your major." /></Field>
+        <Field label="Field Of Study *" error={err.field_of_study}><TextPicker ariaLabel="Field of study" options={fields} value={f.field_of_study} max={100} placeholder="e.g. Computer Science" onChange={(v) => setF({ ...f, field_of_study: v })} addHint="Not listed? Add your major. Shortcuts like CS use the full name." nameFor={fieldName} /></Field>
         <Field label="Institution *" error={err.institution_name}><TextPicker ariaLabel="Institution" options={schools} value={f.institution_name} placeholder="e.g. University Of New Hampshire" onChange={(v) => setF({ ...f, institution_name: v })} addHint="Not listed? Add your school." /></Field>
         <Field label="Graduation Year" error={err.graduation_year}><input inputMode="numeric" maxLength={4} placeholder="2024" className={inputCls} value={f.graduation_year} onChange={(e) => setF({ ...f, graduation_year: e.target.value.replace(/\D/g, "").slice(0, 4) })} /></Field>
       </div>
