@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, resumeLinks, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import { CandidateResumeAccessPanel } from "./ResumeAccess";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
@@ -74,7 +74,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
   return <div className="space-y-4">
     <CandidateResumeAccessPanel uid={account.userId} requireRequest={data.profile.require_resume_request ?? true} />
     <div className="grid gap-3 md:grid-cols-2">
-      <div className="rounded-xl border border-border p-4"><div className="flex items-start gap-3"><FileBadge2 className="mt-0.5 h-5 w-5 text-primary" /><div><p className="font-semibold">Sundance Standard Resume</p><p className="text-xs text-muted-foreground">Consistent, ATS-friendly, and built only from profile details you confirmed.</p></div><span className="ml-auto rounded-full bg-primary-soft px-2 py-1 text-[10px] font-bold uppercase text-primary">Premium Preview</span></div>
+      <div className="rounded-xl border border-border p-4"><div className="flex items-start gap-3"><FileBadge2 className="mt-0.5 h-5 w-5 text-primary" /><div><p className="font-semibold">Sundance Standard Resume</p><p className="text-xs text-muted-foreground">Consistent, ATS-friendly, and built only from profile details you confirmed.</p></div></div>
         {latest ? <div className="mt-4 flex flex-wrap items-center gap-2"><span className="text-sm font-semibold">Published v{latest.version_number}</span><span className="text-xs text-muted-foreground">{new Date(latest.published_at).toLocaleDateString()}</span><Button size="sm" variant="outline" onClick={() => { setPreview(true); }}><Eye className="h-4 w-4" />Preview</Button><Button size="sm" variant="outline" onClick={() => download(latest)}><Download className="h-4 w-4" />PDF</Button></div> : <p className="mt-4 text-sm text-muted-foreground">Create your first polished version when your profile is ready.</p>}
         <Button className="mt-4" onClick={() => setEditor(true)}><Sparkles className="h-4 w-4" />{latest ? "Publish New Version" : "Create Sundance Resume"}</Button>
       </div>
@@ -93,7 +93,6 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
       </div><ResumeDocument snapshot={snapshot} sections={sections} includePhoto={includePhoto} photoUrl={avatarUrl} /></div>
     </DialogContent></Dialog>
     <Dialog open={preview} onOpenChange={setPreview}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Sundance Standard Resume Preview</DialogTitle><DialogDescription>{latest ? `Published version ${latest.version_number}` : "Draft preview"}</DialogDescription></DialogHeader><ResumeDocument snapshot={latest ? latest.snapshot as StandardResumeSnapshot : snapshot} sections={(latest?.section_order as StandardResumeSection[] | undefined) ?? sections} includePhoto={latest?.include_photo ?? includePhoto} photoUrl={avatarUrl} /></DialogContent></Dialog>
-    {STANDARD_RESUME_PREMIUM_PREVIEW && <p className="text-xs text-muted-foreground">Premium Preview is free for everyone during early access.</p>}
   </div>;
 }
 
