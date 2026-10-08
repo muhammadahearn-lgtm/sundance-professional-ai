@@ -9,7 +9,7 @@ export function inviteMessage(candidateName: string, jobTitle: string, company: 
 export type CareerModeTag = { label: string; tone: "success" | "warning" | "muted" };
 /** Recruiter-facing tag for a candidate's career mode. */
 export function careerModeTag(mode: string | null | undefined): CareerModeTag {
-  if (mode === "passive") return { label: "Open to Exceptional Roles", tone: "warning" };
+  if (mode === "passive") return { label: "Open to the Right Opportunity", tone: "warning" };
   if (mode === "not_looking") return { label: "Employed & Not Looking", tone: "muted" };
   return { label: "Actively Looking", tone: "success" };
 }
