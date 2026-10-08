@@ -302,7 +302,7 @@ function PrefsView({ p }: { p: Profile }) {
     <dl className="grid gap-5 sm:grid-cols-2">
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target Roles</dt><Chips items={p.target_roles} /></div>
       <Item k="Desired Minimum Salary" v={formatSalaryAmount(p.salary_amount, p.salary_currency)} />
-      <Item k="Availability" v={label(AVAILABILITY, p.availability)} />
+      <Item k="Career Mode" v={label(AVAILABILITY, p.availability)} />
       <Item k="Preferred Work Arrangement" v={label(ARRANGEMENTS, p.work_arrangement)} />
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Locations Of Interest</dt><Chips items={p.locations_of_interest} /></div>
       <div><dt className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target Industries</dt><Chips items={p.target_industries} /></div>
@@ -335,7 +335,7 @@ function PreferencesForm({ p, uid, roleNames, onDone }: { p: Profile; uid: strin
     <form onSubmit={submit} className="space-y-5">
       <Field label="Target Roles *" error={err}><TagInput value={f.target_roles} onChange={(v) => setF({ ...f, target_roles: v })} options={roleNames} placeholder="Search roles…" /></Field>
       <Field label="Desired Minimum Salary" error={salErr}><div className="flex gap-2"><input className={inputCls} type="text" inputMode="numeric" pattern="[0-9]*" placeholder="60000" value={f.salary_amount} onChange={(e) => setF({ ...f, salary_amount: digitsOnly(e.target.value) })} /><select aria-label="Currency" className={`${inputCls} w-28`} value={f.salary_currency} onChange={(e) => setF({ ...f, salary_currency: e.target.value })}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></div></Field>
-      <div className="space-y-1.5"><p className="text-sm font-medium">Availability</p>{choice(AVAILABILITY, f.availability, (v) => setF({ ...f, availability: v }))}</div>
+      <div className="space-y-1.5"><p className="text-sm font-medium">Career Mode</p>{choice(AVAILABILITY, f.availability, (v) => setF({ ...f, availability: v }))}</div>
       <div className="space-y-1.5"><p className="text-sm font-medium">Preferred Work Arrangement</p>{choice(ARRANGEMENTS, f.work_arrangement, (v) => setF({ ...f, work_arrangement: v }))}</div>
       <Field label="Locations Of Interest"><TagInput value={f.locations_of_interest} onChange={(v) => setF({ ...f, locations_of_interest: v })} placeholder="e.g. Boston, MA — press Enter" /></Field>
       <Field label="Target Industries"><TagInput value={f.target_industries} onChange={(v) => setF({ ...f, target_industries: v })} placeholder="e.g. Healthcare — press Enter" /></Field>
