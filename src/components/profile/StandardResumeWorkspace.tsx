@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Eye, FileBadge2, Loader2, Sparkles } from "lucide-react";
+import { Check, Download, Eye, FileBadge2, Github, Globe, Linkedin, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/components/app/ProfilePhoto";
@@ -112,7 +112,7 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
   return <article className="mx-auto aspect-[210/297] w-full max-w-[720px] overflow-hidden bg-card text-[12px] leading-relaxed text-foreground shadow-elevated">
     <header className="flex items-center gap-5 border-b-2 border-foreground/80 px-8 pb-5 pt-8">
       {includePhoto && photoUrl && <img src={photoUrl} alt="" className="h-16 w-16 rounded-sm object-cover" />}
-      <div><h2 className="font-display text-2xl font-extrabold leading-tight">{snapshot.name}</h2><p className="text-sm font-semibold text-foreground/75">{snapshot.headline}</p>{(snapshot.location || resumeLinks(snapshot).length > 0) && <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">{snapshot.location && <span>{snapshot.location}</span>}{resumeLinks(snapshot).map((l) => <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/75 hover:underline"><span className="rounded-sm bg-foreground/75 px-1 text-[8px] font-bold leading-[12px] text-background">{l.label === "LinkedIn" ? "in" : l.label === "GitHub" ? "gh" : "www"}</span>{l.label}</a>)}</p>}</div>
+      <div><h2 className="font-display text-2xl font-extrabold leading-tight">{snapshot.name}</h2><p className="text-sm font-semibold text-foreground/75">{snapshot.headline}</p>{(snapshot.location || resumeLinks(snapshot).length > 0) && <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">{snapshot.location && <span>{snapshot.location}</span>}{resumeLinks(snapshot).map((l) => <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/75 hover:underline">{l.label === "LinkedIn" ? <Linkedin className="h-3 w-3" /> : l.label === "GitHub" ? <Github className="h-3 w-3" /> : <Globe className="h-3 w-3" />}{l.label}</a>)}</p>}</div>
     </header>
     <div className="grid h-full grid-cols-[32%_1fr]">
       <aside className="space-y-5 bg-muted/40 px-6 py-5">
