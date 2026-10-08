@@ -21,7 +21,7 @@ const STEPS: { key: Phase; label: string }[] = [
 export function ResumeUploadCard({ catalogs, onParsed, onSkip, className, initialFile }: {
   initialFile?: File | null;
   catalogs: Catalogs | null;
-  onParsed: (resume: ParsedResume, matched: MatchedResume) => void;
+  onParsed: (resume: ParsedResume, matched: MatchedResume, file: File) => void;
   onSkip?: () => void;
   className?: string;
 }) {
@@ -53,7 +53,7 @@ export function ResumeUploadCard({ catalogs, onParsed, onSkip, className, initia
         jobs: res.resume.experience.length, schools: res.resume.education.length, unmatched: matched.unmatched.length,
       });
       setPhase("done");
-      onParsed(res.resume, matched);
+      onParsed(res.resume, matched, file);
     } catch (e) {
       setError(e instanceof Error && e.message ? e.message : "We couldn't read this resume. Please try again or enter your details manually.");
       setPhase("error");
@@ -74,7 +74,7 @@ export function ResumeUploadCard({ catalogs, onParsed, onSkip, className, initia
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></div>
         <div>
           <h3 className="font-semibold">Auto-fill from your resume</h3>
-          <p className="text-sm text-muted-foreground">Upload a PDF, Word or text file. We fill in your profile — you review everything before saving.</p>
+          <p className="text-sm text-muted-foreground">Upload a PDF, Word or text file. We fill in your profile and attach the file for recruiters to download — you review everything before saving.</p>
         </div>
       </div>
 

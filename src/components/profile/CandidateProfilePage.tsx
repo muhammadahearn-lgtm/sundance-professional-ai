@@ -1,4 +1,5 @@
 import { ResumeAutofillPanel } from "./ResumeAutofillPanel";
+import { isStorableResume } from "@/lib/resume-storage";
 import { LocationFields } from "@/components/location/LocationFields";
 import { EducationLines } from "@/components/profile/EducationLines";
 import { formatLocation, type LocationParts } from "@/lib/location";
@@ -12,7 +13,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Sparkles, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Globe, FolderGit2,
+  Award, Briefcase, Code2, Cpu, Download, Eye, EyeOff, FileText, GraduationCap, MapPin, Pencil, Plus, ShieldCheck, Target, Trash2, Upload, UserRound, Wrench, ArrowLeft, Lightbulb, HeartHandshake, Globe, FolderGit2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account } from "@/lib/account";
@@ -102,7 +103,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} percent={completion.percent}
           onEdit={() => { setEditPro(true); document.getElementById("professional")?.scrollIntoView({ behavior: "smooth" }); }}
-          onPreview={() => setPreview(true)} onAutofill={() => setAutofill(true)} />
+          onPreview={() => setPreview(true)} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
 
         <Section id="professional" title="Professional Information" icon={<UserRound className="h-4 w-4" />} action={!editPro && editBtn(() => setEditPro(true))}>
@@ -123,7 +124,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
 
         <Section id="resume" title="Your Resume / CV" icon={<FileText className="h-4 w-4" />}>
           <ResumeManager uid={uid} p={p} onAutofill={(f) => { setAutofillFile(f); setAutofill(true); }} />
-          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. After uploading, Sundance AI can also fill in your profile from it — or use <button type="button" onClick={() => setAutofill(true)} className="font-semibold text-primary hover:underline">Auto-fill with AI</button>.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Recruiters can download this file. Each time you upload, Sundance AI compares it with your profile and suggests anything missing — you choose what to add.</p>
         </Section>
 
         <Section id="experience" title="Work Experience" icon={<Briefcase className="h-4 w-4" />} action={adding !== "exp" && addBtn("Add Experience", () => setAdding("exp"))}>
@@ -189,7 +190,7 @@ function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="mt-1 text-sm">{v || "—"}</dd></div>;
 }
 
-function Header({ account, p, percent, onEdit, onPreview, onAutofill }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void; onAutofill: () => void }) {
+function Header({ account, p, percent, onEdit, onPreview }: { account: Account; p: Profile; percent: number; onEdit: () => void; onPreview: () => void }) {
   const initials = `${account.firstName[0] ?? ""}${account.lastName[0] ?? ""}`.toUpperCase() || "?";
   const [photo, setPhoto] = useState(account.avatarPath);
   const qc = useQueryClient();
@@ -201,7 +202,6 @@ function Header({ account, p, percent, onEdit, onPreview, onAutofill }: { accoun
           <ProfilePhoto uid={account.userId} path={photo} initials={initials} editable onChange={(p2) => { setPhoto(p2); void qc.invalidateQueries(); }} />
           <div className="flex flex-wrap gap-2">
             <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"><Pencil className="h-4 w-4" />Edit Profile</button>
-            <button onClick={onAutofill} className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary-soft px-3.5 py-2 text-sm font-semibold text-primary hover:border-primary"><Sparkles className="h-4 w-4" />Auto-fill with AI</button>
             <button onClick={onPreview} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />Preview Profile</button>
           </div>
         </div>
@@ -323,8 +323,7 @@ function ResumeManager({ uid, p, onAutofill }: { uid: string; p: Profile; onAuto
   const save = useSaveProfile(uid);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [offer, setOffer] = useState<File | null>(null);
-
+  
   async function upload(file: File) {
     const bad = validateResumeFile(file);
     if (bad) { toast.error(bad); return; }
@@ -338,7 +337,7 @@ function ResumeManager({ uid, p, onAutofill }: { uid: string; p: Profile; onAuto
     if (ok && old) await supabase.storage.from("resumes").remove([old]);
     if (!ok) await supabase.storage.from("resumes").remove([path]);
     setBusy(false);
-    if (ok) setOffer(file);
+    if (ok && isStorableResume(file)) onAutofill(file);
   }
   async function download() {
     if (!p.resume_path) return;
@@ -373,18 +372,8 @@ function ResumeManager({ uid, p, onAutofill }: { uid: string; p: Profile; onAuto
         <button onClick={() => input.current?.click()} disabled={busy} className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-border p-8 text-center hover:border-primary hover:bg-primary-soft/30">
           <Upload className="h-7 w-7 text-primary" />
           <span className="font-semibold">{busy ? "Uploading…" : "Attach your resume for recruiters"}</span>
-          <span className="text-xs text-muted-foreground">PDF or DOCX, up to 10 MB · Sundance AI can also auto-fill your profile from it</span>
+          <span className="text-xs text-muted-foreground">PDF or DOCX, up to 10 MB · We'll suggest profile updates from it</span>
         </button>
-      )}
-      {offer && (
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-          <p className="min-w-0 flex-1 text-sm"><span className="font-semibold">Resume saved.</span> Want Sundance AI to fill in your profile from it? You review everything before it's saved.</p>
-          <div className="flex gap-2">
-            <button onClick={() => setOffer(null)} className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted">No thanks</button>
-            <button onClick={() => { onAutofill(offer); setOffer(null); }} className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Yes, auto-fill</button>
-          </div>
-        </div>
       )}
     </div>
   );

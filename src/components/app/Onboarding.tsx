@@ -18,6 +18,7 @@ import { normalizeUrl, validateLinks } from "@/lib/profile-links";
 import { addCompanyEntry } from "@/lib/company-add";
 import { ResumeUploadCard } from "@/components/profile/ResumeUploadCard";
 import { useResumeCatalogs, importResume } from "@/lib/resume-import";
+import { isStorableResume, uploadResumeFile } from "@/lib/resume-storage";
 import type { ParsedResume } from "@/lib/resume-parse";
 import type { MatchedResume } from "@/lib/resume-taxonomy-matcher";
 
@@ -93,12 +94,12 @@ export function CandidateOnboarding({ account }: { account: Account }) {
   });
   const [proj, setProj] = useState({ title: "", project_url: "", description: "" });
   const [method, setMethod] = useState<"choose" | "form">("choose");
-  const [resume, setResume] = useState<{ p: ParsedResume; m: MatchedResume } | null>(null);
+  const [resume, setResume] = useState<{ p: ParsedResume; m: MatchedResume; file: File } | null>(null);
   const catalogs = useResumeCatalogs();
   const roleNames = useQuery({ queryKey: ["role-names"], staleTime: 3600_000, queryFn: async () => ((await supabase.from("roles").select("role_name").eq("is_active", true).order("sort_order")).data ?? []).map((r) => r.role_name) });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
 
-  function applyResume(p: ParsedResume, m: MatchedResume) {
+  function applyResume(p: ParsedResume, m: MatchedResume, file: File) {
     const names = (xs: { name: string }[]) => [...new Set(xs.map((x) => x.name))];
     const loc = { country: m.country, state: p.location_state, city: p.location_city };
     setF((o) => ({
@@ -114,7 +115,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     }));
     const pr = p.projects[0];
     if (pr) setProj({ title: pr.title.slice(0, 120), project_url: pr.project_url, description: pr.description.slice(0, 1000) });
-    setResume({ p, m });
+    setResume({ p, m, file });
     setStep(1);
     setMethod("form");
   }
@@ -138,8 +139,10 @@ export function CandidateOnboarding({ account }: { account: Account }) {
     if (projUrl === null) return setError("Enter a valid project link.");
     if (!proj.title.trim() && (proj.project_url.trim() || proj.description.trim())) return setError("Give your project a title.");
     setSaving(true);
+    const resumePath = resume && isStorableResume(resume.file) ? await uploadResumeFile(account.userId, resume.file) : null;
+    const resumeCols = resumePath && resume ? { resume_path: resumePath, resume_file_name: resume.file.name, resume_uploaded_at: new Date().toISOString() } : {};
     const { error: e1 } = await supabase.from("candidate_profiles").upsert({
-      user_id: account.userId, ...f, salary_amount: amt.value, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
+      user_id: account.userId, ...f, ...resumeCols, salary_amount: amt.value, ...links.value, years_experience: Math.max(0, Math.min(60, Number(f.years_experience) || 0)),
     });
     let e2 = e1 ? e1.message : null;
     if (!e2 && proj.title.trim()) {
@@ -170,7 +173,7 @@ export function CandidateOnboarding({ account }: { account: Account }) {
       <h1 className="mt-6 text-2xl font-extrabold">{["Professional Information", "Technical Qualifications", "Career Preferences"][step - 1]}</h1>
       <div className="mt-6 space-y-5">
         {error && <FormAlert>{error}</FormAlert>}
-        {resume && <div className="rounded-xl border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-primary">Pre-filled from your resume — please review and adjust any field. Your jobs, education and certifications from the resume are added to your profile when you finish.{resume.m.unmatched.length > 0 && <> Not on our lists yet (add them later on your profile): {resume.m.unmatched.map((u) => u.name).join(", ")}.</>}</div>}
+        {resume && <div className="rounded-xl border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-primary">Pre-filled from your resume — please review and adjust any field. Your jobs, education and certifications are added when you finish, and your resume is attached for recruiters to download.{resume.m.unmatched.length > 0 && <> Not on our lists yet (add them later on your profile): {resume.m.unmatched.map((u) => u.name).join(", ")}.</>}</div>}
         {step === 1 && (<>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Current Role"><Input value={f.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="Senior Data Engineer" maxLength={100} /></Field>

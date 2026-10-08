@@ -51,20 +51,20 @@ export function ResumeAutofillPanel({ uid, profile, open, onOpenChange, initialF
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setReview(null); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Auto-fill with AI</DialogTitle>
-          <DialogDescription>Add missing skills, jobs, education and certifications from your resume. You review before anything is saved.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />{initialFile ? "Resume saved — check for updates" : "Update profile from resume"}</DialogTitle>
+          <DialogDescription>We compare your resume with your profile and suggest anything missing. Nothing changes until you accept.</DialogDescription>
         </DialogHeader>
       {!review ? <ResumeUploadCard catalogs={catalogs.data ?? null} onParsed={onParsed} initialFile={initialFile ?? null} /> : (
         <div className="rounded-2xl border bg-card p-5">
-          <h3 className="font-semibold">Review what we'll add</h3>
-          {lines.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Your profile already has everything we found in this resume.</p> : (
+          <h3 className="font-semibold">We found these additions in your resume</h3>
+          {lines.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Your resume is attached and your profile already has everything we found in it.</p> : (
             <ul className="mt-3 space-y-1 text-sm">{lines.map(([n, l]) => <li key={l}>• {n} {l}</li>)}</ul>
           )}
           <p className="mt-3 text-xs text-muted-foreground">Existing entries are never changed or duplicated. Jobs without a start date are skipped.</p>
           {review.m.unmatched.length > 0 && <p className="mt-2 text-xs text-muted-foreground">Not on our lists yet — add them yourself below if you'd like: {review.m.unmatched.map((u) => u.name).join(", ")}.</p>}
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" className="rounded-full" onClick={() => setReview(null)}>Use a different file</Button>
-            <Button className="rounded-full" disabled={saving || planCount(review.plan) + Object.keys(review.patch).length === 0} onClick={confirm}>{saving ? "Adding…" : "Add to my profile"}</Button>
+            <Button variant="outline" className="rounded-full" onClick={() => initialFile ? onOpenChange(false) : setReview(null)}>{initialFile ? "Skip" : "Use a different file"}</Button>
+            <Button className="rounded-full" disabled={saving || planCount(review.plan) + Object.keys(review.patch).length === 0} onClick={confirm}>{saving ? "Updating…" : "Accept & update profile"}</Button>
           </div>
         </div>
       )}
