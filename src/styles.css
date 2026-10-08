@@ -45,7 +45,8 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(1 0 0);
+  /* Cool Slate Grey canvas — softer than pure white, cards stay white and lift off the page */
+  --background: oklch(0.972 0.005 260);
   --foreground: oklch(0.2 0.03 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.03 260);
@@ -54,9 +55,9 @@
   --primary: oklch(0.55 0.21 260);
   --primary-foreground: oklch(0.99 0 0);
   --primary-soft: oklch(0.96 0.03 260);
-  --secondary: oklch(0.975 0.004 260);
+  --secondary: oklch(0.955 0.006 260);
   --secondary-foreground: oklch(0.25 0.03 260);
-  --muted: oklch(0.975 0.004 260);
+  --muted: oklch(0.955 0.006 260);
   --muted-foreground: oklch(0.52 0.025 260);
   --accent: oklch(0.96 0.03 260);
   --accent-foreground: oklch(0.4 0.18 260);
