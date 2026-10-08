@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { template as activityAlert } from './activity-alert'
+import { template as compareShare } from './compare-share'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -20,6 +21,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'activity-alert': activityAlert,
+  'compare-share': compareShare,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }
