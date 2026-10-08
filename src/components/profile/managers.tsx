@@ -16,7 +16,7 @@ import { CategoryGuardAdd } from "@/components/taxonomy/CategoryGuardAdd";
 import { RecGroups } from "@/components/taxonomy/RecGroups";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Empty, Field, SaveBar, PROFICIENCY, cap, friendlyError, inputCls, type Proficiency } from "./parts";
-import { TagPicker, TextPicker } from "@/components/taxonomy/TextPicker";
+import { TagPicker, TextPicker, newTextName } from "@/components/taxonomy/TextPicker";
 import { newCompanyName } from "@/lib/company-add";
 
 type Exp = Tables<"work_experience">;
