@@ -9,7 +9,8 @@ type Photo = { bytes: ArrayBuffer; type: string } | null;
 const W = 595.28, H = 841.89, M = 36;
 const SIDE_W = 190; // sidebar ~32%
 const GAP = 22;
-const navy = rgb(0.082, 0.102, 0.2), blue = rgb(0.184, 0.357, 0.878), muted = rgb(0.38, 0.42, 0.5), sideBg = rgb(0.955, 0.965, 0.99), rule = rgb(0.86, 0.89, 0.97);
+// Deep Midnight & Steel palette: #0F172A text, #334155 accent, #64748B muted, #F8FAFC sidebar, #E2E8F0 rules.
+const navy = rgb(0.059, 0.09, 0.165), blue = rgb(0.2, 0.255, 0.333), muted = rgb(0.392, 0.455, 0.545), sideBg = rgb(0.973, 0.98, 0.988), rule = rgb(0.886, 0.91, 0.941);
 
 function clean(v: string) { return v.replace(/\s+/g, " ").trim(); }
 
