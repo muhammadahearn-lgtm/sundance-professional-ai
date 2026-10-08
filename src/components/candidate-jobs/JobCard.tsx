@@ -29,10 +29,10 @@ export function StealthBadge({ on }: { on: boolean | null | undefined }) {
 
 export function monogram(name: string | null | undefined) {
   const w = (name ?? "").replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
-  return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] ?? "").slice(0, 2)).toUpperCase();
+  return (w.length > 1 ? w[0]!.charAt(0) + w[1]!.charAt(0) : (w[0] ?? "").slice(0, 2)).toUpperCase();
 }
 
-export function CompanyLogo({ path, name, size = "h-12 w-12" }: { path: string | null | undefined; name?: string | null; size?: string }) {
+export function CompanyLogo({ path, name, size = "h-12 w-12" }: { path: string | null | undefined; name?: string | null | undefined; size?: string }) {
   if (path) return <BrandImg path={path} alt="Company logo" className={`${size} shrink-0 rounded-xl object-cover`} />;
   const m = monogram(name);
   return <div className={`grid ${size} shrink-0 place-items-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/25 to-primary-soft font-display text-sm font-bold tracking-wide text-primary`}>{m || <Building2 className="h-5 w-5" />}</div>;
