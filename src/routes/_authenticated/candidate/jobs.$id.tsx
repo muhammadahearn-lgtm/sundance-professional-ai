@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CandidateJobDetail } from "@/components/candidate-jobs/CandidateJobDetail";
 
 export const Route = createFileRoute("/_authenticated/candidate/jobs/$id")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Job Details — Sundance Professionals" }, { name: "description", content: "Role details, requirements and company information." }, { property: "og:title", content: "Job Details — Sundance Professionals" }, { property: "og:description", content: "Role details, requirements and company information." }] }),
   component: Page,
 });

@@ -13,6 +13,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 type Search = { reason?: "expired" | "reset" | undefined };
 
 export const Route = createFileRoute("/login")({
+  staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>): Search => ({
     reason: s["reason"] === "expired" || s["reason"] === "reset" ? s["reason"] : undefined,
   }),

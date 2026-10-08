@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, Mail, legalHead, type LegalSection } from "@/components/site/LegalPage";
 
 export const Route = createFileRoute("/privacy")({
+  staticData: { sitemap: true },
   head: () => legalHead("Privacy Policy — Sundance Professionals", "How Sundance Professionals collects, uses, protects and deletes candidate and recruiter information.", "/privacy"),
   component: Privacy,
 });

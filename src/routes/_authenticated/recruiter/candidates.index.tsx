@@ -7,6 +7,7 @@ const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typ
 const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; };
 
 export const Route = createFileRoute("/_authenticated/recruiter/candidates/")({
+  staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>): Partial<TalentFilters> => {
     const full: TalentFilters = {
       q: str(s["q"]), role: str(s["role"]), level: str(s["level"]), exp: str(s["exp"]), loc: str(s["loc"]), country: str(s["country"]), state: str(s["state"]), city: str(s["city"]), sort: str(s["sort"]) || "match", co: str(s["co"]), job: str(s["job"]), deg: str(s["deg"]), fos: str(s["fos"]), grad: num(s["grad"]) || undefined,

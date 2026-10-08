@@ -7,6 +7,7 @@ import { dashboardPath, type Role } from "@/lib/auth-rules";
 import { AuthCard, SuccessScreen } from "@/components/auth/AuthCard";
 
 export const Route = createFileRoute("/auth/callback")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Email Verified — Sundance Professionals" },

@@ -12,6 +12,7 @@ import { AuthCard, FieldError, FormAlert } from "@/components/auth/AuthCard";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export const Route = createFileRoute("/register")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Create Account — Sundance Professionals" },

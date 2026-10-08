@@ -7,6 +7,7 @@ const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typ
 const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; };
 
 export const Route = createFileRoute("/_authenticated/candidate/jobs/")({
+  staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>): Partial<SearchState> => {
     const out: Partial<SearchState> = {};
     for (const k of ["q", "role", "level", "exp", "loc", "company", "sort", "country", "state", "city"] as const) { const v = str(s[k]); if (v) out[k] = v; }

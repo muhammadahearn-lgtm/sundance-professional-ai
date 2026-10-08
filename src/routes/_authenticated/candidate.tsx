@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { roleGuard } from "@/lib/role-guard";
 
 export const Route = createFileRoute("/_authenticated/candidate")({
+  staticData: { sitemap: false },
   beforeLoad: roleGuard("candidate"),
   component: Layout,
 });

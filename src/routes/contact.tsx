@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHero } from "@/components/site/shared";
 
 export const Route = createFileRoute("/contact")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, 
       { title: "Contact Sundance Professionals — Talk to Our Team" },

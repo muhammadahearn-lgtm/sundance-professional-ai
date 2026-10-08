@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { PageHero } from "@/components/site/shared";
 
 export const Route = createFileRoute("/help")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Help Center & FAQ — Sundance Professionals" },
