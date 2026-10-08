@@ -30,7 +30,7 @@ export type StandardResumeSnapshot = {
   location: string;
   links: { label: string; url: string }[];
   summary: string;
-  experience: { title: string; company: string; location: string; start: string | null; end: string | null; current: boolean; responsibilities: string; achievements: string; technologies: string[] }[];
+  experience: { title: string; company: string; location: string; start: string | null; end: string | null; current: boolean; responsibilities: string; technologies: string[] }[];
   skills: string[];
   technologies: string[];
   programmingLanguages: string[];

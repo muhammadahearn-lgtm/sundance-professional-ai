@@ -107,7 +107,6 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
         exp.forEach((e) => {
           m.need(40); m.text(e.title, 10.5); m.text([e.company, e.location].filter(Boolean).join(" · ") + (resumePeriod(e) ? `   ${resumePeriod(e)}` : ""), 8.5, muted);
           m.space(2); m.text(e.responsibilities, 9);
-          if (e.achievements) m.text(`Achievements: ${e.achievements}`, 9);
           if (e.technologies.length) m.text(e.technologies.join(" · "), 8, muted);
           m.space(8);
         });
