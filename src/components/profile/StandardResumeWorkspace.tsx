@@ -115,7 +115,7 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
       <aside className="space-y-5 bg-primary-soft/40 px-6 py-5">
         {(groups.length > 0 || spoken.length > 0) && <section><H>Skills & Languages</H><div className="space-y-2.5">
           {groups.map(([label, v]) => <div key={label}><p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p>{v.join(" · ")}</p></div>)}
-          {spoken.length > 0 && <div className={groups.length ? "pt-1" : ""}><p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Languages</p><div className="mt-1 space-y-1">{spoken.map((l) => <div key={l.name} className="flex items-baseline justify-between gap-2"><span className="truncate">{l.name}</span><span className="shrink-0 text-[10px] text-muted-foreground">{l.proficiency}</span></div>)}</div></div>}
+          {spoken.length > 0 && <div className={groups.length ? "pt-1" : ""}><p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Languages</p><div className="mt-1 space-y-1">{spoken.map((l) => <div key={l.name} className="flex items-baseline justify-between gap-2"><span className="min-w-0 break-words">{l.name}</span><span className="shrink-0 text-[10px] text-muted-foreground">{l.proficiency}</span></div>)}</div></div>}
         </div></section>}
       </aside>
       <main className="space-y-5 px-6 py-5">
