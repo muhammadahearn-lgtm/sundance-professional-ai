@@ -67,7 +67,7 @@ export const notifyHiringTeam = createServerFn({ method: "POST" })
     return { sent };
   });
 
-const shareInput = z.object({ jobId: z.string().uuid(), candidateIds: z.array(z.string().uuid()).min(2).max(4), image: z.string().startsWith("data:image/png;base64,").max(8_000_000).optional() });
+const shareInput = z.object({ jobId: z.string().uuid(), candidateIds: z.array(z.string().uuid()).min(2).max(4) });
 
 /**
  * Email the job's hiring team a privacy-safe comparison (first name + last
@@ -90,34 +90,36 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     }
     const { data: team } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email").eq("job_id", data.jobId);
     if (!team?.length) return { sent: 0, team: 0 };
+    const { formatSalaryAmount } = await import("./salary");
     const [{ data: profs }, { data: cps }, { data: scores }] = await Promise.all([
       supabaseAdmin.from("profiles").select("user_id, first_name, last_name").in("user_id", data.candidateIds),
-      supabaseAdmin.from("candidate_profiles").select("user_id, job_title, years_experience").in("user_id", data.candidateIds),
+      supabaseAdmin.from("candidate_profiles").select("user_id, job_title, years_experience, current_employer, location, availability, work_arrangement, salary_amount, salary_currency").in("user_id", data.candidateIds),
       supabaseAdmin.from("match_scores").select("candidate_id, overall_match_score, details").eq("job_id", data.jobId).in("candidate_id", data.candidateIds),
     ]);
-    const list = data.candidateIds.map((id) => {
+    const AVAIL: Record<string, string> = { active: "Actively Looking", open: "Open to the Right Opportunity", not_looking: "Employed & Not Looking" };
+    const ARR: Record<string, string> = { remote: "Remote", hybrid: "Hybrid", onsite: "On-Site" };
+    const candidates = data.candidateIds.map((id) => {
       const p = profs?.find((x) => x.user_id === id);
+      const cp = cps?.find((x) => x.user_id === id);
       const s = scores?.find((x) => x.candidate_id === id);
       const det = (s?.details ?? {}) as { strengths?: string[] };
-      return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.user_id === id)?.job_title ?? "", years: cps?.find((x) => x.user_id === id)?.years_experience ?? null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
+      return {
+        name: shortName(p?.first_name ?? "", p?.last_name ?? ""),
+        jobTitle: cp?.job_title ?? "", employer: cp?.current_employer ?? "", location: cp?.location ?? "",
+        years: cp?.years_experience ?? null,
+        availability: AVAIL[cp?.availability ?? ""] ?? cp?.availability ?? "",
+        arrangement: ARR[cp?.work_arrangement ?? ""] ?? cp?.work_arrangement ?? "",
+        salary: cp ? formatSalaryAmount(cp.salary_amount, cp.salary_currency) : "",
+        score: s ? Number(s.overall_match_score) : null,
+        strengths: (det.strengths ?? []).slice(0, 4),
+      };
     });
-    const candidates = list.map((c) => ({ name: shortName(c.firstName, c.lastName), jobTitle: c.jobTitle, years: c.years, score: c.score, strengths: c.strengths.slice(0, 3) }));
     const stamp = Date.now();
-    // Optional on-screen snapshot: stored privately, shared via a 30-day signed link.
-    let imageUrl: string | undefined;
-    if (data.image) {
-      try {
-        const bytes = Uint8Array.from(atob(data.image.replace(/^data:image\/png;base64,/, "")), (ch) => ch.charCodeAt(0));
-        const path = `${context.userId}/${data.jobId}-${stamp}.png`;
-        const up = await supabaseAdmin.storage.from("compare-snapshots").upload(path, bytes, { contentType: "image/png" });
-        if (!up.error) imageUrl = (await supabaseAdmin.storage.from("compare-snapshots").createSignedUrl(path, 60 * 60 * 24 * 30)).data?.signedUrl;
-      } catch (e) { console.error("snapshot upload failed", e); }
-    }
     let sent = 0;
     for (const m of team) {
       try {
         const r = await sendTemplateEmail("compare-share", m.email, {
-          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE, imageUrl },
+          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;
