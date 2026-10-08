@@ -13,7 +13,7 @@ import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
 type Named = { name: string };
-type Profile = { user_id: string; headline: string; location: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; resume_path: string | null; resume_file_name: string | null; recruiter_resume_choice: string };
+type Profile = { user_id: string; headline: string; location: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; resume_path: string | null; resume_file_name: string | null; recruiter_resume_choice: string; require_resume_request?: boolean };
 type Experience = { job_title: string; company_name: string; location: string; start_date: string | null; end_date: string | null; current_position: boolean; responsibilities: string; technologies_used: string[] };
 type Education = { institution_name: string; degree: string; degree_type: string | null; field_of_study: string; graduation_year: number | null };
 type Certification = { certification_name: string; issuing_organization: string; issue_date: string | null };
