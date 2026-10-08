@@ -104,8 +104,8 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
     ["Programming languages", has("programming_languages") ? snapshot.programmingLanguages : []],
     ["Tools & technologies", has("technologies") ? snapshot.technologies : []],
     ["Soft skills", has("soft_skills") ? snapshot.softSkills : []],
-    ["Languages", has("spoken_languages") ? snapshot.spokenLanguages.map((l) => `${l.name} (${l.proficiency})`) : []],
   ].filter(([, v]) => (v as string[]).length) as [string, string[]][];
+  const spoken = has("spoken_languages") ? snapshot.spokenLanguages : [];
   return <article className="mx-auto aspect-[210/297] w-full max-w-[720px] overflow-hidden bg-card text-[12px] leading-relaxed text-foreground shadow-elevated">
     <header className="flex items-center gap-5 border-b-2 border-primary px-8 pb-5 pt-8">
       {includePhoto && photoUrl && <img src={photoUrl} alt="" className="h-16 w-16 rounded-sm object-cover" />}
