@@ -46,7 +46,7 @@ export function computeCompletion(i: CompletionInput): { percent: number; recomm
   if (i.skillCount > 0 || i.languageCount > 0) score += w.skills; else recs.push("Add Technical Skills to increase profile completion.");
   if (i.technologyCount > 0) score += w.technologies; else recs.push("Add Technologies to increase profile completion.");
   if (i.targetRoleCount > 0 && i.salaryExpectation.trim()) score += w.preferences; else recs.push("Complete your Career Preferences to increase profile completion.");
-  if (i.hasResume) score += w.resume; else recs.push("Upload your Resume to increase profile completion.");
+  if (i.hasResume) score += w.resume; else recs.push("Upload a resume or publish your Sundance Standard Resume to increase profile completion.");
   return { percent: score, recommendations: recs };
 }
 

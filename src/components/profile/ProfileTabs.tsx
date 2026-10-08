@@ -29,7 +29,7 @@ export function ProfileTabBar<K extends string>({ tabs, value, onChange }: { tab
             <button key={t.key} role="tab" aria-selected={on} type="button" onClick={() => onChange(t.key)}
               className={`relative inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${on ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
               {t.icon}{t.label}
-              {t.incomplete && <span title="Needs attention" className={`h-2 w-2 rounded-full ${on ? "bg-primary-foreground" : "bg-destructive"}`} />}
+              {t.incomplete && <span title="Something left to add" className={`h-2 w-2 rounded-full ${on ? "bg-primary-foreground" : "bg-warning"}`} />}
             </button>
           );
         })}
