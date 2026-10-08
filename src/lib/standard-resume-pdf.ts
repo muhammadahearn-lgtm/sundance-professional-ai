@@ -2,7 +2,7 @@ import { PDFDocument, rgb, type PDFPage, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import notoFontUrl from "@/assets/fonts/NotoSans-Variable.ttf?url";
 import type { StandardResumeSection, StandardResumeSnapshot } from "./standard-resume";
-import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine } from "./standard-resume";
+import { splitResumeColumns, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems } from "./standard-resume";
 
 type Photo = { bytes: ArrayBuffer; type: string } | null;
 // A4 portrait in points.
@@ -91,7 +91,7 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   const { side, main } = splitResumeColumns(sections);
   const b = budgetResume(snapshot);
   const s = new Column(pages, addPage, font, M, SIDE_W - 6, top);
-  const m = new Column(pages, addPage, font, M + SIDE_W + GAP, W - M * 2 - SIDE_W - GAP, top);
+  const m = new Column(pages, addPage, font, M + SIDE_W + GAP, W - M * 2 - SIDE_W - GAP, top, true);
 
   // Sidebar
   for (const block of side) {
@@ -137,12 +137,12 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
           if (period) m.page.drawText(period, { x: m.x + m.width - pw, y: m.y - 10, size: 8.5, font, color: muted });
           const full = m.width; m.width = full - (pw ? pw + 12 : 0); m.text(e.title, 10.5); m.width = full;
           m.text([e.company, e.location].filter(Boolean).join(" · "), 8.5, muted);
-          m.space(2); m.text(e.responsibilities, 9);
-          if (e.technologies.length) m.text(e.technologies.join(" · "), 8, muted);
+          m.space(2); m.bullets(responsibilityItems(e.responsibilities), 9);
+          if (e.technologies.length) m.text(`Tech stack: ${e.technologies.join(" · ")}`, 8, muted);
           m.space(8);
         });
         if (earlier.length) { m.need(24); m.text(`Earlier experience: ${earlier.map(earlierRoleLine).join(" · ")}`, 8.5, muted); m.space(6); }
-        if (proj.length) { if (exp.length) m.sub("Projects"); proj.forEach((p) => { m.need(30); m.text(p.title, 10); m.text(p.description, 9); if (p.technologies.length) m.text(p.technologies.join(" · "), 8, muted); m.space(6); }); }
+        if (proj.length) { if (exp.length) m.sub("Projects"); proj.forEach((p) => { m.need(30); m.text(p.title, 10); m.text(p.description, 9); if (p.technologies.length) m.text(`Tech stack: ${p.technologies.join(" · ")}`, 8, muted); m.space(6); }); }
       }
     }
     if (block === "education") {
@@ -161,10 +161,13 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
     }
   }
 
-  // Page footers on multi-page resumes so printed pages stay in order.
-  if (pages.length > 1) pages.forEach((p, i) => {
-    const label = `${clean(snapshot.name)} · Page ${i + 1} of ${pages.length}`;
-    p.drawText(label, { x: W - M - font.widthOfTextAtSize(label, 7), y: M / 2 - 3, size: 7, font, color: muted });
+  // Footers: verification mark on every page; page numbers when multi-page.
+  pages.forEach((p, i) => {
+    p.drawText("Verified candidate profile · Sundance Professionals", { x: M, y: M / 2 - 3, size: 7, font, color: muted });
+    if (pages.length > 1) {
+      const label = `${clean(snapshot.name)} · Page ${i + 1} of ${pages.length}`;
+      p.drawText(label, { x: W - M - font.widthOfTextAtSize(label, 7), y: M / 2 - 3, size: 7, font, color: muted });
+    }
   });
   doc.setTitle(`${snapshot.name} — Sundance Standard Resume`); doc.setAuthor(snapshot.name); doc.setSubject("Professional resume generated from candidate-confirmed profile information");
   return doc.save();

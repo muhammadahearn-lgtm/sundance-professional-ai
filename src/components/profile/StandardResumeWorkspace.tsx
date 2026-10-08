@@ -7,7 +7,7 @@ import { useAvatarUrl } from "@/components/app/ProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createStandardResumePdf } from "@/lib/standard-resume-pdf";
-import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
+import { DEFAULT_STANDARD_RESUME_SECTIONS, STANDARD_RESUME_MAX_SOFT_SKILLS, STANDARD_RESUME_PREMIUM_PREVIEW, STANDARD_RESUME_SECTION_LABELS, nextStandardResumeVersion, resumePeriod, budgetResume, earlierRoleLine, responsibilityItems, RESUME_LIMITS, spokenLanguageLevelLabel, type ResumeChoice, type StandardResumeSection, type StandardResumeSnapshot } from "@/lib/standard-resume";
 import type { Account } from "@/lib/account";
 import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
@@ -122,10 +122,10 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
       <main className="space-y-5 px-6 py-5">
         {has("summary") && snapshot.summary && <section><H>PROFILE SUMMARY</H><p>{snapshot.summary}</p></section>}
         {(exp.length > 0 || proj.length > 0) && <section><H>{exp.length && proj.length ? "Experience & Projects" : exp.length ? "Experience" : "Projects"}</H><div className="space-y-3.5">
-          {exp.map((e, i) => <div key={`x${i}`}><div className="flex items-baseline justify-between gap-3"><p className="text-[13px] font-semibold">{e.title}</p><span className="shrink-0 text-[10px] text-muted-foreground">{resumePeriod(e)}</span></div><p className="text-[11px] text-muted-foreground">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.responsibilities && <p className="mt-1">{e.responsibilities}</p>}{e.technologies.length > 0 && <p className="mt-1 text-[10px] text-muted-foreground">{e.technologies.join(" · ")}</p>}</div>)}
+          {exp.map((e, i) => <div key={`x${i}`}><div className="flex items-baseline justify-between gap-3"><p className="text-[13px] font-semibold">{e.title}</p><span className="shrink-0 text-[10px] text-muted-foreground">{resumePeriod(e)}</span></div><p className="text-[11px] text-muted-foreground">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{(() => { const items = responsibilityItems(e.responsibilities); return items.length > 1 ? <ul className="mt-1 space-y-0.5">{items.map((t, k) => <li key={k} className="flex gap-1.5"><span className="text-primary">•</span><span>{t}</span></li>)}</ul> : items[0] ? <p className="mt-1">{items[0]}</p> : null; })()}{e.technologies.length > 0 && <p className="mt-1 text-[10px] text-muted-foreground">Tech stack: {e.technologies.join(" · ")}</p>}</div>)}
           {earlier.length > 0 && <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">Earlier experience: </span>{earlier.map(earlierRoleLine).join(" · ")}</p>}
           {proj.length > 0 && exp.length > 0 && <p className="pt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Projects</p>}
-          {proj.map((p, i) => <div key={`p${i}`}><p className="font-semibold">{p.title}</p>{p.description && <p>{p.description}</p>}{p.technologies.length > 0 && <p className="text-[10px] text-muted-foreground">{p.technologies.join(" · ")}</p>}</div>)}
+          {proj.map((p, i) => <div key={`p${i}`}><p className="font-semibold">{p.title}</p>{p.description && <p>{p.description}</p>}{p.technologies.length > 0 && <p className="text-[10px] text-muted-foreground">Tech stack: {p.technologies.join(" · ")}</p>}</div>)}
         </div></section>}
         {edu.length > 0 && <section><H>Education</H><div className="space-y-2">
           {edu.map((e, i) => <div key={`e${i}`}><div className="flex items-baseline justify-between gap-3"><p className="font-semibold">{[e.degree, e.field].filter(Boolean).join(" in ")}</p><span className="shrink-0 text-[10px] text-muted-foreground">{e.year ?? ""}</span></div><p className="text-[11px] text-muted-foreground">{e.institution}</p></div>)}
@@ -135,5 +135,6 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
         </div></section>}
       </main>
     </div>
+    <p className="px-8 pb-3 text-[9px] text-muted-foreground">Verified candidate profile · Sundance Professionals</p>
   </article>;
 }
