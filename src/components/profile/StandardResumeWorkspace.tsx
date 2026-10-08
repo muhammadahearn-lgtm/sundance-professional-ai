@@ -13,7 +13,7 @@ import type { SpokenLanguage } from "./SpokenLanguagesManager";
 
 type Named = { name: string };
 type Profile = { user_id: string; headline: string; location: string; summary: string; linkedin_url: string; github_url: string; portfolio_url: string; resume_path: string | null; resume_file_name: string | null; recruiter_resume_choice: string };
-type Experience = { job_title: string; company_name: string; location: string; start_date: string | null; end_date: string | null; current_position: boolean; responsibilities: string; achievements: string; technologies_used: string[] };
+type Experience = { job_title: string; company_name: string; location: string; start_date: string | null; end_date: string | null; current_position: boolean; responsibilities: string; technologies_used: string[] };
 type Education = { institution_name: string; degree: string; degree_type: string | null; field_of_study: string; graduation_year: number | null };
 type Certification = { certification_name: string; issuing_organization: string; issue_date: string | null };
 type Project = { title: string; description: string; project_url: string; technologies: string[] };
@@ -30,7 +30,7 @@ function buildSnapshot(account: Account, d: StandardResumeData, softSkills: stri
     name: `${account.firstName} ${account.lastName}`.trim(), headline: p.headline, location: p.location,
     links: [["LinkedIn", p.linkedin_url], ["GitHub", p.github_url], ["Portfolio", p.portfolio_url]].flatMap(([label, url]) => url ? [{ label: label!, url }] : []),
     summary: p.summary,
-    experience: d.experience.map((e) => ({ title: e.job_title, company: e.company_name, location: e.location, start: e.start_date, end: e.end_date, current: e.current_position, responsibilities: e.responsibilities, achievements: e.achievements, technologies: e.technologies_used })),
+    experience: d.experience.map((e) => ({ title: e.job_title, company: e.company_name, location: e.location, start: e.start_date, end: e.end_date, current: e.current_position, responsibilities: e.responsibilities, technologies: e.technologies_used })),
     skills: d.skills.map((x) => x.name), technologies: d.technologies.map((x) => x.name), programmingLanguages: d.languages.map((x) => x.name), softSkills,
     education: d.education.map((e) => ({ institution: e.institution_name, degree: e.degree_type || e.degree, field: e.field_of_study, year: e.graduation_year })),
     certifications: d.certifications.map((c) => ({ name: c.certification_name, issuer: c.issuing_organization, issued: c.issue_date })),
