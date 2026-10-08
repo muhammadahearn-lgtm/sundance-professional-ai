@@ -22,7 +22,7 @@ const initials = (n: string) => n.split(/\s+/).map((p) => p.charAt(0)).join('').
 const scoreText = (s?: number | null) => (s == null ? 'No score yet' : `${Math.round(s)}% match`)
 const meta = (c: CompareEmailCandidate) => [c.jobTitle, c.years != null ? `${c.years} yrs experience` : ''].filter(Boolean).join(' · ')
 
-const Pills = ({ items }: { items?: string[] }) =>
+const Pills = ({ items }: { items?: string[] | undefined }) =>
   items && items.length ? (
     <Text style={{ margin: '10px 0 0', lineHeight: '26px' }}>
       {items.slice(0, 3).map((s) => (
