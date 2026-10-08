@@ -96,16 +96,15 @@ export function RecruiterProfilePage({ account }: { account: Account }) {
                 <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{r.location || "No location"}</span>
                 <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4" />{r.years_experience} Years Recruiting Experience</span>
               </div>
-              <div className="mt-3 flex items-center gap-3"><div className="h-1.5 w-40 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${percent}%` }} /></div><span className="text-xs font-semibold text-primary">Profile Completion {percent}%</span></div>
-            </div>
+          <div className="mt-3 flex items-center gap-3"><div className="h-1.5 w-40 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${percent}%` }} /></div><span className="text-xs font-semibold text-primary">Profile Completion {percent}%</span></div>
           </div>
+        </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview Profile</button>
             <Link to="/recruiter/company" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"><Building2 className="h-4 w-4" />View Company Profile</Link>
           </div>
         </div>
 
-        <ProfileTabBar value={tab} onChange={setTab} tabs={[
+        <ProfileTabBar value={tab} onChange={setTab} action={
           { key: "about", label: "About Me", icon: <UserRound className="h-4 w-4" />, incomplete: !r.title || !r.location || !r.professional_summary },
           { key: "focus", label: "Recruiting Focus", icon: <Target className="h-4 w-4" />, incomplete: !r.specialization || !r.industry_specializations.length },
           { key: "settings", label: "Visibility & Alerts", icon: <Bell className="h-4 w-4" /> },
