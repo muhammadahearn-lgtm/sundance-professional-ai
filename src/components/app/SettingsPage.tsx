@@ -19,7 +19,7 @@ import { deleteMyAccount } from "@/lib/account.functions";
 import { FormAlert } from "@/components/auth/AuthCard";
 import { PageHeader } from "./AppShell";
 
-function Card({ title, desc, children, danger }: { title: string; desc?: string; children: ReactNode; danger?: boolean }) {
+function Card({ title, desc, children, danger }: { title: string; desc?: string | undefined; children: ReactNode; danger?: boolean }) {
   return (
     <section className={`rounded-2xl border bg-card p-6 shadow-soft ${danger ? "border-destructive/40" : "border-border"}`}>
       <h2 className={`font-bold ${danger ? "text-destructive" : ""}`}>{title}</h2>
