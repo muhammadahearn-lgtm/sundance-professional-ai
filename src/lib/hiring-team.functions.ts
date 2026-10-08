@@ -81,7 +81,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
-    const { buildCompareSummary, shortName } = await import("./compare-share");
+    const { shortName } = await import("./compare-share");
     const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
     if (!job || job.recruiter_id !== context.userId) throw new Error("Only the recruiter who posted this job can share it.");
     for (const id of data.candidateIds) {
@@ -101,7 +101,6 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
       const det = (s?.details ?? {}) as { strengths?: string[] };
       return { firstName: p?.first_name ?? "", lastName: p?.last_name ?? "", jobTitle: cps?.find((x) => x.user_id === id)?.job_title ?? "", years: cps?.find((x) => x.user_id === id)?.years_experience ?? null, score: s ? Number(s.overall_match_score) : null, strengths: det.strengths ?? [] };
     });
-    void buildCompareSummary;
     const candidates = list.map((c) => ({ name: shortName(c.firstName, c.lastName), jobTitle: c.jobTitle, years: c.years, score: c.score, strengths: c.strengths.slice(0, 3) }));
     const stamp = Date.now();
     let sent = 0;
