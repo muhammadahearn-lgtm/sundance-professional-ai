@@ -64,7 +64,6 @@ export function ExperienceManager({ uid, items, adding, setAdding }: { uid: stri
               </div>
             </div>
             {x.responsibilities && <p className="mt-2 whitespace-pre-line text-sm">{x.responsibilities}</p>}
-            {x.achievements && <p className="mt-2 whitespace-pre-line text-sm"><span className="font-semibold">Achievements: </span>{x.achievements}</p>}
             {x.technologies_used.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{x.technologies_used.map((t) => <span key={t} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs text-primary">{t}</span>)}</div>}
           </li>
         ))}
@@ -77,7 +76,7 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
   const [f, setF] = useState({
     company_name: item?.company_name ?? "", job_title: item?.job_title ?? "", industry: item?.industry ?? "", location: item?.location ?? "",
     start_date: item?.start_date ?? "", end_date: item?.end_date ?? "", current_position: item?.current_position ?? false,
-    responsibilities: item?.responsibilities ?? "", achievements: item?.achievements ?? "", technologies_used: item?.technologies_used ?? [],
+    responsibilities: item?.responsibilities ?? "", technologies_used: item?.technologies_used ?? [],
   });
   const [err, setErr] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [saving, setSaving] = useState(false);
@@ -123,7 +122,6 @@ function ExperienceForm({ uid, item, onDone, onCancel }: { uid: string; item?: E
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.current_position} onChange={(e) => set("current_position", e.target.checked)} className="h-4 w-4 accent-primary" /> I currently work here</label>
       <Field label="Responsibilities"><textarea rows={3} maxLength={2000} className={inputCls} value={f.responsibilities} onChange={(e) => set("responsibilities", e.target.value)} /></Field>
-      <Field label="Achievements"><textarea rows={2} maxLength={2000} className={inputCls} value={f.achievements} onChange={(e) => set("achievements", e.target.value)} /></Field>
       <Field label="Technologies Used"><TagPicker ariaLabel="Technologies used" options={techs.data ?? []} value={f.technologies_used} onChange={(v) => set("technologies_used", v)} placeholder="Search tools & technologies…" max={60} /></Field>
       <SaveBar saving={saving} onCancel={onCancel} />
     </form>
