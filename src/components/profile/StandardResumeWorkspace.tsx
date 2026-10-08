@@ -28,7 +28,7 @@ function buildSnapshot(account: Account, d: StandardResumeData, softSkills: stri
   const p = d.profile;
   return {
     name: `${account.firstName} ${account.lastName}`.trim(), headline: p.headline, location: p.location,
-    links: [["LinkedIn", p.linkedin_url], ["GitHub", p.github_url], ["Portfolio", p.portfolio_url]].filter((x) => x[1]).map(([label, url]) => ({ label, url })),
+    links: [["LinkedIn", p.linkedin_url], ["GitHub", p.github_url], ["Portfolio", p.portfolio_url]].flatMap(([label, url]) => url ? [{ label: label!, url }] : []),
     summary: p.summary,
     experience: d.experience.map((e) => ({ title: e.job_title, company: e.company_name, location: e.location, start: e.start_date, end: e.end_date, current: e.current_position, responsibilities: e.responsibilities, achievements: e.achievements, technologies: e.technologies_used })),
     skills: d.skills.map((x) => x.name), technologies: d.technologies.map((x) => x.name), programmingLanguages: d.languages.map((x) => x.name), softSkills,
@@ -67,8 +67,8 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
     } catch { toast.error("We couldn't publish the resume. Please try again."); }
     setPublishing(false);
   }
-  async function setChoice(value: ResumeChoice) { const { error } = await supabase.from("candidate_profiles").update({ recruiter_resume_choice: value }).eq("user_id", account.userId); if (error) return toast.error("Couldn't update the recruiter download choice."); toast.success(value === "standard" ? "Recruiters will receive your Sundance resume" : "Recruiters will receive your original resume"); await qc.invalidateQueries({ queryKey: ["candidate-full", account.userId] }); }
-  async function download(v: Version) { const { data: signed, error } = await supabase.storage.from("resumes").createSignedUrl(v.pdf_path, 60, { download: `Sundance-Standard-Resume-v${v.version_number}.pdf` }); if (error || !signed) return toast.error("Resume download isn't available."); window.open(signed.signedUrl, "_blank", "noopener"); }
+  async function setChoice(value: ResumeChoice) { const { error } = await supabase.from("candidate_profiles").update({ recruiter_resume_choice: value }).eq("user_id", account.userId); if (error) { toast.error("Couldn't update the recruiter download choice."); return; } toast.success(value === "standard" ? "Recruiters will receive your Sundance resume" : "Recruiters will receive your original resume"); await qc.invalidateQueries({ queryKey: ["candidate-full", account.userId] }); }
+  async function download(v: Version) { const { data: signed, error } = await supabase.storage.from("resumes").createSignedUrl(v.pdf_path, 60, { download: `Sundance-Standard-Resume-v${v.version_number}.pdf` }); if (error || !signed) { toast.error("Resume download isn't available."); return; } window.open(signed.signedUrl, "_blank", "noopener"); }
 
   return <div className="space-y-4">
     <div className="grid gap-3 md:grid-cols-2">

@@ -16,10 +16,10 @@ export function SpokenLanguagesManager({ uid, items, adding, setAdding }: { uid:
   async function add() {
     const clean = name.trim(); if (clean.length < 2) return toast.error("Enter a spoken language.");
     setBusy(true); const { error } = await supabase.from("candidate_spoken_languages").insert({ candidate_id: uid, language_name: clean, proficiency: level }); setBusy(false);
-    if (error) return toast.error(friendlyError(error, "Couldn't add that language."));
+    if (error) { toast.error(friendlyError(error, "Couldn't add that language.")); return; }
     toast.success("Spoken language added"); setName(""); setAdding(false); void refresh();
   }
-  async function remove(id: string) { const { error } = await supabase.from("candidate_spoken_languages").delete().eq("spoken_language_id", id); if (error) return toast.error("Couldn't remove that language."); toast.success("Spoken language removed"); void refresh(); }
+  async function remove(id: string) { const { error } = await supabase.from("candidate_spoken_languages").delete().eq("spoken_language_id", id); if (error) { toast.error("Couldn't remove that language."); return; } toast.success("Spoken language removed"); void refresh(); }
   return <div className="space-y-4">
     {adding && <div className="grid gap-3 rounded-xl border border-primary/30 bg-primary-soft/30 p-4 sm:grid-cols-[1fr_200px_auto]">
       <TextPicker ariaLabel="Spoken language" options={COMMON.filter((x) => !items.some((i) => i.language_name.toLowerCase() === x.toLowerCase()))} value={name} onChange={setName} placeholder="Search or add a language…" addHint="Not listed? Add the language you speak." />
