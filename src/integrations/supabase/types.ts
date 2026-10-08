@@ -2568,6 +2568,19 @@ export type Database = {
         Args: { _kind: string; _name: string }
         Returns: string
       }
+      application_hiring_lead: {
+        Args: { _application_id: string }
+        Returns: {
+          avatar_path: string
+          company_name: string
+          first_name: string
+          last_name: string
+          recruiter_id: string
+          specialization: string
+          title: string
+          years_experience: number
+        }[]
+      }
       applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
       candidate_avatars: {
         Args: { _ids: string[] }
