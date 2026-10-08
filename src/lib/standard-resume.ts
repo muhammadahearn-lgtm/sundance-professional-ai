@@ -106,3 +106,12 @@ export function earlierRoleLine(e: Exp): string {
   const range = yrs.length === 2 && yrs[0] === yrs[1] ? yrs[0] : yrs.join("–");
   return `${e.title}${e.company ? `, ${e.company}` : ""}${range ? ` (${range})` : ""}`;
 }
+
+/** Public profile links shown as clickable icons; only safe http(s) URLs, never email. */
+export function resumeLinks(snapshot: Pick<StandardResumeSnapshot, "links">): { label: string; url: string }[] {
+  return (snapshot.links ?? []).flatMap((l) => {
+    const raw = l.url.trim(); if (!raw || /^mailto:/i.test(raw)) return [];
+    const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try { const u = new URL(url); return u.protocol === "https:" || u.protocol === "http:" ? [{ label: l.label, url: u.toString() }] : []; } catch { return []; }
+  });
+}
