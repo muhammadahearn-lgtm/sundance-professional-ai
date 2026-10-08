@@ -2,8 +2,9 @@ import { formatSalaryAmount } from "./salary";
 import { supabase } from "@/integrations/supabase/client";
 import { computeCompletion } from "./profile-completion";
 import type { TalentRow } from "./talent-rules";
+import { chosenResume, type ResumeChoice, type StandardResumeSnapshot } from "./standard-resume";
 
-type Profile = { user_id: string; job_title: string; current_employer: string; location: string; location_country?: string; location_state?: string; location_city?: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; current_level_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null };
+type Profile = { user_id: string; job_title: string; current_employer: string; location: string; location_country?: string; location_state?: string; location_city?: string; years_experience: number; availability: string; headline: string; summary: string; salary_expectation: string; salary_amount: number | null; salary_currency: string; work_arrangement: string; industry_experience: string[]; role_id: string | null; current_level_id: string | null; updated_at: string; target_roles: string[]; resume_path: string | null; recruiter_resume_choice: string };
 
 export async function namesFor(ids: string[]): Promise<Record<string, string>> {
   if (!ids.length) return {};
@@ -42,7 +43,7 @@ function toRow(p: Profile, name: string, k: Awaited<ReturnType<typeof links>>): 
   };
 }
 
-const COLS = "user_id, job_title, current_employer, location, location_country, location_state, location_city, years_experience, availability, headline, summary, salary_expectation, salary_amount, salary_currency, work_arrangement, industry_experience, role_id, current_level_id, updated_at, target_roles, resume_path";
+const COLS = "user_id, job_title, current_employer, location, location_country, location_state, location_city, years_experience, availability, headline, summary, salary_expectation, salary_amount, salary_currency, work_arrangement, industry_experience, role_id, current_level_id, updated_at, target_roles, resume_path, recruiter_resume_choice";
 
 /** All recruiter-searchable candidates (filtering happens client-side). */
 export async function listTalent(): Promise<TalentRow[]> {
@@ -67,7 +68,7 @@ async function rowsFor(ps: Profile[]) {
 }
 
 export async function loadCandidateFull(id: string) {
-  const [p, l, s, t, e, ed, c, names, ss, pj] = await Promise.all([
+  const [p, l, s, t, e, ed, c, names, ss, pj, spoken, standard] = await Promise.all([
     supabase.from("candidate_profiles").select("*").eq("user_id", id).maybeSingle(),
     supabase.from("candidate_languages").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
     supabase.from("candidate_skills").select("lookup_id, proficiency_level, years_experience").eq("candidate_id", id),
@@ -78,8 +79,10 @@ export async function loadCandidateFull(id: string) {
     namesFor([id]),
     supabase.from("candidate_soft_skills").select("lookup_id").eq("candidate_id", id),
     supabase.from("candidate_projects").select("project_id, title, description, project_url, technologies").eq("candidate_id", id).order("created_at"),
+    supabase.from("candidate_spoken_languages").select("spoken_language_id, language_name, proficiency").eq("candidate_id", id).order("language_name"),
+    supabase.from("standard_resume_versions").select("standard_resume_id, version_number, snapshot, pdf_path, include_photo, section_order, published_at").eq("candidate_id", id).order("version_number", { ascending: false }).limit(1),
   ]);
-  const err = [p, l, s, t, e, ed, c].find((x) => x.error)?.error;
+  const err = [p, l, s, t, e, ed, c, spoken, standard].find((x) => x.error)?.error;
   if (err) throw err;
   if (!p.data) return null;
   const pr = p.data;
@@ -90,7 +93,7 @@ export async function loadCandidateFull(id: string) {
   }).percent;
   const av = await supabase.rpc("candidate_avatars", { _ids: [id] });
   const avatarPath: string | null = av.data?.[0]?.avatar_path ?? null;
-  return { profile: pr, avatarPath, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], projects: pj.data ?? [], completion };
+  return { profile: pr, avatarPath, name: names[id] ?? "Candidate", languages: l.data ?? [], skills: s.data ?? [], technologies: t.data ?? [], softSkills: (ss.data ?? []).map((x) => x.lookup_id), spokenLanguages: spoken.data ?? [], standardResume: standard.data?.[0] ?? null, experience: e.data ?? [], education: ed.data ?? [], certifications: c.data ?? [], projects: pj.data ?? [], completion };
 }
 export type CandidateFull = NonNullable<Awaited<ReturnType<typeof loadCandidateFull>>>;
 
@@ -98,6 +101,14 @@ export async function resumeUrl(path: string, fileName: string | null) {
   const { data, error } = await supabase.storage.from("resumes").createSignedUrl(path, 60, { download: fileName ?? true });
   if (error) throw error;
   return data.signedUrl;
+}
+
+export function recruiterResume(d: CandidateFull) {
+  const p = d.profile;
+  const selected = chosenResume(p.recruiter_resume_choice as ResumeChoice, !!p.resume_path, !!d.standardResume);
+  if (selected === "standard" && d.standardResume) return { kind: selected, path: d.standardResume.pdf_path, fileName: `${d.name}-Sundance-Resume-v${d.standardResume.version_number}.pdf`, version: d.standardResume.version_number, snapshot: d.standardResume.snapshot as StandardResumeSnapshot };
+  if (selected === "original" && p.resume_path) return { kind: selected, path: p.resume_path, fileName: p.resume_file_name, version: null, snapshot: null };
+  return null;
 }
 
 export async function listSavedCandidates(uid: string) {
