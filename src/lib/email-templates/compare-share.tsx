@@ -14,6 +14,7 @@ export interface CompareEmailCandidate {
   salary?: string
   score?: number | null
   strengths?: string[]
+  gaps?: string[]
 }
 
 interface Props {
@@ -55,6 +56,7 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
     ['Work Arrangement', (c) => c.arrangement || '—'],
     ['Desired Minimum Salary', (c) => c.salary || '—'],
     ['Strengths', (c) => c.strengths?.length ? c.strengths.slice(0, 4).map((s) => <div key={s} style={{ fontSize: '12px' }}>✓ {s}</div>) : '—'],
+    ['Gaps', (c) => c.gaps == null ? '—' : c.gaps.length ? c.gaps.slice(0, 4).map((g) => <div key={g} style={{ fontSize: '12px', color: '#b45309' }}>• Missing {g}</div>) : <span style={{ fontSize: '12px', color: '#1f8a4c' }}>None</span>],
   ]
 
   return (

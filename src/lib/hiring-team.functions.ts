@@ -102,7 +102,9 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
       const p = profs?.find((x) => x.user_id === id);
       const cp = cps?.find((x) => x.user_id === id);
       const s = scores?.find((x) => x.candidate_id === id);
-      const det = (s?.details ?? {}) as { strengths?: string[] };
+      const det = (s?.details ?? {}) as { strengths?: string[]; missing?: { languages?: string[]; skills?: string[]; technologies?: string[] } };
+      const m = det.missing ?? {};
+      const gaps = [...(m.languages ?? []), ...(m.skills ?? []), ...(m.technologies ?? [])].slice(0, 4);
       return {
         name: shortName(p?.first_name ?? "", p?.last_name ?? ""),
         jobTitle: cp?.job_title ?? "", employer: cp?.current_employer ?? "", location: cp?.location ?? "",
@@ -112,6 +114,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
         salary: cp ? formatSalaryAmount(cp.salary_amount, cp.salary_currency) : "",
         score: s ? Number(s.overall_match_score) : null,
         strengths: (det.strengths ?? []).slice(0, 4),
+        gaps: s ? gaps : undefined,
       };
     });
     const stamp = Date.now();
