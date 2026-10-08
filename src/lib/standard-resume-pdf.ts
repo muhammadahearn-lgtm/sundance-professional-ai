@@ -79,7 +79,8 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
   const font = await doc.embedFont(await fetch(notoFontUrl).then((r) => r.arrayBuffer()), { subset: false });
   const pages: PDFPage[] = [];
   // Only page 1 gets the tinted sidebar; skills finish there, so later pages stay clean white.
-  const addPage = () => { const p = doc.addPage([W, H]); if (!pages.length) p.drawRectangle({ x: 0, y: 0, width: M + SIDE_W + GAP / 2, height: H, color: sideBg }); pages.push(p); return p; };
+  // The tint is drawn after the header is measured so it starts below the header rule.
+  const addPage = () => { const p = doc.addPage([W, H]); pages.push(p); return p; };
   const first = addPage();
 
   // Header (full width, sits on top of both columns)
@@ -120,6 +121,7 @@ export async function createStandardResumePdf(snapshot: StandardResumeSnapshot, 
     header.y -= size * 1.4;
   }
   const headerBottom = Math.min(header.y, photoW ? H - M - 64 : header.y) - 12;
+  first.drawRectangle({ x: 0, y: 0, width: M + SIDE_W + GAP / 2, height: headerBottom, color: sideBg });
   first.drawLine({ start: { x: M, y: headerBottom }, end: { x: W - M, y: headerBottom }, thickness: 1.5, color: blue });
   const top = headerBottom - 14;
 

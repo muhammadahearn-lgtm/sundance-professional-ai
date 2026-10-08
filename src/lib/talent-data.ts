@@ -106,7 +106,7 @@ export async function resumeUrl(path: string, fileName: string | null) {
 export function recruiterResume(d: CandidateFull) {
   const p = d.profile;
   const selected = chosenResume(p.recruiter_resume_choice as ResumeChoice, !!p.resume_path, !!d.standardResume);
-  if (selected === "standard" && d.standardResume) return { kind: selected, path: d.standardResume.pdf_path, fileName: `${d.name}-Sundance-Resume-v${d.standardResume.version_number}.pdf`, version: d.standardResume.version_number, snapshot: d.standardResume.snapshot as StandardResumeSnapshot };
+  if (selected === "standard" && d.standardResume) return { kind: selected, path: d.standardResume.pdf_path, fileName: resumeFileName(d.name), version: d.standardResume.version_number, snapshot: d.standardResume.snapshot as StandardResumeSnapshot };
   if (selected === "original" && p.resume_path) return { kind: selected, path: p.resume_path, fileName: p.resume_file_name, version: null, snapshot: null };
   return null;
 }
