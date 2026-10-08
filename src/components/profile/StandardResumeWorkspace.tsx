@@ -110,7 +110,7 @@ function ResumeDocument({ snapshot, sections, includePhoto, photoUrl }: { snapsh
   return <article className="mx-auto aspect-[210/297] w-full max-w-[720px] overflow-hidden bg-card text-[12px] leading-relaxed text-foreground shadow-elevated">
     <header className="flex items-center gap-5 border-b-2 border-primary px-8 pb-5 pt-8">
       {includePhoto && photoUrl && <img src={photoUrl} alt="" className="h-16 w-16 rounded-sm object-cover" />}
-      <div><h2 className="font-display text-2xl font-extrabold leading-tight">{snapshot.name}</h2><p className="text-sm font-semibold text-primary">{snapshot.headline}</p>{snapshot.location && <p className="mt-0.5 text-[11px] text-muted-foreground">{snapshot.location}</p>}</div>
+      <div><h2 className="font-display text-2xl font-extrabold leading-tight">{snapshot.name}</h2><p className="text-sm font-semibold text-primary">{snapshot.headline}</p>{(snapshot.location || resumeLinks(snapshot).length > 0) && <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">{snapshot.location && <span>{snapshot.location}</span>}{resumeLinks(snapshot).map((l) => <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-primary hover:underline"><span className="rounded-sm bg-primary px-1 text-[8px] font-bold leading-[12px] text-primary-foreground">{l.label === "LinkedIn" ? "in" : l.label === "GitHub" ? "gh" : "www"}</span>{l.label}</a>)}</p>}</div>
     </header>
     <div className="grid h-full grid-cols-[32%_1fr]">
       <aside className="space-y-5 bg-primary-soft/40 px-6 py-5">
