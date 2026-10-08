@@ -712,7 +712,7 @@ export function CompareCandidatesPage({ uid, initialJob = "" }: { uid: string; i
       if (!el) return undefined;
       const { toPng } = await import("html-to-image");
       const bg = getComputedStyle(document.body).backgroundColor;
-      return await toPng(el, { pixelRatio: 2, backgroundColor: bg, width: el.scrollWidth, filter: (n) => !(n instanceof HTMLElement && n.dataset.shareHide !== undefined) });
+      return await toPng(el, { pixelRatio: 2, backgroundColor: bg, width: el.scrollWidth, filter: (n) => !(n instanceof HTMLElement && n.dataset['shareHide'] !== undefined) });
     } catch (e) { console.error("snapshot failed", e); return undefined; }
     finally { setShot(false); }
   };
