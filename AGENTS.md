@@ -39,4 +39,4 @@
 - Market Pulse (`market-pulse.ts`) is a pure client computation comparing the last 30 days of published jobs with the prior 30; career mode + passive pay floor live on candidate_profiles; hide-from-current-employer is enforced in `candidate_visible_to_recruiters`. Why: explainable numbers, privacy enforced in the DB.
 
 - Seeded company catalog rows have `is_catalog = true`, a nil-UUID creator and no members, so they are readable by all signed-in users, selectable for jobs, and editable by no one. Why: shared reference list without ownership.
-- Recruiter resume downloads go through `resume_access_reason` (applicant, approved unexpired request, or candidate opt-out of ask-first) and are logged via `log_resume_download`; requests only via `request_resume_access`/`respond_resume_request`. Why: candidate controls and sees every download.
+- Recruiter resume downloads require `resume_access_reason` and are logged by `log_resume_download`; requests use RPCs only. Why: candidate controls and sees downloads.
