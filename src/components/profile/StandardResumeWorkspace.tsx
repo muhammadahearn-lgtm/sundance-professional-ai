@@ -80,6 +80,7 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
         {(["original", "standard"] as ResumeChoice[]).map((value) => { const disabled = value === "original" ? !data.profile.resume_path : !latest; return <button key={value} type="button" disabled={disabled} onClick={() => setChoice(value)} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm disabled:opacity-50 ${choice === value ? "border-primary bg-primary-soft text-primary" : "border-border"}`}><span className={`grid h-5 w-5 place-items-center rounded-full border ${choice === value ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{choice === value && <Check className="h-3 w-3" />}</span><span><strong className="block">{value === "original" ? "Original resume" : "Sundance Standard Resume"}</strong><span className="text-xs text-muted-foreground">{disabled ? "Not available yet" : value === "original" ? data.profile.resume_file_name : `Published v${latest?.version_number}`}</span></span></button>; })}
       </div>
     </div>
+    </div>
 
     <Dialog open={editor} onOpenChange={setEditor}><DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl"><DialogHeader><DialogTitle>Create Sundance Standard Resume</DialogTitle><DialogDescription>Choose what appears, preview it, then publish an immutable numbered version. Personal email, salary, availability, and match scores are never included.</DialogDescription></DialogHeader>
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]"><div className="space-y-5">
