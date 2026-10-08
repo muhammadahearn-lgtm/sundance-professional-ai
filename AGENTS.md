@@ -40,4 +40,3 @@
 
 - Seeded company catalog rows have `is_catalog = true`, a nil-UUID creator and no members, so they are readable by all signed-in users, selectable for jobs, and editable by no one. Why: shared reference list without ownership.
 - Recruiter resume downloads require `resume_access_reason` and are logged by `log_resume_download`; requests use RPCs only. Why: candidate controls and sees downloads.
-- Profile pages (candidate + recruiter) group sections into tabs via `ProfileTabs.tsx`, tab mirrored to `?tab=`. Why: no long scroll, deep-linkable.
