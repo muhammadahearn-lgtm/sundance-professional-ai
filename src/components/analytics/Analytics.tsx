@@ -3,12 +3,12 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { BarChart3, Bookmark, Briefcase, ChevronDown, ChevronRight, Clock, KanbanSquare, MessageSquare, Send, Sparkles, Target, TrendingUp, Users, Download, FileSpreadsheet, FileText, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bookmark, Briefcase, ChevronDown, ChevronRight, Clock, KanbanSquare, MessageSquare, Send, Sparkles, Target, TrendingUp, Users, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageHeader } from "@/components/app/AppShell";
 import {
-  RANGES, avg, avgDaysToHire, byMonth, conversions, funnel, inWindow, matchDistribution, matchStats, messagingStats, notificationStats, pct, tally, toCsv, windowFor,
+  RANGES, avg, avgDaysToHire, byMonth, conversions, funnel, inWindow, matchDistribution, matchStats, messagingStats, notificationStats, pct, tally, windowFor,
   type DateWindow, type RangeKey,
 } from "@/lib/analytics";
 import { loadCandidateAnalytics, loadRecruiterAnalytics, type CandidateAnalyticsData, type JobInfo, type RecruiterAnalyticsData } from "@/lib/analytics-data";
@@ -23,9 +23,9 @@ type Filters = { range: RangeKey; from: string; to: string; role: string; indust
 const EMPTY: Filters = { range: "30d", from: "", to: "", role: "", industry: "", technology: "", skill: "", location: "", company: "" };
 type FilterKey = "role" | "industry" | "technology" | "skill" | "location" | "company";
 
-function FilterBar({ f, set, options, onRefresh, onCsv, onExcel, refreshing }: {
+function FilterBar({ f, set, options, onRefresh, refreshing }: {
   f: Filters; set: (f: Filters) => void; options: Partial<Record<FilterKey, string[]>>;
-  onRefresh: () => void; onCsv: () => void; onExcel: () => void; refreshing: boolean;
+  onRefresh: () => void; refreshing: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const sel = "h-9 w-full rounded-lg border border-border bg-background px-2 text-sm";
@@ -43,9 +43,6 @@ function FilterBar({ f, set, options, onRefresh, onCsv, onExcel, refreshing }: {
         <button className={btn} onClick={() => setOpen(!open)} aria-expanded={open}><SlidersHorizontal className="h-3.5 w-3.5" />Filters{active ? ` (${active})` : ""}<ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} /></button>
         <div className="ml-auto flex flex-wrap gap-2">
           <button className={btn} onClick={onRefresh} disabled={refreshing}><RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />Refresh</button>
-          <button className={btn} onClick={onCsv}><Download className="h-3.5 w-3.5" />CSV</button>
-          <button className={btn} onClick={onExcel}><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
-          <button className={btn} onClick={() => toast("PDF export is coming soon.")}><FileText className="h-3.5 w-3.5" />PDF</button>
         </div>
       </div>
       {open && (
@@ -225,31 +222,6 @@ function Ring({ v, l }: { v: number; l: string }) {
   );
 }
 
-function download(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
-  const a = Object.assign(document.createElement("a"), { href: url, download: name });
-  a.click(); URL.revokeObjectURL(url);
-}
-type Sheet = { name: string; rows: Record<string, string | number | null | undefined>[] };
-function exportCsv(file: string, sheets: Sheet[]) {
-  try {
-    download(`${file}.csv`, sheets.filter((s) => s.rows.length).map((s) => `${s.name}\n${toCsv(s.rows)}`).join("\n\n"));
-    toast.success("Export Completed");
-  } catch { toast.error("Export Failed"); }
-}
-async function exportExcel(file: string, sheets: Sheet[]) {
-  try {
-    const { default: writeXlsxFile } = await import("write-excel-file/browser");
-    const data = sheets.filter((s) => s.rows.length).map((s) => {
-      const cols = Object.keys(s.rows[0]!);
-      return { sheet: s.name.slice(0, 31), data: [cols.map((c) => ({ value: c, fontWeight: "bold" as const })), ...s.rows.map((r) => cols.map((c) => (r[c] == null ? null : { value: r[c] as string | number })))] };
-    });
-    if (!data.length) { toast("No Data Available"); return; }
-    await writeXlsxFile(data).toFile(`${file}.xlsx`);
-    toast.success("Export Completed");
-  } catch { toast.error("Export Failed"); }
-}
-
 function useWindow(f: Filters): DateWindow {
   return useMemo(() => windowFor(f.range, new Date(), { from: f.from, to: f.to }), [f.range, f.from, f.to]);
 }
@@ -343,15 +315,10 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
   const m = useMemo(() => (q.data ? candidateMetrics(q.data, f, w, uid) : null), [q.data, f, w, uid]);
   const jobs = Object.values(q.data?.jobs ?? {});
   const options = { role: uniq(jobs.map((j) => j.role || j.job_title)), industry: uniq(jobs.map((j) => j.industry)), technology: uniq(jobs.flatMap((j) => j.technologies)), skill: uniq(jobs.flatMap((j) => j.skills)), location: uniq(jobs.map((j) => j.location)), company: uniq(jobs.map((j) => j.company)) };
-  const sheets = (): Sheet[] => !m || !q.data ? [] : [
-    { name: "KPIs", rows: Object.entries(m.kpis).map(([k, v]) => ({ metric: label(k.replace(/([A-Z])/g, "_$1")), value: v })) },
-    { name: "Applications", rows: m.apps.map((a) => ({ job: q.data.jobs[a.job_id]?.job_title ?? "", company: q.data.jobs[a.job_id]?.company ?? "", status: label(a.application_status), applied: a.application_date.slice(0, 10) })) },
-    { name: "Applications By Month", rows: m.byMonth },
-  ];
   return (
     <Shell title="Analytics" subtitle="How your job search is performing, and where to focus next." q={q}>
       {m && <>
-        <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} onCsv={() => exportCsv("sundance-candidate-analytics", sheets())} onExcel={() => void exportExcel("sundance-candidate-analytics", sheets())} />
+        <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} />
         <Tabs tabs={[["overview", "Overview", Sparkles], ["applications", "Applications", Send], ["match", "Match Intelligence", Target], ["growth", "Growth & Activity", TrendingUp]]} value={tab} onChange={setTab} />
         {tab === "overview" && <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-3">
@@ -503,17 +470,11 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
   const w = useWindow(f);
   const m = useMemo(() => (q.data ? recruiterMetrics(q.data, f, w, uid) : null), [q.data, f, w, uid]);
   const options = q.data ? { role: uniq(q.data.jobs.map((j) => j.role || j.job_title)), location: uniq(q.data.jobs.map((j) => j.location)), technology: uniq(q.data.jobs.flatMap((j) => j.technologies)), skill: uniq(q.data.candidateSkills.map((s) => s.technical_skills?.skill_name ?? "")) } : {};
-  const sheets = (): Sheet[] => !m ? [] : [
-    { name: "KPIs", rows: Object.entries(m.kpis).map(([k, v]) => ({ metric: label(k.replace(/([A-Z])/g, "_$1")), value: v ?? "" })) },
-    { name: "Job Performance", rows: m.jobPerf.map((j) => ({ ...j, interviewRate: `${j.interviewRate}%`, offerRate: `${j.offerRate}%`, hireRate: `${j.hireRate}%` })) },
-    { name: "Funnel", rows: m.fun },
-    { name: "Conversion", rows: m.conv.map((c) => ({ stage: c.name, rate: `${c.value}%` })) },
-  ];
   const recRate = m ? pct(m.recs.contacted, m.recs.viewed) : 0;
   return (
     <Shell title="Analytics" subtitle="How effective your hiring process is, from first application to hire." q={q}>
       {m && <>
-        <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} onCsv={() => exportCsv("sundance-hiring-analytics", sheets())} onExcel={() => void exportExcel("sundance-hiring-analytics", sheets())} />
+        <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} />
         <Tabs tabs={[["overview", "Overview", Sparkles], ["pipeline", "Pipeline & Funnel", KanbanSquare], ["jobs", "Job Performance", Briefcase], ["candidates", "Candidate Quality", Users]]} value={tab} onChange={setTab} />
         {tab === "overview" && <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-3">
