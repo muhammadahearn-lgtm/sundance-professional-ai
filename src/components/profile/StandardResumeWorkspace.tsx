@@ -64,6 +64,9 @@ export function StandardResumeWorkspace({ account, data }: { account: Account; d
       const saved = await supabase.from("standard_resume_versions").insert({ candidate_id: account.userId, version_number: version, snapshot, pdf_path: path, include_photo: includePhoto, section_order: sections }).select("standard_resume_id").single();
       if (saved.error) { await supabase.storage.from("resumes").remove([path]); throw saved.error; }
       if (!latest) await supabase.from("candidate_profiles").update({ recruiter_resume_choice: "standard" }).eq("user_id", account.userId);
+      const pruned = await supabase.rpc("prune_standard_resume_versions", { _keep: STANDARD_RESUME_KEEP_VERSIONS });
+      const oldPaths = (pruned.data ?? []) as unknown as string[];
+      if (oldPaths.length) await supabase.storage.from("resumes").remove(oldPaths);
       toast.success(`Sundance Standard Resume v${version} published`); setEditor(false); await qc.invalidateQueries({ queryKey: ["candidate-full", account.userId] });
     } catch { toast.error("We couldn't publish the resume. Please try again."); }
     setPublishing(false);
