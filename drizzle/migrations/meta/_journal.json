@@ -477,13 +477,6 @@
       "when": 1791546048362,
       "tag": "0067_hiring_team_recommendations",
       "breakpoints": true
-    },
-    {
-      "idx": 68,
-      "version": "7",
-      "when": 1791547244678,
-      "tag": "0068_team_recommendations_multi_pick",
-      "breakpoints": true
     }
   ]
 }

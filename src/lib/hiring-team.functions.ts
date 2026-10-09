@@ -134,7 +134,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
         const base = `${SITE}/team-review?t=${token}`;
         const withLinks = linkErr ? candidates : candidates.map((c, i) => ({ ...c, pickUrl: `${base}&pick=${data.candidateIds[i]}` }));
         const r = await sendTemplateEmail("compare-share", m.email, {
-          templateData: { recipientName: m.name, jobTitle: job.job_title, clientCompany, candidates: withLinks, actionUrl: linkErr ? SITE : `${base}&pick=none` },
+          templateData: { recipientName: m.name, jobTitle: job.job_title, clientCompany, candidates: withLinks, actionUrl: linkErr ? SITE : base },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;
