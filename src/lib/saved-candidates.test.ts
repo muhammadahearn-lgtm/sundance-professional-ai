@@ -30,3 +30,16 @@ describe("silver medalists", () => {
     expect(r.map((x) => x.id)).toEqual(["a"]);
   });
 });
+
+import { finalistLabel as _fl, fastTrackJobs as _ftj } from "./saved-candidates";
+describe("finalist fast-track", () => {
+  const jobs = [{ job_id: "a", job_title: "Data Engineer", job_status: "closed" }, { job_id: "b", job_title: "ML Engineer", job_status: "active" }, { job_id: "c", job_title: "Draft", job_status: "paused" }];
+  it("badges silver medalists with the job they were a finalist for", () => {
+    expect(_fl({ silver_medalist_job_id: "a" }, jobs)).toBe("Finalist: Data Engineer");
+    expect(_fl({ silver_medalist_job_id: null }, jobs)).toBeNull();
+  });
+  it("fast-track offers only active jobs other than the original", () => {
+    expect(_ftj(jobs, "a").map((j) => j.job_id)).toEqual(["b"]);
+    expect(_ftj(jobs, "b")).toEqual([]);
+  });
+});

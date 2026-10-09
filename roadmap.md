@@ -9,3 +9,6 @@
 - [ ] Bulk triage in the Applications inbox (select many, move or archive at once)
 - [ ] Quick internal notes / tags on application cards
 - [ ] Send a real test recommendation email to confirm the full loop end-to-end
+- [x] Silver Medalist "Finalist" badges in Talent Search + Add to Requisition fast-track on profile
+- [x] Downloadable Offer Summary & Acceptance Confirmation PDF (candidate + recruiter)
+- [ ] Reference checks: candidate submits referees, no-login referee questionnaire, answers into Team Notes

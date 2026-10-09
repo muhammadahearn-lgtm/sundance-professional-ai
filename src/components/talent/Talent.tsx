@@ -1,5 +1,6 @@
 import { TeamNotes } from "./TeamNotes";
 import { ShareWithManager } from "./ShareWithManager";
+import { FinalistBadge, FinalistFastTrackPanel } from "./FinalistFastTrack";
 import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
@@ -251,7 +252,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
         <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link><span className="ml-2 align-middle"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></span>
+            <div className="min-w-0"><Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="font-display text-lg font-bold hover:text-primary">{c.name}</Link><span className="ml-2 align-middle"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></span><span className="ml-1 align-middle"><FinalistBadge uid={lists.uid} candidateId={c.id} /></span>
               <p className="text-sm">{c.jobTitle}{c.employer && <span className="text-muted-foreground"> · {c.employer}</span>}</p></div>
             <div className="flex items-center gap-2">{jobTitle && <span className="inline-flex items-center gap-2">{score != null && row ? <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${Math.round(score)}% match details`} className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xl font-extrabold transition hover:brightness-95 ${matchTone(score)}`}>{Math.round(score)}%<ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} /></button> : <MatchBadge score={score} />}<span className="text-xs text-muted-foreground">Match for {jobTitle}</span></span>}{c.availability && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${availTone(c.availability)}`}>{label(AVAILABILITY, c.availability)}</span>}</div>
           </div>
@@ -318,7 +319,7 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
       </div>
       <div className="flex flex-1 flex-col p-4">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="truncate font-display text-base font-bold hover:text-primary">{c.name}</Link>
-        <p className="truncate text-sm">{c.jobTitle || "—"}</p>{c.headline && <p className="truncate text-xs font-medium text-primary" title={c.headline}>{c.headline}</p>}<div className="mt-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /></div>
+        <p className="truncate text-sm">{c.jobTitle || "—"}</p>{c.headline && <p className="truncate text-xs font-medium text-primary" title={c.headline}>{c.headline}</p>}<div className="mt-1 flex flex-wrap gap-1 empty:hidden"><SavedBadge uid={lists.uid} candidateId={c.id} jobId={jobId} /><FinalistBadge uid={lists.uid} candidateId={c.id} /></div>
         <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location || "—"}</span><span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{c.years} yrs</span>{c.salary && <span>Expects {c.salary}</span>}</p>
         <div className="mt-3 space-y-2"><Chips ids={c.skills} opts={t.skills} max={3} /><Chips ids={c.techs} opts={t.technologies} max={3} />{(c.softSkills?.length ?? 0) > 0 && <Chips soft ids={c.softSkills ?? []} opts={t.softSkills} max={3} />}</div>
         <div className="mt-auto flex items-center gap-1.5 pt-4">
@@ -501,6 +502,7 @@ export function CandidateProfileBody({ d, t, aside, stacked = false, jobId }: { 
       </div>
       <div className="min-w-0 space-y-6">
         {aside}
+        <FinalistFastTrackPanel candidateId={p.user_id} name={d.name} />
         {jobId && <ShareWithManager candidateId={p.user_id} jobId={jobId} />}
         <TeamNotes candidateId={p.user_id} jobId={jobId} />
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
