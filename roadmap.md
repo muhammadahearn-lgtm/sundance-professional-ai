@@ -6,7 +6,7 @@
 - [x] Applications sort control (Highest Match Score default, Lowest, Most Experienced, Newest, Oldest)
 - [x] Applied timeframe presets (All time, 24h, 7d, 14d, 30d) + "Unreviewed only" toggle
 - [x] Filter bar order: Company → Job → Applied → Sort (sort on the far right)
-- [ ] Bulk triage in the Applications inbox (select many, move or archive at once)
+- [x] Bulk triage in the Applications inbox (select many, move or archive at once; rejections use delivery timing, reason, Undo)
 - [ ] Quick internal notes / tags on application cards
 - [ ] Send a real test recommendation email to confirm the full loop end-to-end
 - [x] Silver Medalist "Finalist" badges in Talent Search + Add to Requisition fast-track on profile
