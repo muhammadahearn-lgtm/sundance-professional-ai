@@ -82,8 +82,11 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
     const { shortName } = await import("./compare-share");
-    const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
+    const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id, is_confidential, confidential_label, companies(company_name)").eq("job_id", data.jobId).maybeSingle();
     if (!job || job.recruiter_id !== context.userId) throw new Error("Only the recruiter who posted this job can share it.");
+    const clientCompany = job.is_confidential
+      ? (job.confidential_label?.trim() || "Confidential Client")
+      : ((job.companies as { company_name?: string } | null)?.company_name ?? "");
     for (const id of data.candidateIds) {
       const { data: ok } = await context.supabase.rpc("recruiter_can_view_candidate", { _candidate: id });
       if (!ok) throw new Error("One of these candidates is not visible to you.");
@@ -122,7 +125,7 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     for (const m of team) {
       try {
         const r = await sendTemplateEmail("compare-share", m.email, {
-          templateData: { recipientName: m.name, jobTitle: job.job_title, candidates, actionUrl: SITE },
+          templateData: { recipientName: m.name, jobTitle: job.job_title, clientCompany, candidates, actionUrl: SITE },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;

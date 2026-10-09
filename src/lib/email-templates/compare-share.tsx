@@ -20,6 +20,7 @@ export interface CompareEmailCandidate {
 interface Props {
   recipientName?: string
   jobTitle?: string
+  clientCompany?: string
   candidates?: CompareEmailCandidate[]
   actionUrl?: string
 }
@@ -31,7 +32,7 @@ const pct = (s?: number | null) => (s == null ? '—' : `${Math.round(s)}%`)
 
 const Best = () => <span style={best}>🏆 BEST</span>
 
-const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }: Props) => {
+const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, candidates = [] }: Props) => {
   const sorted = [...candidates].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   const top = sorted[0]
   const lead = top?.score != null && sorted[1]?.score != null ? Math.round(top.score - (sorted[1].score ?? 0)) : null
@@ -67,7 +68,8 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
         <Container style={container}>
           <Text style={brand}>Sundance Professionals</Text>
           <Heading style={h1}>Candidate comparison — {jobTitle}</Heading>
-          <Text style={text}>{recipientName ? `Hi ${recipientName}, y` : 'Y'}our recruiter would like your opinion on these candidates.</Text>
+          {clientCompany ? <Text style={client}>Hiring for <span style={{ fontWeight: 700, color: '#2f5be0' }}>{clientCompany}</span></Text> : null}
+          <Text style={text}>{recipientName ? `Hi ${recipientName}, y` : 'Y'}our recruiter would like your opinion on these candidates{clientCompany ? ` for ${jobTitle} at ${clientCompany}` : ''}.</Text>
 
           {top ? (
             <Section style={spot}>
@@ -142,11 +144,12 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', candidates = [] }
 
 export const template = {
   component: CompareShare,
-  subject: (d: Record<string, any>) => `Candidate comparison — ${d['jobTitle'] || 'your open role'}`,
+  subject: (d: Record<string, any>) => `Candidate comparison — ${d['jobTitle'] || 'your open role'}${d['clientCompany'] ? ` · ${d['clientCompany']}` : ''}`,
   displayName: 'Candidate comparison (hiring team)',
   previewData: {
     recipientName: 'Alex',
     jobTitle: 'Data Scientist',
+    clientCompany: 'Acme Corp',
     candidates: [
       { name: 'Muhammad A.', jobTitle: 'Data Scientist', employer: 'Sundance Professionals', location: 'Boston, Massachusetts, United States', years: 2, availability: 'Actively Looking', arrangement: 'Hybrid', salary: '$60,000 USD', score: 100, strengths: ['Python (required) matches', 'SQL (required) matches', 'R (required) matches'] },
       { name: 'Jordan T.', jobTitle: 'Data Engineer', employer: '', location: 'Boston, Massachusetts, United States', years: 8, availability: 'Actively Looking', arrangement: 'Remote', salary: '', score: 51, strengths: ['SQL (required) matches'] },
@@ -162,6 +165,7 @@ const main = { backgroundColor: '#ffffff', fontFamily: "'DM Sans', Arial, sans-s
 const container = { padding: '32px 16px', maxWidth: '760px' }
 const brand = { fontSize: '14px', fontWeight: 700, color: '#2f5be0', margin: '0 0 20px' }
 const h1 = { fontSize: '22px', fontWeight: 700, color: '#151a33', margin: '0 0 10px' }
+const client = { fontSize: '13px', color: '#64748b', margin: '0 0 14px' }
 const text = { fontSize: '15px', color: '#3d4366', lineHeight: '1.6', margin: '0 0 20px' }
 const spot = { border: '1px solid #dbe4fb', borderRadius: '16px', padding: '20px', margin: '0 0 20px', background: 'linear-gradient(90deg, #f2fbf5 0%, #ffffff 55%, #eef1fe 100%)', backgroundColor: '#f8fafc' }
 const ring = { width: '92px', height: '92px', borderRadius: '999px', border: '3px solid #2f5be0', backgroundColor: '#ffffff', borderCollapse: 'separate' as const }
