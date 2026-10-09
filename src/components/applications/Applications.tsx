@@ -1,3 +1,4 @@
+import { APP_SORTS, sortApplications } from "@/lib/application-sort";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { formatSalaryAmount } from "@/lib/salary";
