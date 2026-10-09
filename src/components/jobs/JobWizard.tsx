@@ -205,6 +205,10 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
             <Field label="Bonus Information"><input className={inputCls} value={f.bonus_info} onChange={(e) => set("bonus_info", e.target.value)} placeholder="Up to 15% annual performance bonus" /></Field>
             <Field label="Benefits Summary"><textarea rows={4} className={inputCls} value={f.benefits_summary} onChange={(e) => set("benefits_summary", e.target.value)} placeholder="Health, dental, vision, 401(k) match, unlimited PTO…" /></Field>
             <EquityPanel v={f} errs={errs} onChange={(k, val) => set(k, val)} />
+            <Field label="Openings to Fill">
+              <input type="text" inputMode="numeric" pattern="[0-9]*" className={inputCls} value={f.headcount} onChange={(e) => set("headcount", digitsOnly(e.target.value).slice(0, 2))} placeholder="1" />
+              <p className="mt-1 text-xs text-muted-foreground">How many people you're hiring for this role. The job stays open until every spot is filled.</p>
+            </Field>
             <Field label="Applicant Limit (optional)">
               <input type="text" inputMode="numeric" pattern="[0-9]*" className={inputCls} value={f.max_applications} onChange={(e) => set("max_applications", digitsOnly(e.target.value))} placeholder="Unlimited" />
               <p className="mt-1 text-xs text-muted-foreground">Leave empty for unlimited. When this many people apply, the job pauses automatically and you get a notice — raise the limit and resume anytime.</p>

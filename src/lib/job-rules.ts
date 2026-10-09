@@ -13,14 +13,14 @@ export type JobForm = {
   location: string; location_country: string; location_state: string; location_city: string; minimum_years_experience: string; minimum_degree: string; experience_level: string; job_description: string;
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
-  is_confidential: boolean; confidential_label: string; max_applications: string;
+  is_confidential: boolean; confidential_label: string; max_applications: string; headcount: string;
   equity_type: string; equity_range: string; equity_vesting: string; screening: ScreeningQ[]; interview_plan: PlanRound[];
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
   job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "", location_country: "", location_state: "", location_city: "",
   minimum_years_experience: "", minimum_degree: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
-  minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "", is_confidential: false, confidential_label: "", max_applications: "",
+  minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "", is_confidential: false, confidential_label: "", max_applications: "", headcount: "1",
   equity_type: "none", equity_range: "", equity_vesting: "", screening: [], interview_plan: DEFAULT_PLAN.map((r) => ({ ...r })),
 });
 
@@ -116,3 +116,11 @@ export function draftCompletion(f: Pick<JobForm, "role_id" | "level_id" | "job_d
 
 /** Drafts can be saved with anything; only publishing validates. */
 export const canPublish = (f: JobForm) => Object.keys(validateAll(f)).length === 0;
+
+/** Openings for a requisition: whole number 1–99, defaults to 1. */
+export function parseHeadcount(v: string | number | null | undefined): number {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, 99) : 1;
+}
+/** Spots still open after counting hires. */
+export function openSpots(headcount: number, hired: number): number { return Math.max(0, parseHeadcount(headcount) - Math.max(0, hired)); }
