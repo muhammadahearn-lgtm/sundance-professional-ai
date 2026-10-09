@@ -526,6 +526,13 @@
       "when": 1791570731338,
       "tag": "0074_interview_reschedule_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791571305863,
+      "tag": "0075_silver_medalists",
+      "breakpoints": true
     }
   ]
 }

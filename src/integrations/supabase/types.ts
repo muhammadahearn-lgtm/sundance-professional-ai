@@ -2270,6 +2270,8 @@ export type Database = {
           recruiter_id: string
           saved_candidate_id: string
           saved_date: string
+          silver_medalist_at: string | null
+          silver_medalist_job_id: string | null
         }
         Insert: {
           candidate_id: string
@@ -2277,6 +2279,8 @@ export type Database = {
           recruiter_id: string
           saved_candidate_id?: string
           saved_date?: string
+          silver_medalist_at?: string | null
+          silver_medalist_job_id?: string | null
         }
         Update: {
           candidate_id?: string
@@ -2284,6 +2288,8 @@ export type Database = {
           recruiter_id?: string
           saved_candidate_id?: string
           saved_date?: string
+          silver_medalist_at?: string | null
+          silver_medalist_job_id?: string | null
         }
         Relationships: [
           {
@@ -2306,6 +2312,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recruiter_profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "saved_candidates_silver_medalist_job_id_fkey"
+            columns: ["silver_medalist_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
           },
         ]
       }

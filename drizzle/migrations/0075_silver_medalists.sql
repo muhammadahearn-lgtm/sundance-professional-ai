@@ -1,0 +1,1 @@
+ALTER TABLE public.saved_candidates ADD COLUMN IF NOT EXISTS silver_medalist_job_id uuid REFERENCES public.jobs(job_id) ON DELETE SET NULL, ADD COLUMN IF NOT EXISTS silver_medalist_at timestamptz;
