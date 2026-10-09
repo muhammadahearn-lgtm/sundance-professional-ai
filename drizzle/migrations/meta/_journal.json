@@ -484,6 +484,13 @@
       "when": 1791548842726,
       "tag": "0068_team_recommendations_restore_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1791549731556,
+      "tag": "0069_fix_messaging_grants_and_resume_link",
+      "breakpoints": true
     }
   ]
 }
