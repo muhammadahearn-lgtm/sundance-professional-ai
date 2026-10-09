@@ -6,6 +6,7 @@ export type Offer = {
   salary_amount: number | null; salary_currency: string; signing_bonus: number | null; equity_details: string;
   start_date: string | null; expires_on: string | null; notes: string; status: string; revision: number;
   decline_reason: string; responded_at: string | null; negotiated_at: string | null; negotiation_conversation_id: string | null; created_at: string; updated_at: string;
+  extension_requested_until?: string | null; extension_note?: string; extension_status?: string; extension_responded_at?: string | null;
 };
 
 /** Latest offer for a candidate on a job (any status). */
@@ -66,4 +67,14 @@ export async function wrapUpOthers(jobId: string, hiredCandidateId: string) {
   if (e2) throw e2;
   await supabase.from("job_offers").update({ status: "withdrawn" }).eq("job_id", jobId).neq("candidate_id", hiredCandidateId).eq("status", "pending");
   return (closed ?? []).map((r) => r.application_id);
+}
+
+export async function requestOfferExtension(offerId: string, until: string, note: string) {
+  const { error } = await supabase.rpc("request_offer_extension", { _offer: offerId, _until: until, _note: note });
+  if (error) throw error;
+}
+
+export async function respondOfferExtension(offerId: string, grant: boolean, until?: string) {
+  const { error } = await supabase.rpc("respond_offer_extension", { _offer: offerId, _grant: grant, ...(until ? { _until: until } : {}) });
+  if (error) throw error;
 }
