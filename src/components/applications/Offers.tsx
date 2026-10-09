@@ -288,7 +288,7 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
       {expired && o.extension_status !== "requested" && (
         <div className="mt-1.5 flex items-center gap-1"><div className="flex-1"><DatePicker value={newDate} onChange={setNewDate} aria-label="New offer deadline" placeholder="New deadline" /></div><button type="button" disabled={extBusy || !newDate} onClick={() => answer(true, newDate)} className="rounded-md bg-primary px-2 py-1.5 font-semibold text-primary-foreground disabled:opacity-50">Extend</button></div>)}
       {o.status === "pending" && o.negotiated_at && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
-      <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" ? "View / Revise" : "View Details"}</button>
+      <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" || inReview ? "View / Revise" : "View Details"}</button>
       {o.status === "accepted" && <OfferLetterButton offer={o} jobTitle="" side="recruiter" className="mt-1.5 inline-flex w-full items-center justify-center gap-1 rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary" />}
     </div>
   );
