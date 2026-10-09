@@ -624,6 +624,13 @@
       "when": 1791576085670,
       "tag": "0088_application_disposition_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1791576687503,
+      "tag": "0089_offer_acceptance_signature",
+      "breakpoints": true
     }
   ]
 }
