@@ -4,7 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, Trash2, X } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { shareCompareWithTeam } from "@/lib/hiring-team.functions";
@@ -17,7 +17,7 @@ async function listTeamRecommendations() {
   if (error) throw error;
   return data ?? [];
 }
-import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
+import { listJobApplications, listPipeline, moveStage, type PipelineCard } from "@/lib/applications-data";
 import { listRecruiterInterviews } from "@/lib/interviews-data";
 import { ScheduleInterviewDialog, ScorecardDialog } from "@/components/applications/Interviews";
 import { RoundStepper, ShortlistSummary } from "@/components/applications/RoundStepper";
@@ -168,11 +168,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     await move(c, stage, false, true);
   }
   const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], offer: ["hired", "Mark Hired"] };
-  async function remove(c: PipelineCard) {
-    if (!confirm(`Remove ${c.name} from the pipeline?`)) return;
-    try { await removeFromPipeline(c.pipeline_id); toast.success("Candidate removed"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
-    qc.invalidateQueries({ queryKey: ["pipeline"] });
-  }
+
 
   if (q.error) return <ErrorBox msg="Unable To Update Pipeline" retry={() => q.refetch()} />;
   const myJobs = jobsQ.data ?? [];
@@ -249,7 +245,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                   return (
                   <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable={canMoveCard(c.current_stage as Stage, c.jobs?.job_status)} title={canMoveCard(c.current_stage as Stage, c.jobs?.job_status) ? undefined : "Hired — locked"} onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 ${canMoveCard(c.current_stage as Stage, c.jobs?.job_status) ? "cursor-grab active:cursor-grabbing" : "cursor-default"} ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
                     <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p>{c.withdrawnAt && <span title={`Withdrew ${fmt(c.withdrawnAt)}`} className="mt-1 inline-block rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning">Withdrawn by candidate · {withdrawReasonLabel(c.withdrawReason)}</span>}</div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
-                      <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
+                      </div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
                     {perf.scored > 0 && <div className="mt-1.5 flex flex-wrap items-center gap-1">
                       {ranked && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold ${idx === 0 && !perf.concerns ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>#{idx + 1}</span>}

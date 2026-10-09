@@ -157,10 +157,6 @@ export async function moveStage(card: Pick<PipelineCard, "pipeline_id" | "applic
   }
 }
 
-export async function removeFromPipeline(id: string) {
-  const { error } = await supabase.from("recruiting_pipeline").delete().eq("pipeline_id", id);
-  if (error) throw error;
-}
 
 // ---------- Screening ----------
 export async function loadScreeningQuestions(jobId: string): Promise<import("./screening").ScreeningQ[]> {
