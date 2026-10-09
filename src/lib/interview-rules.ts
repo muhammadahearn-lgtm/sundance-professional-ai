@@ -115,3 +115,31 @@ export function splitInterviews<T extends { scheduled_at: string; duration_minut
 export function fmtInterview(iso: string) {
   return new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
+
+export type DayBucket = "Today" | "Tomorrow" | "This week" | "Later";
+/** Calendar bucket for an upcoming interview, relative to local midnight. "This week" = within the next 7 days. */
+export function dayBucket(iso: string, now = new Date()): DayBucket {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const days = Math.floor((new Date(iso).getTime() - start) / 86400000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 7) return "This week";
+  return "Later";
+}
+
+/** Groups (already sorted) upcoming interviews by day bucket, keeping order and dropping empty groups. */
+export function groupByDay<T extends { scheduled_at: string }>(list: T[], now = new Date()) {
+  const order: DayBucket[] = ["Today", "Tomorrow", "This week", "Later"];
+  return order.map((label) => ({ label, items: list.filter((i) => dayBucket(i.scheduled_at, now) === label) })).filter((g) => g.items.length);
+}
+
+/** Past interviews still missing the recruiter's scorecard. */
+export function needsScorecard<T extends { interview_id: string }>(past: T[], scored: Set<string>) {
+  return past.filter((i) => !scored.has(i.interview_id));
+}
+
+/** Time in another IANA zone (e.g. the zone the interview was scheduled in), or null when it matches the viewer's. */
+export function otherZoneTime(iso: string, zone: string | null | undefined, viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone) {
+  if (!zone || zone === viewerZone) return null;
+  try { return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone: zone, timeZoneName: "short" }); } catch { return null; }
+}
