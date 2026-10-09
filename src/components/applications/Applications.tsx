@@ -256,13 +256,12 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
-      <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5`}>
+      <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4`}>
         <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} className={inputCls} aria-label="Sort by">{APP_SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
         <SearchSelect ariaLabel="Filter by company" value={f.co} onChange={(v) => setF({ ...f, co: v, job: "" })} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
         <SearchSelect ariaLabel="Filter by job" value={f.job} onChange={(v) => setF({ ...f, job: v })} allLabel="All jobs" placeholder="Search job titles..." options={jobs.map(([id, t]) => ({ value: id, label: t }))} />
-        <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className={inputCls} aria-label="Status"><option value="">All statuses</option>{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         <DatePicker value={f.since} onChange={(v) => setF({ ...f, since: v })} aria-label="Applied since" placeholder="Applied since" />
-        <div className="sm:col-span-2 lg:col-span-5"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
+        <div className="sm:col-span-2 lg:col-span-4"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
       </div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>
