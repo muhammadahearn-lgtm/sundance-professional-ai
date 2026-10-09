@@ -21,9 +21,9 @@ export const DEFAULT_KITS: Record<string, { focus: string; rubric: string[] }> =
 export const defaultKit = (type: string) => DEFAULT_KITS[type] ?? { focus: "", rubric: [] };
 
 export const DEFAULT_PLAN: PlanRound[] = [
-  { type: "screen", name: "Initial Screen", duration_minutes: 30, ...structuredClone(DEFAULT_KITS.screen!) },
-  { type: "technical", name: "Technical Deep Dive", duration_minutes: 60, ...structuredClone(DEFAULT_KITS.technical!) },
-  { type: "final", name: "Final Round", duration_minutes: 45, ...structuredClone(DEFAULT_KITS.final!) },
+  { type: "screen", name: "Initial Screen", duration_minutes: 30, ...structuredClone(defaultKit("screen")) },
+  { type: "technical", name: "Technical Deep Dive", duration_minutes: 60, ...structuredClone(defaultKit("technical")) },
+  { type: "final", name: "Final Round", duration_minutes: 45, ...structuredClone(defaultKit("final")) },
 ];
 
 const typeName = (t: string) => INTERVIEW_TYPES.find(([k]) => k === t)?.[1] ?? "";
