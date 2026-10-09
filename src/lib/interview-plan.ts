@@ -60,7 +60,7 @@ export function resizePlan(plan: PlanRound[], n: number): PlanRound[] {
   const extra: PlanRound[] = [];
   for (let i = plan.length; i < size; i++) {
     const t = INTERVIEW_TYPES[Math.min(i, INTERVIEW_TYPES.length - 1)]!;
-    extra.push({ type: t[0], name: t[1], duration_minutes: 45 });
+    extra.push({ type: t[0], name: t[1], duration_minutes: 45, ...structuredClone(defaultKit(t[0])) });
   }
   return [...plan, ...extra];
 }
