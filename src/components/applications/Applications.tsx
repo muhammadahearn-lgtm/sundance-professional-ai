@@ -285,7 +285,16 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
   const cutoff = f.tf ? new Date(Date.now() - Number(f.tf) * 86_400_000).toISOString() : "";
-  const filtered = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
+  const [kw, setKw] = useState("");
+  const [quick, setQuick] = useState<Set<QuickFilter>>(new Set());
+  const [review, setReview] = useState<string | null>(null);
+  const rowOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j);
+  const names = (ids: string[], opts?: { id: string; name: string }[]) => ids.map((i) => opts?.find((o) => o.id === i)?.name ?? "");
+  const facts = (a: { candidate_id: string; job_id: string; application_id: string; availability: string }) => ({ score: scoreOf(a.candidate_id, a.job_id), dealbreakers: dbQ.data?.[a.application_id], availability: a.availability });
+  const base = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)
+    && matchesKeyword(kw, [a.name, a.candTitle, ...names(a.skills, tax.data?.skills), ...names(a.techs, tax.data?.technologies)]));
+  const filtered = base.filter((a) => passesAll(quick, facts(a)));
+  const quickCount = (k: QuickFilter) => base.filter((a) => inTriageTab(tab, a.application_status, inPipe(a)) && passesAll(new Set([...quick, k]), facts(a))).length;
   const tabCount = (t: TriageTab) => filtered.filter((a) => inTriageTab(t, a.application_status, inPipe(a))).length;
   const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string; prev: string } | null>(null);
@@ -330,12 +339,19 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         <select value={f.tf} onChange={(e) => setF({ ...f, tf: e.target.value })} className={inputCls} aria-label="Applied timeframe">{TIMEFRAMES.map(([k, l]) => <option key={k} value={k}>Applied: {l}</option>)}</select>
         <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} className={inputCls} aria-label="Sort by">{APP_SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
 
+        <div className="relative sm:col-span-2 lg:col-span-4"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input type="search" value={kw} onChange={(e) => setKw(e.target.value)} placeholder="Search by name, title, skill or technology (e.g. Kubernetes)" aria-label="Search applicants" className={`${inputCls} pl-9`} /></div>
         <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4">
           <div className="min-w-0 flex-1"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
-          <button type="button" role="switch" aria-checked={f.unrev} onClick={() => setF({ ...f, unrev: !f.unrev })}
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${f.unrev ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
-            Unreviewed only
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_FILTERS.map(([k, l]) => { const on = quick.has(k); return (
+              <button key={k} type="button" role="switch" aria-checked={on} onClick={() => setQuick((s) => { const n = new Set(s); if (on) n.delete(k); else n.add(k); return n; })}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
+                {l}<span className="opacity-75">{quickCount(k)}</span></button>); })}
+            <button type="button" role="switch" aria-checked={f.unrev} onClick={() => setF({ ...f, unrev: !f.unrev })}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${f.unrev ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
+              Unreviewed only
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -351,8 +367,9 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         : <div className="grid gap-4 pb-20 md:grid-cols-2">{rows.map((a) => { const picked = sel.has(a.application_id); return (
             <article key={a.application_id} className={`${card} p-5 transition-shadow ${picked ? "ring-2 ring-primary" : ""}`}>
               <div className="flex items-start gap-3">{eligible(a) && <input type="checkbox" checked={picked} onChange={() => toggle(a.application_id)} aria-label={`Select ${a.name}`} className="mt-3 h-4 w-4 shrink-0 cursor-pointer accent-primary" />}<Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} aria-label={`Open ${a.name}'s profile`} className="shrink-0 rounded-full hover:ring-2 hover:ring-primary"><Avatar name={a.name} size="h-11 w-11 text-sm" /></Link><div className="min-w-0 flex-1"><p className="font-display font-bold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link></p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><DealbreakerChip count={dbQ.data?.[a.application_id]} /><p className="text-xs text-muted-foreground">For <Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> · <span className="font-semibold text-foreground">{coName(a)}</span> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
+              <QualPills s={rowOf(a.candidate_id, a.job_id)} />
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
-              <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
+              <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => setReview(a.application_id)} className={primaryBtn}><Zap className="h-4 w-4" />Quick Review</button><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={btn}>Full Page</Link>
                 {inPipe(a) ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} search={{ candidate: a.candidate_id }} className={btn}>In Pipeline →</Link>
                   : a.application_status !== "rejected" && <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Moved to Pipeline · cleared from Inbox")} className={btn}>Move To Pipeline</button>}
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
@@ -367,6 +384,17 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         </div>)}
       {bulkReject && <NotMovingForwardDialog name={`${selRows.length} candidate${selRows.length === 1 ? "" : "s"}`} onCancel={() => setBulkReject(false)} onConfirm={(_s, reason, timing) => { setBulkReject(false); void bulk("reject", reason, timing); }} />}
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={(_s, reason, timing) => { const c = closing; setClosing(null); void rejectMany([{ id: c.id, prev: c.prev }], reason, timing); }} />}
+      {review && (() => {
+        const i = rows.findIndex((r) => r.application_id === review);
+        if (i < 0) return null;
+        const a = rows[i]!;
+        const go = (d: 1 | -1) => { const n = stepIndex(i, rows.length, d); if (n !== null) setReview(rows[n]!.application_id); };
+        const advanceAfter = () => { const n = stepIndex(i, rows.length, 1) ?? stepIndex(i, rows.length, -1); setReview(n === null ? null : rows[n]!.application_id); };
+        return <SpeedReview key={a.application_id} a={a} pos={i + 1} total={rows.length} score={scoreOf(a.candidate_id, a.job_id)} sub={rowOf(a.candidate_id, a.job_id)} dealbreakers={dbQ.data?.[a.application_id]} piped={inPipe(a)}
+          onClose={() => setReview(null)} onPrev={() => go(-1)} onNext={() => go(1)}
+          onPipe={() => { void act(() => addToPipeline(uid, a.candidate_id, a.job_id), `${a.name} moved to Pipeline`); advanceAfter(); }}
+          onReject={() => { setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title, prev: a.application_status }); advanceAfter(); }} />;
+      })()}
     </div>
   );
 }
