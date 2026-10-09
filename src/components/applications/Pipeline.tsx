@@ -21,7 +21,7 @@ import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type 
 import { listRecruiterInterviews } from "@/lib/interviews-data";
 import { ScheduleInterviewDialog, ScorecardDialog } from "@/components/applications/Interviews";
 import { RoundStepper, ShortlistSummary } from "@/components/applications/RoundStepper";
-import { normalizePlan, roundProgress, FOLLOW_UP_PLAN } from "@/lib/interview-plan";
+import { normalizePlan, roundProgress, FOLLOW_UP_PLAN, interviewPerformance, compareByInterview } from "@/lib/interview-plan";
 import { listMyScorecards, type Interview } from "@/lib/interviews-data";
 import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
@@ -75,6 +75,8 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
   const scQ = useQuery({ queryKey: ["scorecards", uid], queryFn: () => listMyScorecards(uid) });
   const planOf = (c: PipelineCard) => normalizePlan((c.jobs as { interview_plan?: unknown } | null)?.interview_plan);
   const stepsOf = (c: PipelineCard) => roundProgress(planOf(c), roundsOf(c), scQ.data ?? []);
+  const perfOf = (c: PipelineCard) => interviewPerformance(stepsOf(c));
+  const [sortMode, setSortMode] = useState<"auto" | "interview" | "match" | "workflow">("auto");
   const [scoreFor, setScoreFor] = useState<{ c: PipelineCard; i: Interview } | null>(null);
   const [editIv, setEditIv] = useState<Interview | undefined>(undefined);
   const [followUp, setFollowUp] = useState(false);
@@ -195,6 +197,13 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
       </div>
 
       <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match</span><MatchFilter value={mm} onChange={setMm} />
+        <label className="ml-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sort
+          <select value={sortMode} onChange={(e) => setSortMode(e.target.value as typeof sortMode)} aria-label="Sort pipeline cards" className="h-9 rounded-xl border border-input bg-card px-2 text-sm font-medium normal-case tracking-normal text-foreground">
+            <option value="auto">Smart (rank Shortlisted by interviews)</option>
+            <option value="interview">Highest interview rating</option>
+            <option value="match">Highest match score</option>
+            <option value="workflow">Workflow order</option>
+          </select></label>
         <div className="ml-auto flex gap-2">
           <button type="button" onClick={() => scrollBy(-1)} aria-label="Scroll pipeline left" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:border-primary hover:text-primary"><ChevronLeft className="h-4 w-4" /></button>
           <button type="button" onClick={() => scrollBy(1)} aria-label="Scroll pipeline right" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:border-primary hover:text-primary"><ChevronRight className="h-4 w-4" /></button>
@@ -202,20 +211,30 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
       {tax.error ? <ErrorBox msg="Unable To Load Pipeline" retry={() => tax.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
         <div ref={boardRef} onDragOver={edgeScroll} className="pipeline-scroll -mx-4 overflow-x-scroll px-4 pb-3"><div className="flex gap-4" style={{ minWidth: STAGES.length * 276 }}>
           {BOARD_STAGES.map(([key, title], si) => {
-            const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
+            const filtered = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
+            const byIv = sortMode === "interview" || (sortMode === "auto" && key === "shortlisted");
+            const col = byIv ? [...filtered].sort((a, b) => compareByInterview(perfOf(a), perfOf(b)) || (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1))
+              : sortMode === "match" ? [...filtered].sort((a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1)) : filtered;
+            const ranked = byIv && ["interviewing", "shortlisted"].includes(key);
             const tone = key === "hired" ? "bg-success" : key === "rejected" ? "bg-muted-foreground/40" : "bg-gradient-primary";
             return (
               <section key={key} onDragOver={(e) => e.preventDefault()} onDrop={() => { const c = cards.find((x) => x.pipeline_id === drag); if (c) move(c, key as Stage); setDrag(null); }}
                 className={`w-[16.5rem] shrink-0 rounded-2xl border bg-card/60 p-3 backdrop-blur-sm transition-all ${drag ? "border-primary/40 ring-2 ring-primary/15" : "border-border"}`} aria-label={`${title} column`}>
                 <div className={`mb-3 h-1 rounded-full ${tone} ${key === "rejected" ? "opacity-60" : ""}`} style={key === "rejected" || key === "hired" ? undefined : { opacity: 0.35 + si * 0.12 }} />
                 <div className="mb-3 flex items-center justify-between px-1"><h2 className="text-sm font-bold">{title}</h2><span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">{col.length}</span></div>
-                <div className="min-h-24 space-y-3">{col.map((c) => {
+                {ranked && col.length > 1 && <p className="-mt-2 mb-2 px-1 text-[10px] font-semibold text-muted-foreground">Ranked by interview results</p>}
+                <div className="min-h-24 space-y-3">{col.map((c, idx) => {
                   const next = NEXT[c.current_stage as Stage];
+                  const perf = perfOf(c);
                   return (
                   <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
                     <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
+                    {perf.scored > 0 && <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      {ranked && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold ${idx === 0 && !perf.concerns ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>#{idx + 1}</span>}
+                      <span title={`${perf.passed} of ${perf.scored} scored rounds passed`} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${perf.concerns ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}><Star className="h-3 w-3 fill-current" />{perf.avg ?? "–"} · {perf.scored} round{perf.scored === 1 ? "" : "s"}{perf.concerns ? ` · ${perf.concerns} concern${perf.concerns === 1 ? "" : "s"}` : ""}</span>
+                    </div>}
                     {!["hired", "rejected"].includes(c.current_stage) && (() => { const a = stageAge(c.stage_date); return <p className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.stale ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"}`}>{a.days === 0 ? "Updated today" : `${a.days}d in ${title}`}</p>; })()}
                     {!jobId && c.jobs?.job_title && <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
                     {(() => { const r = picksOf(c); if (!r.length) return null; const tip = r.map((x) => `${x.job_stakeholders?.name ?? "Team member"}${x.job_stakeholders?.hiring_role ? ` (${x.job_stakeholders.hiring_role})` : ""}${x.note ? `: "${x.note}"` : ""}`).join("\n");
