@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PRESETS, knockoutMisses, answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
+import { PRESETS, dealbreakerCounts, knockoutMisses, answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 const q = (p: Partial<ScreeningQ>): ScreeningQ => ({ id: "q1", text: "Do you need a visa?", type: "yes_no", options: [], ideal: "", required: true, ...p });
 
@@ -58,5 +58,18 @@ describe("dealbreakers", () => {
   });
   it("requires a preferred answer", () => {
     expect(validateQuestions([q({ knockout: true })])["q1"]).toBe("Dealbreakers need a preferred answer.");
+  });
+});
+
+describe("dealbreaker card counts", () => {
+  it("counts only mismatched knockout answers per application", () => {
+    const qs = [{ id: "k1", ideal: "Yes" }, { id: "k2", ideal: "No" }];
+    const c = dealbreakerCounts(qs, [
+      { application_id: "a", question_id: "k1", answer_text: "No" },
+      { application_id: "a", question_id: "k2", answer_text: "Yes" },
+      { application_id: "b", question_id: "k1", answer_text: "yes" },
+      { application_id: "c", question_id: "other", answer_text: "No" },
+    ]);
+    expect(c).toEqual({ a: 2 });
   });
 });

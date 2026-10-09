@@ -177,3 +177,14 @@ export async function loadScreeningAnswers(applicationId: string, jobId: string)
   const map = Object.fromEntries((a.data ?? []).map((r) => [r.question_id, r.answer_text]));
   return qs.map((q) => ({ q, answer: map[q.id] ?? "" }));
 }
+
+/** Recruiter: dealbreaker miss counts keyed by application id, for card badges. */
+export async function listDealbreakerCounts(): Promise<Record<string, number>> {
+  const { dealbreakerCounts } = await import("./screening");
+  const { data: qs, error } = await supabase.from("job_screening_questions").select("question_id, ideal_answer").eq("is_knockout", true);
+  if (error) throw error;
+  if (!qs?.length) return {};
+  const { data: ans, error: e2 } = await supabase.from("application_screening_answers").select("application_id, question_id, answer_text").in("question_id", qs.map((q) => q.question_id));
+  if (e2) throw e2;
+  return dealbreakerCounts(qs.map((q) => ({ id: q.question_id, ideal: q.ideal_answer })), ans ?? []);
+}

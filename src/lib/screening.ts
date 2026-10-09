@@ -99,3 +99,14 @@ export function validateEquity(f: { equity_type: string; equity_range: string; e
   if (f.equity_vesting.trim().length > 160) e.equity_vesting = "Keep vesting notes under 160 characters.";
   return e;
 }
+
+/** Dealbreaker misses per application, from knockout questions and raw answer rows. Flags only. */
+export function dealbreakerCounts(questions: { id: string; ideal: string }[], answers: { application_id: string; question_id: string; answer_text: string }[]): Record<string, number> {
+  const qs = new Map(questions.map((q) => [q.id, q]));
+  const out: Record<string, number> = {};
+  for (const a of answers) {
+    const q = qs.get(a.question_id);
+    if (q && answerFit(q, a.answer_text) === "mismatch") out[a.application_id] = (out[a.application_id] ?? 0) + 1;
+  }
+  return out;
+}
