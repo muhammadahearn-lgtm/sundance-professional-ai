@@ -28,6 +28,8 @@ import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
 /** Board columns — sourced talent lives in Saved Candidates, so the pipeline starts at Contacted. */
 const BOARD_STAGES = STAGES.filter(([k]) => k !== "saved");
+import { isSilverEligible } from "@/lib/saved-candidates";
+import { markSilverMedalists } from "@/lib/talent-data";
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { HireDialog, OfferDialog, OfferPill } from "@/components/applications/Offers";
 import { latestOffer, withdrawOffer, type Offer } from "@/lib/offers-data";
@@ -300,14 +302,14 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); move(c, "rejected", true); }} />}
+      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} silverEligible={isSilverEligible(closing.current_stage) && !!closing.job_id} onCancel={() => setClosing(null)} onConfirm={(silver) => { const c = closing; setClosing(null); void move(c, "rejected", true); if (silver && c.job_id) void markSilverMedalists(uid, [c.candidate_id], c.job_id).then(() => { toast.success(`${c.name} saved as a Silver Medalist`); void qc.invalidateQueries({ queryKey: ["saved-entries", uid] }); }).catch((e) => toast.error(friendlyError(e, "Could not save Silver Medalist"))); }} />}
       {offerFor && offerFor.c.job_id && <OfferDialog ctx={{ uid, jobId: offerFor.c.job_id, candidateId: offerFor.c.candidate_id, applicationId: offerFor.c.applicationId ?? null }}
         candidateName={offerFor.c.name} jobTitle={offerFor.c.jobs?.job_title ?? j?.job_title ?? "this role"} existing={offerFor.existing}
         defaultSalary={j?.maximum_salary ?? null} defaultCurrency={j?.salary_currency}
         onClose={() => setOfferFor(null)}
         onSkip={offerFor.advance ? () => { const c = offerFor.c; setOfferFor(null); move(c, "offer", true); } : undefined}
         onDone={() => { const o = offerFor; setOfferFor(null); qc.invalidateQueries({ queryKey: ["offer-pill"] }); if (o.advance) move(o.c, "offer", true); }} />}
-      {hired && hired.job_id && <HireDialog name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
+      {hired && hired.job_id && <HireDialog uid={uid} name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
       {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => { if (!o) { setSched(null); setFollowUp(false); } }} candidateName={sched.name} existing={editIv ?? ivOf(sched)} priorRounds={roundsOf(sched)} plan={followUp ? FOLLOW_UP_PLAN : planOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}
