@@ -1,4 +1,6 @@
 import { APP_SORTS, sortApplications } from "@/lib/application-sort";
+import { TRIAGE_TABS, inTriageTab, type TriageTab } from "@/lib/application-triage";
+import { listPipeline } from "@/lib/applications-data";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { formatSalaryAmount } from "@/lib/salary";
@@ -247,11 +249,17 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const scores = useScores({});
   const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
   const [f, setF] = useState({ co: "", job: "", tf: "", mm: 0, sort: "match", unrev: false });
+  const [tab, setTab] = useState<TriageTab>("inbox");
+  const pipe = useQuery({ queryKey: ["pipeline", uid, "all"], queryFn: () => listPipeline(uid) });
+  const piped = useMemo(() => new Set((pipe.data ?? []).map((p) => `${p.candidate_id}:${p.job_id}`)), [pipe.data]);
+  const inPipe = (a: { candidate_id: string; job_id: string }) => piped.has(`${a.candidate_id}:${a.job_id}`);
   const coName = (a: { jobs: { companies: { company_name: string } | null } }) => a.jobs.companies?.company_name ?? "No company";
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
   const cutoff = f.tf ? new Date(Date.now() - Number(f.tf) * 86_400_000).toISOString() : "";
-  const rows = sortApplications((q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
+  const filtered = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
+  const tabCount = (t: TriageTab) => filtered.filter((a) => inTriageTab(t, a.application_status, inPipe(a))).length;
+  const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   return (
@@ -270,14 +278,17 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
           </button>
         </div>
       </div>
+      <div role="tablist" aria-label="Application triage" className="flex w-fit flex-wrap gap-1.5 rounded-2xl border border-border bg-card p-1">{TRIAGE_TABS.map(([k, l]) => (
+        <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{l}<span className="ml-1.5 text-xs opacity-75">{tabCount(k)}</span></button>))}</div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
-        : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>
+        : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">{tab === "inbox" && q.data?.length ? "Inbox zero" : "No applications"}</p><p className="mt-1 text-sm text-muted-foreground">{!q.data?.length ? "Applications to your active jobs will appear here." : tab === "inbox" ? "Every applicant has a decision. New applications will land here." : "No applications match these filters."}</p></div>
         : <div className="grid gap-4 md:grid-cols-2">{rows.map((a) => (
             <article key={a.application_id} className={`${card} p-5`}>
               <div className="flex items-start gap-3"><Avatar name={a.name} size="h-11 w-11 text-sm" /><div className="min-w-0 flex-1"><p className="font-display font-bold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link></p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><p className="text-xs text-muted-foreground">For <Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
               <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
-                <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Candidate Moved To Pipeline")} className={btn}>Move To Pipeline</button>
+                {inPipe(a) ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} search={{ candidate: a.candidate_id }} className={btn}>In Pipeline →</Link>
+                  : a.application_status !== "rejected" && <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Moved to Pipeline · cleared from Inbox")} className={btn}>Move To Pipeline</button>}
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
                 {a.application_status !== "rejected" && <button onClick={() => setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title })} className={btn}>Not Moving Forward</button>}</div>
             </article>))}</div>}
