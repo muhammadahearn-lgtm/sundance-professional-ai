@@ -32,7 +32,7 @@ import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwa
 import { HireDialog, OfferDialog, OfferPill } from "@/components/applications/Offers";
 import { latestOffer, withdrawOffer, type Offer } from "@/lib/offers-data";
 import { canMoveCard, moveToast, needsOfferWithdrawal, shouldAutoSchedule } from "@/lib/stage-moves";
-import { formatSalary } from "@/lib/salary";
+import { formatSalaryAmount } from "@/lib/salary";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
@@ -246,7 +246,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                   const next = NEXT[c.current_stage as Stage];
                   const perf = perfOf(c);
                   return (
-                  <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
+                  <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable={canMoveCard(c.current_stage as Stage)} title={canMoveCard(c.current_stage as Stage) ? undefined : "Hired — locked"} onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 ${canMoveCard(c.current_stage as Stage) ? "cursor-grab active:cursor-grabbing" : "cursor-default"} ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
                     <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
@@ -289,6 +289,20 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         <button type="button" onClick={shareSel} disabled={sel.length < 2 || !!busy} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"><Send className="h-4 w-4" />{busy === "share" ? "Sending…" : "Share with Hiring Team"}</button>
         <button type="button" onClick={() => setSel([])} aria-label="Clear selection" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>}
+      <AlertDialog open={!!offerGuard} onOpenChange={(o) => { if (!o) setOfferGuard(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Withdraw the pending offer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {offerGuard ? `${offerGuard.c.name} has a pending offer (${formatSalaryAmount(offerGuard.offer.salary_amount, offerGuard.offer.salary_currency)}${offerGuard.offer.start_date ? `, start ${fmt(offerGuard.offer.start_date)}` : ""}). Moving them out of Offer withdraws it so they can no longer accept it.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep in Offer</AlertDialogCancel>
+            <AlertDialogAction onClick={withdrawAndMove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Withdraw Offer &amp; Move</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); move(c, "rejected", true); }} />}
       {offerFor && offerFor.c.job_id && <OfferDialog ctx={{ uid, jobId: offerFor.c.job_id, candidateId: offerFor.c.candidate_id, applicationId: offerFor.c.applicationId ?? null }}
         candidateName={offerFor.c.name} jobTitle={offerFor.c.jobs?.job_title ?? j?.job_title ?? "this role"} existing={offerFor.existing}
