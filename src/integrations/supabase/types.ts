@@ -85,6 +85,9 @@ export type Database = {
           candidate_id: string
           created_at: string
           job_id: string
+          renege_note: string
+          renege_reason: string
+          reneged_at: string | null
           updated_at: string
           withdraw_note: string
           withdraw_reason: string
@@ -97,6 +100,9 @@ export type Database = {
           candidate_id: string
           created_at?: string
           job_id: string
+          renege_note?: string
+          renege_reason?: string
+          reneged_at?: string | null
           updated_at?: string
           withdraw_note?: string
           withdraw_reason?: string
@@ -109,6 +115,9 @@ export type Database = {
           candidate_id?: string
           created_at?: string
           job_id?: string
+          renege_note?: string
+          renege_reason?: string
+          reneged_at?: string | null
           updated_at?: string
           withdraw_note?: string
           withdraw_reason?: string
@@ -2940,6 +2949,16 @@ export type Database = {
       prune_standard_resume_versions: {
         Args: { _keep?: number }
         Returns: string[]
+      }
+      record_hire_renege: {
+        Args: {
+          _candidate: string
+          _job: string
+          _note?: string
+          _reason: string
+          _reopen?: boolean
+        }
+        Returns: undefined
       }
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
