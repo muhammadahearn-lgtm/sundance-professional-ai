@@ -8,7 +8,7 @@ import { card, friendlyError, inputCls } from "@/components/profile/parts";
 import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
-import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, offerExpired, offerExpiringSoon, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
+import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, normalizeSignature, offerExpired, offerExpiringSoon, signatureError, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
 import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, signAndAcceptOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { supabase } from "@/integrations/supabase/client";
 import { SILVER_STAGES } from "@/lib/saved-candidates";
