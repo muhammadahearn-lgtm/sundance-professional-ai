@@ -78,3 +78,6 @@ export function roundProgress<I extends Iv>(plan: PlanRound[], interviews: I[], 
 
 /** The first round that still needs scheduling, if any. */
 export const nextPendingRound = <I>(steps: RoundStep<I>[]) => steps.find((s) => s.state === "pending");
+
+/** Used when scheduling an ad-hoc chat for a shortlisted finalist: every round slot is a 30-min follow-up. */
+export const FOLLOW_UP_PLAN: PlanRound[] = Array.from({ length: 20 }, () => ({ type: CUSTOM_TYPE, name: "Follow-up / Executive Chat", duration_minutes: 30 }));

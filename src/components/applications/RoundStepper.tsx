@@ -41,3 +41,30 @@ export function RoundStepper({ steps, planned, onSchedule, onEdit, onScorecard, 
     </div>
   );
 }
+
+/** Shortlisted cards: finalist consensus, offer as the primary action, optional follow-up chat. */
+export function ShortlistSummary({ steps, planned, onOffer, onFollowUp, onEdit, onScorecard }: {
+  steps: RoundStep<Interview>[]; planned: number; onOffer?: (() => void) | undefined; onFollowUp: () => void; onEdit: (i: Interview) => void; onScorecard: (i: Interview) => void;
+}) {
+  const scored = steps.filter((s) => s.state === "passed" || s.state === "concern");
+  const passed = scored.filter((s) => s.state === "passed").length;
+  const ratings = scored.map((s) => s.rating ?? 0).filter((r) => r > 0);
+  const avg = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
+  const missing = steps.find((s) => s.state === "awaiting_scorecard");
+  const upcoming = steps.find((s) => s.state === "scheduled");
+  const complete = scored.length >= planned && passed === scored.length && !missing;
+  return (
+    <div className="mt-2 space-y-1.5">
+      {scored.length === 0 && !upcoming && !missing
+        ? <p className="rounded-lg bg-primary-soft px-2 py-1 text-center text-[11px] font-semibold text-primary">Shortlisted finalist</p>
+        : <p className={`flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-center text-[11px] font-semibold ${complete ? "bg-success/10 text-success" : scored.length > passed ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+            {complete ? <Check className="h-3 w-3" /> : scored.length > passed ? <AlertTriangle className="h-3 w-3" /> : null}
+            {passed}/{planned} rounds passed{avg ? ` · ${avg}★` : ""}{complete ? " · Ready for offer" : ""}
+          </p>}
+      {missing?.interview && <button type="button" onClick={() => onScorecard(missing.interview!)} className="flex w-full items-center justify-center gap-1 rounded-lg bg-warning/10 px-2 py-1 text-[11px] font-semibold text-warning hover:bg-warning/20"><AlertTriangle className="h-3 w-3" />R{missing.round} needs a scorecard</button>}
+      {upcoming?.interview && <button type="button" onClick={() => onEdit(upcoming.interview!)} className="flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"><CalendarClock className="h-3 w-3" />{upcoming.name} · {fmtInterview(upcoming.interview.scheduled_at)}</button>}
+      {onOffer && <button type="button" onClick={onOffer} className="flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-primary px-2 py-1.5 text-xs font-bold text-primary-foreground shadow-soft hover:opacity-90">Prepare Offer →</button>}
+      {!upcoming && <button type="button" onClick={onFollowUp} className="flex w-full items-center justify-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold text-muted-foreground hover:text-primary"><Plus className="h-3 w-3" />Schedule follow-up / executive chat</button>}
+    </div>
+  );
+}
