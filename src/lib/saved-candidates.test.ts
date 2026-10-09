@@ -17,3 +17,16 @@ describe("saved candidates", () => {
   it("sorts by experience", () => expect(ids(sortSaved(items, "experience"))).toEqual(["b", "c", "a"]));
   it("sorts by name", () => expect(ids(sortSaved(items, "name"))).toEqual(["b", "c", "a"]));
 });
+
+import { isSilverEligible as _ise, filterSaved as _fs } from "./saved-candidates";
+describe("silver medalists", () => {
+  it("only late-stage runners-up are eligible", () => {
+    expect(["interviewing", "shortlisted", "offer"].every(_ise)).toBe(true);
+    expect(["contacted", "hired", "rejected", null].some(_ise)).toBe(false);
+  });
+  it("silver filter keeps only silver medalists", () => {
+    const base = { years: 1, savedDate: "2026-01-01", jobId: null, companyId: null, score: null };
+    const r = _fs([{ ...base, id: "a", name: "A", silver: true }, { ...base, id: "b", name: "B" }], { company: "", job: "", silver: true });
+    expect(r.map((x) => x.id)).toEqual(["a"]);
+  });
+});

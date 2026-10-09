@@ -114,9 +114,9 @@ export function recruiterResume(d: CandidateFull) {
 export async function listSavedCandidates(uid: string) {
   return (await listSavedEntries(uid)).map((r) => r.candidate_id);
 }
-export type SavedEntry = { candidate_id: string; job_id: string | null; saved_date: string };
+export type SavedEntry = { candidate_id: string; job_id: string | null; saved_date: string; silver_medalist_job_id?: string | null; silver_medalist_at?: string | null };
 export async function listSavedEntries(uid: string): Promise<SavedEntry[]> {
-  const { data, error } = await supabase.from("saved_candidates").select("candidate_id, job_id, saved_date").eq("recruiter_id", uid).order("saved_date", { ascending: false });
+  const { data, error } = await supabase.from("saved_candidates").select("candidate_id, job_id, saved_date, silver_medalist_job_id, silver_medalist_at").eq("recruiter_id", uid).order("saved_date", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
@@ -128,6 +128,13 @@ export async function setSavedCandidateJob(uid: string, candidateId: string, job
 /** Save a candidate (or re-tag an existing save) for one of the recruiter's jobs; null = general pool. */
 export async function saveCandidateForJob(uid: string, candidateId: string, jobId: string | null) {
   const { error } = await supabase.from("saved_candidates").upsert({ recruiter_id: uid, candidate_id: candidateId, job_id: jobId }, { onConflict: "recruiter_id,candidate_id" });
+  if (error) throw error;
+}
+/** Save runners-up as Silver Medalists (finalists for jobId); keeps any existing job tag. */
+export async function markSilverMedalists(uid: string, candidateIds: string[], jobId: string) {
+  if (!candidateIds.length) return;
+  const at = new Date().toISOString();
+  const { error } = await supabase.from("saved_candidates").upsert(candidateIds.map((cid) => ({ recruiter_id: uid, candidate_id: cid, silver_medalist_job_id: jobId, silver_medalist_at: at })), { onConflict: "recruiter_id,candidate_id" });
   if (error) throw error;
 }
 /** The recruiter's own non-draft jobs with their hiring company, for saved-candidate tagging and filters. */

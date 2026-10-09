@@ -7,14 +7,19 @@ export const SAVED_SORTS: { value: SavedSort; label: string }[] = [
   { value: "experience", label: "Most experience" },
   { value: "name", label: "Name (A–Z)" },
 ];
-export type SavedItem = { id: string; name: string; years: number; savedDate: string; jobId: string | null; companyId: string | null; score: number | null };
+export type SavedItem = { id: string; name: string; years: number; savedDate: string; jobId: string | null; companyId: string | null; score: number | null; silver?: boolean };
 
-export function filterSaved(items: SavedItem[], f: { company: string; job: string; q?: string }) {
+/** Stages where a runner-up counts as a vetted finalist ("Silver Medalist"). */
+export const SILVER_STAGES = ["interviewing", "shortlisted", "offer"] as const;
+export const isSilverEligible = (stage: string | null | undefined) => !!stage && (SILVER_STAGES as readonly string[]).includes(stage);
+
+export function filterSaved(items: SavedItem[], f: { company: string; job: string; q?: string; silver?: boolean }) {
   const q = (f.q ?? "").trim().toLowerCase();
   return items.filter((i) => {
     if (f.job === UNASSIGNED) { if (i.jobId) return false; }
     else if (f.job && i.jobId !== f.job) return false;
     if (f.company && f.job !== UNASSIGNED && i.companyId !== f.company) return false;
+    if (f.silver && !i.silver) return false;
     if (q && !i.name.toLowerCase().includes(q)) return false;
     return true;
   });
