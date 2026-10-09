@@ -2,25 +2,30 @@ import * as React from 'react'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
+interface Pick { name: string; role?: string; score?: number | null }
 interface Props {
   recruiterName?: string
   reviewerName?: string
   reviewerRole?: string
   kind?: 'recommend' | 'pass_all'
-  candidateName?: string
-  candidateRole?: string
-  score?: number | null
+  candidates?: Pick[]
   jobTitle?: string
   company?: string
   note?: string
   pipelineUrl?: string
 }
 
-const TeamRecommendation = ({ recruiterName, reviewerName = 'A hiring team member', reviewerRole, kind = 'recommend', candidateName = 'a candidate', candidateRole, score, jobTitle = 'your job', company, note, pipelineUrl }: Props) => {
+const names = (c: Pick[]) => {
+  const n = c.map((x) => x.name)
+  if (!n.length) return 'a candidate'
+  return n.length === 1 ? n[0]! : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`
+}
+
+const TeamRecommendation = ({ recruiterName, reviewerName = 'A hiring team member', reviewerRole, kind = 'recommend', candidates = [], jobTitle = 'your job', company, note, pipelineUrl }: Props) => {
   const pass = kind === 'pass_all'
   const who = reviewerRole ? `${reviewerName} (${reviewerRole})` : reviewerName
   const forJob = company ? `${jobTitle} at ${company}` : jobTitle
-  const title = pass ? `${reviewerName} requested more candidates` : `${reviewerName} recommended ${candidateName}`
+  const title = pass ? `${reviewerName} requested more candidates` : `${reviewerName} recommended ${names(candidates)}`
   return (
     <Html lang="en" dir="ltr">
       <Head />
@@ -33,14 +38,14 @@ const TeamRecommendation = ({ recruiterName, reviewerName = 'A hiring team membe
             {recruiterName ? `Hi ${recruiterName}, ` : ''}
             {pass
               ? `${who} reviewed your comparison for ${forJob} and felt none of the candidates fit. Consider shortlisting a fresh batch.`
-              : `${who} reviewed your comparison and picked a candidate for ${forJob}.`}
+              : `${who} reviewed your comparison and picked ${candidates.length > 1 ? `${candidates.length} candidates` : 'a candidate'} for ${forJob}.`}
           </Text>
-          {!pass ? (
-            <Section style={card}>
-              <Text style={cardName}>{candidateName}</Text>
-              <Text style={cardMeta}>{[candidateRole, score != null ? `${score}% Match` : null].filter(Boolean).join(' · ')}</Text>
+          {!pass ? candidates.map((c) => (
+            <Section key={c.name} style={card}>
+              <Text style={cardName}>{c.name}</Text>
+              <Text style={cardMeta}>{[c.role, c.score != null ? `${c.score}% Match` : null].filter(Boolean).join(' · ')}</Text>
             </Section>
-          ) : null}
+          )) : null}
           {note ? (
             <Section style={quote}>
               <Text style={quoteLabel}>Their note</Text>
@@ -49,7 +54,7 @@ const TeamRecommendation = ({ recruiterName, reviewerName = 'A hiring team membe
           ) : null}
           {pipelineUrl ? (
             <Section style={{ margin: '28px 0' }}>
-              <Button href={pipelineUrl} style={button}>{`Open ${jobTitle} Pipeline`}</Button>
+              <Button href={pipelineUrl} target="_blank" style={button}>{`Open ${jobTitle} Pipeline`}</Button>
             </Section>
           ) : null}
           <Text style={muted}>You received this because you shared a candidate comparison with your hiring team on Sundance Professionals.</Text>
@@ -65,12 +70,13 @@ export const template = {
     const job = d['company'] ? `${d['jobTitle']} · ${d['company']}` : d['jobTitle'] ?? 'your job'
     return d['kind'] === 'pass_all'
       ? `${d['reviewerName'] ?? 'Your hiring team'} requested more candidates for ${job}`
-      : `${d['reviewerName'] ?? 'Your hiring team'} recommended ${d['candidateName'] ?? 'a candidate'} for ${job}`
+      : `${d['reviewerName'] ?? 'Your hiring team'} recommended ${names(d['candidates'] ?? [])} for ${job}`
   },
   displayName: 'Hiring team recommendation (to recruiter)',
   previewData: {
     recruiterName: 'Alex', reviewerName: 'Jordan Smith', reviewerRole: 'Hiring Manager', kind: 'recommend',
-    candidateName: 'Muhammad A.', candidateRole: 'Data Scientist', score: 100, jobTitle: 'Data Scientist', company: 'Acme Corp',
+    candidates: [{ name: 'Muhammad A.', role: 'Data Scientist', score: 100 }, { name: 'Priya S.', role: 'Backend Engineer', score: 74 }],
+    jobTitle: 'Data Scientist', company: 'Acme Corp',
     note: 'Loved the PyTorch background, let’s fast-track.', pipelineUrl: 'https://sundanceprofessionals.com/recruiter/pipeline/123',
   },
 } satisfies TemplateEntry
