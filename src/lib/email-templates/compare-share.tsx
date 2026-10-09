@@ -196,3 +196,4 @@ const sub = { fontSize: '11px', color: '#64748b', marginTop: '3px' }
 const best = { display: 'inline-block', marginLeft: '6px', backgroundColor: '#e7f6ec', color: '#1f8a4c', fontSize: '10px', fontWeight: 700, borderRadius: '6px', padding: '1px 6px' }
 const ask = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '14px 16px', margin: '20px 0 16px' }
 const muted = { fontSize: '12px', color: '#8a8fa8', lineHeight: '1.5', margin: '24px 0 0' }
+const pickBtn = { display: 'inline-block', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '13px', fontWeight: 700, borderRadius: '999px', padding: '9px 16px', textDecoration: 'none' }
