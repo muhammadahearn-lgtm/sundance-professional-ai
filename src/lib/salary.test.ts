@@ -7,6 +7,6 @@ describe("salary standard", () => {
   it("rejects free-form salary text", () => {
     for (const bad of ["$60K", "60k", "USD 60000", "$120,000", "120.000", "100K - 150K"]) expect(parseSalaryInput(bad).ok).toBe(false);
   });
-  it("formats a single amount", () => expect(formatSalaryAmount(60000, "USD")).toBe("$60,000 USD"));
-  it("formats a range", () => expect(formatSalaryRange(120000, 150000, "USD")).toBe("$120,000 - $150,000 USD"));
+  it("formats a single amount with symbol only, no trailing code", () => expect(formatSalaryAmount(60000, "USD")).toBe("$60,000"));
+  it("formats a range with symbol only, no trailing code", () => expect(formatSalaryRange(120000, 150000, "USD")).toBe("$120,000 - $150,000"));
 });
