@@ -8,23 +8,24 @@ import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 import { CUSTOM_TYPE, interviewTypeLabel, DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
 import { cancelInterview, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
+import type { PlanRound } from "@/lib/interview-plan";
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const pad = (n: number) => String(n).padStart(2, "0");
 const lbl = (list: [string, string][], k: string) => list.find(([v]) => v === k)?.[1] ?? k;
 
-function draftFrom(i?: Interview, prior: Interview[] = []): InterviewDraft {
-  if (!i) { const t = new Date(Date.now() + 86400000); const nr = nextRound(prior); return { format: "online", interview_type: nr.interview_type, round_number: nr.round_number, platform: "google_meet", meeting_url: "", location_address: "", location_instructions: "", date: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`, time: "10:00", duration_minutes: 45, timezone: tz(), notes: "" }; }
+function draftFrom(i?: Interview, prior: Interview[] = [], plan: PlanRound[] = []): InterviewDraft {
+  if (!i) { const t = new Date(Date.now() + 86400000); const nr = nextRound(prior); const p = plan[nr.round_number - 1]; const asType = p && p.type !== CUSTOM_TYPE && interviewTypeLabel(p.type) === p.name; const planned = p ? { interview_type: asType ? p.type : CUSTOM_TYPE, custom_round_name: asType ? "" : p.name } : { interview_type: nr.interview_type }; return { format: "online", ...planned, round_number: nr.round_number, platform: "google_meet", meeting_url: "", location_address: "", location_instructions: "", date: `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`, time: "10:00", duration_minutes: p?.duration_minutes ?? 45, timezone: tz(), notes: "" }; }
   const d = new Date(i.scheduled_at);
   return { format: i.format as InterviewDraft["format"], interview_type: i.interview_type, custom_round_name: i.custom_round_name ?? "", round_number: i.round_number ?? 1, platform: i.platform || "google_meet", meeting_url: i.meeting_url, location_address: i.location_address, location_instructions: i.location_instructions, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`, duration_minutes: i.duration_minutes, timezone: i.timezone, notes: i.notes };
 }
 
-export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved, priorRounds = [] }: {
-  open: boolean; onOpenChange: (o: boolean) => void; candidateName: string; existing?: Interview | undefined; onSaved: () => void; priorRounds?: Interview[];
+export function ScheduleInterviewDialog({ open, onOpenChange, ctx, existing, candidateName, onSaved, priorRounds = [], plan = [] }: {
+  open: boolean; onOpenChange: (o: boolean) => void; candidateName: string; existing?: Interview | undefined; onSaved: () => void; priorRounds?: Interview[]; plan?: PlanRound[];
   ctx: { uid: string; candidateId: string; jobId: string | null; pipelineId: string | null; applicationId: string | null };
 }) {
-  const [d, setD] = useState<InterviewDraft>(() => draftFrom(existing, priorRounds));
+  const [d, setD] = useState<InterviewDraft>(() => draftFrom(existing, priorRounds, plan));
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof InterviewDraft>(k: K, v: InterviewDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   const err = validateInterview(d);
