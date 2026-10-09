@@ -1228,6 +1228,8 @@ export type Database = {
           equity_details: string
           expires_on: string | null
           job_id: string
+          negotiated_at: string | null
+          negotiation_conversation_id: string | null
           notes: string
           offer_id: string
           recruiter_id: string
@@ -1248,6 +1250,8 @@ export type Database = {
           equity_details?: string
           expires_on?: string | null
           job_id: string
+          negotiated_at?: string | null
+          negotiation_conversation_id?: string | null
           notes?: string
           offer_id?: string
           recruiter_id: string
@@ -1268,6 +1272,8 @@ export type Database = {
           equity_details?: string
           expires_on?: string | null
           job_id?: string
+          negotiated_at?: string | null
+          negotiation_conversation_id?: string | null
           notes?: string
           offer_id?: string
           recruiter_id?: string
@@ -2882,6 +2888,10 @@ export type Database = {
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
+      }
+      request_offer_negotiation: {
+        Args: { _message: string; _offer: string }
+        Returns: string
       }
       request_resume_access: {
         Args: { _candidate: string; _message: string }
