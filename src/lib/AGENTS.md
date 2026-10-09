@@ -21,3 +21,4 @@
 - Offer emails: client calls `notifyOfferEvent` after each offer action; the server re-checks the offer state as the caller before emailing the other party. Why: emails cannot be forged; failures never block the offer.
 - Pipeline stage-move rules (backward detection, hired lock, pending-offer withdrawal before leaving Offer, scheduler auto-open) live in `stage-moves.ts`. Why: one place for board guardrails.
 - Position-filled notices: one `job-closed-applicant` email per closed-out application via `sendJobClosedNotice` (re-checks rejected + job closed, idempotent per application); triggered after offer acceptance (`notifyOfferEvent`) and HireDialog wrap-up (`notifyApplicantsJobFilled`). Why: no ghosting, cannot be forged.
+- Pipeline landing (/recruiter/pipeline) is a per-job Requisition Hub (`requisition-hub.ts`); boards are always one job at `/recruiter/pipeline/$jobId`. Why: scales to many companies/jobs, no mixed boards.
