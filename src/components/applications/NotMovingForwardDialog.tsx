@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarX, Medal } from "lucide-react";
+import { CalendarX, Clock, Medal } from "lucide-react";
 import { card, inputCls } from "@/components/profile/parts";
 import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DISPOSITION_REASONS, type DispositionReason } from "@/lib/pipeline-guardrails";
