@@ -2575,26 +2575,44 @@ export type Database = {
         Row: {
           candidate_ids: string[]
           created_at: string
+          created_by: string | null
           expires_at: string
+          feedback: string
           job_id: string
+          mode: string
+          note_id: string | null
           stakeholder_id: string
+          submitted_at: string | null
           token_hash: string
+          verdict: string | null
         }
         Insert: {
           candidate_ids: string[]
           created_at?: string
+          created_by?: string | null
           expires_at: string
+          feedback?: string
           job_id: string
+          mode?: string
+          note_id?: string | null
           stakeholder_id: string
+          submitted_at?: string | null
           token_hash: string
+          verdict?: string | null
         }
         Update: {
           candidate_ids?: string[]
           created_at?: string
+          created_by?: string | null
           expires_at?: string
+          feedback?: string
           job_id?: string
+          mode?: string
+          note_id?: string | null
           stakeholder_id?: string
+          submitted_at?: string | null
           token_hash?: string
+          verdict?: string | null
         }
         Relationships: [
           {

@@ -22,3 +22,22 @@ export function isExpired(expiresAt: string, now: Date = new Date()): boolean {
 export function validPick(pick: string | null, shared: string[]): boolean {
   return pick === null || shared.includes(pick);
 }
+
+// Single-candidate "Share with Hiring Manager" feedback.
+export const PROFILE_FEEDBACK_MAX = 1000;
+export const VERDICTS = [
+  { value: "strong_yes", label: "Strong Yes" },
+  { value: "yes", label: "Yes, advance" },
+  { value: "hold", label: "Hold" },
+  { value: "pass", label: "Pass" },
+] as const;
+export type Verdict = (typeof VERDICTS)[number]["value"];
+export function isVerdict(v: string): v is Verdict { return VERDICTS.some((x) => x.value === v); }
+export function verdictLabel(v: string): string { return VERDICTS.find((x) => x.value === v)?.label ?? v; }
+
+/** Team Notes text for manager feedback received through a review link. */
+export function feedbackNoteText(reviewer: string, role: string | null | undefined, verdict: Verdict, feedback: string): string {
+  const who = role ? `${reviewer} (${role})` : reviewer;
+  const head = `Hiring manager feedback from ${who} via review link — ${verdictLabel(verdict)}`;
+  return (feedback.trim() ? `${head}\n${feedback.trim()}` : head).slice(0, 2000);
+}

@@ -142,3 +142,68 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
     }
     return { sent, team: team.length };
   });
+
+/** The posting recruiter's hiring team for a job (name, role, email). */
+export const listJobTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ jobId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: job } = await supabaseAdmin.from("jobs").select("recruiter_id, job_title").eq("job_id", data.jobId).maybeSingle();
+    if (!job || job.recruiter_id !== context.userId) return { owner: false, jobTitle: job?.job_title ?? "", team: [] };
+    const { data: team } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email, hiring_role").eq("job_id", data.jobId).order("name");
+    return { owner: true, jobTitle: job.job_title, team: team ?? [] };
+  });
+
+const profileShareInput = z.object({
+  jobId: z.string().uuid(), candidateId: z.string().uuid(), stakeholderId: z.string().uuid(),
+  message: z.string().max(500).default(""), sendEmail: z.boolean(),
+});
+
+/**
+ * One-candidate, no-login review link for one hiring team member. Returns the
+ * link so it can be copied into Slack/Teams; optionally emails it too.
+ */
+export const shareProfileWithManager = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => profileShareInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: job } = await supabaseAdmin.from("jobs").select("job_title, recruiter_id").eq("job_id", data.jobId).maybeSingle();
+    if (!job || job.recruiter_id !== context.userId) throw new Error("Only the recruiter who posted this job can share for it.");
+    const { data: ok } = await context.supabase.rpc("recruiter_can_view_candidate", { _candidate: data.candidateId });
+    if (!ok) throw new Error("This candidate is not visible to you.");
+    const { data: sh } = await supabaseAdmin.from("job_stakeholders").select("stakeholder_id, name, email").eq("stakeholder_id", data.stakeholderId).eq("job_id", data.jobId).maybeSingle();
+    if (!sh) throw new Error("Pick someone from this job's hiring team.");
+    const { newReviewToken, hashToken, REVIEW_TTL_DAYS } = await import("./team-review");
+    const token = newReviewToken();
+    const { error } = await supabaseAdmin.from("team_review_links").insert({
+      token_hash: await hashToken(token), job_id: data.jobId, stakeholder_id: sh.stakeholder_id, candidate_ids: [data.candidateId],
+      expires_at: new Date(Date.now() + REVIEW_TTL_DAYS * 864e5).toISOString(), mode: "profile", created_by: context.userId,
+    });
+    if (error) throw new Error("Could not create the review link.");
+    const url = `${SITE}/team-review?t=${token}`;
+    let emailed = false;
+    if (data.sendEmail) {
+      try {
+        const { sendTemplateEmail } = await import("./email-templates/send-email");
+        const { shortName } = await import("./compare-share");
+        const [{ data: p }, { data: rp }] = await Promise.all([
+          supabaseAdmin.from("profiles").select("first_name, last_name").eq("user_id", data.candidateId).maybeSingle(),
+          supabaseAdmin.from("profiles").select("first_name, last_name").eq("user_id", context.userId).maybeSingle(),
+        ]);
+        const cand = shortName(p?.first_name ?? "", p?.last_name ?? "") || "a candidate";
+        const rec = [rp?.first_name, rp?.last_name].filter(Boolean).join(" ") || "Your recruiter";
+        const r = await sendTemplateEmail("activity-alert", sh.email, {
+          templateData: {
+            title: `Your input on ${cand} — ${job.job_title}`,
+            message: `Hi ${sh.name}, ${rec} would like your quick take on ${cand} for ${job.job_title}.${data.message.trim() ? ` "${data.message.trim()}"` : ""} No sign-in needed; the link works for 14 days.`,
+            actionUrl: url, actionLabel: "Review candidate",
+          },
+          idempotencyKey: `profile-review-${data.jobId}-${data.candidateId}-${sh.stakeholder_id}-${Date.now()}`,
+        });
+        emailed = !!r.sent;
+      } catch (e) { console.error("profile review email failed", e); }
+    }
+    return { url, emailed, name: sh.name };
+  });
