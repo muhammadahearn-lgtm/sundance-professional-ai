@@ -4,6 +4,7 @@ import { template as compareShare } from './compare-share'
 import { template as teamRecommendation } from './team-recommendation'
 import { template as offerCandidate } from './offer-candidate'
 import { template as offerRecruiterAlert } from './offer-recruiter-alert'
+import { template as jobClosedApplicant } from './job-closed-applicant'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -28,6 +29,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'team-recommendation': teamRecommendation,
   'offer-candidate': offerCandidate,
   'offer-recruiter-alert': offerRecruiterAlert,
+  'job-closed-applicant': jobClosedApplicant,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }

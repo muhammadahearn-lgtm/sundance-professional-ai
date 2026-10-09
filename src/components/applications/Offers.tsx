@@ -11,6 +11,7 @@ import { daysLeft, emptyOffer, negotiateMessage, offerExpired, todayISO, validat
 import { latestOffer, offersForApplication, requestNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { setJobStatus } from "@/lib/jobs-data";
 import { notifyOfferEvent } from "@/lib/offer-email.functions";
+import { notifyApplicantsJobFilled } from "@/lib/job-closed-email.functions";
 
 const Modal = ({ label, onClose, children, wide }: { label: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
   <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" role="dialog" aria-modal="true" aria-label={label} onClick={onClose}>
@@ -81,8 +82,9 @@ export function HireDialog({ name, jobId, jobTitle, candidateId, onClose }: { na
   async function go() {
     setBusy(true);
     try {
-      if (wrap) await wrapUpOthers(jobId, candidateId);
+      const closedIds = wrap ? await wrapUpOthers(jobId, candidateId) : [];
       if (close) await setJobStatus(jobId, "closed");
+      if (close && closedIds.length) void notifyApplicantsJobFilled({ data: { jobId, applicationIds: closedIds } }).catch(() => {});
       toast.success(close ? "Job closed. Congratulations on the hire!" : "All set. Congratulations on the hire!");
       ["pipeline", "job-applications", "jobs", "job"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
       onClose();

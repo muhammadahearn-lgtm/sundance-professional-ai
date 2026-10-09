@@ -20,13 +20,13 @@
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Company editing needs `is_company_admin` (`company_members`). Requests via `company_admin_requests` (approve promotes; last admin protected). Team via `company_team`; admin dashboard reads counts-only `company_admin_jobs`. Why: no orphaned companies.
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
-- Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: keeps history.
+- Closed jobs are read-only (`jobs_guard`) but owners can re-open them; hired cards unlock only while open. Jobs with applications can't be deleted. Why: history kept, reneges recoverable.
 - Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable, unbypassable.
 - Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: emails stay private.
 - Pipeline moves sync application status via `stageToStatus`; writes guarded by `pipeline_job_guard`. Why: timeline mirrors pipeline.
 - Conversations: created/archived/read only via RPCs (`start_conversation`, `my_conversations`); attachments in private `message-attachments/<conversation_id>/`. Why: DB-enforced.
 - Notifications are created only by DB triggers via `create_notification` (honors preferences, dedupes by `dedupe_key`); users only read/archive/delete their own. Why: unfakeable, no duplicates.
-- Database helper functions are not callable by signed-out visitors, and trigger-only functions are not callable by anyone directly. Why: less exposure.
+- DB helper functions are not callable by signed-out visitors; trigger-only functions by no one. Why: less exposure.
 - Profile photos live in the private `avatars` bucket under `${uid}/`; profiles.avatar_path stores the path. Sign-up photos upload on first sign-in. Why: no session before confirmation.
 - Soft skills (`soft_skills`, `candidate_soft_skills`, `job_soft_skills`) are display/search/filter only and must never feed match, career, recommendation or ranking scores. Why: product rule.
 - Roles/levels are controlled lists; new roles only via `add_role_entry` (strips seniority words, dedupes by taxonomy_key); jobs store role_id+level_id+display-only custom_title; job_title derived via `displayJobTitle`. Why: custom titles never drive logic, no duplicate roles.

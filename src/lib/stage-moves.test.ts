@@ -7,7 +7,8 @@ describe("pipeline stage moves", () => {
     expect(isBackwardMove("contacted", "interviewing")).toBe(false);
     expect(isBackwardMove("offer", "rejected")).toBe(false);
   });
-  it("locks hired candidates", () => { expect(canMoveCard("hired")).toBe(false); expect(canMoveCard("offer")).toBe(true); });
+  it("locks hired candidates while the job is closed", () => { expect(canMoveCard("hired")).toBe(false); expect(canMoveCard("hired", "closed")).toBe(false); expect(canMoveCard("offer")).toBe(true); });
+  it("unlocks hired candidates after the job is reopened", () => { expect(canMoveCard("hired", "active")).toBe(true); });
   it("auto-schedules only on forward entry without a booking", () => {
     expect(shouldAutoSchedule("contacted", "interviewing", false)).toBe(true);
     expect(shouldAutoSchedule("shortlisted", "interviewing", false)).toBe(false);

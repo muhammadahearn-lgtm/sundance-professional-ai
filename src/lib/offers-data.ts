@@ -60,9 +60,10 @@ export async function requestNegotiation(offerId: string, body: string) {
 /** After a hire: mark every other open applicant and pipeline card for the job as Not Moving Forward. */
 export async function wrapUpOthers(jobId: string, hiredCandidateId: string) {
   const open = ["applied", "viewed", "recruiter_contacted", "interviewing", "offer"] as const;
-  const { error } = await supabase.from("applications").update({ application_status: "rejected" }).eq("job_id", jobId).neq("candidate_id", hiredCandidateId).in("application_status", open as unknown as ("applied")[]);
+  const { data: closed, error } = await supabase.from("applications").update({ application_status: "rejected" }).eq("job_id", jobId).neq("candidate_id", hiredCandidateId).in("application_status", open as unknown as ("applied")[]).select("application_id");
   if (error) throw error;
   const { error: e2 } = await supabase.from("recruiting_pipeline").update({ current_stage: "rejected" }).eq("job_id", jobId).neq("candidate_id", hiredCandidateId).not("current_stage", "in", "(hired,rejected)");
   if (e2) throw e2;
   await supabase.from("job_offers").update({ status: "withdrawn" }).eq("job_id", jobId).neq("candidate_id", hiredCandidateId).eq("status", "pending");
+  return (closed ?? []).map((r) => r.application_id);
 }
