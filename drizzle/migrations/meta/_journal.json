@@ -645,6 +645,13 @@
       "when": 1791577006126,
       "tag": "0091_application_events",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1791577500807,
+      "tag": "0092_offer_approval_chains",
+      "breakpoints": true
     }
   ]
 }

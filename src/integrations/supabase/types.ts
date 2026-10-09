@@ -1433,6 +1433,10 @@ export type Database = {
       job_offers: {
         Row: {
           application_id: string | null
+          approval_note: string
+          approval_requested_at: string | null
+          approved_at: string | null
+          approver_id: string | null
           candidate_id: string
           created_at: string
           decline_reason: string
@@ -1462,6 +1466,10 @@ export type Database = {
         }
         Insert: {
           application_id?: string | null
+          approval_note?: string
+          approval_requested_at?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
           candidate_id: string
           created_at?: string
           decline_reason?: string
@@ -1491,6 +1499,10 @@ export type Database = {
         }
         Update: {
           application_id?: string | null
+          approval_note?: string
+          approval_requested_at?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
           candidate_id?: string
           created_at?: string
           decline_reason?: string
@@ -2997,6 +3009,10 @@ export type Database = {
         }[]
       }
       applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
+      can_approve_offer_for: {
+        Args: { _approver: string; _job: string; _recruiter: string }
+        Returns: boolean
+      }
       can_read_candidate_note: {
         Args: { _author: string; _job: string }
         Returns: boolean
@@ -3215,6 +3231,29 @@ export type Database = {
           views: number
         }[]
       }
+      my_offer_approvals: {
+        Args: never
+        Returns: {
+          approval_note: string
+          approval_requested_at: string
+          approved_at: string
+          candidate_name: string
+          equity_details: string
+          expires_on: string
+          job_id: string
+          job_title: string
+          max_salary: number
+          min_salary: number
+          notes: string
+          offer_id: string
+          recruiter_name: string
+          salary_amount: number
+          salary_currency: string
+          signing_bonus: number
+          start_date: string
+          status: string
+        }[]
+      }
       my_resume_activity: {
         Args: never
         Returns: {
@@ -3227,6 +3266,13 @@ export type Database = {
           reason: string
           recruiter_name: string
           status: string
+        }[]
+      }
+      offer_approver_options: {
+        Args: { _job: string }
+        Returns: {
+          name: string
+          user_id: string
         }[]
       }
       owns_job: { Args: { _job: string }; Returns: boolean }
@@ -3278,6 +3324,10 @@ export type Database = {
         Returns: undefined
       }
       resume_access_reason: { Args: { _candidate: string }; Returns: string }
+      review_offer_approval: {
+        Args: { _approve: boolean; _note?: string; _offer: string }
+        Returns: undefined
+      }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv: string }
         Returns: undefined

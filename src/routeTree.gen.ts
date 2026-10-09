@@ -50,6 +50,7 @@ import { Route as AuthenticatedNotificationsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedRecruiterIndexRouteImport } from './routes/_authenticated/recruiter/index'
 import { Route as AuthenticatedRecruiterAnalyticsRouteImport } from './routes/_authenticated/recruiter/analytics'
 import { Route as AuthenticatedRecruiterApplicationsRouteImport } from './routes/_authenticated/recruiter/applications'
+import { Route as AuthenticatedRecruiterApprovalsRouteImport } from './routes/_authenticated/recruiter/approvals'
 import { Route as AuthenticatedRecruiterCandidatesRouteImport } from './routes/_authenticated/recruiter/candidates'
 import { Route as AuthenticatedRecruiterCompanyRouteImport } from './routes/_authenticated/recruiter/company'
 import { Route as AuthenticatedRecruiterDashboardRouteImport } from './routes/_authenticated/recruiter/dashboard'
@@ -316,6 +317,12 @@ const AuthenticatedRecruiterApplicationsRoute =
   AuthenticatedRecruiterApplicationsRouteImport.update({
     id: '/applications',
     path: '/applications',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterApprovalsRoute =
+  AuthenticatedRecruiterApprovalsRouteImport.update({
+    id: '/approvals',
+    path: '/approvals',
     getParentRoute: () => AuthenticatedRecruiterRoute,
   } as any)
 const AuthenticatedRecruiterCandidatesRoute =
@@ -607,6 +614,7 @@ export interface FileRoutesByFullPath {
   '/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/recruiter/analytics': typeof AuthenticatedRecruiterAnalyticsRoute
   '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRouteWithChildren
+  '/recruiter/approvals': typeof AuthenticatedRecruiterApprovalsRoute
   '/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRouteWithChildren
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
@@ -684,6 +692,7 @@ export interface FileRoutesByTo {
   '/candidate/settings': typeof AuthenticatedCandidateSettingsRoute
   '/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/recruiter/analytics': typeof AuthenticatedRecruiterAnalyticsRoute
+  '/recruiter/approvals': typeof AuthenticatedRecruiterApprovalsRoute
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/recruiter/interviews': typeof AuthenticatedRecruiterInterviewsRoute
@@ -765,6 +774,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications/$id': typeof AuthenticatedNotificationsIdRoute
   '/_authenticated/recruiter/analytics': typeof AuthenticatedRecruiterAnalyticsRoute
   '/_authenticated/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRouteWithChildren
+  '/_authenticated/recruiter/approvals': typeof AuthenticatedRecruiterApprovalsRoute
   '/_authenticated/recruiter/candidates': typeof AuthenticatedRecruiterCandidatesRouteWithChildren
   '/_authenticated/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/_authenticated/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
@@ -851,6 +861,7 @@ export interface FileRouteTypes {
     | '/notifications/$id'
     | '/recruiter/analytics'
     | '/recruiter/applications'
+    | '/recruiter/approvals'
     | '/recruiter/candidates'
     | '/recruiter/company'
     | '/recruiter/dashboard'
@@ -928,6 +939,7 @@ export interface FileRouteTypes {
     | '/candidate/settings'
     | '/notifications/$id'
     | '/recruiter/analytics'
+    | '/recruiter/approvals'
     | '/recruiter/company'
     | '/recruiter/dashboard'
     | '/recruiter/interviews'
@@ -1008,6 +1020,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications/$id'
     | '/_authenticated/recruiter/analytics'
     | '/_authenticated/recruiter/applications'
+    | '/_authenticated/recruiter/approvals'
     | '/_authenticated/recruiter/candidates'
     | '/_authenticated/recruiter/company'
     | '/_authenticated/recruiter/dashboard'
@@ -1366,6 +1379,13 @@ declare module '@tanstack/react-router' {
       path: '/applications'
       fullPath: '/recruiter/applications'
       preLoaderRoute: typeof AuthenticatedRecruiterApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/approvals': {
+      id: '/_authenticated/recruiter/approvals'
+      path: '/approvals'
+      fullPath: '/recruiter/approvals'
+      preLoaderRoute: typeof AuthenticatedRecruiterApprovalsRouteImport
       parentRoute: typeof AuthenticatedRecruiterRoute
     }
     '/_authenticated/recruiter/candidates': {
@@ -1912,6 +1932,7 @@ const AuthenticatedRecruiterPipelineRouteWithChildren =
 interface AuthenticatedRecruiterRouteChildren {
   AuthenticatedRecruiterAnalyticsRoute: typeof AuthenticatedRecruiterAnalyticsRoute
   AuthenticatedRecruiterApplicationsRoute: typeof AuthenticatedRecruiterApplicationsRouteWithChildren
+  AuthenticatedRecruiterApprovalsRoute: typeof AuthenticatedRecruiterApprovalsRoute
   AuthenticatedRecruiterCandidatesRoute: typeof AuthenticatedRecruiterCandidatesRouteWithChildren
   AuthenticatedRecruiterCompanyRoute: typeof AuthenticatedRecruiterCompanyRoute
   AuthenticatedRecruiterDashboardRoute: typeof AuthenticatedRecruiterDashboardRoute
@@ -1932,6 +1953,7 @@ const AuthenticatedRecruiterRouteChildren: AuthenticatedRecruiterRouteChildren =
     AuthenticatedRecruiterAnalyticsRoute: AuthenticatedRecruiterAnalyticsRoute,
     AuthenticatedRecruiterApplicationsRoute:
       AuthenticatedRecruiterApplicationsRouteWithChildren,
+    AuthenticatedRecruiterApprovalsRoute: AuthenticatedRecruiterApprovalsRoute,
     AuthenticatedRecruiterCandidatesRoute:
       AuthenticatedRecruiterCandidatesRouteWithChildren,
     AuthenticatedRecruiterCompanyRoute: AuthenticatedRecruiterCompanyRoute,
