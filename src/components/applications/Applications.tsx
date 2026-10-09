@@ -34,6 +34,8 @@ import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwa
 import { ApplicationInsights } from "@/components/applications/ApplicationInsights";
 import { CandidateOfferCard } from "@/components/applications/Offers";
 import { ViewToggle } from "@/components/applications/ApplicationRequisitionHub";
+import { rejectApplication, undoRejection, type RejectionTiming } from "@/lib/rejection-delivery";
+import { notifyByEmail } from "@/lib/applications-data";
 import { WITHDRAW_NOTE_MAX, WITHDRAW_REASONS, canWithdraw, withdrawReasonLabel } from "@/lib/withdrawal";
 
 const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
@@ -283,7 +285,7 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
   const filtered = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
   const tabCount = (t: TriageTab) => filtered.filter((a) => inTriageTab(t, a.application_status, inPipe(a))).length;
   const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
-  const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
+  const [closing, setClosing] = useState<{ id: string; name: string; job: string; prev: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -291,11 +293,25 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
   const eligible = (a: (typeof rows)[number]) => canBulkSelect(a.application_status, inPipe(a));
   const selRows = rows.filter((a) => sel.has(a.application_id) && eligible(a));
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  async function bulk(kind: "pipe" | "reject") {
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); };
+  async function rejectMany(items: { id: string; prev: string }[], reason: string, timing: RejectionTiming) {
+    const done: { id: string; prev: string }[] = [];
+    for (const it of items) { try { await rejectApplication(it.id, it.prev, reason, timing); if (timing === "now") notifyByEmail("application", it.id); done.push(it); } catch { /* counted below */ } }
+    const failed = items.length - done.length;
+    if (done.length) {
+      const what = done.length === 1 ? "Marked Not Moving Forward" : `${done.length} marked Not Moving Forward`;
+      if (timing === "now") toast.success(`${what} · update sent`);
+      else toast.success(`${what} · update sends ${timing === "24h" ? "in 24 hours" : "tomorrow at 9 AM"}`, { duration: 10000, action: { label: "Undo", onClick: async () => { let back = 0; for (const it of done) { try { await undoRejection(it.id, it.prev); back++; } catch { /* ignore */ } } toast.success(back === done.length ? "Undone — no update was sent" : `${back} of ${done.length} restored`); refresh(); } } });
+    }
+    if (failed) toast.error(`${failed} couldn't be updated. Please try again.`);
+    refresh();
+  }
+  async function bulk(kind: "pipe" | "reject", reason = "", timing: RejectionTiming = "24h") {
     setBulkBusy(true); let ok = 0;
-    for (const a of selRows) { try { if (kind === "pipe") await addToPipeline(uid, a.candidate_id, a.job_id); else await setApplicationStatus(a.application_id, "rejected"); ok++; } catch { /* counted below */ } }
+    if (kind === "reject") { await rejectMany(selRows.map((a) => ({ id: a.application_id, prev: a.application_status })), reason, timing); setSel(new Set()); setBulkBusy(false); return; }
+    for (const a of selRows) { try { await addToPipeline(uid, a.candidate_id, a.job_id); ok++; } catch { /* counted below */ } }
     const failed = selRows.length - ok;
-    if (ok) toast.success(kind === "pipe" ? `${ok} moved to Pipeline` : `${ok} marked Not Moving Forward`);
+    if (ok) toast.success(`${ok} moved to Pipeline`);
     if (failed) toast.error(`${failed} couldn't be updated. Please try again.`);
     setSel(new Set()); setBulkBusy(false);
     qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] });
@@ -337,7 +353,7 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
                 {inPipe(a) ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} search={{ candidate: a.candidate_id }} className={btn}>In Pipeline →</Link>
                   : a.application_status !== "rejected" && <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Moved to Pipeline · cleared from Inbox")} className={btn}>Move To Pipeline</button>}
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
-                {a.application_status !== "rejected" && <button onClick={() => setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title })} className={btn}>Not Moving Forward</button>}</div>
+                {a.application_status !== "rejected" && <button onClick={() => setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title, prev: a.application_status })} className={btn}>Not Moving Forward</button>}</div>
             </article>); })}</div>}
       {selRows.length > 0 && (
         <div role="region" aria-label="Bulk actions" className="fixed inset-x-0 bottom-6 z-40 mx-auto flex w-fit max-w-[95vw] flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/90 p-2 pl-4 shadow-elevated backdrop-blur">
@@ -346,8 +362,8 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
           <button disabled={bulkBusy} onClick={() => setBulkReject(true)} className={btn}><XCircle className="h-4 w-4" />Not Moving Forward</button>
           <button disabled={bulkBusy} onClick={() => setSel(new Set())} className={btn}>Clear</button>
         </div>)}
-      {bulkReject && <NotMovingForwardDialog name={`${selRows.length} candidate${selRows.length === 1 ? "" : "s"}`} onCancel={() => setBulkReject(false)} onConfirm={() => { setBulkReject(false); void bulk("reject"); }} />}
-      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); act(() => setApplicationStatus(c.id, "rejected"), "Marked Not Moving Forward"); }} />}
+      {bulkReject && <NotMovingForwardDialog name={`${selRows.length} candidate${selRows.length === 1 ? "" : "s"}`} onCancel={() => setBulkReject(false)} onConfirm={(_s, reason, timing) => { setBulkReject(false); void bulk("reject", reason, timing); }} />}
+      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={(_s, reason, timing) => { const c = closing; setClosing(null); void rejectMany([{ id: c.id, prev: c.prev }], reason, timing); }} />}
     </div>
   );
 }
@@ -363,6 +379,12 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
   if (app.error || cand.error) return <ErrorBox msg="Unable To Load Applications" retry={() => { app.refetch(); cand.refetch(); }} />;
   if (!app.data || !cand.data || !tax.data || app.data.jobs?.recruiter_id !== uid) return <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">Access Denied</p><p className="text-sm text-muted-foreground">This application isn't available.</p><Link to="/recruiter/applications" className={`${primaryBtn} mt-4`}>Back</Link></div>;
   const a = app.data;
+  async function rejectDetail(reason: string, timing: RejectionTiming) {
+    const prev = a.application_status;
+    try { await rejectApplication(id, prev, reason, timing); if (timing === "now") notifyByEmail("application", id);
+      toast.success(timing === "now" ? "Marked Not Moving Forward · update sent" : `Marked Not Moving Forward · update sends ${timing === "24h" ? "in 24 hours" : "tomorrow at 9 AM"}`, timing === "now" ? undefined : { duration: 10000, action: { label: "Undo", onClick: async () => { try { await undoRejection(id, prev); toast.success("Undone — no update was sent"); app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); } catch { toast.error("Couldn't undo."); } } } });
+      app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); } catch (e) { toast.error(friendlyError(e, "Unable to update.")); }
+  }
   async function update(s: AppStatus, confirmed = false) {
     if (s === "rejected" && !confirmed) { setClosingDetail(true); return; }
     try { await setApplicationStatus(id, s); toast.success(s === "rejected" ? "Marked Not Moving Forward" : s === "offer" ? "Offer Extended" : "Application Updated"); app.refetch(); qc.invalidateQueries({ queryKey: ["job-applications"] }); } catch (e) { toast.error(friendlyError(e, "Unable to update.")); }
@@ -383,7 +405,7 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
           <MatchPlaceholder />
         </aside>
       </div>
-      {closingDetail && <NotMovingForwardDialog name={cand.data.name} jobTitle={a.jobs?.job_title} onCancel={() => setClosingDetail(false)} onConfirm={() => { setClosingDetail(false); update("rejected", true); }} />}
+      {closingDetail && <NotMovingForwardDialog name={cand.data.name} jobTitle={a.jobs?.job_title} onCancel={() => setClosingDetail(false)} onConfirm={(_s, reason, timing) => { setClosingDetail(false); void rejectDetail(reason, timing); }} />}
     </div>
   );
 }

@@ -35,3 +35,16 @@ export async function sendRejectionNow(applicationId: string) {
   const { error } = await supabase.from("applications").update({ rejection_deliver_at: new Date().toISOString() }).eq("application_id", applicationId);
   if (error) throw error;
 }
+
+/** Inbox "Not Moving Forward": store reason + delivery schedule, then reject. Same path for single and bulk. */
+export async function rejectApplication(applicationId: string, prevStatus: string, reason: string, timing: RejectionTiming) {
+  await scheduleRejection(applicationId, timing, prevStatus);
+  const { error } = await supabase.from("applications").update({ application_status: "rejected", disposition_reason: reason }).eq("application_id", applicationId);
+  if (error) throw error;
+}
+
+/** Undo an inbox rejection whose notice hasn't gone out; leaving "rejected" clears the schedule. */
+export async function undoRejection(applicationId: string, prevStatus: string) {
+  const { error } = await supabase.from("applications").update({ application_status: prevStatus as "applied", disposition_reason: null }).eq("application_id", applicationId);
+  if (error) throw error;
+}
