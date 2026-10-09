@@ -5,7 +5,7 @@ export type Offer = {
   offer_id: string; application_id: string | null; job_id: string; candidate_id: string; recruiter_id: string;
   salary_amount: number | null; salary_currency: string; signing_bonus: number | null; equity_details: string;
   start_date: string | null; expires_on: string | null; notes: string; status: string; revision: number;
-  decline_reason: string; responded_at: string | null; created_at: string; updated_at: string;
+  decline_reason: string; responded_at: string | null; negotiated_at: string | null; negotiation_conversation_id: string | null; created_at: string; updated_at: string;
 };
 
 /** Latest offer for a candidate on a job (any status). */
@@ -47,6 +47,13 @@ export async function openNegotiation(uid: string, candidateId: string, jobId: s
   if (error || !data) throw error ?? new Error("Unable to start conversation");
   const { error: e2 } = await supabase.from("messages").insert({ conversation_id: data, sender_id: uid, sender_type: "candidate", message_body: body });
   if (e2) throw e2;
+  return data as string;
+}
+
+/** Candidate opens a discussion on a pending offer: posts the message, flags the offer, notifies the recruiter. */
+export async function requestNegotiation(offerId: string, body: string) {
+  const { data, error } = await supabase.rpc("request_offer_negotiation", { _offer: offerId, _message: body });
+  if (error || !data) throw error ?? new Error("Unable to start conversation");
   return data as string;
 }
 

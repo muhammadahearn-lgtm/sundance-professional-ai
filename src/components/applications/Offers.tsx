@@ -119,7 +119,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   }
   async function negotiate() {
     setBusy(true);
-    try { const id = await openNegotiation(uid, uid, jobId, negotiateMessage(jobTitle)); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
+    try { const id = o.negotiation_conversation_id ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
     catch (e) { toast.error(friendlyError(e, "Unable to start conversation")); }
     setBusy(false);
   }
@@ -144,10 +144,12 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
         </div>
         {o.equity_details && <p className="mt-3 text-sm"><strong>Equity:</strong> {o.equity_details}</p>}
         {o.notes && <blockquote className="mt-3 whitespace-pre-line rounded-2xl border-l-4 border-primary/40 bg-card/70 p-3 text-sm">{o.notes}</blockquote>}
+        {o.status === "pending" && !expired && o.negotiated_at && (
+          <div className="mt-4 rounded-2xl border border-accent bg-accent/40 p-3 text-sm"><p className="flex items-center gap-1.5 font-semibold"><MessageSquare className="h-4 w-4" />Discussion started {fmtDate(o.negotiated_at.slice(0, 10))}</p><p className="mt-1 text-muted-foreground">The hiring team has been notified. Keep chatting in Messages, then accept or decline once you're ready.</p></div>)}
         {o.status === "pending" && !expired && (
           <div className="mt-5 flex flex-wrap gap-2">
             <button onClick={() => setDlg("accept")} className={primaryBtn}>Accept Offer</button>
-            <button onClick={negotiate} disabled={busy} className={btn}><MessageSquare className="h-4 w-4" />Discuss / Negotiate</button>
+            <button onClick={negotiate} disabled={busy} className={btn}><MessageSquare className="h-4 w-4" />{o.negotiated_at ? "Open Conversation" : "Discuss / Negotiate"}</button>
             <button onClick={() => setDlg("decline")} className={btn}>Decline</button>
           </div>)}
       </div>
@@ -169,9 +171,9 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
   const q = useQuery({ queryKey: ["offer-pill", jobId, candidateId], queryFn: () => latestOffer(jobId, candidateId) });
   const o = q.data;
   if (q.isLoading) return <div className="mt-2 h-8 animate-pulse rounded-lg bg-muted" />;
-  if (!o || o.status === "withdrawn") return <button type="button" onClick={onOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/50 px-2 py-1.5 text-[11px] font-semibold text-primary hover:border-primary">+ Log Formal Offer Terms</button>;
+  if (!o || o.status === "withdrawn") return <button type="button" onClick={onOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/50 px-2 py-1.5 text-[11px] font-semibold text-primary hover:border-primary">+ Add Offer Terms</button>;
   const today = todayISO(), left = daysLeft(o.expires_on, today), expired = o.status === "pending" && offerExpired(o.expires_on, today);
-  const [label, tone] = o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
+  const [label, tone] = o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : o.negotiated_at ? ["💬 Discussion requested", "text-accent-foreground bg-accent"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
   return (
     <div className="mt-2 rounded-lg border border-border bg-card p-2 text-[11px]">
       <div className="flex items-center justify-between gap-2">
@@ -180,6 +182,7 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
       </div>
       <p className="mt-1 font-display text-sm font-extrabold">{formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"}</p>
       {o.status === "declined" && o.decline_reason && <p className="mt-1 text-muted-foreground">“{o.decline_reason}”</p>}
+      {o.status === "pending" && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
       <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" ? "View / Revise" : "View Details"}</button>
     </div>
   );
