@@ -14,7 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Send, Sparkles, Upload, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Search, Send, Sparkles, Upload, X, XCircle, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { loadTaxonomy } from "@/lib/jobs-data";
 import { loadCandidateJob } from "@/lib/job-search-data";
 import { listMyInterviews } from "@/lib/interviews-data";
@@ -38,6 +38,7 @@ import { CandidateOfferCard } from "@/components/applications/Offers";
 import { ViewToggle } from "@/components/applications/ApplicationRequisitionHub";
 import { rejectApplication, undoRejection, type RejectionTiming } from "@/lib/rejection-delivery";
 import { notifyByEmail } from "@/lib/applications-data";
+import { QUICK_FILTERS, matchesKeyword, passesAll, qualificationPills, stepIndex, type QuickFilter } from "@/lib/applicant-screening";
 import { WITHDRAW_NOTE_MAX, WITHDRAW_REASONS, canWithdraw, withdrawReasonLabel } from "@/lib/withdrawal";
 
 const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
@@ -395,6 +396,56 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
           onPipe={() => { void act(() => addToPipeline(uid, a.candidate_id, a.job_id), `${a.name} moved to Pipeline`); advanceAfter(); }}
           onReject={() => { setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title, prev: a.application_status }); advanceAfter(); }} />;
       })()}
+    </div>
+  );
+}
+
+function QualPills({ s }: { s?: { skill_alignment_score: number; technology_alignment_score: number; experience_alignment_score: number } | undefined }) {
+  const pills = qualificationPills(s);
+  if (!pills.length) return null;
+  return <div className="mt-3 flex flex-wrap gap-1.5">{pills.map((p) => <span key={p.label} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.tone === "good" ? "bg-success/10 text-success" : "bg-warning/10 text-warning-foreground"}`}>{p.label}</span>)}</div>;
+}
+
+function SpeedReview({ a, pos, total, score, sub, dealbreakers, piped, onClose, onPrev, onNext, onPipe, onReject }: {
+  a: { application_id: string; candidate_id: string; job_id: string; name: string; application_status: string; jobs: { job_title: string } };
+  pos: number; total: number; score?: number | undefined; sub?: { skill_alignment_score: number; technology_alignment_score: number; experience_alignment_score: number } | undefined; dealbreakers?: number | undefined; piped: boolean;
+  onClose: () => void; onPrev: () => void; onNext: () => void; onPipe: () => void; onReject: () => void;
+}) {
+  const tax = useTaxonomy();
+  const cand = useQuery({ queryKey: ["talent-candidate", a.candidate_id], queryFn: () => loadCandidateFull(a.candidate_id) });
+  const canAct = !piped && a.application_status !== "rejected";
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "Escape") onClose(); else if (e.key === "ArrowLeft") onPrev(); else if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose, onPrev, onNext]);
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-foreground/30" onClick={onClose}>
+      <aside role="dialog" aria-modal="true" aria-label={`Quick review: ${a.name}`} onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-2xl flex-col border-l border-border bg-background shadow-elevated">
+        <header className="flex items-center gap-3 border-b border-border p-4">
+          <div className="min-w-0 flex-1"><p className="font-display text-lg font-bold">{a.name}</p><p className="truncate text-xs text-muted-foreground">{a.jobs.job_title} · {pos} of {total}</p></div>
+          <MatchBadge score={score} />
+          <button type="button" onClick={onClose} aria-label="Close" className={btn}><X className="h-4 w-4" /></button>
+        </header>
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="flex flex-wrap items-center gap-2"><DealbreakerChip count={dealbreakers} /><QualPills s={sub} /></div>
+          <ScreeningAnswers applicationId={a.application_id} jobId={a.job_id} recruiter />
+          {cand.isLoading || !tax.data ? <div className={`${card} h-64 animate-pulse`} /> : cand.data ? <CandidateProfileBody d={cand.data} t={tax.data} stacked jobId={a.job_id} /> : <p className="text-sm text-muted-foreground">Profile unavailable.</p>}
+        </div>
+        <footer className="flex flex-wrap items-center gap-2 border-t border-border p-3">
+          <button type="button" onClick={onPrev} disabled={pos <= 1} className={btn} aria-label="Previous applicant"><ChevronLeft className="h-4 w-4" />Prev</button>
+          <button type="button" onClick={onNext} disabled={pos >= total} className={btn} aria-label="Next applicant">Next<ChevronRight className="h-4 w-4" /></button>
+          <span className="hidden text-xs text-muted-foreground sm:inline">Use ← → keys</span>
+          <div className="ml-auto flex gap-2">
+            {canAct ? <><button type="button" onClick={onReject} className={btn}><XCircle className="h-4 w-4" />Not Moving Forward</button><button type="button" onClick={onPipe} className={primaryBtn}><GitBranch className="h-4 w-4" />Move to Pipeline</button></>
+              : <span className="text-sm text-muted-foreground">{piped ? "Already in Pipeline" : "Not moving forward"}</span>}
+          </div>
+        </footer>
+      </aside>
     </div>
   );
 }
