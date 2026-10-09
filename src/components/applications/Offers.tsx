@@ -73,7 +73,7 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
       <p className="text-sm text-muted-foreground">{jobTitle}</p>
       {overWarn && <p role="alert" className="mt-4 rounded-xl bg-warning/15 px-3 py-2 text-sm font-semibold">{overWarn}</p>}
       <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_110px]">
-        <label className="text-sm font-semibold">Base Salary (annual)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.salary} onChange={(e) => set("salary")(e.target.value)} placeholder="150000" />{err("salary")}{salWarn && <span role="alert" className="mt-1 block text-xs font-semibold text-warning-foreground">{salWarn}</span>}</label>
+        <label className="text-sm font-semibold">Base Salary (annual)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.salary} onChange={(e) => set("salary")(e.target.value)} placeholder="150000" />{err("salary")}{salWarn && <span role="alert" className="mt-1 block text-xs font-semibold text-foreground">{salWarn}</span>}</label>
         <label className="text-sm font-semibold">Currency<select className={`${inputCls} mt-1`} value={f.currency} onChange={(e) => set("currency")(e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label className="text-sm font-semibold">Signing Bonus (optional)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.bonus} onChange={(e) => set("bonus")(e.target.value)} placeholder="10000" />{err("bonus")}</label>
         <span />
