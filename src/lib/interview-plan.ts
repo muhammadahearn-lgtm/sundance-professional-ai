@@ -81,3 +81,23 @@ export const nextPendingRound = <I>(steps: RoundStep<I>[]) => steps.find((s) => 
 
 /** Used when scheduling an ad-hoc chat for a shortlisted finalist: every round slot is a 30-min follow-up. */
 export const FOLLOW_UP_PLAN: PlanRound[] = Array.from({ length: 20 }, () => ({ type: CUSTOM_TYPE, name: "Follow-up / Executive Chat", duration_minutes: 30 }));
+
+export type Performance = { scored: number; passed: number; concerns: number; avg: number | null };
+
+/** Summary of a candidate's scored rounds (ratings 1–5). */
+export function interviewPerformance<I>(steps: RoundStep<I>[]): Performance {
+  const scored = steps.filter((s) => s.state === "passed" || s.state === "concern");
+  const ratings = scored.map((s) => s.rating ?? 0).filter((r) => r > 0);
+  return {
+    scored: scored.length,
+    passed: scored.filter((s) => s.state === "passed").length,
+    concerns: scored.filter((s) => s.state === "concern").length,
+    avg: ratings.length ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : null,
+  };
+}
+
+/** Fair interview ranking: no-concern candidates first, then more rounds passed, then higher average rating. Unscored last. */
+export function compareByInterview(a: Performance, b: Performance): number {
+  if (!a.scored !== !b.scored) return a.scored ? -1 : 1;
+  return (a.concerns > 0 ? 1 : 0) - (b.concerns > 0 ? 1 : 0) || b.passed - a.passed || (b.avg ?? 0) - (a.avg ?? 0);
+}

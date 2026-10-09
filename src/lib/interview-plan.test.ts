@@ -28,3 +28,12 @@ describe("interview plan", () => {
     expect(nextPendingRound(s)?.round).toBe(2);
   });
 });
+
+import { compareByInterview as cmpIv } from "./interview-plan";
+describe("compareByInterview", () => {
+  const p = (scored: number, passed: number, concerns: number, avg: number | null) => ({ scored, passed, concerns, avg });
+  it("ranks 3 passed rounds at 4.3 above 1 passed round at 5.0", () => expect(cmpIv(p(3, 3, 0, 4.3), p(1, 1, 0, 5))).toBeLessThan(0));
+  it("ranks a candidate with a concern below one without", () => expect(cmpIv(p(3, 2, 1, 4.8), p(2, 2, 0, 3.5))).toBeGreaterThan(0));
+  it("breaks equal rounds by higher average rating", () => expect(cmpIv(p(2, 2, 0, 4.5), p(2, 2, 0, 4))).toBeLessThan(0));
+  it("puts unscored candidates last", () => expect(cmpIv(p(0, 0, 0, null), p(1, 0, 1, 2))).toBeGreaterThan(0));
+});
