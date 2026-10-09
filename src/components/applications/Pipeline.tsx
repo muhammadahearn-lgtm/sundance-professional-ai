@@ -4,8 +4,13 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bell, CalendarClock, ChevronLeft, ChevronRight, Sparkles, Star, Trash2 } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { shareCompareWithTeam } from "@/lib/hiring-team.functions";
+import { listComparedCandidates, setComparedCandidate } from "@/lib/talent-data";
+
+const SELECT_MAX = 4;
 
 async function listTeamRecommendations() {
   const { data, error } = await supabase.from("team_recommendations").select("job_id, candidate_id, kind, note, job_stakeholders(name, hiring_role)");
@@ -64,6 +69,40 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const ivOf = (c: PipelineCard) => roundsOf(c).find((i) => i.status === "scheduled" && new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000 > Date.now());
   const doneRounds = (c: PipelineCard) => roundsOf(c).length;
   const [sched, setSched] = useState<PipelineCard | null>(null);
+  const [sel, setSel] = useState<PipelineCard[]>([]);
+  const [busy, setBusy] = useState<"" | "compare" | "share">("");
+  const share = useServerFn(shareCompareWithTeam);
+  const isSel = (c: PipelineCard) => sel.some((x) => x.pipeline_id === c.pipeline_id);
+  const toggleSel = (c: PipelineCard) => {
+    if (isSel(c)) { setSel((s) => s.filter((x) => x.pipeline_id !== c.pipeline_id)); return; }
+    if (sel.length && sel[0]!.job_id !== c.job_id) { toast.error("Pick candidates from the same job to compare them."); return; }
+    if (sel.some((x) => x.candidate_id === c.candidate_id)) return;
+    if (sel.length >= SELECT_MAX) { toast.error(`You can compare up to ${SELECT_MAX} candidates.`); return; }
+    setSel((s) => [...s, c]);
+  };
+  const selJob = sel[0]?.job_id ?? null;
+  async function compareSel() {
+    setBusy("compare");
+    try {
+      const current = await listComparedCandidates(uid);
+      const ids = sel.map((c) => c.candidate_id);
+      for (const id of current) if (!ids.includes(id)) await setComparedCandidate(uid, id, false);
+      for (const id of ids) if (!current.includes(id)) await setComparedCandidate(uid, id, true);
+      await qc.invalidateQueries({ queryKey: ["cmp-cands", uid] });
+      navigate({ to: "/recruiter/candidates/compare", search: selJob ? { job: selJob } : {} });
+    } catch (e) { toast.error(friendlyError(e, "Could not open the comparison.")); }
+    finally { setBusy(""); }
+  }
+  async function shareSel() {
+    if (!selJob) return;
+    setBusy("share");
+    try {
+      const r = await share({ data: { jobId: selJob, candidateIds: sel.map((c) => c.candidate_id) } });
+      if (!r.team) toast.info("This job has no hiring team yet. Add them on the job page.");
+      else { toast.success(`Comparison sent to ${r.sent} of ${r.team} hiring team member${r.team === 1 ? "" : "s"}.`); setSel([]); }
+    } catch (e) { toast.error(friendlyError(e, "Could not share the comparison.")); }
+    finally { setBusy(""); }
+  }
 
   const [closing, setClosing] = useState<PipelineCard | null>(null);
   const [offerFor, setOfferFor] = useState<{ c: PipelineCard; existing: Offer | null; advance: boolean } | null>(null);
