@@ -110,5 +110,5 @@ export function groupUnread(list: Notification[]): { key: string; label: string;
 
 /** Only allow in-app relative links. */
 export function safeActionUrl(url: string): string | null {
-  return /^\/(candidate|recruiter)\/[\w\-/]*$/.test(url) ? url : null;
+  return /^\/(candidate|recruiter)\/[\w\-/]*(\?candidate=[0-9a-f-]{36})?$/i.test(url) ? url : null;
 }
