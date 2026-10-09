@@ -1,6 +1,7 @@
 import { TeamNotes } from "./TeamNotes";
 import { ReferenceChecks } from "@/components/talent/ReferenceChecks";
 import { ShareWithManager } from "./ShareWithManager";
+import { ReferenceChecks } from "./ReferenceChecks";
 import { FinalistBadge, FinalistFastTrackPanel } from "./FinalistFastTrack";
 import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
 import { RangeSlider } from "@/components/ui/range-slider";

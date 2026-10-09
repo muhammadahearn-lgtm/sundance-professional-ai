@@ -6,7 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, X } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, Check, ClipboardCheck, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { shareCompareWithTeam } from "@/lib/hiring-team.functions";
