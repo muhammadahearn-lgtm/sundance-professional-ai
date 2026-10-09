@@ -34,9 +34,14 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
   candidateName: string; jobTitle: string; existing?: Offer | null; defaultSalary?: number | null | undefined; defaultCurrency?: string | undefined;
   onDone: () => void; onSkip?: (() => void) | undefined; onClose: () => void;
 }) {
-  const revising = existing?.status === "pending";
+  const inReview = existing?.status === "pending_approval" || existing?.status === "approval_declined";
+  const revising = existing?.status === "pending" || inReview;
+  const live = existing?.status === "pending";
   const [f, setF] = useState<OfferForm>(revising ? fromOffer(existing!) : emptyOffer(defaultCurrency ?? "USD", defaultSalary ?? null));
   const [show, setShow] = useState(false), [busy, setBusy] = useState(false);
+  const [needApproval, setNeedApproval] = useState(inReview);
+  const [approver, setApprover] = useState<string>(existing?.approver_id ?? "");
+  const approversQ = useQuery({ queryKey: ["offer-approvers", ctx.jobId], queryFn: () => approverOptions(ctx.jobId), enabled: !live });
   const errs = validateOffer(f, todayISO());
   const set = (k: keyof OfferForm) => (v: string) => setF((p) => ({ ...p, [k]: v }));
   const ctxQ = useQuery({ queryKey: ["offer-guard", ctx.jobId, ctx.candidateId], queryFn: async () => {

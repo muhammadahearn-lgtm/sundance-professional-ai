@@ -8,6 +8,7 @@ export type Offer = {
   decline_reason: string; responded_at: string | null; negotiated_at: string | null; negotiation_conversation_id: string | null; created_at: string; updated_at: string;
   extension_requested_until?: string | null; extension_note?: string; extension_status?: string; extension_responded_at?: string | null;
   signed_name?: string | null; signed_at?: string | null;
+  approver_id?: string | null; approval_note?: string; approved_at?: string | null; approval_requested_at?: string | null;
 };
 
 /** Latest offer for a candidate on a job (any status). */
