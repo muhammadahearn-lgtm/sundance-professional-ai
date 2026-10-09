@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarDays, Gift, Handshake, Medal, MessageSquare, PartyPopper, Sparkles, Wallet } from "lucide-react";
+import { CalendarClock, CalendarDays, Gift, Handshake, Medal, MessageSquare, PartyPopper, Sparkles, Wallet } from "lucide-react";
 import { card, friendlyError, inputCls } from "@/components/profile/parts";
 import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
-import { daysLeft, emptyOffer, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
-import { latestOffer, offersForApplication, requestNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
+import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
+import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { supabase } from "@/integrations/supabase/client";
 import { SILVER_STAGES } from "@/lib/saved-candidates";
 import { markSilverMedalists } from "@/lib/talent-data";
@@ -119,7 +119,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   const qc = useQueryClient();
   const nav = useNavigate();
   const q = useQuery({ queryKey: ["offer", applicationId], queryFn: () => offersForApplication(applicationId) });
-  const [dlg, setDlg] = useState<"accept" | "decline" | null>(null), [reason, setReason] = useState(""), [busy, setBusy] = useState(false);
+  const [dlg, setDlg] = useState<"accept" | "decline" | "extend" | null>(null), [extDays, setExtDays] = useState(3), [extNote, setExtNote] = useState(""), [reason, setReason] = useState(""), [busy, setBusy] = useState(false);
   const o = q.data;
   if (!o) return null;
   const today = todayISO();
@@ -138,6 +138,13 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
     catch (e) { toast.error(friendlyError(e, "Unable to start conversation")); }
     setBusy(false);
   }
+  async function askExtension() {
+    if (!o?.expires_on) return; setBusy(true);
+    try { await requestOfferExtension(o.offer_id, extensionDate(o.expires_on, today, extDays), extNote.trim()); toast.success("Extension requested. The hiring team has been notified."); setDlg(null); refresh(); }
+    catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't request more time.")); }
+    setBusy(false);
+  }
+  const canExtend = canRequestExtension(o, today);
   const Item = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
     <div className="rounded-2xl border border-border bg-card/80 p-3"><p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{icon}{label}</p><p className="mt-1 font-display text-lg font-extrabold">{value}</p></div>
   );
@@ -161,10 +168,16 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
         {o.notes && <blockquote className="mt-3 whitespace-pre-line rounded-2xl border-l-4 border-primary/40 bg-card/70 p-3 text-sm">{o.notes}</blockquote>}
         {o.status === "pending" && !expired && o.negotiated_at && (
           <div className="mt-4 rounded-2xl border border-accent bg-accent/40 p-3 text-sm"><p className="flex items-center gap-1.5 font-semibold"><MessageSquare className="h-4 w-4" />Discussion started {fmtDate(o.negotiated_at.slice(0, 10))}</p><p className="mt-1 text-muted-foreground">The hiring team has been notified. Keep chatting in Messages, then accept or decline once you're ready.</p></div>)}
+        {o.status === "pending" && o.extension_status === "requested" && o.extension_requested_until && (
+          <div className="mt-4 rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm"><p className="flex items-center gap-1.5 font-semibold"><CalendarClock className="h-4 w-4" />Extension requested until {fmtDate(o.extension_requested_until)}</p><p className="mt-1 text-muted-foreground">Your recruiter has been notified.</p></div>)}
+        {o.status === "pending" && o.extension_status === "granted" && !expired && <p className="mt-4 text-sm font-semibold text-success">✓ Extension granted. New deadline {fmtDate(o.expires_on)}.</p>}
+        {o.status === "pending" && o.extension_status === "declined" && <p className="mt-4 text-sm text-muted-foreground">The hiring team kept the original deadline.</p>}
+        {expired && canExtend && <div className="mt-5"><button onClick={() => setDlg("extend")} className={primaryBtn}><CalendarClock className="h-4 w-4" />Request More Time</button></div>}
         {o.status === "pending" && !expired && (
           <div className="mt-5 flex flex-wrap gap-2">
             <button onClick={() => setDlg("accept")} className={primaryBtn}>Accept Offer</button>
             <button onClick={negotiate} disabled={busy} className={btn}><MessageSquare className="h-4 w-4" />{o.negotiated_at ? "Open Conversation" : "Discuss / Negotiate"}</button>
+            {canExtend && <button onClick={() => setDlg("extend")} className={btn}><CalendarClock className="h-4 w-4" />Request More Time</button>}
             <button onClick={() => setDlg("decline")} className={btn}>Decline</button>
           </div>)}
       </div>
@@ -172,6 +185,13 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
         <h2 className="font-display text-lg font-extrabold">Accept this offer?</h2>
         <p className="mt-2 text-sm text-muted-foreground">You'll be marked as hired for {jobTitle}. The hiring team is notified right away and the role closes to new applicants.</p>
         <div className="mt-6 flex justify-end gap-2"><button onClick={() => setDlg(null)} className={btn}>Not yet</button><button onClick={() => respond(true)} disabled={busy} className={primaryBtn}>Yes, Accept</button></div></Modal>}
+      {dlg === "extend" && o.expires_on && <Modal label="Request more time" onClose={() => setDlg(null)}>
+        <h2 className="font-display text-lg font-extrabold">Ask for more time</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Current deadline: {fmtDate(o.expires_on)}</p>
+        <div className="mt-4 flex flex-wrap gap-2">{[2, 3, 7].map((d) => <button key={d} type="button" onClick={() => setExtDays(d)} className={`${btn} ${extDays === d ? "border-primary text-primary" : ""}`}>+{d === 7 ? "1 week" : `${d} days`}</button>)}</div>
+        <p className="mt-3 text-sm">New deadline: <strong>{fmtDate(extensionDate(o.expires_on, today, extDays))}</strong></p>
+        <textarea rows={3} maxLength={500} className={`${inputCls} mt-3`} value={extNote} onChange={(e) => setExtNote(e.target.value)} placeholder="Optional: why you need more time" />
+        <div className="mt-6 flex justify-end gap-2"><button onClick={() => setDlg(null)} className={btn}>Back</button><button onClick={askExtension} disabled={busy} className={primaryBtn}>Send Request</button></div></Modal>}
       {dlg === "decline" && <Modal label="Decline offer" onClose={() => setDlg(null)}>
         <h2 className="font-display text-lg font-extrabold">Decline this offer?</h2>
         <p className="mt-2 text-sm text-muted-foreground">Optionally share why. It helps the hiring team.</p>
@@ -183,12 +203,20 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
 
 /** Recruiter pipeline card: live status of the candidate's formal offer. */
 export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candidateId: string; onOpen: () => void }) {
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ["offer-pill", jobId, candidateId], queryFn: () => latestOffer(jobId, candidateId) });
+  const [extBusy, setExtBusy] = useState(false), [newDate, setNewDate] = useState("");
+  async function answer(grant: boolean, until?: string) {
+    if (!q.data) return; setExtBusy(true);
+    try { await respondOfferExtension(q.data.offer_id, grant, until); toast.success(grant ? "Deadline extended" : "Extension declined"); setNewDate(""); qc.invalidateQueries({ queryKey: ["offer-pill", jobId, candidateId] }); }
+    catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't update the deadline.")); }
+    setExtBusy(false);
+  }
   const o = q.data;
   if (q.isLoading) return <div className="mt-2 h-8 animate-pulse rounded-lg bg-muted" />;
   if (!o || o.status === "withdrawn") return <button type="button" onClick={onOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/50 px-2 py-1.5 text-[11px] font-semibold text-primary hover:border-primary">+ Add Offer Terms</button>;
   const today = todayISO(), left = daysLeft(o.expires_on, today), expired = o.status === "pending" && offerExpired(o.expires_on, today);
-  const [label, tone] = o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : o.negotiated_at ? ["💬 Discussion requested", "text-accent-foreground bg-accent"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
+  const [label, tone] = o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : o.extension_status === "requested" ? ["⏳ More time asked", "text-warning bg-warning/15"] : o.negotiated_at ? ["💬 Discussion requested", "text-accent-foreground bg-accent"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
   return (
     <div className="mt-2 rounded-lg border border-border bg-card p-2 text-[11px]">
       <div className="flex items-center justify-between gap-2">
@@ -197,6 +225,14 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
       </div>
       <p className="mt-1 font-display text-sm font-extrabold">{formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"}</p>
       {o.status === "declined" && o.decline_reason && <p className="mt-1 text-muted-foreground">“{o.decline_reason}”</p>}
+      {o.status === "pending" && o.extension_status === "requested" && o.extension_requested_until && (
+        <div className="mt-1.5 rounded-md border border-warning/40 bg-warning/10 p-1.5">
+          <p className="font-semibold text-warning">⚠ Extension requested · until {fmtDate(o.extension_requested_until)}</p>
+          {o.extension_note && <p className="mt-0.5 text-muted-foreground">“{o.extension_note}”</p>}
+          <div className="mt-1 flex gap-1"><button type="button" disabled={extBusy} onClick={() => answer(true)} className="flex-1 rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">Grant</button><button type="button" disabled={extBusy} onClick={() => answer(false)} className="flex-1 rounded-md border border-border px-2 py-1 font-semibold">Decline</button></div>
+        </div>)}
+      {expired && o.extension_status !== "requested" && (
+        <div className="mt-1.5 flex items-center gap-1"><div className="flex-1"><DatePicker value={newDate} onChange={setNewDate} aria-label="New offer deadline" placeholder="New deadline" /></div><button type="button" disabled={extBusy || !newDate} onClick={() => answer(true, newDate)} className="rounded-md bg-primary px-2 py-1.5 font-semibold text-primary-foreground disabled:opacity-50">Extend</button></div>)}
       {o.status === "pending" && o.negotiated_at && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
       <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" ? "View / Revise" : "View Details"}</button>
     </div>
