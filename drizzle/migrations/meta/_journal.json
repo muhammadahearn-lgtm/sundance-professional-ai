@@ -512,6 +512,13 @@
       "when": 1791557808466,
       "tag": "0072_offer_negotiation",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791570177965,
+      "tag": "0073_migration",
+      "breakpoints": true
     }
   ]
 }

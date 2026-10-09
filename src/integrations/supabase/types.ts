@@ -86,6 +86,9 @@ export type Database = {
           created_at: string
           job_id: string
           updated_at: string
+          withdraw_note: string
+          withdraw_reason: string
+          withdrawn_at: string | null
         }
         Insert: {
           application_date?: string
@@ -95,6 +98,9 @@ export type Database = {
           created_at?: string
           job_id: string
           updated_at?: string
+          withdraw_note?: string
+          withdraw_reason?: string
+          withdrawn_at?: string | null
         }
         Update: {
           application_date?: string
@@ -104,6 +110,9 @@ export type Database = {
           created_at?: string
           job_id?: string
           updated_at?: string
+          withdraw_note?: string
+          withdraw_reason?: string
+          withdrawn_at?: string | null
         }
         Relationships: [
           {
@@ -2916,6 +2925,10 @@ export type Database = {
       }
       taxonomy_display: { Args: { _v: string }; Returns: string }
       taxonomy_key: { Args: { _v: string }; Returns: string }
+      withdraw_application: {
+        Args: { _application: string; _note?: string; _reason: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "candidate" | "recruiter"
