@@ -139,7 +139,7 @@ export async function listPipeline(uid: string, jobId?: string) {
 }
 export type PipelineCard = Awaited<ReturnType<typeof listPipeline>>[number];
 
-export async function addToPipeline(uid: string, candidateId: string, jobId: string | null, stage: Stage = "saved") {
+export async function addToPipeline(uid: string, candidateId: string, jobId: string | null, stage: Stage = "contacted") {
   const { error } = await supabase.from("recruiting_pipeline").insert({ recruiter_id: uid, candidate_id: candidateId, job_id: jobId, current_stage: stage });
   if (error && error.code !== "23505") throw error;
   if (error?.code === "23505") throw new Error("Candidate is already in this pipeline.");

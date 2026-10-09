@@ -23,6 +23,8 @@ import { InterviewPill, ScheduleInterviewDialog } from "@/components/application
 import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
+/** Board columns — sourced talent lives in Saved Candidates, so the pipeline starts at Contacted. */
+const BOARD_STAGES = STAGES.filter(([k]) => k !== "saved");
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { HireDialog, OfferDialog } from "@/components/applications/Offers";
 import { latestOffer, type Offer } from "@/lib/offers-data";
