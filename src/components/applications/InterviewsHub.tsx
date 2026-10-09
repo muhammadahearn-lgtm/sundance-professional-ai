@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, Globe, KanbanSquare, MapPin, Pencil, Search, Sparkles, Star, Video } from "lucide-react";
@@ -155,7 +155,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext, onChanged }: { i: I
   );
 }
 
-export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
+export function InterviewsHub({ uid, role, scoreId }: { uid: string; role: Role; scoreId?: string }) {
   const q = useQuery({ queryKey: ["my-interviews", uid, role], queryFn: () => listMyInterviews(uid, role) });
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [co, setCo] = useState(""); const [job, setJob] = useState("");
