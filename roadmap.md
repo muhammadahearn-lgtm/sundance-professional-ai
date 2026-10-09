@@ -15,3 +15,4 @@
 - [x] Candidate offer acceptance e-signature
 - [x] Automated post-interview scorecard prompts
 - [x] Application activity history & audit trail
+- [x] Internal offer approval chains (teammate sign-off before candidate sees offer)
