@@ -194,7 +194,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
         </div>
       </div>
 
-      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} onEdit={editFor(next)} rounds={roundsOf(next)} /> : (
+      {q.isLoading ? <div className="h-48 animate-pulse rounded-3xl bg-muted" /> : next ? <Spotlight i={next} role={role} onEdit={editFor(next)} rounds={roundsOf(next)} onChanged={refresh} /> : (
         <section className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
           <CalendarClock className="mx-auto h-10 w-10 text-primary" />
           <p className="mt-3 font-display text-lg font-bold">No upcoming interviews</p>
@@ -233,7 +233,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
           <div className="space-y-5">{groupByDay(list).map((g) => (
             <section key={g.label} aria-label={g.label}>
               <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{g.label} <span className="font-semibold">· {g.items.length}</span></h3>
-              <ul className="space-y-3">{g.items.map((i) => <Row key={i.interview_id} i={i} role={role} onEdit={editFor(i)} />)}</ul>
+              <ul className="space-y-3">{g.items.map((i) => <Row key={i.interview_id} i={i} role={role} onEdit={editFor(i)} onChanged={refresh} />)}</ul>
             </section>
           ))}</div>
         ) : (
