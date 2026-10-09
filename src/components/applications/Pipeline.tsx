@@ -137,7 +137,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
   }
-  const NEXT: Partial<Record<Stage, [Stage, string]>> = { saved: ["contacted", "Mark Contacted"], interviewing: ["shortlisted", "Shortlist"], shortlisted: ["offer", "Extend Offer"], offer: ["hired", "Mark Hired"] };
+  const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], shortlisted: ["offer", "Extend Offer"], offer: ["hired", "Mark Hired"] };
   async function remove(c: PipelineCard) {
     if (!confirm(`Remove ${c.name} from the pipeline?`)) return;
     try { await removeFromPipeline(c.pipeline_id); toast.success("Candidate removed"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
@@ -221,7 +221,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
                       {next ? <button type="button" onClick={() => move(c, next[0])} className={`${miniBtn} min-w-0 flex-1 justify-center`}>{next[1]}<ArrowRight className="h-3 w-3" /></button> : <span className="flex-1" />}
-                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} title="Move to stage" className="h-7 w-full rounded-lg border border-input bg-card px-1 text-xs font-semibold hover:border-primary">{STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                      <select value={c.current_stage} onChange={(e) => move(c, e.target.value as Stage)} aria-label={`Move ${c.name}`} title="Move to stage" className="h-7 w-full rounded-lg border border-input bg-card px-1 text-xs font-semibold hover:border-primary">{BOARD_STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
                     </div>
                   </article>); })}
                   {!col.length && <p className="rounded-xl border border-dashed border-border px-1 py-6 text-center text-xs text-muted-foreground">Drop candidates here</p>}</div>
