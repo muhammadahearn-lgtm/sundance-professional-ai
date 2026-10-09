@@ -13,3 +13,5 @@
 - [x] Downloadable Offer Summary & Acceptance Confirmation PDF (candidate + recruiter)
 - [ ] Reference checks: candidate submits referees, no-login referee questionnaire, answers into Team Notes
 - [x] Candidate offer acceptance e-signature
+- [x] Automated post-interview scorecard prompts
+- [x] Application activity history & audit trail
