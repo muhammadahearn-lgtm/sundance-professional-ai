@@ -75,7 +75,7 @@ export async function myPendingOfferApps(uid: string) {
 
 /** Recruiter: applications to own jobs, with candidate summary data. */
 export async function listJobApplications(uid: string) {
-  const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, candidate_id, job_id, jobs!inner(job_id, job_title, location, role_id, recruiter_id, company_id, companies(company_name))`).eq("jobs.recruiter_id", uid).order("application_date", { ascending: false });
+  const { data, error } = await supabase.from("applications").select(`application_id, application_date, application_status, candidate_id, job_id, jobs!inner(job_id, job_title, job_status, location, role_id, recruiter_id, company_id, companies(company_name))`).eq("jobs.recruiter_id", uid).order("application_date", { ascending: false });
   if (error) throw error;
   const rows = data ?? [];
   const ids = [...new Set(rows.map((r) => r.candidate_id))];
