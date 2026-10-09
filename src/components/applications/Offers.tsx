@@ -2,13 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarDays, Gift, Handshake, MessageSquare, PartyPopper, Sparkles, Wallet } from "lucide-react";
+import { CalendarDays, Gift, Handshake, Medal, MessageSquare, PartyPopper, Sparkles, Wallet } from "lucide-react";
 import { card, friendlyError, inputCls } from "@/components/profile/parts";
 import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
 import { daysLeft, emptyOffer, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
 import { latestOffer, offersForApplication, requestNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
+import { supabase } from "@/integrations/supabase/client";
+import { SILVER_STAGES } from "@/lib/saved-candidates";
+import { markSilverMedalists } from "@/lib/talent-data";
 import { setJobStatus } from "@/lib/jobs-data";
 import { notifyOfferEvent } from "@/lib/offer-email.functions";
 import { notifyApplicantsJobFilled } from "@/lib/job-closed-email.functions";
@@ -76,17 +79,20 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
 }
 
 /** Recruiter: after a hire, offer to close the job and wrap up other candidates. */
-export function HireDialog({ name, jobId, jobTitle, candidateId, onClose }: { name: string; jobId: string; jobTitle: string; candidateId: string; onClose: () => void }) {
+export function HireDialog({ uid, name, jobId, jobTitle, candidateId, onClose }: { uid: string; name: string; jobId: string; jobTitle: string; candidateId: string; onClose: () => void }) {
   const qc = useQueryClient();
-  const [close, setClose] = useState(true), [wrap, setWrap] = useState(true), [busy, setBusy] = useState(false);
+  const [close, setClose] = useState(true), [wrap, setWrap] = useState(true), [silver, setSilver] = useState(true), [busy, setBusy] = useState(false);
+  const finalists = useQuery({ queryKey: ["finalists", jobId, candidateId], queryFn: async () => { const { data, error } = await supabase.from("recruiting_pipeline").select("candidate_id").eq("job_id", jobId).neq("candidate_id", candidateId).in("current_stage", [...SILVER_STAGES]); if (error) throw error; return (data ?? []).map((r) => r.candidate_id); } });
+  const nFinal = finalists.data?.length ?? 0;
   async function go() {
     setBusy(true);
     try {
+      if (silver && nFinal) await markSilverMedalists(uid, finalists.data!, jobId);
       const closedIds = wrap ? await wrapUpOthers(jobId, candidateId) : [];
       if (close) await setJobStatus(jobId, "closed");
       if (close && closedIds.length) void notifyApplicantsJobFilled({ data: { jobId, applicationIds: closedIds } }).catch(() => {});
       toast.success(close ? "Job closed. Congratulations on the hire!" : "All set. Congratulations on the hire!");
-      ["pipeline", "job-applications", "jobs", "job"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+      ["pipeline", "job-applications", "jobs", "job", "saved-entries"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
       onClose();
     } catch (e) { toast.error(friendlyError(e, "Couldn't finish wrapping up.")); }
     setBusy(false);
@@ -99,8 +105,9 @@ export function HireDialog({ name, jobId, jobTitle, candidateId, onClose }: { na
       <div className="mt-5 space-y-3 text-sm">
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={close} onChange={(e) => setClose(e.target.checked)} className="mt-0.5" /><span><strong>Close this job</strong><span className="block text-muted-foreground">It leaves search and stops taking applications.</span></span></label>
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} className="mt-0.5" /><span><strong>Update everyone else</strong><span className="block text-muted-foreground">Send a kind "Not Moving Forward" update so nobody is left waiting.</span></span></label>
+        {nFinal > 0 && <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={silver} onChange={(e) => setSilver(e.target.checked)} className="mt-0.5" /><span><strong className="inline-flex items-center gap-1"><Medal className="h-4 w-4 text-primary" />Keep {nFinal} finalist{nFinal === 1 ? "" : "s"} as Silver Medalists</strong><span className="block text-muted-foreground">Save interviewed runners-up to Saved Candidates for future roles.</span></span></label>}
       </div>
-      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={onClose} className={btn}>Not Now</button><button type="button" onClick={go} disabled={busy || (!close && !wrap)} className={primaryBtn}>{busy ? "Working…" : "Finish Up"}</button></div>
+      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={onClose} className={btn}>Not Now</button><button type="button" onClick={go} disabled={busy || (!close && !wrap && !(silver && nFinal))} className={primaryBtn}>{busy ? "Working…" : "Finish Up"}</button></div>
     </Modal>
   );
 }

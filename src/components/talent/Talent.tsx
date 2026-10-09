@@ -18,7 +18,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Bookmark, BookmarkCheck, Briefcase, Check, ChevronDown, Download, Eye, GitCompare, LayoutGrid, List, MapPin, MessageSquare, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Briefcase, Check, ChevronDown, Download, Eye, GitCompare, LayoutGrid, List, MapPin, Medal, MessageSquare, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFiltersHidden } from "@/hooks/use-filters-hidden";
 import { PanelReveal, PanelSeparator, usePanelWidth } from "@/components/ui/panel-separator";
@@ -609,6 +609,7 @@ export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; ini
   const [jobSel, setJobSel] = useState(initialJob);
   const [sort, setSort] = useState<SavedSort>("recent");
   const [search, setSearch] = useState("");
+  const [silverOnly, setSilverOnly] = useState(false);
   const jobs = jobsQ.data ?? [];
   const selJob = jobSel && jobSel !== UNASSIGNED ? jobs.find((j) => j.job_id === jobSel) : undefined;
   const scoreQ = useScores(selJob ? { jobIds: [selJob.job_id] } : { jobIds: [] });
@@ -618,8 +619,10 @@ export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; ini
   const jobOpts = [{ value: UNASSIGNED, label: "General talent pool (no job)" }, ...jobs.filter((j) => !co || j.company_id === co).map((j) => ({ value: j.job_id, label: co ? j.job_title : `${j.job_title} — ${j.company_name}` }))];
   const effSort: SavedSort = sort === "match" && !selJob ? "recent" : sort;
   const byId = new Map((q.data ?? []).map((c) => [c.id, c]));
-  const items: SavedItem[] = (entries.data ?? []).flatMap((e) => { const c = byId.get(e.candidate_id); if (!c) return []; const r = scoreRow(c.id); return [{ id: c.id, name: c.name, years: c.years, savedDate: e.saved_date, jobId: e.job_id, companyId: jobOf(e.job_id)?.company_id ?? null, score: r ? Number(r.overall_match_score) : null }]; });
-  const shown = sortSaved(filterSaved(items, { company: co, job: jobSel, q: search }), effSort);
+  const items: SavedItem[] = (entries.data ?? []).flatMap((e) => { const c = byId.get(e.candidate_id); if (!c) return []; const r = scoreRow(c.id); return [{ id: c.id, name: c.name, years: c.years, savedDate: e.saved_date, jobId: e.job_id, companyId: jobOf(e.job_id)?.company_id ?? null, score: r ? Number(r.overall_match_score) : null, silver: !!e.silver_medalist_at }]; });
+  const entryOf = (cid: string) => entries.data?.find((e) => e.candidate_id === cid);
+  const nSilver = items.filter((i) => i.silver).length;
+  const shown = sortSaved(filterSaved(items, { company: co, job: jobSel, q: search, silver: silverOnly }), effSort);
   const retag = async (cid: string, jobId: string) => {
     try { await setSavedCandidateJob(uid, cid, jobId || null); toast.success(jobId ? `Saved for ${jobOf(jobId)?.job_title ?? "job"}` : "Moved to general talent pool"); }
     catch (e) { toast.error(friendlyError(e, "Couldn't update. Please try again.")); }
@@ -640,9 +643,13 @@ export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; ini
           {SAVED_SORTS.map((s) => <option key={s.value} value={s.value} disabled={s.value === "match" && !selJob}>{s.label}{s.value === "match" && !selJob ? " (pick a job)" : ""}</option>)}
         </select>
       </div>
+      <div role="tablist" aria-label="Saved candidate pools" className="flex gap-2">
+        <button type="button" role="tab" aria-selected={!silverOnly} onClick={() => setSilverOnly(false)} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${!silverOnly ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>All saved ({items.length})</button>
+        <button type="button" role="tab" aria-selected={silverOnly} onClick={() => setSilverOnly(true)} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${silverOnly ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}><Medal className="h-4 w-4" />Silver Medalists ({nSilver})</button>
+      </div>
       {entries.error || q.error ? <ErrorBox msg="Unable to load saved candidates." retry={() => { void entries.refetch(); void q.refetch(); }} /> : loading ? <div className={`${card} h-48 animate-pulse`} />
         : !items.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates yet</p><Link to="/recruiter/candidates" className={`${primaryBtn} mt-4`}>Search talent</Link></div>
-        : !shown.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates match these filters</p><button onClick={() => { setCo(""); setJobSel(""); setSearch(""); }} className={`${btn} mt-4`}>Clear filters</button></div>
+        : !shown.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No saved candidates match these filters</p><button onClick={() => { setCo(""); setJobSel(""); setSearch(""); setSilverOnly(false); }} className={`${btn} mt-4`}>Clear filters</button></div>
         : <div className="space-y-4"><p className="text-sm text-muted-foreground">{shown.length} of {items.length} saved</p>{shown.map((it) => { const c = byId.get(it.id)!; return (
           <div key={it.id} className="space-y-0">
             <CandidateCard c={c} t={tax.data!} lists={lists} score={selJob ? it.score ?? undefined : undefined} jobTitle={selJob?.job_title} row={selJob ? scoreRow(it.id) : undefined} />
@@ -652,6 +659,7 @@ export function SavedCandidatesPage({ uid, initialJob = "" }: { uid: string; ini
                 <option value="">General talent pool</option>
                 {jobs.map((j) => <option key={j.job_id} value={j.job_id}>{j.job_title} · {j.company_name}{j.job_status !== "active" ? ` (${j.job_status})` : ""}</option>)}
               </select>
+              {it.silver && (() => { const fj = jobOf(entryOf(it.id)?.silver_medalist_job_id ?? null); return <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"><Medal className="h-3.5 w-3.5" />Silver Medalist{fj ? ` · Finalist for ${fj.job_title}` : ""}</span>; })()}
               <span className="ml-auto text-xs text-muted-foreground">Saved {new Date(it.savedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
           </div>); })}</div>}
