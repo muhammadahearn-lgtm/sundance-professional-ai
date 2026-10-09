@@ -23,13 +23,35 @@ export async function offersForApplication(applicationId: string): Promise<Offer
   return data as Offer | null;
 }
 
-export async function sendOffer(ctx: { uid: string; jobId: string; candidateId: string; applicationId: string | null }, f: OfferForm) {
-  const { error } = await supabase.from("job_offers").insert({ ...toOfferRow(f), recruiter_id: ctx.uid, job_id: ctx.jobId, candidate_id: ctx.candidateId, application_id: ctx.applicationId });
+/** New offer. With `approverId` it waits for that teammate's sign-off before the candidate can see it. */
+export async function sendOffer(ctx: { uid: string; jobId: string; candidateId: string; applicationId: string | null }, f: OfferForm, approverId?: string | null) {
+  const approval = approverId ? { status: "pending_approval", approver_id: approverId } : {};
+  const { error } = await supabase.from("job_offers").insert({ ...toOfferRow(f), ...approval, recruiter_id: ctx.uid, job_id: ctx.jobId, candidate_id: ctx.candidateId, application_id: ctx.applicationId });
   if (error) throw error.code === "23505" ? new Error("This candidate already has an open offer. Revise it instead.") : error;
 }
 
-export async function reviseOffer(offerId: string, f: OfferForm) {
-  const { error } = await supabase.from("job_offers").update(toOfferRow(f)).eq("offer_id", offerId);
+/** Edit terms. Offers still in internal review stay there (optionally re-routed to another approver). */
+export async function reviseOffer(offerId: string, f: OfferForm, approverId?: string | null) {
+  const approval = approverId ? { status: "pending_approval", approver_id: approverId } : {};
+  const { error } = await supabase.from("job_offers").update({ ...toOfferRow(f), ...approval }).eq("offer_id", offerId);
+  if (error) throw error;
+}
+
+export type ApproverOption = { user_id: string; name: string };
+export async function approverOptions(jobId: string): Promise<ApproverOption[]> {
+  const { data, error } = await supabase.rpc("offer_approver_options", { _job: jobId });
+  if (error) throw error;
+  return (data ?? []) as ApproverOption[];
+}
+
+export async function myOfferApprovals() {
+  const { data, error } = await supabase.rpc("my_offer_approvals");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function reviewOfferApproval(offerId: string, approve: boolean, note = "") {
+  const { error } = await supabase.rpc("review_offer_approval", { _offer: offerId, _approve: approve, _note: note });
   if (error) throw error;
 }
 

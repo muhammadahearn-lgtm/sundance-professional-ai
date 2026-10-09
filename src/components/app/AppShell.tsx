@@ -33,7 +33,7 @@ const NAV: Record<"candidate" | "recruiter", NavItem[]> = {
     { to: "/recruiter/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/recruiter/jobs", label: "Jobs", Icon: Briefcase },
     { to: "/recruiter/candidates", label: "Talent", Icon: Search, badge: "compare" },
-    { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch, match: ["/recruiter/applications", "/recruiter/interviews"], badge: "interviews" },
+    { to: "/recruiter/pipeline", label: "Pipeline", Icon: GitBranch, match: ["/recruiter/applications", "/recruiter/interviews", "/recruiter/approvals"], badge: "interviews" },
     { to: "/recruiter/recommendations", label: "Recommendations", Icon: Lightbulb },
     { to: "/recruiter/analytics", label: "Analytics", Icon: BarChart3 },
     { to: "/recruiter/messages", label: "Messages", Icon: MessageSquare, badge: "messages" },
@@ -55,7 +55,7 @@ type Tab = { to: string; label: string; badge?: "compare" | "interviews" };
 /** Tabbed workspaces: list pages sharing one sidebar entry. Detail pages (e.g. /jobs/$id) show no tabs. */
 const WORKSPACES: Tab[][] = [
   [{ to: "/recruiter/candidates", label: "Search Talent" }, { to: "/recruiter/candidates/saved", label: "Saved" }, { to: "/recruiter/candidates/compare", label: "Compare", badge: "compare" }],
-  [{ to: "/recruiter/pipeline", label: "Board" }, { to: "/recruiter/applications", label: "Applications" }, { to: "/recruiter/interviews", label: "Interviews", badge: "interviews" }],
+  [{ to: "/recruiter/pipeline", label: "Board" }, { to: "/recruiter/applications", label: "Applications" }, { to: "/recruiter/interviews", label: "Interviews", badge: "interviews" }, { to: "/recruiter/approvals", label: "Offer Approvals" }],
   [{ to: "/candidate/jobs", label: "Search Jobs" }, { to: "/candidate/jobs/saved", label: "Saved" }, { to: "/candidate/jobs/compare", label: "Compare", badge: "compare" }],
   [{ to: "/candidate/applications", label: "My Applications" }, { to: "/candidate/interviews", label: "Interviews", badge: "interviews" }],
   [{ to: "/candidate/recommendations", label: "Recommended" }, { to: "/candidate/career", label: "Career" }],

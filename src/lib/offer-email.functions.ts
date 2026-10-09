@@ -17,7 +17,7 @@ export const notifyOfferEvent = createServerFn({ method: "POST" })
     const { data: o } = await context.supabase.from("job_offers").select("*").eq("offer_id", data.offerId).maybeSingle();
     if (!o) return { sent: false };
     const uid = context.userId;
-    const ok = data.event === "sent" ? o.recruiter_id === uid && o.status === "pending"
+    const ok = data.event === "sent" ? (o.recruiter_id === uid || o.approver_id === uid) && o.status === "pending"
       : data.event === "negotiation" ? o.candidate_id === uid && o.status === "pending" && !!o.negotiated_at
       : o.candidate_id === uid && o.status === data.event;
     if (!ok) return { sent: false };
