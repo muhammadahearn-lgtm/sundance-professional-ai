@@ -252,11 +252,23 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
         <div className="flex items-start gap-3">
           <Link to={back} className="mt-1 md:hidden" aria-label="Back to inbox"><ArrowLeft className="h-5 w-5" /></Link>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2"><p className="font-display font-bold">{role === "recruiter" ? c.candidate_name : c.recruiter_name}</p><ReportButton type="message" targetId={c.conversation_id} compact className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" /></div>
+            <div className="flex items-center gap-2">
+              {role === "recruiter"
+                ? <a href={`/recruiter/candidates/${c.candidate_id}${c.job_id ? `?job=${c.job_id}` : ""}`} target="_blank" rel="noopener noreferrer" title="Open profile in a new tab" className="group inline-flex items-center gap-1.5 font-display font-bold hover:text-primary hover:underline underline-offset-2">{c.candidate_name}<ExternalLink className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100" /></a>
+                : <p className="font-display font-bold">{c.recruiter_name}</p>}
+              <ReportButton type="message" targetId={c.conversation_id} compact className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" /></div>
             <div className="mt-1 grid gap-x-4 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2">
-              <span><b className="text-foreground">Job:</b> {c.job_title ?? "General conversation"}</span>
-              <span><b className="text-foreground">Company:</b> {c.company_name || "—"}</span>
-              <span><b className="text-foreground">Candidate:</b> {c.candidate_name}</span>
+              <span><b className="text-foreground">Job:</b> {c.job_id
+                ? role === "recruiter"
+                  ? <Link to="/recruiter/jobs/$id" params={{ id: c.job_id }} className="hover:text-primary hover:underline">{c.job_title ?? "View job"}</Link>
+                  : <Link to="/candidate/jobs/$id" params={{ id: c.job_id }} className="hover:text-primary hover:underline">{c.job_title ?? "View job"}</Link>
+                : "General conversation"}</span>
+              <span><b className="text-foreground">Company:</b> {c.company_name
+                ? role === "candidate" ? <Link to="/candidate/jobs" search={{ q: c.company_name }} className="hover:text-primary hover:underline">{c.company_name}</Link> : c.company_name
+                : "—"}</span>
+              <span><b className="text-foreground">Candidate:</b> {role === "recruiter"
+                ? <a href={`/recruiter/candidates/${c.candidate_id}${c.job_id ? `?job=${c.job_id}` : ""}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">{c.candidate_name}</a>
+                : c.candidate_name}</span>
               <span><b className="text-foreground">Recruiter:</b> {c.recruiter_name}</span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
