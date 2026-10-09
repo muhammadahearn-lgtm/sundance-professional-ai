@@ -55,7 +55,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
                   <p className="mt-1 text-xs text-muted-foreground">Last updated {new Date(j.updated_at).toLocaleString()}</p>
                 </div>
               </div>
-              {j.job_status === "closed" && <p className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground"><Lock className="h-4 w-4" />This job is closed and read-only.</p>}
+              {j.job_status === "closed" && <p className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground"><Lock className="h-4 w-4" />This job is closed and read-only. Re-open it if a hire falls through.</p>}
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link to="/recruiter/jobs/$id/preview" params={{ id }} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:border-primary hover:text-primary"><Eye className="h-4 w-4" />Preview</Link>
                 <JobActionBar uid={account.userId} id={id} status={j.job_status} applications={d.stats.applications} onDeleted={() => navigate({ to: "/recruiter/jobs" })} />

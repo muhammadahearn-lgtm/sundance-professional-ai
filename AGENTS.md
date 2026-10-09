@@ -20,7 +20,7 @@
 - Company branding images live in the private `company-branding` bucket under `${uid}/…`; companies store storage paths and the UI shows signed URLs. Why: workspace blocks public buckets.
 - Company editing needs `is_company_admin` (`company_members`). Requests via `company_admin_requests` (approve promotes; last admin protected). Team via `company_team`; admin dashboard reads counts-only `company_admin_jobs`. Why: no orphaned companies.
 - Job requirements store `requirement_level` (required/preferred/optional) and keep `required_flag` in sync. Why: matching reads levels; legacy flag stays valid.
-- Closed jobs are read-only, enforced by the `jobs_guard` trigger; jobs with applications can't be deleted. Why: keeps history.
+- Closed jobs are read-only (`jobs_guard`) but the owner can re-open them (closed → active, `reopen` action in `job-rules.ts`); hired cards unlock only while the job is open. Jobs with applications can't be deleted. Why: keeps history, recovers from reneged hires.
 - Job search filter/search state lives in the URL; only `job_status = active` jobs are queried and the 4-job compare limit is enforced by the `job_comparisons_limit` trigger. Why: shareable, unbypassable.
 - Recruiters see a candidate only if searchable or an applicant to their job (`recruiter_can_view_candidate`); names come from the `candidate_names` RPC, never from profiles directly. Why: emails stay private.
 - Pipeline moves sync application status via `stageToStatus`; writes guarded by `pipeline_job_guard`. Why: timeline mirrors pipeline.
