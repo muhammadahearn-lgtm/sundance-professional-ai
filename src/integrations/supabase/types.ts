@@ -2095,6 +2095,7 @@ export type Database = {
           candidate_id: string
           created_at: string
           current_stage: Database["public"]["Enums"]["pipeline_stage"]
+          disposition_reason: string | null
           job_id: string | null
           pipeline_id: string
           recruiter_id: string
@@ -2105,6 +2106,7 @@ export type Database = {
           candidate_id: string
           created_at?: string
           current_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          disposition_reason?: string | null
           job_id?: string | null
           pipeline_id?: string
           recruiter_id: string
@@ -2115,6 +2117,7 @@ export type Database = {
           candidate_id?: string
           created_at?: string
           current_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          disposition_reason?: string | null
           job_id?: string | null
           pipeline_id?: string
           recruiter_id?: string

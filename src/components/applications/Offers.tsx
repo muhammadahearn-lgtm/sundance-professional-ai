@@ -14,6 +14,7 @@ import { SILVER_STAGES } from "@/lib/saved-candidates";
 import { markSilverMedalists } from "@/lib/talent-data";
 import { setJobStatus } from "@/lib/jobs-data";
 import { openSpots, parseHeadcount } from "@/lib/job-rules";
+import { overOfferWarning, salaryWarning } from "@/lib/pipeline-guardrails";
 import { notifyOfferEvent } from "@/lib/offer-email.functions";
 import { notifyApplicantsJobFilled } from "@/lib/job-closed-email.functions";
 
@@ -37,6 +38,17 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
   const [show, setShow] = useState(false), [busy, setBusy] = useState(false);
   const errs = validateOffer(f, todayISO());
   const set = (k: keyof OfferForm) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+  const ctxQ = useQuery({ queryKey: ["offer-guard", ctx.jobId, ctx.candidateId], queryFn: async () => {
+    const [jq, h, p] = await Promise.all([
+      supabase.from("jobs").select("headcount, minimum_salary, maximum_salary").eq("job_id", ctx.jobId).maybeSingle(),
+      supabase.from("recruiting_pipeline").select("candidate_id").eq("job_id", ctx.jobId).eq("current_stage", "hired"),
+      supabase.from("job_offers").select("candidate_id").eq("job_id", ctx.jobId).eq("status", "pending").neq("candidate_id", ctx.candidateId),
+    ]);
+    return { headcount: parseHeadcount(jq.data?.headcount), min: jq.data?.minimum_salary ?? null, max: jq.data?.maximum_salary ?? null, hired: new Set((h.data ?? []).map((r) => r.candidate_id)).size, pending: new Set((p.data ?? []).map((r) => r.candidate_id)).size };
+  } });
+  const g = ctxQ.data;
+  const overWarn = g && !revising ? overOfferWarning(g.headcount, g.hired, g.pending) : null;
+  const salWarn = g ? salaryWarning(Number(f.salary) || null, g.min, g.max, f.currency) : null;
   async function submit() {
     if (Object.keys(errs).length) { setShow(true); return; }
     setBusy(true);
@@ -59,8 +71,9 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
       <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />{revising ? `Revision ${existing!.revision + 1}` : "Formal offer"}</span>
       <h2 className="mt-2 font-display text-xl font-extrabold">{revising ? "Revise offer for" : "Extend an offer to"} {candidateName}</h2>
       <p className="text-sm text-muted-foreground">{jobTitle}</p>
+      {overWarn && <p role="alert" className="mt-4 rounded-xl bg-warning/15 px-3 py-2 text-sm font-semibold">{overWarn}</p>}
       <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_110px]">
-        <label className="text-sm font-semibold">Base Salary (annual)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.salary} onChange={(e) => set("salary")(e.target.value)} placeholder="150000" />{err("salary")}</label>
+        <label className="text-sm font-semibold">Base Salary (annual)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.salary} onChange={(e) => set("salary")(e.target.value)} placeholder="150000" />{err("salary")}{salWarn && <span role="alert" className="mt-1 block text-xs font-semibold text-foreground">{salWarn}</span>}</label>
         <label className="text-sm font-semibold">Currency<select className={`${inputCls} mt-1`} value={f.currency} onChange={(e) => set("currency")(e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label className="text-sm font-semibold">Signing Bonus (optional)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.bonus} onChange={(e) => set("bonus")(e.target.value)} placeholder="10000" />{err("bonus")}</label>
         <span />

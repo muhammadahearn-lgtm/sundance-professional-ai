@@ -1,0 +1,1 @@
+ALTER TABLE public.recruiting_pipeline ADD COLUMN IF NOT EXISTS disposition_reason text CHECK (disposition_reason IS NULL OR disposition_reason IN ('underqualified','failed_assessment','compensation','timing','better_fit','culture','other'));
