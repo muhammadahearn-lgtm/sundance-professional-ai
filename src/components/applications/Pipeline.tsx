@@ -2,7 +2,7 @@ import { MessageButton } from "@/components/messages/Messages";
 import { SearchSelect } from "@/components/ui/search-select";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +36,7 @@ const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { month: "s
 const miniBtn = "inline-flex h-7 items-center gap-1 rounded-lg border border-border bg-card px-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:bg-muted/80 hover:text-primary disabled:opacity-50";
 const MSG: Partial<Record<Stage, string>> = { rejected: "Marked Not Moving Forward", offer: "Offer Extended", hired: "Candidate Hired" };
 
-export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | undefined }) {
+export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: string | undefined; focus?: string | undefined }) {
   const qc = useQueryClient();
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["pipeline", uid, jobId ?? "all"], queryFn: () => listPipeline(uid, jobId) });
@@ -69,6 +69,18 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const ivOf = (c: PipelineCard) => roundsOf(c).find((i) => i.status === "scheduled" && new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000 > Date.now());
   const doneRounds = (c: PipelineCard) => roundsOf(c).length;
   const [sched, setSched] = useState<PipelineCard | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!focus || focused.current || !q.data) return;
+    const el = document.querySelector<HTMLElement>(`[data-candidate="${focus}"]`);
+    if (!el) return;
+    focused.current = true;
+    el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    setFlash(focus);
+    const t = setTimeout(() => setFlash(null), 4000);
+    return () => clearTimeout(t);
+  }, [focus, q.data, tax.data]);
   const [sel, setSel] = useState<PipelineCard[]>([]);
   const [busy, setBusy] = useState<"" | "compare" | "share">("");
   const share = useServerFn(shareCompareWithTeam);
@@ -190,14 +202,15 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                 <div className="min-h-24 space-y-3">{col.map((c) => {
                   const iv = ivOf(c); const next = NEXT[c.current_stage as Stage];
                   return (
-                  <article key={c.pipeline_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""}`}>
+                  <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
                     <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
                     {!["hired", "rejected"].includes(c.current_stage) && (() => { const a = stageAge(c.stage_date); return <p className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.stale ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"}`}>{a.days === 0 ? "Updated today" : `${a.days}d in ${title}`}</p>; })()}
                     {!jobId && c.jobs?.job_title && <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
                     {(() => { const r = picksOf(c); if (!r.length) return null; const tip = r.map((x) => `${x.job_stakeholders?.name ?? "Team member"}${x.job_stakeholders?.hiring_role ? ` (${x.job_stakeholders.hiring_role})` : ""}${x.note ? `: "${x.note}"` : ""}`).join("\n");
-                      return <p title={tip} className="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning"><Star className="h-3 w-3 shrink-0 fill-current" />Team Pick · {r.length === 1 ? (r[0]!.job_stakeholders?.name ?? "1 recommendation") : `${r.length} recommendations`}</p>; })()}
+                      return <><p title={tip} className="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning"><Star className="h-3 w-3 shrink-0 fill-current" />Team Pick · {r.length === 1 ? (r[0]!.job_stakeholders?.name ?? "1 recommendation") : `${r.length} recommendations`}</p>
+                        {r.filter((x) => x.note).map((x, i) => <blockquote key={i} className="mt-1.5 rounded-lg border-l-2 border-warning bg-warning/10 px-2 py-1 text-[11px] leading-snug text-foreground"><span className="italic">“{x.note}”</span><span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">— {x.job_stakeholders?.name ?? "Team member"}{x.job_stakeholders?.hiring_role ? `, ${x.job_stakeholders.hiring_role}` : ""}</span></blockquote>)}</>; })()}
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
                       : ["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && <button type="button" onClick={() => setSched(c)} className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1 text-[11px] font-semibold transition-colors hover:border-primary hover:text-primary ${c.current_stage === "interviewing" ? "border-warning/60 text-warning" : "border-border text-muted-foreground"}`}><CalendarClock className="h-3 w-3" />{doneRounds(c) ? `Schedule Round ${Math.max(...roundsOf(c).map((r) => r.round_number ?? 1)) + 1}` : "Schedule interview"}</button>}
