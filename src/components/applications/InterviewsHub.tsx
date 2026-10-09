@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, MapPin, Pencil, Sparkles, Star, Video } from "lucide-react";
+import { AlertCircle, Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, Globe, KanbanSquare, MapPin, Pencil, Search, Sparkles, Star, Video } from "lucide-react";
 import { toast } from "sonner";
 import { SearchSelect } from "@/components/ui/search-select";
 import { AddToCalendar, ScheduleInterviewDialog, ScorecardDialog, recommendationLabel } from "@/components/applications/Interviews";
-import { PLATFORMS, countdown, fmtInterview, roundLabel, splitInterviews } from "@/lib/interview-rules";
+import { MessageButton } from "@/components/messages/Messages";
+import { PLATFORMS, countdown, fmtInterview, groupByDay, needsScorecard, otherZoneTime, roundLabel, splitInterviews } from "@/lib/interview-rules";
 import { listMyInterviews, listMyScorecards, type InterviewRow, type Scorecard } from "@/lib/interviews-data";
 
 type Role = "candidate" | "recruiter";
@@ -100,15 +101,34 @@ function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; o
   );
 }
 
+const iconBtn = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary";
+
+function QuickLinks({ i }: { i: InterviewRow }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {i.job_id && <Link to="/recruiter/pipeline/$jobId" params={{ jobId: i.job_id }} search={{ candidate: i.candidate_id }} aria-label="Open in Pipeline" title="Open in Pipeline" className={iconBtn}><KanbanSquare className="h-4 w-4" /></Link>}
+      <MessageButton role="recruiter" candidateId={i.candidate_id} jobId={i.job_id} iconOnly label="Open chat" className={iconBtn} />
+    </span>
+  );
+}
+
+function ZoneHint({ i }: { i: InterviewRow }) {
+  const t = otherZoneTime(i.scheduled_at, i.timezone);
+  if (!t) return null;
+  return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title={`Scheduled in ${i.timezone}`}><Globe className="h-3.5 w-3.5" />{t}</span>;
+}
+
 function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow; role: Role; past?: boolean; onEdit?: (() => void) | undefined; card?: Scorecard | undefined; onScore?: (() => void) | undefined; onNext?: (() => void) | undefined }) {
   const online = i.format === "online";
   return (
-    <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past ? "opacity-75" : ""}`}>
+    <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past && card ? "opacity-75" : ""}`}>
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">{online ? <Video className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}</span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold"><JobTitle i={i} role={role} /> <span className="font-normal text-muted-foreground">· {roundLabel(i)}</span></p>
         <p className="truncate text-sm text-muted-foreground"><Who i={i} role={role} /> · {fmtInterview(i.scheduled_at)} · {i.duration_minutes} min · {online ? lbl(PLATFORMS, i.platform) : "In person"}</p>
+        <ZoneHint i={i} />
       </div>
+      {role === "recruiter" && <QuickLinks i={i} />}
       {past ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Completed</span>
