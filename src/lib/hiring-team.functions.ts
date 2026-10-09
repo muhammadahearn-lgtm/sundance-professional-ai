@@ -121,11 +121,20 @@ export const shareCompareWithTeam = createServerFn({ method: "POST" })
       };
     });
     const stamp = Date.now();
+    const { newReviewToken, hashToken, REVIEW_TTL_DAYS } = await import("./team-review");
     let sent = 0;
     for (const m of team) {
       try {
+        // One secret link per team member; only its hash is stored.
+        const token = newReviewToken();
+        const { error: linkErr } = await supabaseAdmin.from("team_review_links").insert({
+          token_hash: await hashToken(token), job_id: data.jobId, stakeholder_id: m.stakeholder_id,
+          candidate_ids: data.candidateIds, expires_at: new Date(stamp + REVIEW_TTL_DAYS * 864e5).toISOString(),
+        });
+        const base = `${SITE}/team-review?t=${token}`;
+        const withLinks = linkErr ? candidates : candidates.map((c, i) => ({ ...c, pickUrl: `${base}&pick=${data.candidateIds[i]}` }));
         const r = await sendTemplateEmail("compare-share", m.email, {
-          templateData: { recipientName: m.name, jobTitle: job.job_title, clientCompany, candidates, actionUrl: SITE },
+          templateData: { recipientName: m.name, jobTitle: job.job_title, clientCompany, candidates: withLinks, actionUrl: linkErr ? SITE : base },
           idempotencyKey: `team-compare-${data.jobId}-${m.stakeholder_id}-${stamp}`,
         });
         if (r.sent) sent++;
