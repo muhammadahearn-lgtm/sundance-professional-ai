@@ -187,7 +187,6 @@ export const submitProfileReview = createServerFn({ method: "POST" })
       const cand = shortName(p?.first_name ?? "", p?.last_name ?? "") || "your candidate";
       const title = `${sh?.name ?? "Hiring team"}: ${verdictLabel(data.verdict)} on ${cand}`;
       const url = `/recruiter/candidates/${candidateId}?job=${link.job_id}`;
-      await supabaseAdmin.rpc("create_notification", { _recipient: job.recruiter_id, _rtype: "recruiter", _type: "team_feedback", _category: "applications", _title: title, _message: data.feedback.trim().slice(0, 200) || `Feedback for ${job.job_title}`, _url: url, _priority: "high", _dedupe: `profile-review-${link.token_hash}-${Date.now()}` });
       if (first) {
         const { data: rp } = await supabaseAdmin.from("profiles").select("email").eq("user_id", job.recruiter_id).maybeSingle();
         if (rp?.email) {
