@@ -14,7 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Send, Sparkles, Upload, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, Clock, FileText, GitBranch, Lightbulb, MapPin, Search, Send, Sparkles, Upload, X, XCircle, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { loadTaxonomy } from "@/lib/jobs-data";
 import { loadCandidateJob } from "@/lib/job-search-data";
 import { listMyInterviews } from "@/lib/interviews-data";
@@ -38,6 +38,7 @@ import { CandidateOfferCard } from "@/components/applications/Offers";
 import { ViewToggle } from "@/components/applications/ApplicationRequisitionHub";
 import { rejectApplication, undoRejection, type RejectionTiming } from "@/lib/rejection-delivery";
 import { notifyByEmail } from "@/lib/applications-data";
+import { QUICK_FILTERS, matchesKeyword, passesAll, qualificationPills, stepIndex, type QuickFilter } from "@/lib/applicant-screening";
 import { WITHDRAW_NOTE_MAX, WITHDRAW_REASONS, canWithdraw, withdrawReasonLabel } from "@/lib/withdrawal";
 
 const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
@@ -285,7 +286,16 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
   const cutoff = f.tf ? new Date(Date.now() - Number(f.tf) * 86_400_000).toISOString() : "";
-  const filtered = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
+  const [kw, setKw] = useState("");
+  const [quick, setQuick] = useState<Set<QuickFilter>>(new Set());
+  const [review, setReview] = useState<string | null>(null);
+  const rowOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j);
+  const names = (ids: string[], opts?: { id: string; name: string }[]) => ids.map((i) => opts?.find((o) => o.id === i)?.name ?? "");
+  const facts = (a: { candidate_id: string; job_id: string; application_id: string; availability: string }) => ({ score: scoreOf(a.candidate_id, a.job_id), dealbreakers: dbQ.data?.[a.application_id], availability: a.availability });
+  const base = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)
+    && matchesKeyword(kw, [a.name, a.candTitle, ...names(a.skills, tax.data?.skills), ...names(a.techs, tax.data?.technologies)]));
+  const filtered = base.filter((a) => passesAll(quick, facts(a)));
+  const quickCount = (k: QuickFilter) => base.filter((a) => inTriageTab(tab, a.application_status, inPipe(a)) && passesAll(new Set([...quick, k]), facts(a))).length;
   const tabCount = (t: TriageTab) => filtered.filter((a) => inTriageTab(t, a.application_status, inPipe(a))).length;
   const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string; prev: string } | null>(null);
@@ -330,12 +340,19 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         <select value={f.tf} onChange={(e) => setF({ ...f, tf: e.target.value })} className={inputCls} aria-label="Applied timeframe">{TIMEFRAMES.map(([k, l]) => <option key={k} value={k}>Applied: {l}</option>)}</select>
         <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} className={inputCls} aria-label="Sort by">{APP_SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
 
+        <div className="relative sm:col-span-2 lg:col-span-4"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input type="search" value={kw} onChange={(e) => setKw(e.target.value)} placeholder="Search by name, title, skill or technology (e.g. Kubernetes)" aria-label="Search applicants" className={`${inputCls} pl-9`} /></div>
         <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4">
           <div className="min-w-0 flex-1"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
-          <button type="button" role="switch" aria-checked={f.unrev} onClick={() => setF({ ...f, unrev: !f.unrev })}
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${f.unrev ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
-            Unreviewed only
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_FILTERS.map(([k, l]) => { const on = quick.has(k); return (
+              <button key={k} type="button" role="switch" aria-checked={on} onClick={() => setQuick((s) => { const n = new Set(s); if (on) n.delete(k); else n.add(k); return n; })}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
+                {l}<span className="opacity-75">{quickCount(k)}</span></button>); })}
+            <button type="button" role="switch" aria-checked={f.unrev} onClick={() => setF({ ...f, unrev: !f.unrev })}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${f.unrev ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
+              Unreviewed only
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -351,8 +368,9 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         : <div className="grid gap-4 pb-20 md:grid-cols-2">{rows.map((a) => { const picked = sel.has(a.application_id); return (
             <article key={a.application_id} className={`${card} p-5 transition-shadow ${picked ? "ring-2 ring-primary" : ""}`}>
               <div className="flex items-start gap-3">{eligible(a) && <input type="checkbox" checked={picked} onChange={() => toggle(a.application_id)} aria-label={`Select ${a.name}`} className="mt-3 h-4 w-4 shrink-0 cursor-pointer accent-primary" />}<Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} aria-label={`Open ${a.name}'s profile`} className="shrink-0 rounded-full hover:ring-2 hover:ring-primary"><Avatar name={a.name} size="h-11 w-11 text-sm" /></Link><div className="min-w-0 flex-1"><p className="font-display font-bold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link></p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><DealbreakerChip count={dbQ.data?.[a.application_id]} /><p className="text-xs text-muted-foreground">For <Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> · <span className="font-semibold text-foreground">{coName(a)}</span> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
+              <QualPills s={rowOf(a.candidate_id, a.job_id)} />
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
-              <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
+              <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => setReview(a.application_id)} className={primaryBtn}><Zap className="h-4 w-4" />Quick Review</button><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={btn}>Full Page</Link>
                 {inPipe(a) ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} search={{ candidate: a.candidate_id }} className={btn}>In Pipeline →</Link>
                   : a.application_status !== "rejected" && <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Moved to Pipeline · cleared from Inbox")} className={btn}>Move To Pipeline</button>}
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
@@ -367,6 +385,67 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
         </div>)}
       {bulkReject && <NotMovingForwardDialog name={`${selRows.length} candidate${selRows.length === 1 ? "" : "s"}`} onCancel={() => setBulkReject(false)} onConfirm={(_s, reason, timing) => { setBulkReject(false); void bulk("reject", reason, timing); }} />}
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={(_s, reason, timing) => { const c = closing; setClosing(null); void rejectMany([{ id: c.id, prev: c.prev }], reason, timing); }} />}
+      {review && (() => {
+        const i = rows.findIndex((r) => r.application_id === review);
+        if (i < 0) return null;
+        const a = rows[i]!;
+        const go = (d: 1 | -1) => { const n = stepIndex(i, rows.length, d); if (n !== null) setReview(rows[n]!.application_id); };
+        const advanceAfter = () => { const n = stepIndex(i, rows.length, 1) ?? stepIndex(i, rows.length, -1); setReview(n === null ? null : rows[n]!.application_id); };
+        return <SpeedReview key={a.application_id} a={a} pos={i + 1} total={rows.length} score={scoreOf(a.candidate_id, a.job_id)} sub={rowOf(a.candidate_id, a.job_id)} dealbreakers={dbQ.data?.[a.application_id]} piped={inPipe(a)}
+          onClose={() => setReview(null)} onPrev={() => go(-1)} onNext={() => go(1)}
+          onPipe={() => { void act(() => addToPipeline(uid, a.candidate_id, a.job_id), `${a.name} moved to Pipeline`); advanceAfter(); }}
+          onReject={() => { setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title, prev: a.application_status }); advanceAfter(); }} />;
+      })()}
+    </div>
+  );
+}
+
+function QualPills({ s }: { s?: { skill_alignment_score: number; technology_alignment_score: number; experience_alignment_score: number } | undefined }) {
+  const pills = qualificationPills(s);
+  if (!pills.length) return null;
+  return <div className="mt-3 flex flex-wrap gap-1.5">{pills.map((p) => <span key={p.label} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.tone === "good" ? "bg-success/10 text-success" : "bg-warning/15 text-foreground"}`}>{p.label}</span>)}</div>;
+}
+
+function SpeedReview({ a, pos, total, score, sub, dealbreakers, piped, onClose, onPrev, onNext, onPipe, onReject }: {
+  a: { application_id: string; candidate_id: string; job_id: string; name: string; application_status: string; jobs: { job_title: string } };
+  pos: number; total: number; score?: number | undefined; sub?: { skill_alignment_score: number; technology_alignment_score: number; experience_alignment_score: number } | undefined; dealbreakers?: number | undefined; piped: boolean;
+  onClose: () => void; onPrev: () => void; onNext: () => void; onPipe: () => void; onReject: () => void;
+}) {
+  const tax = useTaxonomy();
+  const cand = useQuery({ queryKey: ["talent-candidate", a.candidate_id], queryFn: () => loadCandidateFull(a.candidate_id) });
+  const canAct = !piped && a.application_status !== "rejected";
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "Escape") onClose(); else if (e.key === "ArrowLeft") onPrev(); else if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose, onPrev, onNext]);
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-foreground/30" onClick={onClose}>
+      <aside role="dialog" aria-modal="true" aria-label={`Quick review: ${a.name}`} onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-2xl flex-col border-l border-border bg-background shadow-elevated">
+        <header className="flex items-center gap-3 border-b border-border p-4">
+          <div className="min-w-0 flex-1"><p className="font-display text-lg font-bold">{a.name}</p><p className="truncate text-xs text-muted-foreground">{a.jobs.job_title} · {pos} of {total}</p></div>
+          <MatchBadge score={score} />
+          <button type="button" onClick={onClose} aria-label="Close" className={btn}><X className="h-4 w-4" /></button>
+        </header>
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="flex flex-wrap items-center gap-2"><DealbreakerChip count={dealbreakers} /><QualPills s={sub} /></div>
+          <ScreeningAnswers applicationId={a.application_id} jobId={a.job_id} recruiter />
+          {cand.isLoading || !tax.data ? <div className={`${card} h-64 animate-pulse`} /> : cand.data ? <CandidateProfileBody d={cand.data} t={tax.data} stacked jobId={a.job_id} /> : <p className="text-sm text-muted-foreground">Profile unavailable.</p>}
+        </div>
+        <footer className="flex flex-wrap items-center gap-2 border-t border-border p-3">
+          <button type="button" onClick={onPrev} disabled={pos <= 1} className={btn} aria-label="Previous applicant"><ChevronLeft className="h-4 w-4" />Prev</button>
+          <button type="button" onClick={onNext} disabled={pos >= total} className={btn} aria-label="Next applicant">Next<ChevronRight className="h-4 w-4" /></button>
+          <span className="hidden text-xs text-muted-foreground sm:inline">Use ← → keys</span>
+          <div className="ml-auto flex gap-2">
+            {canAct ? <><button type="button" onClick={onReject} className={btn}><XCircle className="h-4 w-4" />Not Moving Forward</button><button type="button" onClick={onPipe} className={primaryBtn}><GitBranch className="h-4 w-4" />Move to Pipeline</button></>
+              : <span className="text-sm text-muted-foreground">{piped ? "Already in Pipeline" : "Not moving forward"}</span>}
+          </div>
+        </footer>
+      </aside>
     </div>
   );
 }
