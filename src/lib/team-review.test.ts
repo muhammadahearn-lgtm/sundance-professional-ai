@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REVIEW_TTL_DAYS, hashToken, isExpired, newReviewToken, validPick } from "./team-review";
+import { REVIEW_TTL_DAYS, hashToken, isExpired, newReviewToken, validPick, validPicks } from "./team-review";
 
 describe("team review links", () => {
   it("expire after 14 days", () => {
@@ -12,6 +12,12 @@ describe("team review links", () => {
     expect(validPick("a", ["a", "b"])).toBe(true);
     expect(validPick(null, ["a", "b"])).toBe(true);
     expect(validPick("z", ["a", "b"])).toBe(false);
+  });
+  it("allow several shared picks, but no outsiders or duplicates", () => {
+    expect(validPicks(["a", "b"], ["a", "b", "c"])).toBe(true);
+    expect(validPicks([], ["a"])).toBe(true);
+    expect(validPicks(["a", "z"], ["a", "b"])).toBe(false);
+    expect(validPicks(["a", "a"], ["a", "b"])).toBe(false);
   });
   it("tokens are unique and stored only as a hash", async () => {
     const t = newReviewToken();

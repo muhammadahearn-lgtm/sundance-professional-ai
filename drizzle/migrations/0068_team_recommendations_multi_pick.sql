@@ -1,0 +1,2 @@
+ALTER TABLE public.team_recommendations DROP CONSTRAINT IF EXISTS team_recommendations_job_id_stakeholder_id_key;
+CREATE UNIQUE INDEX IF NOT EXISTS team_recommendations_one_per_pick ON public.team_recommendations (job_id, stakeholder_id, coalesce(candidate_id, '00000000-0000-0000-0000-000000000000'::uuid));

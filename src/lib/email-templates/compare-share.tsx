@@ -128,22 +128,26 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, ca
                   ))}
                 </tr>
               ))}
-              {sorted.some((c) => c.pickUrl) ? (
-                <tr>
-                  {sorted.map((c, i) => (
-                    <td key={`pick-${i}`} align="center" style={{ ...cell(i), backgroundColor: i === 0 ? '#f3f6fe' : '#ffffff', textAlign: 'center' }}>
-                      {c.pickUrl ? <a href={c.pickUrl} style={pickBtn}>Recommend {c.name.split(' ')[0]}</a> : null}
-                    </td>
-                  ))}
-                </tr>
-              ) : null}
             </tbody>
           </table>
 
           <Section style={ask}>
-            <Text style={{ ...text, margin: 0, fontWeight: 600, color: '#151a33' }}>Which candidate would you invite to apply for {jobTitle}?</Text>
+            <Text style={{ ...text, margin: 0, fontWeight: 600, color: '#151a33' }}>Which candidates would you invite to apply for {jobTitle}?</Text>
             {actionUrl && sorted.some((c) => c.pickUrl) ? (
-              <Text style={{ ...text, margin: '4px 0 0' }}>Tap "Recommend" under your pick — no sign-in needed. None of these fit? <a href={actionUrl} style={{ color: '#2f5be0', fontWeight: 600 }}>Request more candidates</a>.</Text>
+              <>
+                <Text style={{ ...text, margin: '4px 0 12px' }}>Tap a candidate to recommend them — no sign-in needed. You can pick more than one on the next page.</Text>
+                {/* Full-width stacked buttons: large tap targets that work in phone mail apps. */}
+                <table role="presentation" width="100%" cellPadding={0} cellSpacing={0}><tbody>
+                  {sorted.filter((c) => c.pickUrl).map((c, i) => (
+                    <tr key={`pick-${i}`}><td style={{ padding: '0 0 8px' }}>
+                      <a href={c.pickUrl} target="_blank" rel="noopener" style={pickBtn}>✓ Recommend {c.name}{c.score != null ? ` · ${pct(c.score)}` : ''}</a>
+                    </td></tr>
+                  ))}
+                  <tr><td style={{ padding: '4px 0 0' }}>
+                    <a href={actionUrl} target="_blank" rel="noopener" style={passBtn}>None of these fit — request more candidates</a>
+                  </td></tr>
+                </tbody></table>
+              </>
             ) : (
               <Text style={{ ...text, margin: '4px 0 0' }}>Reply to your recruiter with your pick.</Text>
             )}
@@ -196,4 +200,5 @@ const sub = { fontSize: '11px', color: '#64748b', marginTop: '3px' }
 const best = { display: 'inline-block', marginLeft: '6px', backgroundColor: '#e7f6ec', color: '#1f8a4c', fontSize: '10px', fontWeight: 700, borderRadius: '6px', padding: '1px 6px' }
 const ask = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '14px 16px', margin: '20px 0 16px' }
 const muted = { fontSize: '12px', color: '#8a8fa8', lineHeight: '1.5', margin: '24px 0 0' }
-const pickBtn = { display: 'inline-block', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '13px', fontWeight: 700, borderRadius: '999px', padding: '9px 16px', textDecoration: 'none' }
+const pickBtn = { display: 'block', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '15px', fontWeight: 700, lineHeight: '20px', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' as const, textDecoration: 'none' }
+const passBtn = { ...pickBtn, backgroundColor: '#ffffff', color: '#2f5be0', border: '1px solid #c7d4f7', fontWeight: 600 }
