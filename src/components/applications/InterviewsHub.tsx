@@ -155,7 +155,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext, onChanged }: { i: I
   );
 }
 
-export function InterviewsHub({ uid, role, scoreId }: { uid: string; role: Role; scoreId?: string }) {
+export function InterviewsHub({ uid, role, scoreId }: { uid: string; role: Role; scoreId?: string | undefined }) {
   const q = useQuery({ queryKey: ["my-interviews", uid, role], queryFn: () => listMyInterviews(uid, role) });
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [co, setCo] = useState(""); const [job, setJob] = useState("");
