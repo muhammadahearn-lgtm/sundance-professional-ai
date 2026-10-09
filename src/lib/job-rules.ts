@@ -1,5 +1,5 @@
 import { parseSalaryInput } from "./salary";
-import { DEFAULT_PLAN, type PlanRound } from "./interview-plan";
+import { DEFAULT_PLAN, validatePlan, type PlanRound } from "./interview-plan";
 import { validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 export type JobStatus = "draft" | "active" | "paused" | "closed";
@@ -28,6 +28,7 @@ type Errs = Partial<Record<keyof JobForm, string>>;
 
 function validateComp(f: JobForm): Errs {
   const e: Errs = { ...validateSalary(f), ...validateEquity(f) };
+  const planErr = validatePlan(f.interview_plan ?? []); if (planErr) e.interview_plan = planErr;
   if (Object.keys(validateQuestions(f.screening)).length) e.screening = "Fix the highlighted screening questions.";
   return e;
 }
