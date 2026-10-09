@@ -130,12 +130,12 @@ export async function listPipeline(uid: string, jobId?: string) {
     namesFor(ids),
     supabase.from("candidate_profiles").select("user_id, job_title, years_experience").in("user_id", ids),
     supabase.from("candidate_skills").select("candidate_id, lookup_id").in("candidate_id", ids),
-    supabase.from("applications").select("candidate_id, job_id, application_date, application_id, withdrawn_at, withdraw_reason").in("candidate_id", ids),
+    supabase.from("applications").select("candidate_id, job_id, application_date, application_id, withdrawn_at, withdraw_reason, reneged_at, renege_reason").in("candidate_id", ids),
   ]);
   return rows.map((r) => {
     const p = profs.data?.find((x) => x.user_id === r.candidate_id);
     const app = apps.data?.find((a) => a.candidate_id === r.candidate_id && a.job_id === r.job_id);
-    return { ...r, name: names[r.candidate_id] ?? "Candidate", candTitle: p?.job_title ?? "", years: p?.years_experience ?? 0, appDate: app?.application_date ?? null, applicationId: app?.application_id ?? null, withdrawnAt: app?.withdrawn_at ?? null, withdrawReason: app?.withdraw_reason ?? "", skills: (skills.data ?? []).filter((x) => x.candidate_id === r.candidate_id).map((x) => x.lookup_id) };
+    return { ...r, name: names[r.candidate_id] ?? "Candidate", candTitle: p?.job_title ?? "", years: p?.years_experience ?? 0, appDate: app?.application_date ?? null, applicationId: app?.application_id ?? null, withdrawnAt: app?.withdrawn_at ?? null, withdrawReason: app?.withdraw_reason ?? "", renegedAt: app?.reneged_at ?? null, renegeReason: app?.renege_reason ?? "", skills: (skills.data ?? []).filter((x) => x.candidate_id === r.candidate_id).map((x) => x.lookup_id) };
   });
 }
 export type PipelineCard = Awaited<ReturnType<typeof listPipeline>>[number];
