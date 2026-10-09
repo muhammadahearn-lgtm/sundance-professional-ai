@@ -30,7 +30,10 @@ import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
 const BOARD_STAGES = STAGES.filter(([k]) => k !== "saved");
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { HireDialog, OfferDialog, OfferPill } from "@/components/applications/Offers";
-import { latestOffer, type Offer } from "@/lib/offers-data";
+import { latestOffer, withdrawOffer, type Offer } from "@/lib/offers-data";
+import { canMoveCard, moveToast, needsOfferWithdrawal, shouldAutoSchedule } from "@/lib/stage-moves";
+import { formatSalary } from "@/lib/salary";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { MatchBadge, MatchFilter, useScores } from "@/components/match/Match";
@@ -137,15 +140,31 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     try { existing = await latestOffer(c.job_id, c.candidate_id); } catch { /* show empty form */ }
     setOfferFor({ c, existing, advance }); return true;
   }
-  async function move(c: PipelineCard, stage: Stage, confirmed = false) {
-    if (c.current_stage === stage) return;
+  const [offerGuard, setOfferGuard] = useState<{ c: PipelineCard; stage: Stage; offer: Offer } | null>(null);
+  async function move(c: PipelineCard, stage: Stage, confirmed = false, offerChecked = false) {
+    const from = c.current_stage as Stage;
+    if (from === stage) return;
+    if (!canMoveCard(from)) { toast.info("Hired candidates are locked — the job is closed."); return; }
+    if (from === "offer" && !offerChecked && c.job_id) {
+      let o: Offer | null = null;
+      try { o = await latestOffer(c.job_id, c.candidate_id); } catch { /* ignore */ }
+      if (o && needsOfferWithdrawal(from, stage, o.status)) { setOfferGuard({ c, stage, offer: o }); return; }
+    }
     if (stage === "rejected" && !confirmed) { setClosing(c); return; }
     if (stage === "offer" && !confirmed && c.job_id) { await openOffer(c, true); return; }
     if (stage === "hired" && c.job_id) setHired({ ...c, current_stage: stage });
     const key = ["pipeline", uid, jobId ?? "all"];
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
-    try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
+    try { await moveStage(c, stage); toast.success(moveToast(from, stage)); if (shouldAutoSchedule(from, stage, !!ivOf(c))) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
+  }
+  async function withdrawAndMove() {
+    if (!offerGuard) return;
+    const { c, stage, offer } = offerGuard;
+    setOfferGuard(null);
+    try { await withdrawOffer(offer.offer_id); toast.success("Offer withdrawn"); qc.invalidateQueries({ queryKey: ["offer-pill"] }); }
+    catch (e) { toast.error(friendlyError(e, "Could not withdraw the offer.")); return; }
+    await move(c, stage, false, true);
   }
   const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], offer: ["hired", "Mark Hired"] };
   async function remove(c: PipelineCard) {
