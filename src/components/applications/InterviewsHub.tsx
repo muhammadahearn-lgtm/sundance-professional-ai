@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, Globe, KanbanSquare, MapPin, Pencil, Search, Sparkles, Star, Video } from "lucide-react";
 import { toast } from "sonner";
 import { SearchSelect } from "@/components/ui/search-select";
-import { AddToCalendar, ScheduleInterviewDialog, ScorecardDialog, recommendationLabel } from "@/components/applications/Interviews";
+import { AddToCalendar, CandidateInterviewActions, RescheduleBadge, ScheduleInterviewDialog, ScorecardDialog, recommendationLabel } from "@/components/applications/Interviews";
 import { MessageButton } from "@/components/messages/Messages";
 import { PLATFORMS, countdown, fmtInterview, groupByDay, needsScorecard, otherZoneTime, roundLabel, splitInterviews } from "@/lib/interview-rules";
 import { listMyInterviews, listMyScorecards, type InterviewRow, type Scorecard } from "@/lib/interviews-data";
@@ -69,7 +69,7 @@ function JobTitle({ i, role }: { i: InterviewRow; role: Role }) {
     : <Link to="/candidate/jobs/$id" params={{ id: i.job_id }} className={cls}>{i.job_title}</Link>;
 }
 
-function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined; rounds: InterviewRow[] }) {
+function Spotlight({ i, role, onEdit, rounds, onChanged }: { i: InterviewRow; role: Role; onEdit?: (() => void) | undefined; rounds: InterviewRow[]; onChanged?: () => void }) {
   const online = i.format === "online";
   return (
     <section className="relative overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
@@ -90,11 +90,13 @@ function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; o
           </p>
           {i.location_instructions && <p className="mt-1 text-xs text-muted-foreground">{i.location_instructions}</p>}
           {i.notes && <p className="mt-3 whitespace-pre-line rounded-xl bg-muted/60 p-3 text-sm">{i.notes}</p>}
+          <RescheduleBadge i={i} candidate={role === "candidate"} />
           <div className="mt-4 flex flex-wrap gap-2">
             <JoinButton i={i} />
             {online && <button type="button" onClick={() => { navigator.clipboard.writeText(i.meeting_url); toast.success("Link copied"); }} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Copy className="h-4 w-4" />Copy link</button>}
             <AddToCalendar i={i} title={calTitle(i, role)} />
             {onEdit && <EditButton onClick={onEdit} />}
+            {role === "candidate" && <CandidateInterviewActions i={i} onChanged={onChanged} />}
             {role === "recruiter" && <QuickLinks i={i} />}
           </div>
         </div>
@@ -120,7 +122,7 @@ function ZoneHint({ i }: { i: InterviewRow }) {
   return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title={`Scheduled in ${i.timezone}`}><Globe className="h-3.5 w-3.5" />{t}</span>;
 }
 
-function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow; role: Role; past?: boolean; onEdit?: (() => void) | undefined; card?: Scorecard | undefined; onScore?: (() => void) | undefined; onNext?: (() => void) | undefined }) {
+function Row({ i, role, past, onEdit, card, onScore, onNext, onChanged }: { i: InterviewRow; role: Role; past?: boolean; onChanged?: () => void; onEdit?: (() => void) | undefined; card?: Scorecard | undefined; onScore?: (() => void) | undefined; onNext?: (() => void) | undefined }) {
   const online = i.format === "online";
   return (
     <li className={`flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-soft ${past && card ? "opacity-75" : ""}`}>
@@ -129,6 +131,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow
         <p className="truncate font-semibold"><JobTitle i={i} role={role} /> <span className="font-normal text-muted-foreground">· {roundLabel(i)}</span></p>
         <p className="truncate text-sm text-muted-foreground"><Who i={i} role={role} /> · {fmtInterview(i.scheduled_at)} · {i.duration_minutes} min · {online ? lbl(PLATFORMS, i.platform) : "In person"}</p>
         <ZoneHint i={i} />
+        {!past && i.reschedule_requested_at && <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-bold text-warning" title={i.reschedule_note || undefined}><CalendarClock className="h-3 w-3" />{role === "candidate" ? "New time requested" : "Reschedule requested"}</span>}
       </div>
       {role === "recruiter" && <QuickLinks i={i} />}
       {past ? (
@@ -145,6 +148,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext }: { i: InterviewRow
           <JoinButton i={i} />
           <AddToCalendar i={i} title={calTitle(i, role)} />
           {onEdit && <EditButton onClick={onEdit} />}
+          {role === "candidate" && <CandidateInterviewActions i={i} onChanged={onChanged} />}
         </div>
       )}
     </li>

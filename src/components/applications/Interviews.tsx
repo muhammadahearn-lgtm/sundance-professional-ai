@@ -6,8 +6,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DatePicker } from "@/components/ui/date-picker";
 import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-import { CUSTOM_TYPE, interviewTypeLabel, DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft } from "@/lib/interview-rules";
-import { cancelInterview, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
+import { CUSTOM_TYPE, interviewTypeLabel, DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft, canCandidateChange, validateCancelReason } from "@/lib/interview-rules";
+import { cancelInterview, candidateCancelInterview, requestReschedule, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
 import type { PlanRound } from "@/lib/interview-plan";
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
@@ -121,7 +121,7 @@ export function AddToCalendar({ i, title, className = "" }: { i: Interview; titl
 }
 
 /** Full interview card for candidate and recruiter detail views. */
-export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview; title: string; onEdit?: () => void; onCancelled?: () => void }) {
+export function InterviewCard({ i, title, onEdit, onCancelled, candidate, onChanged }: { i: Interview; title: string; onEdit?: () => void; onCancelled?: () => void; candidate?: boolean; onChanged?: () => void }) {
   const online = i.format === "online";
   async function cancel() {
     if (!confirm("Cancel this interview? The candidate will be notified.")) return;
@@ -139,12 +139,14 @@ export function InterviewCard({ i, title, onEdit, onCancelled }: { i: Interview;
           {online ? <p className="mt-2 truncate text-sm"><a href={i.meeting_url} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">{i.meeting_url}</a></p>
             : <><p className="mt-2 flex items-start gap-1 text-sm font-medium"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{i.location_address}</p>{i.location_instructions && <p className="mt-1 text-xs text-muted-foreground">{i.location_instructions}</p>}</>}
           {i.notes && <p className="mt-2 whitespace-pre-line rounded-lg bg-muted/60 p-2 text-sm">{i.notes}</p>}
+          <RescheduleBadge i={i} candidate={candidate} />
           <div className="mt-3 flex flex-wrap gap-2">
             {online ? <a href={i.meeting_url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground"><Video className="h-4 w-4" />Join call</a>
               : <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(i.location_address)}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-primary px-3 text-sm font-bold text-primary-foreground"><MapPin className="h-4 w-4" />Directions</a>}
             {online && <button type="button" onClick={() => { navigator.clipboard.writeText(i.meeting_url); toast.success("Link copied"); }} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Copy className="h-4 w-4" />Copy link</button>}
             <AddToCalendar i={i} title={title} />
             {onEdit && <button type="button" onClick={onEdit} className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary">Reschedule</button>}
+            {candidate && <CandidateInterviewActions i={i} onChanged={onChanged} />}
             {onCancelled && <button type="button" onClick={cancel} className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:text-destructive"><X className="h-4 w-4" />Cancel</button>}
           </div>
         </div>
@@ -193,3 +195,54 @@ export function ScorecardDialog({ open, onOpenChange, uid, interview, candidateN
 }
 
 export const recommendationLabel = (k: string) => RECOMMENDATIONS.find(([v]) => v === k)?.[1] ?? k;
+
+/** Amber notice that the candidate asked for a new time. */
+export function RescheduleBadge({ i, candidate }: { i: Interview; candidate?: boolean | undefined }) {
+  if (!i.reschedule_requested_at) return null;
+  return (
+    <div className="mt-2 rounded-xl border border-warning/40 bg-warning/10 p-2.5 text-sm">
+      <p className="font-semibold text-warning">{candidate ? "You asked for a new time — waiting for the recruiter" : "Candidate asked to reschedule"}</p>
+      {i.reschedule_note && <p className="mt-0.5 whitespace-pre-line text-foreground/80">“{i.reschedule_note}”</p>}
+    </div>
+  );
+}
+
+/** Candidate-side "Request reschedule" and "Cancel" with a short note. */
+export function CandidateInterviewActions({ i, onChanged }: { i: Interview; onChanged?: (() => void) | undefined }) {
+  const [mode, setMode] = useState<null | "move" | "cancel">(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!canCandidateChange(i)) return null;
+  async function submit() {
+    if (mode === "cancel") { const e = validateCancelReason(text); if (e) { toast.error(e); return; } }
+    if (text.length > 500) { toast.error("Keep it under 500 characters."); return; }
+    setBusy(true);
+    try {
+      if (mode === "move") { await requestReschedule(i.interview_id, text); toast.success("Request sent — the recruiter will pick a new time"); }
+      else { await candidateCancelInterview(i.interview_id, text); toast.success("Interview cancelled. The recruiter has been told."); }
+      setMode(null); setText(""); onChanged?.();
+    } catch (e) { toast.error(friendlyError(e, "Couldn't send that.")); }
+    setBusy(false);
+  }
+  const btn = "inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary";
+  return (
+    <>
+      {!i.reschedule_requested_at && <button type="button" onClick={() => setMode("move")} className={btn}><CalendarPlus className="h-4 w-4" />Request reschedule</button>}
+      <button type="button" onClick={() => setMode("cancel")} className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:text-destructive"><X className="h-4 w-4" />Can't attend</button>
+      <Dialog open={mode !== null} onOpenChange={(o) => { if (!o) { setMode(null); setText(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{mode === "move" ? "Ask for a new time" : "Cancel this interview"}</DialogTitle>
+            <DialogDescription>{mode === "move" ? "Your interview stays booked until the recruiter picks a new time. Suggest times that work for you." : "The recruiter will be told right away. To leave the job entirely, withdraw your application instead."}</DialogDescription>
+          </DialogHeader>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={500} rows={4} className={inputCls} placeholder={mode === "move" ? "e.g. Could we do Thursday or Friday afternoon instead?" : "e.g. I'm unwell and can't make it."} />
+          <p className="text-right text-[11px] text-muted-foreground">{text.length}/500</p>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setMode(null)} className={btn}>Back</button>
+            <button type="button" disabled={busy} onClick={submit} className={`inline-flex h-9 items-center rounded-xl px-4 text-sm font-bold text-primary-foreground disabled:opacity-60 ${mode === "cancel" ? "bg-destructive" : "bg-gradient-primary"}`}>{mode === "move" ? "Send request" : "Cancel interview"}</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
