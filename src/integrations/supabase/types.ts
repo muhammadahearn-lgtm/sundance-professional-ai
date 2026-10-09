@@ -215,6 +215,44 @@ export type Database = {
           },
         ]
       }
+      candidate_notes: {
+        Row: {
+          author_id: string
+          candidate_id: string
+          content: string
+          created_at: string
+          job_id: string | null
+          note_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string
+          candidate_id: string
+          content: string
+          created_at?: string
+          job_id?: string | null
+          note_id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          candidate_id?: string
+          content?: string
+          created_at?: string
+          job_id?: string | null
+          note_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_notes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       candidate_profiles: {
         Row: {
           availability: string
@@ -2745,6 +2783,10 @@ export type Database = {
         }[]
       }
       applied_to_my_job: { Args: { _candidate: string }; Returns: boolean }
+      can_read_candidate_note: {
+        Args: { _author: string; _job: string }
+        Returns: boolean
+      }
       candidate_avatars: {
         Args: { _ids: string[] }
         Returns: {
