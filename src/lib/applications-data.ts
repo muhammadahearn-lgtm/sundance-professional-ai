@@ -162,7 +162,7 @@ export async function moveStage(card: Pick<PipelineCard, "pipeline_id" | "applic
 export async function loadScreeningQuestions(jobId: string): Promise<import("./screening").ScreeningQ[]> {
   const { data, error } = await supabase.from("job_screening_questions").select("*").eq("job_id", jobId).order("sort_order");
   if (error) throw error;
-  return (data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as "yes_no" | "choice" | "text", options: r.options, ideal: r.ideal_answer, required: r.is_required }));
+  return (data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as "yes_no" | "choice" | "text", options: r.options, ideal: r.ideal_answer, required: r.is_required, knockout: r.is_knockout }));
 }
 export async function saveScreeningAnswers(applicationId: string, answers: Record<string, string>) {
   const rows = Object.entries(answers).filter(([, a]) => a.trim()).map(([question_id, a]) => ({ application_id: applicationId, question_id, answer_text: a.trim().slice(0, 1000) }));

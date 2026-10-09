@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PRESETS, answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
+import { PRESETS, knockoutMisses, answerFit, equitySummary, fromPreset, validateAnswers, validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 const q = (p: Partial<ScreeningQ>): ScreeningQ => ({ id: "q1", text: "Do you need a visa?", type: "yes_no", options: [], ideal: "", required: true, ...p });
 
@@ -46,5 +46,17 @@ describe("equity", () => {
   });
   it("limits range to 80 characters", () => {
     expect(validateEquity({ equity_type: "rsu", equity_range: "x".repeat(81), equity_vesting: "" }).equity_range).toBeTruthy();
+  });
+});
+
+describe("dealbreakers", () => {
+  it("flags only knockout questions answered against the preferred answer", () => {
+    const k = q({ ideal: "No", knockout: true });
+    expect(knockoutMisses([{ q: k, answer: "Yes" }]).length).toBe(1);
+    expect(knockoutMisses([{ q: k, answer: "No" }]).length).toBe(0);
+    expect(knockoutMisses([{ q: q({ ideal: "No" }), answer: "Yes" }]).length).toBe(0);
+  });
+  it("requires a preferred answer", () => {
+    expect(validateQuestions([q({ knockout: true })])["q1"]).toBe("Dealbreakers need a preferred answer.");
   });
 });

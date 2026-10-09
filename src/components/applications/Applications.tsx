@@ -20,7 +20,7 @@ import { CompanyLogo } from "@/components/candidate-jobs/JobCard";
 import { HUB_TABS, INTRO_NOTE_MAX, hubCounts, matchesTab, nextStep, type HubTab } from "@/lib/application-hub";
 import { validateResumeFile } from "@/lib/profile-completion";
 import { loadScreeningQuestions, saveScreeningAnswers, loadScreeningAnswers } from "@/lib/applications-data";
-import { answerFit, optionsFor, validateAnswers, type ScreeningQ } from "@/lib/screening";
+import { answerFit, knockoutMisses, optionsFor, validateAnswers, type ScreeningQ } from "@/lib/screening";
 import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loadJobApplication, loadMyApplication, markViewed, myApplicationFor, myPendingOfferApps, sendIntroNote, setApplicationStatus, uploadResumeForApply, withdrawApplication } from "@/lib/applications-data";
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
@@ -413,14 +413,17 @@ function ScreeningForm({ qs, answers, setAnswers, errs }: { qs: ScreeningQ[]; an
 export function ScreeningAnswers({ applicationId, jobId, recruiter }: { applicationId: string; jobId: string; recruiter?: boolean }) {
   const q = useQuery({ queryKey: ["screening-answers", applicationId], queryFn: () => loadScreeningAnswers(applicationId, jobId) });
   if (!q.data?.length) return null;
+  const misses = recruiter ? knockoutMisses(q.data) : [];
   return (
     <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Screening Answers</h2>
+      {misses.length > 0 && <p className="mt-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">⚠ {misses.length} dealbreaker{misses.length > 1 ? "s" : ""} not met — review before moving forward.</p>}
       <dl className="mt-4 space-y-3 text-sm">{q.data.map(({ q: sq, answer }) => {
         const fit = recruiter ? answerFit(sq, answer) : null;
         return (<div key={sq.id}><dt className="text-muted-foreground">{sq.text}</dt>
           <dd className="mt-0.5 flex items-center gap-2 font-medium">{answer || <span className="text-muted-foreground">Not answered</span>}
             {fit === "match" && <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">Preferred</span>}
-            {fit === "mismatch" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">Differs from preferred ({sq.ideal})</span>}</dd></div>);
+            {fit === "mismatch" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">Differs from preferred ({sq.ideal})</span>}
+            {fit === "mismatch" && sq.knockout && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-semibold text-destructive">Dealbreaker</span>}</dd></div>);
       })}</dl>
     </div>
   );
