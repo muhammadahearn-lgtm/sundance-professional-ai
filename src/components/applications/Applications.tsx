@@ -1,4 +1,6 @@
 import { APP_SORTS, sortApplications } from "@/lib/application-sort";
+import { TRIAGE_TABS, inTriageTab, type TriageTab } from "@/lib/application-triage";
+import { listPipeline } from "@/lib/applications-data";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
 import { formatSalaryAmount } from "@/lib/salary";
