@@ -8,7 +8,7 @@ import { card, friendlyError, inputCls } from "@/components/profile/parts";
 import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
-import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
+import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, offerExpired, offerExpiringSoon, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
 import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { supabase } from "@/integrations/supabase/client";
 import { SILVER_STAGES } from "@/lib/saved-candidates";
@@ -249,6 +249,7 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
       </div>
       <p className="mt-1 font-display text-sm font-extrabold">{formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"}</p>
       {o.status === "declined" && o.decline_reason && <p className="mt-1 text-muted-foreground">“{o.decline_reason}”</p>}
+      {offerExpiringSoon(o, today) && <p className="mt-1 rounded-md bg-warning/15 px-1.5 py-1 font-semibold text-warning">⏰ Expires {left === 0 ? "today" : "in 24h"} — no response yet</p>}
       {o.status === "pending" && o.extension_status === "requested" && o.extension_requested_until && (
         <div className="mt-1.5 rounded-md border border-warning/40 bg-warning/10 p-1.5">
           <p className="font-semibold text-warning">⚠ Extension requested · until {fmtDate(o.extension_requested_until)}</p>

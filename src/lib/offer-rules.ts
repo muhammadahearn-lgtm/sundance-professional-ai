@@ -57,3 +57,10 @@ export function extensionDate(expiresOn: string, today: string, days: number): s
   const base = expiresOn > today ? expiresOn : today;
   return new Date(Date.parse(base) + days * 864e5).toISOString().slice(0, 10);
 }
+
+/** Pending offer due today or tomorrow with no open extension request — mirrors the hourly reminder in the database. */
+export function offerExpiringSoon(o: { status: string; expires_on: string | null; extension_status?: string | null }, today: string): boolean {
+  if (o.status !== "pending" || !o.expires_on || o.extension_status === "requested") return false;
+  const d = daysLeft(o.expires_on, today)!;
+  return d >= 0 && d <= 1;
+}
