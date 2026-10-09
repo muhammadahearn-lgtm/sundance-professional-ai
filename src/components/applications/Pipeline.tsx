@@ -172,7 +172,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
     try {
       await moveStage(c, stage);
-      if (canUndoMove(from, stage)) toast.success(moveToast(from, stage), { duration: 6000, action: { label: "Undo", onClick: () => { void moveStage({ ...c, current_stage: stage }, from).then(() => { toast.success(`Moved back to ${from[0]!.toUpperCase()}${from.slice(1)}`); qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] }); }).catch((e) => toast.error(friendlyError(e, "Couldn't undo"))); } } });
+      if (canUndoMove(from, stage)) toast.success(moveToast(from, stage), { duration: 6000, action: { label: "Undo", onClick: () => { void moveStage(c, from).then(() => { toast.success(`Moved back to ${from[0]!.toUpperCase()}${from.slice(1)}`); qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] }); }).catch((e) => toast.error(friendlyError(e, "Couldn't undo"))); } } });
       else toast.success(moveToast(from, stage));
       if (shouldAutoSchedule(from, stage, !!ivOf(c))) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
