@@ -268,11 +268,12 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
   if (q.isLoading) return <div className="mt-2 h-8 animate-pulse rounded-lg bg-muted" />;
   if (!o || o.status === "withdrawn") return <button type="button" onClick={onOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/50 px-2 py-1.5 text-[11px] font-semibold text-primary hover:border-primary">+ Add Offer Terms</button>;
   const today = todayISO(), left = daysLeft(o.expires_on, today), expired = o.status === "pending" && offerExpired(o.expires_on, today);
-  const [label, tone] = o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : o.extension_status === "requested" ? ["⏳ More time asked", "text-warning bg-warning/15"] : o.negotiated_at ? ["💬 Discussion requested", "text-accent-foreground bg-accent"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
+  const [label, tone] = o.status === "pending_approval" ? ["⏳ Awaiting approval", "text-primary bg-primary-soft"] : o.status === "approval_declined" ? ["Changes requested", "text-destructive bg-destructive/15"] : o.status === "accepted" ? ["Accepted", "text-success bg-success/15"] : o.status === "declined" ? ["Declined", "text-destructive bg-destructive/15"] : expired ? ["Expired", "text-destructive bg-destructive/15"] : o.extension_status === "requested" ? ["⏳ More time asked", "text-warning bg-warning/15"] : o.negotiated_at ? ["💬 Discussion requested", "text-accent-foreground bg-accent"] : left !== null && left <= 2 ? [left === 0 ? "Pending · due today" : `Pending · ${left}d left`, "text-warning bg-warning/15"] : [left !== null ? `Pending · ${left}d left` : "Pending", "text-primary bg-primary-soft"];
+  const inReview = o.status === "pending_approval" || o.status === "approval_declined";
   return (
     <div className="mt-2 rounded-lg border border-border bg-card p-2 text-[11px]">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold">✓ Offer sent{o.revision > 1 ? ` · Rev ${o.revision}` : ""}</span>
+        <span className="font-semibold">{inReview ? "Offer draft · internal" : `✓ Offer sent${o.revision > 1 ? ` · Rev ${o.revision}` : ""}`}</span>
         <span className={`rounded-full px-2 py-0.5 font-bold ${tone}`}>{label}</span>
       </div>
       <p className="mt-1 font-display text-sm font-extrabold">{formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"}</p>
