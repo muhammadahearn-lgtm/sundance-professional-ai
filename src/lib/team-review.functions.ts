@@ -53,5 +53,43 @@ export const submitTeamReview = createServerFn({ method: "POST" })
       kind: data.pick ? "recommend" : "pass_all", note: data.note.trim(), updated_at: new Date().toISOString(),
     }, { onConflict: "job_id,stakeholder_id" });
     if (error) throw new Error("Could not save your recommendation. Please try again.");
+    try { await emailRecruiter(supabaseAdmin, link, data.pick, data.note.trim()); } catch (e) { console.error("recruiter alert email failed", e); }
     return { ok: true };
   });
+
+// Alert the job's recruiter by email with a deep link to that job's pipeline.
+async function emailRecruiter(
+  supabaseAdmin: Awaited<ReturnType<typeof loadLink>>["supabaseAdmin"],
+  link: { job_id: string; stakeholder_id: string },
+  pick: string | null, note: string,
+) {
+  const { shortName } = await import("./compare-share");
+  const { sendTemplateEmail } = await import("./email-templates/send-email");
+  const [{ data: job }, { data: sh }] = await Promise.all([
+    supabaseAdmin.from("jobs").select("job_title, recruiter_id, is_confidential, confidential_label, companies(company_name)").eq("job_id", link.job_id).maybeSingle(),
+    supabaseAdmin.from("job_stakeholders").select("name, hiring_role").eq("stakeholder_id", link.stakeholder_id).maybeSingle(),
+  ]);
+  if (!job) return;
+  const { data: rp } = await supabaseAdmin.from("profiles").select("first_name, email").eq("user_id", job.recruiter_id).maybeSingle();
+  if (!rp?.email) return;
+  let candidateName: string | undefined, candidateRole: string | undefined, score: number | null = null;
+  if (pick) {
+    const [{ data: p }, { data: cp }, { data: s }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("first_name, last_name").eq("user_id", pick).maybeSingle(),
+      supabaseAdmin.from("candidate_profiles").select("job_title").eq("user_id", pick).maybeSingle(),
+      supabaseAdmin.from("match_scores").select("overall_match_score").eq("job_id", link.job_id).eq("candidate_id", pick).maybeSingle(),
+    ]);
+    candidateName = shortName(p?.first_name ?? "", p?.last_name ?? "");
+    candidateRole = cp?.job_title ?? undefined;
+    score = s ? Math.round(Number(s.overall_match_score)) : null;
+  }
+  const company = job.is_confidential ? (job.confidential_label?.trim() || "Confidential Client") : ((job.companies as { company_name?: string } | null)?.company_name ?? "");
+  await sendTemplateEmail("team-recommendation", rp.email, {
+    templateData: {
+      recruiterName: rp.first_name, reviewerName: sh?.name ?? "A hiring team member", reviewerRole: sh?.hiring_role ?? undefined,
+      kind: pick ? "recommend" : "pass_all", candidateName, candidateRole, score, jobTitle: job.job_title, company: company || undefined,
+      note: note || undefined, pipelineUrl: `https://sundanceprofessionals.com/recruiter/pipeline/${link.job_id}`,
+    },
+    idempotencyKey: `team-rec-${link.job_id}-${link.stakeholder_id}-${pick ?? "pass"}-${Date.now()}`,
+  });
+}
