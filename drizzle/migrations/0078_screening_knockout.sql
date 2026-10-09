@@ -1,0 +1,1 @@
+ALTER TABLE public.job_screening_questions ADD COLUMN IF NOT EXISTS is_knockout boolean NOT NULL DEFAULT false;

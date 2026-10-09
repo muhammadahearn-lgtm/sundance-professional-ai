@@ -1340,6 +1340,7 @@ export type Database = {
         Row: {
           created_at: string
           ideal_answer: string
+          is_knockout: boolean
           is_required: boolean
           job_id: string
           options: string[]
@@ -1351,6 +1352,7 @@ export type Database = {
         Insert: {
           created_at?: string
           ideal_answer?: string
+          is_knockout?: boolean
           is_required?: boolean
           job_id: string
           options?: string[]
@@ -1362,6 +1364,7 @@ export type Database = {
         Update: {
           created_at?: string
           ideal_answer?: string
+          is_knockout?: boolean
           is_required?: boolean
           job_id?: string
           options?: string[]
