@@ -1,6 +1,6 @@
 /** Pre-screening questions and equity rules. Display/eligibility only — never feeds match scores. */
 export type QType = "yes_no" | "choice" | "text";
-export type ScreeningQ = { id: string; text: string; type: QType; options: string[]; ideal: string; required: boolean };
+export type ScreeningQ = { id: string; text: string; type: QType; options: string[]; ideal: string; required: boolean; knockout?: boolean };
 
 export const MAX_QUESTIONS = 8;
 export const QUESTION_MAX = 300;
@@ -12,11 +12,11 @@ export const PRESET_GROUPS: { key: PresetGroup; label: string }[] = [
   { key: "experience", label: "Experience" },
   { key: "fit", label: "Pay & Communication" },
 ];
-const yn = (text: string, ideal: string, required = true): Omit<ScreeningQ, "id"> => ({ text, type: "yes_no", options: [], ideal, required });
+const yn = (text: string, ideal: string, required = true, knockout = false): Omit<ScreeningQ, "id"> => ({ text, type: "yes_no", options: [], ideal, required, knockout });
 
 export const PRESETS: { key: string; group: PresetGroup; label: string; q: Omit<ScreeningQ, "id"> }[] = [
-  { key: "visa", group: "logistics", label: "Visa sponsorship", q: yn("Do you require visa sponsorship now or in the future to work in this location?", "No") },
-  { key: "authorization", group: "logistics", label: "Work authorization", q: yn("Are you legally authorized to work in this role's location?", "Yes") },
+  { key: "visa", group: "logistics", label: "Visa sponsorship", q: yn("Do you require visa sponsorship now or in the future to work in this location?", "No", true, true) },
+  { key: "authorization", group: "logistics", label: "Work authorization", q: yn("Are you legally authorized to work in this role's location?", "Yes", true, true) },
   { key: "arrangement", group: "logistics", label: "Work arrangement", q: yn("Are you comfortable with this role's remote / hybrid / on-site policy?", "Yes") },
   { key: "notice", group: "logistics", label: "Start date", q: { text: "What is your availability to start?", type: "choice", options: ["Immediately", "2 weeks", "1 month", "2+ months"], ideal: "", required: true } },
   { key: "timezone", group: "logistics", label: "Timezone overlap", q: yn("Can you work at least 4 hours a day overlapping with our core timezone?", "Yes") },
@@ -46,6 +46,7 @@ export function validateQuestions(qs: ScreeningQ[]): Record<string, string> {
     if (t.length < 3) e[q.id] = "Write the question (at least 3 characters).";
     else if (t.length > QUESTION_MAX) e[q.id] = `Keep it under ${QUESTION_MAX} characters.`;
     else if (q.type === "choice" && q.options.map((o) => o.trim()).filter(Boolean).length < 2) e[q.id] = "Add at least two answer options.";
+    else if (q.knockout && (q.type === "text" || !q.ideal.trim())) e[q.id] = "Dealbreakers need a preferred answer.";
   }
   return e;
 }
@@ -67,6 +68,11 @@ export function validateAnswers(qs: ScreeningQ[], answers: Record<string, string
 export function answerFit(q: Pick<ScreeningQ, "ideal">, answer: string): "match" | "mismatch" | null {
   if (!q.ideal.trim() || !answer.trim()) return null;
   return q.ideal.trim().toLowerCase() === answer.trim().toLowerCase() ? "match" : "mismatch";
+}
+
+/** Dealbreaker questions the candidate answered differently from the preferred answer. Flags only — never auto-rejects. */
+export function knockoutMisses(items: { q: ScreeningQ; answer: string }[]): ScreeningQ[] {
+  return items.filter(({ q, answer }) => q.knockout && answerFit(q, answer) === "mismatch").map((x) => x.q);
 }
 
 // ---------- Equity ----------

@@ -37,7 +37,7 @@ export function ScreeningPanel({ value, onChange, error }: { value: ScreeningQ[]
   return (
     <section className="rounded-2xl border border-border p-4">
       <h3 className="flex items-center gap-2 font-display font-bold"><ListChecks className="h-4 w-4 text-primary" />Screening Questions</h3>
-      <p className="mb-3 text-xs text-muted-foreground">Optional. Candidates answer these when applying. Answers help you review quickly — they never change match scores or auto-reject anyone.</p>
+      <p className="mb-3 text-xs text-muted-foreground">Optional. Candidates answer these when applying. Answers help you review quickly — they never change match scores or auto-reject anyone. Mark a question as a Dealbreaker to flag applicants whose answer differs from your preferred one.</p>
       <p className="mb-2 text-xs font-semibold text-muted-foreground">Templates — add in one click, then edit freely</p>
       <div className="space-y-2">
         {PRESET_GROUPS.map((g) => (
@@ -59,16 +59,17 @@ export function ScreeningPanel({ value, onChange, error }: { value: ScreeningQ[]
               <div className="min-w-0 flex-1 space-y-2">
                 <input aria-label={`Question ${i + 1}`} className={inputCls} maxLength={300} value={q.text} onChange={(e) => upd(q.id, { text: e.target.value })} placeholder="e.g. Share a link to your GitHub or portfolio" />
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <select aria-label="Answer type" className="rounded-lg border border-input bg-background px-2 py-1" value={q.type} onChange={(e) => { const t = e.target.value as QType; upd(q.id, { type: t, ideal: "", options: t === "choice" && q.options.length < 2 ? ["", ""] : q.options }); }}>
+                  <select aria-label="Answer type" className="rounded-lg border border-input bg-background px-2 py-1" value={q.type} onChange={(e) => { const t = e.target.value as QType; upd(q.id, { type: t, ideal: "", knockout: false, options: t === "choice" && q.options.length < 2 ? ["", ""] : q.options }); }}>
                     {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                   {q.type !== "text" && (
-                    <select aria-label="Preferred answer" className="rounded-lg border border-input bg-background px-2 py-1" value={q.ideal} onChange={(e) => upd(q.id, { ideal: e.target.value })}>
+                    <select aria-label="Preferred answer" className="rounded-lg border border-input bg-background px-2 py-1" value={q.ideal} onChange={(e) => upd(q.id, { ideal: e.target.value, ...(e.target.value ? {} : { knockout: false }) })}>
                       <option value="">No preferred answer</option>
                       {optionsFor(q).filter((o) => o.trim()).map((o) => <option key={o} value={o}>Prefer: {o}</option>)}
                     </select>
                   )}
                   <label className="inline-flex items-center gap-1"><input type="checkbox" checked={q.required} onChange={(e) => upd(q.id, { required: e.target.checked })} />Required</label>
+                  {q.type !== "text" && <label className="inline-flex items-center gap-1" title="Flags applicants whose answer differs from the preferred one"><input type="checkbox" disabled={!q.ideal} checked={!!q.knockout} onChange={(e) => upd(q.id, { knockout: e.target.checked })} />Dealbreaker</label>}
                 </div>
                 {q.type === "choice" && (
                   <div className="space-y-1">

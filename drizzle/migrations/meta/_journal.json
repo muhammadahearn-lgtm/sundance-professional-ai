@@ -547,6 +547,13 @@
       "when": 1791571803038,
       "tag": "0077_job_headcount",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1791572204721,
+      "tag": "0078_screening_knockout",
+      "breakpoints": true
     }
   ]
 }

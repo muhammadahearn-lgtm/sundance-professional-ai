@@ -76,7 +76,7 @@ export async function loadJob(id: string) {
   const apps = a.data ?? [];
   return {
     job: j.data, company, languages: map(l.data), skills: map(s.data), technologies: map(t.data), softSkills: map(ss.data),
-    screening: (sq.data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as ScreeningQ["type"], options: r.options, ideal: r.ideal_answer, required: r.is_required })),
+    screening: (sq.data ?? []).map((r) => ({ id: r.question_id, text: r.question_text, type: r.question_type as ScreeningQ["type"], options: r.options, ideal: r.ideal_answer, required: r.is_required, knockout: r.is_knockout })),
     stats: { applications: apps.length, interviews: apps.filter((x) => x.application_status === "interviewing").length, offers: apps.filter((x) => x.application_status === "offer").length },
   };
 }
@@ -186,7 +186,7 @@ async function saveScreening(jobId: string, qs: ScreeningQ[]) {
   const { error: de } = keep.length ? await del.not("question_id", "in", `(${keep.map((q) => q.id).join(",")})`) : await del;
   if (de) throw de;
   if (!keep.length) return;
-  const rows = keep.map((q, i) => ({ question_id: q.id, job_id: jobId, question_text: q.text.trim(), question_type: q.type, options: q.type === "choice" ? q.options.map((o) => o.trim()).filter(Boolean) : [], ideal_answer: q.ideal.trim(), is_required: q.required, sort_order: i }));
+  const rows = keep.map((q, i) => ({ question_id: q.id, job_id: jobId, question_text: q.text.trim(), question_type: q.type, options: q.type === "choice" ? q.options.map((o) => o.trim()).filter(Boolean) : [], ideal_answer: q.ideal.trim(), is_required: q.required, is_knockout: !!q.knockout && q.type !== "text" && !!q.ideal.trim(), sort_order: i }));
   const { error } = await supabase.from("job_screening_questions").upsert(rows, { onConflict: "question_id" });
   if (error) throw error;
 }
