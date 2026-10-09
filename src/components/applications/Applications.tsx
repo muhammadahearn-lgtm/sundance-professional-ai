@@ -1,5 +1,5 @@
 import { APP_SORTS, sortApplications } from "@/lib/application-sort";
-import { TRIAGE_TABS, inTriageTab, type TriageTab } from "@/lib/application-triage";
+import { TRIAGE_TABS, canBulkSelect, inTriageTab, topIds, type TriageTab } from "@/lib/application-triage";
 import { listPipeline } from "@/lib/applications-data";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
@@ -262,6 +262,21 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkReject, setBulkReject] = useState(false);
+  const eligible = (a: (typeof rows)[number]) => canBulkSelect(a.application_status, inPipe(a));
+  const selRows = rows.filter((a) => sel.has(a.application_id) && eligible(a));
+  const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  async function bulk(kind: "pipe" | "reject") {
+    setBulkBusy(true); let ok = 0;
+    for (const a of selRows) { try { if (kind === "pipe") await addToPipeline(uid, a.candidate_id, a.job_id); else await setApplicationStatus(a.application_id, "rejected"); ok++; } catch { /* counted below */ } }
+    const failed = selRows.length - ok;
+    if (ok) toast.success(kind === "pipe" ? `${ok} moved to Pipeline` : `${ok} marked Not Moving Forward`);
+    if (failed) toast.error(`${failed} couldn't be updated. Please try again.`);
+    setSel(new Set()); setBulkBusy(false);
+    qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] });
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
@@ -279,20 +294,34 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
           </button>
         </div>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
       <div role="tablist" aria-label="Application triage" className="flex w-fit flex-wrap gap-1.5 rounded-2xl border border-border bg-card p-1">{TRIAGE_TABS.map(([k, l]) => (
-        <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{l}<span className="ml-1.5 text-xs opacity-75">{tabCount(k)}</span></button>))}</div>
+        <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); setSel(new Set()); }} className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{l}<span className="ml-1.5 text-xs opacity-75">{tabCount(k)}</span></button>))}</div>
+        {rows.some(eligible) && <div className="flex gap-2">
+          <button type="button" onClick={() => setSel(new Set(topIds(rows, 5, (a) => a.application_id, eligible)))} className={btn}><Sparkles className="h-4 w-4" />Select Top 5</button>
+          <button type="button" onClick={() => setSel(selRows.length === rows.filter(eligible).length ? new Set() : new Set(rows.filter(eligible).map((a) => a.application_id)))} className={btn}>{selRows.length && selRows.length === rows.filter(eligible).length ? "Clear All" : "Select All"}</button>
+        </div>}
+      </div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">{tab === "inbox" && q.data?.length ? "Inbox zero" : "No applications"}</p><p className="mt-1 text-sm text-muted-foreground">{!q.data?.length ? "Applications to your active jobs will appear here." : tab === "inbox" ? "Every applicant has a decision. New applications will land here." : "No applications match these filters."}</p></div>
-        : <div className="grid gap-4 md:grid-cols-2">{rows.map((a) => (
-            <article key={a.application_id} className={`${card} p-5`}>
-              <div className="flex items-start gap-3"><Avatar name={a.name} size="h-11 w-11 text-sm" /><div className="min-w-0 flex-1"><p className="font-display font-bold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link></p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><p className="text-xs text-muted-foreground">For <Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> · <span className="font-semibold text-foreground">{coName(a)}</span> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
+        : <div className="grid gap-4 pb-20 md:grid-cols-2">{rows.map((a) => { const picked = sel.has(a.application_id); return (
+            <article key={a.application_id} className={`${card} p-5 transition-shadow ${picked ? "ring-2 ring-primary" : ""}`}>
+              <div className="flex items-start gap-3">{eligible(a) && <input type="checkbox" checked={picked} onChange={() => toggle(a.application_id)} aria-label={`Select ${a.name}`} className="mt-3 h-4 w-4 shrink-0 cursor-pointer accent-primary" />}<Avatar name={a.name} size="h-11 w-11 text-sm" /><div className="min-w-0 flex-1"><p className="font-display font-bold"><Link to="/recruiter/candidates/$id" params={{ id: a.candidate_id }} className="hover:text-primary hover:underline underline-offset-2">{a.name}</Link></p><p className="text-sm">{a.candTitle} · {a.years} yrs</p><p className="text-xs text-muted-foreground">For <Link to="/recruiter/jobs/$id" params={{ id: a.job_id }} className="font-semibold hover:text-primary hover:underline underline-offset-2">{a.jobs.job_title}</Link> · <span className="font-semibold text-foreground">{coName(a)}</span> · {fmt(a.application_date)}{a.availability && ` · ${label(AVAILABILITY, a.availability)}`}</p></div><div className="flex flex-col items-end gap-1"><MatchBadge score={scoreOf(a.candidate_id, a.job_id)} /><AppStatusBadge s={a.application_status} /></div></div>
               <div className="mt-3 space-y-2"><Chips ids={a.skills} opts={tax.data!.skills} max={4} /><Chips ids={a.techs} opts={tax.data!.technologies} max={4} /></div>
               <div className="mt-4 flex flex-wrap gap-2"><Link to="/recruiter/applications/$id" params={{ id: a.application_id }} className={primaryBtn}>View Candidate</Link>
                 {inPipe(a) ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: a.job_id }} search={{ candidate: a.candidate_id }} className={btn}>In Pipeline →</Link>
                   : a.application_status !== "rejected" && <button onClick={() => act(() => addToPipeline(uid, a.candidate_id, a.job_id), "Moved to Pipeline · cleared from Inbox")} className={btn}>Move To Pipeline</button>}
                 <MessageButton role="recruiter" candidateId={a.candidate_id} jobId={a.job_id} className={btn} />
                 {a.application_status !== "rejected" && <button onClick={() => setClosing({ id: a.application_id, name: a.name, job: a.jobs.job_title })} className={btn}>Not Moving Forward</button>}</div>
-            </article>))}</div>}
+            </article>); })}</div>}
+      {selRows.length > 0 && (
+        <div role="region" aria-label="Bulk actions" className="fixed inset-x-0 bottom-6 z-40 mx-auto flex w-fit max-w-[95vw] flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/90 p-2 pl-4 shadow-elevated backdrop-blur">
+          <span className="text-sm font-semibold">{selRows.length} selected</span>
+          <button disabled={bulkBusy} onClick={() => bulk("pipe")} className={primaryBtn}><GitBranch className="h-4 w-4" />Move to Pipeline</button>
+          <button disabled={bulkBusy} onClick={() => setBulkReject(true)} className={btn}><XCircle className="h-4 w-4" />Not Moving Forward</button>
+          <button disabled={bulkBusy} onClick={() => setSel(new Set())} className={btn}>Clear</button>
+        </div>)}
+      {bulkReject && <NotMovingForwardDialog name={`${selRows.length} candidate${selRows.length === 1 ? "" : "s"}`} onCancel={() => setBulkReject(false)} onConfirm={() => { setBulkReject(false); void bulk("reject"); }} />}
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.job} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); act(() => setApplicationStatus(c.id, "rejected"), "Marked Not Moving Forward"); }} />}
     </div>
   );
