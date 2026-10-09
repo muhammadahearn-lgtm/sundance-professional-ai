@@ -631,6 +631,13 @@
       "when": 1791576687503,
       "tag": "0089_offer_acceptance_signature",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1791576869153,
+      "tag": "0090_scorecard_reminders",
+      "breakpoints": true
     }
   ]
 }

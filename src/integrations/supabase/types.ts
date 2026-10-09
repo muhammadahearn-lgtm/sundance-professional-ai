@@ -1235,6 +1235,7 @@ export type Database = {
           reschedule_requested_at: string | null
           round_number: number
           scheduled_at: string
+          scorecard_reminded_at: string | null
           status: string
           timezone: string
           updated_at: string
@@ -1262,6 +1263,7 @@ export type Database = {
           reschedule_requested_at?: string | null
           round_number?: number
           scheduled_at: string
+          scorecard_reminded_at?: string | null
           status?: string
           timezone?: string
           updated_at?: string
@@ -1289,6 +1291,7 @@ export type Database = {
           reschedule_requested_at?: string | null
           round_number?: number
           scheduled_at?: string
+          scorecard_reminded_at?: string | null
           status?: string
           timezone?: string
           updated_at?: string
@@ -3076,6 +3079,7 @@ export type Database = {
       }
       deliver_due_rejections: { Args: never; Returns: number }
       deliver_offer_expiry_reminders: { Args: never; Returns: number }
+      deliver_scorecard_reminders: { Args: never; Returns: number }
       education_degree_from_text: { Args: { _v: string }; Returns: string }
       education_suggestions: {
         Args: never
