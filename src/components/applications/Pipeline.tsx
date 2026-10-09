@@ -20,8 +20,8 @@ async function listTeamRecommendations() {
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { listRecruiterInterviews } from "@/lib/interviews-data";
 import { ScheduleInterviewDialog, ScorecardDialog } from "@/components/applications/Interviews";
-import { RoundStepper } from "@/components/applications/RoundStepper";
-import { normalizePlan, roundProgress } from "@/lib/interview-plan";
+import { RoundStepper, ShortlistSummary } from "@/components/applications/RoundStepper";
+import { normalizePlan, roundProgress, FOLLOW_UP_PLAN } from "@/lib/interview-plan";
 import { listMyScorecards, type Interview } from "@/lib/interviews-data";
 import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
@@ -77,6 +77,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
   const stepsOf = (c: PipelineCard) => roundProgress(planOf(c), roundsOf(c), scQ.data ?? []);
   const [scoreFor, setScoreFor] = useState<{ c: PipelineCard; i: Interview } | null>(null);
   const [editIv, setEditIv] = useState<Interview | undefined>(undefined);
+  const [followUp, setFollowUp] = useState(false);
   const [sched, setSched] = useState<PipelineCard | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const focused = useRef(false);
@@ -144,7 +145,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
   }
-  const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], shortlisted: ["offer", "Extend Offer"], offer: ["hired", "Mark Hired"] };
+  const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], offer: ["hired", "Mark Hired"] };
   async function remove(c: PipelineCard) {
     if (!confirm(`Remove ${c.name} from the pipeline?`)) return;
     try { await removeFromPipeline(c.pipeline_id); toast.success("Candidate removed"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
@@ -221,9 +222,10 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                       return <><p title={tip} className="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning"><Star className="h-3 w-3 shrink-0 fill-current" />Team Pick · {r.length === 1 ? (r[0]!.job_stakeholders?.name ?? "1 recommendation") : `${r.length} recommendations`}</p>
                         {r.filter((x) => x.note).map((x, i) => <blockquote key={i} className="mt-1.5 rounded-lg border-l-2 border-warning bg-warning/10 px-2 py-1 text-[11px] leading-snug text-foreground"><span className="italic">“{x.note}”</span><span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">— {x.job_stakeholders?.name ?? "Team member"}{x.job_stakeholders?.hiring_role ? `, ${x.job_stakeholders.hiring_role}` : ""}</span></blockquote>)}</>; })()}
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
-                    {["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && (roundsOf(c).length > 0 || c.current_stage !== "contacted"
-                      ? <RoundStepper steps={stepsOf(c)} planned={planOf(c).length} canSchedule onSchedule={() => { setEditIv(undefined); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />
-                      : <button type="button" onClick={() => { setEditIv(undefined); setSched(c); }} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"><CalendarClock className="h-3 w-3" />Schedule R1: {planOf(c)[0]?.name ?? "Interview"}</button>)}
+                    {c.current_stage === "shortlisted" && <ShortlistSummary steps={stepsOf(c)} planned={planOf(c).length} onOffer={c.job_id ? () => openOffer(c, true) : undefined} onFollowUp={() => { setEditIv(undefined); setFollowUp(true); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />}
+                    {["contacted", "interviewing"].includes(c.current_stage) && (roundsOf(c).length > 0 || c.current_stage !== "contacted"
+                      ? <RoundStepper steps={stepsOf(c)} planned={planOf(c).length} canSchedule onSchedule={() => { setEditIv(undefined); setFollowUp(false); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />
+                      : <button type="button" onClick={() => { setEditIv(undefined); setFollowUp(false); setSched(c); }} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"><CalendarClock className="h-3 w-3" />Schedule R1: {planOf(c)[0]?.name ?? "Interview"}</button>)}
                     {c.current_stage === "offer" && c.job_id && <button type="button" onClick={() => openOffer(c, false)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-success/50 px-2 py-1 text-[11px] font-semibold text-success hover:border-success">Offer terms</button>}
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
@@ -260,7 +262,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         onSkip={offerFor.advance ? () => { const c = offerFor.c; setOfferFor(null); move(c, "offer", true); } : undefined}
         onDone={() => { const o = offerFor; setOfferFor(null); if (o.advance) move(o.c, "offer", true); }} />}
       {hired && hired.job_id && <HireDialog name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
-      {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={editIv ?? ivOf(sched)} priorRounds={roundsOf(sched)} plan={planOf(sched)}
+      {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => { if (!o) { setSched(null); setFollowUp(false); } }} candidateName={sched.name} existing={editIv ?? ivOf(sched)} priorRounds={roundsOf(sched)} plan={followUp ? FOLLOW_UP_PLAN : planOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}
       {scoreFor && <ScorecardDialog key={scoreFor.i.interview_id} open onOpenChange={(o) => !o && setScoreFor(null)} uid={uid} interview={scoreFor.i} candidateName={scoreFor.c.name} existing={(scQ.data ?? []).find((x) => x.interview_id === scoreFor.i.interview_id)} onSaved={() => qc.invalidateQueries({ queryKey: ["scorecards"] })} />}
