@@ -1248,6 +1248,10 @@ export type Database = {
           decline_reason: string
           equity_details: string
           expires_on: string | null
+          extension_note: string
+          extension_requested_until: string | null
+          extension_responded_at: string | null
+          extension_status: string
           job_id: string
           negotiated_at: string | null
           negotiation_conversation_id: string | null
@@ -1270,6 +1274,10 @@ export type Database = {
           decline_reason?: string
           equity_details?: string
           expires_on?: string | null
+          extension_note?: string
+          extension_requested_until?: string | null
+          extension_responded_at?: string | null
+          extension_status?: string
           job_id: string
           negotiated_at?: string | null
           negotiation_conversation_id?: string | null
@@ -1292,6 +1300,10 @@ export type Database = {
           decline_reason?: string
           equity_details?: string
           expires_on?: string | null
+          extension_note?: string
+          extension_requested_until?: string | null
+          extension_responded_at?: string | null
+          extension_status?: string
           job_id?: string
           negotiated_at?: string | null
           negotiation_conversation_id?: string | null
@@ -2931,6 +2943,10 @@ export type Database = {
         Args: { _interview: string; _note: string }
         Returns: undefined
       }
+      request_offer_extension: {
+        Args: { _note?: string; _offer: string; _until: string }
+        Returns: undefined
+      }
       request_offer_negotiation: {
         Args: { _message: string; _offer: string }
         Returns: string
@@ -2938,6 +2954,10 @@ export type Database = {
       request_resume_access: {
         Args: { _candidate: string; _message: string }
         Returns: string
+      }
+      respond_offer_extension: {
+        Args: { _grant: boolean; _offer: string; _until?: string }
+        Returns: undefined
       }
       respond_resume_request: {
         Args: { _approve: boolean; _request: string }

@@ -43,3 +43,17 @@ export const negotiateMessage = (jobTitle: string) =>
   `Hi, thank you so much for the offer for ${jobTitle}! I'm excited about the opportunity. Before finalizing, I'd love to discuss a couple of points about the offer. Let me know when you have a moment.`;
 
 export const todayISO = () => new Date().toISOString().slice(0, 10);
+
+/** Candidates may ask for more time while pending, up to 2 days after the deadline, once per open request. */
+export const EXTENSION_GRACE_DAYS = 2;
+export function canRequestExtension(o: { status: string; expires_on: string | null; extension_status?: string | null }, today: string): boolean {
+  if (o.status !== "pending" || !o.expires_on || o.extension_status === "requested") return false;
+  const d = daysLeft(o.expires_on, today)!;
+  return d >= -EXTENSION_GRACE_DAYS;
+}
+
+/** New deadline = later of (deadline, today) + days, as YYYY-MM-DD. */
+export function extensionDate(expiresOn: string, today: string, days: number): string {
+  const base = expiresOn > today ? expiresOn : today;
+  return new Date(Date.parse(base) + days * 864e5).toISOString().slice(0, 10);
+}
