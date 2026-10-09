@@ -49,3 +49,19 @@ export function topPickJob(jobs: PickerJob[], scores: Record<string, number>) {
   for (const j of jobs) if (j.job_status === "active" && scores[j.job_id] != null && (!best || scores[j.job_id]! > scores[best.job_id]!)) best = j;
   return best;
 }
+
+/** Stages a Silver Medalist can be fast-tracked into on a new job (skips cold outreach). */
+export const FAST_TRACK_STAGES = [{ value: "interviewing", label: "Interviewing" }, { value: "shortlisted", label: "Shortlisted (final round)" }] as const;
+export type FastTrackStage = (typeof FAST_TRACK_STAGES)[number]["value"];
+
+type JobOpt = { job_id: string; job_title: string; job_status: string };
+/** Finalist badge text for a saved entry, or null when the candidate isn't a Silver Medalist. */
+export function finalistLabel(entry: { silver_medalist_job_id?: string | null } | undefined, jobs: JobOpt[]): string | null {
+  if (!entry?.silver_medalist_job_id) return null;
+  const j = jobs.find((x) => x.job_id === entry.silver_medalist_job_id);
+  return `Finalist: ${j?.job_title ?? "past role"}`;
+}
+/** Open jobs a finalist can be fast-tracked into: active only, never the job they were runner-up for. */
+export function fastTrackJobs<T extends JobOpt>(jobs: T[], silverJobId: string | null | undefined): T[] {
+  return jobs.filter((j) => j.job_status === "active" && j.job_id !== silverJobId);
+}
