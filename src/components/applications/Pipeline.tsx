@@ -193,7 +193,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         </div></div>
       {tax.error ? <ErrorBox msg="Unable To Load Pipeline" retry={() => tax.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-72 animate-pulse`} /> : (
         <div ref={boardRef} onDragOver={edgeScroll} className="pipeline-scroll -mx-4 overflow-x-scroll px-4 pb-3"><div className="flex gap-4" style={{ minWidth: STAGES.length * 276 }}>
-          {STAGES.map(([key, title], si) => {
+          {BOARD_STAGES.map(([key, title], si) => {
             const col = cards.filter((c) => c.current_stage === key && meetsMinMatch(scoreOf(c), mm));
             const tone = key === "hired" ? "bg-success" : key === "rejected" ? "bg-muted-foreground/40" : "bg-gradient-primary";
             return (
