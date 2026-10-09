@@ -21,6 +21,7 @@ import { digitsOnly } from "@/lib/salary";
 import { displayJobTitle } from "@/lib/role-taxonomy";
 import { descriptionTemplate } from "@/lib/role-recommendations";
 import { SearchPicker } from "@/components/taxonomy/SearchPicker";
+import { InterviewPlanPanel } from "./InterviewPlanPanel";
 import { ARRANGEMENT, CURRENCIES, EMPLOYMENT, RequirementPicker } from "./shared";
 
 const STEPS = ["Job Information", "Programming Languages", "Technologies & Tools", "Technical Skills", "Compensation"];
@@ -209,6 +210,7 @@ function Wizard({ uid, jobId, initial, status, companies, tax }: { uid: string; 
               <p className="mt-1 text-xs text-muted-foreground">Leave empty for unlimited. When this many people apply, the job pauses automatically and you get a notice — raise the limit and resume anytime.</p>
             </Field>
             <ScreeningPanel value={f.screening} onChange={(v) => set("screening", v)} error={errs.screening} />
+            <InterviewPlanPanel value={f.interview_plan} onChange={(v) => set("interview_plan", v)} error={errs.interview_plan} />
           </div>
         )}
       </div>
