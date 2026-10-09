@@ -2806,6 +2806,19 @@ export type Database = {
           user_id: string
         }[]
       }
+      candidate_notes_feed: {
+        Args: { _candidate: string }
+        Returns: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at: string
+          job_id: string
+          job_title: string
+          note_id: string
+          updated_at: string
+        }[]
+      }
       candidate_visible_to_recruiters: {
         Args: { _candidate: string }
         Returns: boolean
