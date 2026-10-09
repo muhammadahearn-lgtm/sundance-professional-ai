@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarDays, Gift, Handshake, MessageSquare, PartyPopper, Sparkles, Wallet } from "lucide-react";
@@ -8,7 +8,7 @@ import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
 import { daysLeft, emptyOffer, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
-import { latestOffer, offersForApplication, openNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
+import { latestOffer, offersForApplication, requestNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { setJobStatus } from "@/lib/jobs-data";
 
 const Modal = ({ label, onClose, children, wide }: { label: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
