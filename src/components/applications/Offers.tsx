@@ -119,7 +119,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   }
   async function negotiate() {
     setBusy(true);
-    try { const id = o.negotiation_conversation_id ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
+    if (!o) return; try { const id = o.negotiated_at && o.negotiation_conversation_id ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
     catch (e) { toast.error(friendlyError(e, "Unable to start conversation")); }
     setBusy(false);
   }
@@ -182,7 +182,7 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
       </div>
       <p className="mt-1 font-display text-sm font-extrabold">{formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"}</p>
       {o.status === "declined" && o.decline_reason && <p className="mt-1 text-muted-foreground">“{o.decline_reason}”</p>}
-      {o.status === "pending" && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
+      {o.status === "pending" && o.negotiated_at && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
       <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" ? "View / Revise" : "View Details"}</button>
     </div>
   );
