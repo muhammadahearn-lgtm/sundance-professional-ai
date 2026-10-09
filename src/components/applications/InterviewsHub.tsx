@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Bell, Building2, CalendarClock, CalendarDays, CalendarPlus, Check, ClipboardCheck, Clock, Copy, Globe, KanbanSquare, MapPin, Pencil, Search, Sparkles, Star, Video } from "lucide-react";
@@ -155,7 +155,7 @@ function Row({ i, role, past, onEdit, card, onScore, onNext, onChanged }: { i: I
   );
 }
 
-export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
+export function InterviewsHub({ uid, role, scoreId }: { uid: string; role: Role; scoreId?: string | undefined }) {
   const q = useQuery({ queryKey: ["my-interviews", uid, role], queryFn: () => listMyInterviews(uid, role) });
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [co, setCo] = useState(""); const [job, setJob] = useState("");
@@ -178,6 +178,13 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
   const roundsOf = (i: InterviewRow) => all.filter((x) => processKey(x) === processKey(i)).sort((a, b) => (a.round_number ?? 1) - (b.round_number ?? 1) || a.scheduled_at.localeCompare(b.scheduled_at));
   const isLatest = (i: InterviewRow) => { const r = roundsOf(i); return r[r.length - 1]?.interview_id === i.interview_id; };
   const [scoring, setScoring] = useState<InterviewRow | null>(null);
+  const [autoOpened, setAutoOpened] = useState(false);
+  useEffect(() => {
+    if (!scoreId || autoOpened || !sc.data || !all.length) return;
+    const iv = all.find((i) => i.interview_id === scoreId);
+    setAutoOpened(true);
+    if (iv) { setTab("past"); setScoring(iv); }
+  }, [scoreId, autoOpened, sc.data, all]);
   const [nextFor, setNextFor] = useState<InterviewRow | null>(null);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["my-interviews"] }); qc.invalidateQueries({ queryKey: ["interviews"] }); };
 
