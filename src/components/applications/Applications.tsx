@@ -247,11 +247,17 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const scores = useScores({});
   const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
   const [f, setF] = useState({ co: "", job: "", tf: "", mm: 0, sort: "match", unrev: false });
+  const [tab, setTab] = useState<TriageTab>("inbox");
+  const pipe = useQuery({ queryKey: ["pipeline", uid, "all"], queryFn: () => listPipeline(uid) });
+  const piped = useMemo(() => new Set((pipe.data ?? []).map((p) => `${p.candidate_id}:${p.job_id}`)), [pipe.data]);
+  const inPipe = (a: { candidate_id: string; job_id: string }) => piped.has(`${a.candidate_id}:${a.job_id}`);
   const coName = (a: { jobs: { companies: { company_name: string } | null } }) => a.jobs.companies?.company_name ?? "No company";
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
   const cutoff = f.tf ? new Date(Date.now() - Number(f.tf) * 86_400_000).toISOString() : "";
-  const rows = sortApplications((q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
+  const filtered = (q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!cutoff || a.application_date >= cutoff) && (!f.unrev || a.application_status === "applied") && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm));
+  const tabCount = (t: TriageTab) => filtered.filter((a) => inTriageTab(t, a.application_status, inPipe(a))).length;
+  const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   return (
