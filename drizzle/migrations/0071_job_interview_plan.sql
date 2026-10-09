@@ -1,0 +1,2 @@
+ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS interview_plan jsonb NOT NULL DEFAULT '[{"type":"screen","name":"Initial Screen","duration_minutes":30},{"type":"technical","name":"Technical Deep Dive","duration_minutes":60},{"type":"final","name":"Final Round","duration_minutes":45}]'::jsonb;
+ALTER TABLE public.jobs ADD CONSTRAINT jobs_interview_plan_chk CHECK (jsonb_typeof(interview_plan) = 'array' AND jsonb_array_length(interview_plan) BETWEEN 1 AND 5);
