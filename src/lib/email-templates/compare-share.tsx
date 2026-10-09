@@ -15,6 +15,7 @@ export interface CompareEmailCandidate {
   score?: number | null
   strengths?: string[]
   gaps?: string[]
+  pickUrl?: string
 }
 
 interface Props {
@@ -32,7 +33,7 @@ const pct = (s?: number | null) => (s == null ? '—' : `${Math.round(s)}%`)
 
 const Best = () => <span style={best}>🏆 BEST</span>
 
-const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, candidates = [] }: Props) => {
+const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, candidates = [], actionUrl }: Props) => {
   const sorted = [...candidates].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   const top = sorted[0]
   const lead = top?.score != null && sorted[1]?.score != null ? Math.round(top.score - (sorted[1].score ?? 0)) : null
@@ -127,12 +128,25 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, ca
                   ))}
                 </tr>
               ))}
+              {sorted.some((c) => c.pickUrl) ? (
+                <tr>
+                  {sorted.map((c, i) => (
+                    <td key={`pick-${i}`} align="center" style={{ ...cell(i), backgroundColor: i === 0 ? '#f3f6fe' : '#ffffff', textAlign: 'center' }}>
+                      {c.pickUrl ? <a href={c.pickUrl} style={pickBtn}>Recommend {c.name.split(' ')[0]}</a> : null}
+                    </td>
+                  ))}
+                </tr>
+              ) : null}
             </tbody>
           </table>
 
           <Section style={ask}>
             <Text style={{ ...text, margin: 0, fontWeight: 600, color: '#151a33' }}>Which candidate would you invite to apply for {jobTitle}?</Text>
-            <Text style={{ ...text, margin: '4px 0 0' }}>Reply to your recruiter with your pick.</Text>
+            {actionUrl && sorted.some((c) => c.pickUrl) ? (
+              <Text style={{ ...text, margin: '4px 0 0' }}>Tap "Recommend" under your pick — no sign-in needed. None of these fit? <a href={actionUrl} style={{ color: '#2f5be0', fontWeight: 600 }}>Request more candidates</a>.</Text>
+            ) : (
+              <Text style={{ ...text, margin: '4px 0 0' }}>Reply to your recruiter with your pick.</Text>
+            )}
           </Section>
 
           <Text style={muted}>For privacy, this comparison shows first names and last initials only. Contact details stay private on Sundance Professionals.</Text>
