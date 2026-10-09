@@ -84,6 +84,7 @@ export type Database = {
           application_status: Database["public"]["Enums"]["application_status"]
           candidate_id: string
           created_at: string
+          disposition_reason: string | null
           job_id: string
           rejection_deliver_at: string | null
           rejection_notified_at: string | null
@@ -102,6 +103,7 @@ export type Database = {
           application_status?: Database["public"]["Enums"]["application_status"]
           candidate_id: string
           created_at?: string
+          disposition_reason?: string | null
           job_id: string
           rejection_deliver_at?: string | null
           rejection_notified_at?: string | null
@@ -120,6 +122,7 @@ export type Database = {
           application_status?: Database["public"]["Enums"]["application_status"]
           candidate_id?: string
           created_at?: string
+          disposition_reason?: string | null
           job_id?: string
           rejection_deliver_at?: string | null
           rejection_notified_at?: string | null
