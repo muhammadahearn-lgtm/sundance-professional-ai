@@ -7,6 +7,7 @@ export type Offer = {
   start_date: string | null; expires_on: string | null; notes: string; status: string; revision: number;
   decline_reason: string; responded_at: string | null; negotiated_at: string | null; negotiation_conversation_id: string | null; created_at: string; updated_at: string;
   extension_requested_until?: string | null; extension_note?: string; extension_status?: string; extension_responded_at?: string | null;
+  signed_name?: string | null; signed_at?: string | null;
 };
 
 /** Latest offer for a candidate on a job (any status). */
@@ -76,5 +77,11 @@ export async function requestOfferExtension(offerId: string, until: string, note
 
 export async function respondOfferExtension(offerId: string, grant: boolean, until?: string) {
   const { error } = await supabase.rpc("respond_offer_extension", { _offer: offerId, _grant: grant, ...(until ? { _until: until } : {}) });
+  if (error) throw error;
+}
+
+/** Candidate signs (typed legal name) and accepts in one atomic step. */
+export async function signAndAcceptOffer(offerId: string, name: string) {
+  const { error } = await supabase.rpc("sign_and_accept_offer", { _offer: offerId, _name: name });
   if (error) throw error;
 }

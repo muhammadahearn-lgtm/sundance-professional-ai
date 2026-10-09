@@ -64,3 +64,11 @@ export function offerExpiringSoon(o: { status: string; expires_on: string | null
   const d = daysLeft(o.expires_on, today)!;
   return d >= 0 && d <= 1;
 }
+
+/** Typed e-signature: full legal name (first + last), 3–120 chars, whitespace collapsed. Mirrors `sign_and_accept_offer`. */
+export const normalizeSignature = (s: string) => s.replace(/\s+/g, " ").trim();
+export function signatureError(name: string): string | null {
+  const n = normalizeSignature(name);
+  if (n.length < 3 || n.length > 120 || !n.includes(" ")) return "Type your full legal name (first and last) to sign.";
+  return null;
+}

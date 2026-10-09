@@ -9,7 +9,7 @@ import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
 import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, offerExpired, offerExpiringSoon, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
-import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
+import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, signAndAcceptOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { supabase } from "@/integrations/supabase/client";
 import { SILVER_STAGES } from "@/lib/saved-candidates";
 import { markSilverMedalists } from "@/lib/talent-data";
@@ -142,7 +142,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   const qc = useQueryClient();
   const nav = useNavigate();
   const q = useQuery({ queryKey: ["offer", applicationId], queryFn: () => offersForApplication(applicationId) });
-  const [dlg, setDlg] = useState<"accept" | "decline" | "extend" | null>(null), [extDays, setExtDays] = useState(3), [extNote, setExtNote] = useState(""), [reason, setReason] = useState(""), [busy, setBusy] = useState(false);
+  const [dlg, setDlg] = useState<"accept" | "decline" | "extend" | null>(null), [extDays, setExtDays] = useState(3), [extNote, setExtNote] = useState(""), [reason, setReason] = useState(""), [busy, setBusy] = useState(false), [sig, setSig] = useState(""), [agree, setAgree] = useState(false);
   const o = q.data;
   if (!o) return null;
   const today = todayISO();
@@ -151,7 +151,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   const refresh = () => ["offer", "my-application", "my-applications"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
   async function respond(accept: boolean) {
     setBusy(true);
-    try { await respondToOffer(o!.offer_id, accept, reason); toast.success(accept ? "Offer accepted. Congratulations!" : "Offer declined"); setDlg(null); refresh(); void notifyOfferEvent({ data: { offerId: o!.offer_id, event: accept ? "accepted" : "declined" } }).catch(() => {}); }
+    try { if (accept) await signAndAcceptOffer(o!.offer_id, normalizeSignature(sig)); else await respondToOffer(o!.offer_id, accept, reason); toast.success(accept ? "Offer accepted. Congratulations!" : "Offer declined"); setDlg(null); refresh(); void notifyOfferEvent({ data: { offerId: o!.offer_id, event: accept ? "accepted" : "declined" } }).catch(() => {}); }
     catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't respond.")); }
     setBusy(false);
   }
@@ -208,7 +208,11 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
       {dlg === "accept" && <Modal label="Accept offer" onClose={() => setDlg(null)}>
         <h2 className="font-display text-lg font-extrabold">Accept this offer?</h2>
         <p className="mt-2 text-sm text-muted-foreground">You'll be marked as hired for {jobTitle}. The hiring team is notified right away and the role closes to new applicants.</p>
-        <div className="mt-6 flex justify-end gap-2"><button onClick={() => setDlg(null)} className={btn}>Not yet</button><button onClick={() => respond(true)} disabled={busy} className={primaryBtn}>Yes, Accept</button></div></Modal>}
+        <label className="mt-4 block text-sm font-semibold">Type your full legal name to sign</label>
+        <input className={`${inputCls} mt-1 font-display text-lg italic`} value={sig} maxLength={120} onChange={(e) => setSig(e.target.value)} placeholder="e.g. Jane Doe" aria-label="Signature" />
+        {sig && signatureError(sig) && <p className="mt-1 text-xs text-destructive">{signatureError(sig)}</p>}
+        <label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} /><span>I have read the offer terms above and agree to them. My typed name is my electronic signature.</span></label>
+        <div className="mt-6 flex justify-end gap-2"><button onClick={() => setDlg(null)} className={btn}>Not yet</button><button onClick={() => respond(true)} disabled={busy || !agree || !!signatureError(sig)} className={primaryBtn}>Sign & Accept</button></div></Modal>}
       {dlg === "extend" && o.expires_on && <Modal label="Request more time" onClose={() => setDlg(null)}>
         <h2 className="font-display text-lg font-extrabold">Ask for more time</h2>
         <p className="mt-2 text-sm text-muted-foreground">Current deadline: {fmtDate(o.expires_on)}</p>
