@@ -1,3 +1,4 @@
+import { MyReferences } from "@/components/applications/MyReferences";
 import { APP_SORTS, sortApplications } from "@/lib/application-sort";
 import { TRIAGE_TABS, canBulkSelect, inTriageTab, topIds, type TriageTab } from "@/lib/application-triage";
 import { listPipeline } from "@/lib/applications-data";
@@ -233,6 +234,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.job_id ? <Link to="/candidate/jobs/$id" params={{ id: a.job_id }} className="hover:text-primary hover:underline">{a.jobs?.job_title}</Link> : a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name && <Link to="/candidate/jobs" search={{ q: a.jobs.companies.company_name }} className="hover:text-primary hover:underline">{a.jobs.companies.company_name}</Link>}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
         <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{canWithdraw(a.application_status, withdrawnAt) && <button onClick={() => setWOpen(true)} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+      {a.job_id && a.application_status !== "rejected" && <MyReferences jobId={a.job_id} />}
       {withdrawnAt && <div className={`${card} border-warning/30 bg-warning/10 p-5 text-sm`}><p className="font-semibold">You withdrew from this role on {fmt(withdrawnAt)}.</p><p className="mt-1 text-muted-foreground">Reason shared with the recruiter: {withdrawReasonLabel(withdrawnReason)}. Any pending offer and upcoming interviews were cancelled.</p></div>}
       {wOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" role="dialog" aria-modal="true" aria-label="Withdraw application">

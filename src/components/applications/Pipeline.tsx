@@ -1,3 +1,5 @@
+import { listReferenceBadges } from "@/lib/reference-badges";
+import { referenceProgress } from "@/lib/references";
 import { MessageButton } from "@/components/messages/Messages";
 import { SearchSelect } from "@/components/ui/search-select";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -141,6 +143,8 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
   const [hired, setHired] = useState<PipelineCard | null>(null);
   const [renege, setRenege] = useState<PipelineCard | null>(null);
   const [fastTrack, setFastTrack] = useState<PipelineCard | null>(null);
+  const refQ = useQuery({ queryKey: ["reference-badges", uid], queryFn: listReferenceBadges });
+  const refOf = (c: { job_id: string | null; candidate_id: string }) => refQ.data?.find((r) => r.job_id === c.job_id && r.candidate_id === c.candidate_id);
   const savedQ = useQuery({ queryKey: ["saved-entries", uid], queryFn: () => listSavedEntries(uid) });
   async function openOffer(c: PipelineCard, advance: boolean) {
     if (!c.job_id) return false;
@@ -281,6 +285,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                         {r.filter((x) => x.note).map((x, i) => <blockquote key={i} className="mt-1.5 rounded-lg border-l-2 border-warning bg-warning/10 px-2 py-1 text-[11px] leading-snug text-foreground"><span className="italic">“{x.note}”</span><span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">— {x.job_stakeholders?.name ?? "Team member"}{x.job_stakeholders?.hiring_role ? `, ${x.job_stakeholders.hiring_role}` : ""}</span></blockquote>)}</>; })()}
                     {c.current_stage === "shortlisted" && <ShortlistSummary steps={stepsOf(c)} planned={planOf(c).length} onOffer={c.job_id ? () => openOffer(c, true) : undefined} onFollowUp={() => { setEditIv(undefined); setFollowUp(true); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />}
                     {c.current_stage === "interviewing" && <RoundStepper steps={stepsOf(c)} planned={planOf(c).length} canSchedule onSchedule={() => { setEditIv(undefined); setFollowUp(false); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />}
+                    {(() => { const r = refOf(c); if (!r) return null; const pr = referenceProgress(r.target, r.done, r.status); return <p className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${pr.done ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}><ClipboardCheck className="h-3 w-3" />{pr.label}</p>; })()}
                     {c.current_stage === "offer" && c.job_id && <OfferPill jobId={c.job_id} candidateId={c.candidate_id} onOpen={() => openOffer(c, false)} />}
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />

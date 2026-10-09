@@ -1,4 +1,5 @@
 import { TeamNotes } from "./TeamNotes";
+import { ReferenceChecks } from "@/components/talent/ReferenceChecks";
 import { ShareWithManager } from "./ShareWithManager";
 import { FinalistBadge, FinalistFastTrackPanel } from "./FinalistFastTrack";
 import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
@@ -504,6 +505,7 @@ export function CandidateProfileBody({ d, t, aside, stacked = false, jobId }: { 
         {aside}
         <FinalistFastTrackPanel candidateId={p.user_id} name={d.name} />
         {jobId && <ShareWithManager candidateId={p.user_id} jobId={jobId} />}
+        {jobId && <ReferenceChecks candidateId={p.user_id} jobId={jobId} />}
         <TeamNotes candidateId={p.user_id} jobId={jobId} />
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
           <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technologies & Tools" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Spoken Languages" v={d.spokenLanguages.length ? d.spokenLanguages.map((x) => `${x.language_name} · ${cap(x.proficiency.replaceAll("_", " "))}`).join(", ") : "—"} /></div>
