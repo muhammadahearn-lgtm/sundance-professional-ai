@@ -21,3 +21,15 @@ describe("team review links", () => {
     expect(h).not.toContain(t);
   });
 });
+
+import { feedbackNoteText as fnt, isVerdict as iv, verdictLabel as vl } from "./team-review";
+describe("profile review feedback", () => {
+  it("accepts only the four verdicts", () => {
+    expect(["strong_yes", "yes", "hold", "pass"].every(iv)).toBe(true);
+    expect(iv("maybe")).toBe(false);
+  });
+  it("labels the verdict and attributes the reviewer in the note", () => {
+    expect(vl("strong_yes")).toBe("Strong Yes");
+    expect(fnt("Jane Doe", "Eng Manager", "hold", " Check system design ")).toBe("Hiring manager feedback from Jane Doe (Eng Manager) via review link — Hold\nCheck system design");
+  });
+});
