@@ -29,7 +29,7 @@ import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
 /** Board columns — sourced talent lives in Saved Candidates, so the pipeline starts at Contacted. */
 const BOARD_STAGES = STAGES.filter(([k]) => k !== "saved");
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
-import { HireDialog, OfferDialog } from "@/components/applications/Offers";
+import { HireDialog, OfferDialog, OfferPill } from "@/components/applications/Offers";
 import { latestOffer, type Offer } from "@/lib/offers-data";
 import { card, friendlyError } from "@/components/profile/parts";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
@@ -226,7 +226,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                     {["contacted", "interviewing"].includes(c.current_stage) && (roundsOf(c).length > 0 || c.current_stage !== "contacted"
                       ? <RoundStepper steps={stepsOf(c)} planned={planOf(c).length} canSchedule onSchedule={() => { setEditIv(undefined); setFollowUp(false); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />
                       : <button type="button" onClick={() => { setEditIv(undefined); setFollowUp(false); setSched(c); }} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"><CalendarClock className="h-3 w-3" />Schedule R1: {planOf(c)[0]?.name ?? "Interview"}</button>)}
-                    {c.current_stage === "offer" && c.job_id && <button type="button" onClick={() => openOffer(c, false)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-success/50 px-2 py-1 text-[11px] font-semibold text-success hover:border-success">Offer terms</button>}
+                    {c.current_stage === "offer" && c.job_id && <OfferPill jobId={c.job_id} candidateId={c.candidate_id} onOpen={() => openOffer(c, false)} />}
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
                       {next ? <button type="button" onClick={() => move(c, next[0])} className={`${miniBtn} min-w-0 flex-1 justify-center`}>{next[1]}<ArrowRight className="h-3 w-3" /></button> : <span className="flex-1" />}
@@ -260,7 +260,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         defaultSalary={j?.maximum_salary ?? null} defaultCurrency={j?.salary_currency}
         onClose={() => setOfferFor(null)}
         onSkip={offerFor.advance ? () => { const c = offerFor.c; setOfferFor(null); move(c, "offer", true); } : undefined}
-        onDone={() => { const o = offerFor; setOfferFor(null); if (o.advance) move(o.c, "offer", true); }} />}
+        onDone={() => { const o = offerFor; setOfferFor(null); qc.invalidateQueries({ queryKey: ["offer-pill"] }); if (o.advance) move(o.c, "offer", true); }} />}
       {hired && hired.job_id && <HireDialog name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
       {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => { if (!o) { setSched(null); setFollowUp(false); } }} candidateName={sched.name} existing={editIv ?? ivOf(sched)} priorRounds={roundsOf(sched)} plan={followUp ? FOLLOW_UP_PLAN : planOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
