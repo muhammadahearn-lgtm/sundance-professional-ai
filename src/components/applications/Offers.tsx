@@ -84,6 +84,13 @@ export function HireDialog({ uid, name, jobId, jobTitle, candidateId, onClose }:
   const [close, setClose] = useState(true), [wrap, setWrap] = useState(true), [silver, setSilver] = useState(true), [busy, setBusy] = useState(false);
   const finalists = useQuery({ queryKey: ["finalists", jobId, candidateId], queryFn: async () => { const { data, error } = await supabase.from("recruiting_pipeline").select("candidate_id").eq("job_id", jobId).neq("candidate_id", candidateId).in("current_stage", [...SILVER_STAGES]); if (error) throw error; return (data ?? []).map((r) => r.candidate_id); } });
   const nFinal = finalists.data?.length ?? 0;
+  const seats = useQuery({ queryKey: ["seats", jobId], queryFn: async () => {
+    const [j, h] = await Promise.all([supabase.from("jobs").select("headcount").eq("job_id", jobId).maybeSingle(), supabase.from("recruiting_pipeline").select("candidate_id").eq("job_id", jobId).eq("current_stage", "hired")]);
+    const headcount = parseHeadcount(j.data?.headcount); const hired = new Set((h.data ?? []).map((r) => r.candidate_id)).size;
+    return { headcount, hired, open: openSpots(headcount, hired) };
+  } });
+  const remaining = seats.data?.open ?? 0;
+  useEffect(() => { if (seats.data && seats.data.open > 0) { setClose(false); setWrap(false); setSilver(false); } }, [seats.data]);
   async function go() {
     setBusy(true);
     try {
@@ -102,6 +109,7 @@ export function HireDialog({ uid, name, jobId, jobTitle, candidateId, onClose }:
       <div className="grid h-12 w-12 place-items-center rounded-2xl bg-success/15 text-success"><PartyPopper className="h-6 w-6" /></div>
       <h2 className="mt-3 font-display text-xl font-extrabold">{name} is hired!</h2>
       <p className="mt-1 text-sm text-muted-foreground">Congratulations on filling <strong className="text-foreground">{jobTitle}</strong>. Want to wrap things up?</p>
+      {seats.data && seats.data.headcount > 1 && <p className={`mt-3 rounded-xl px-3 py-2 text-sm font-semibold ${remaining > 0 ? "bg-primary/10 text-primary" : "bg-success/15 text-success"}`}>{seats.data.hired} of {seats.data.headcount} spots filled{remaining > 0 ? ` · ${remaining} still open — keep the job running` : " · all openings filled"}</p>}
       <div className="mt-5 space-y-3 text-sm">
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={close} onChange={(e) => setClose(e.target.checked)} className="mt-0.5" /><span><strong>Close this job</strong><span className="block text-muted-foreground">It leaves search and stops taking applications.</span></span></label>
         <label className="flex items-start gap-3 rounded-xl border border-border p-3"><input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} className="mt-0.5" /><span><strong>Update everyone else</strong><span className="block text-muted-foreground">Send a kind "Not Moving Forward" update so nobody is left waiting.</span></span></label>
