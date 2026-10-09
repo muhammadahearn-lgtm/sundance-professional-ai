@@ -638,6 +638,13 @@
       "when": 1791576869153,
       "tag": "0090_scorecard_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1791577006126,
+      "tag": "0091_application_events",
+      "breakpoints": true
     }
   ]
 }

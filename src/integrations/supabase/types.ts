@@ -41,6 +41,44 @@ export type Database = {
         }
         Relationships: []
       }
+      application_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string
+          detail: string
+          event_id: string
+          job_id: string
+          kind: string
+          occurred_at: string
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id: string
+          detail?: string
+          event_id?: string
+          job_id: string
+          kind: string
+          occurred_at?: string
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string
+          detail?: string
+          event_id?: string
+          job_id?: string
+          kind?: string
+          occurred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["application_id"]
+          },
+        ]
+      }
       application_screening_answers: {
         Row: {
           answer_text: string
@@ -3120,6 +3158,16 @@ export type Database = {
       job_is_active: { Args: { _job: string }; Returns: boolean }
       location_key: { Args: { _v: string }; Returns: string }
       location_title: { Args: { _v: string }; Returns: string }
+      log_application_event: {
+        Args: {
+          _app: string
+          _at?: string
+          _detail: string
+          _job: string
+          _kind: string
+        }
+        Returns: undefined
+      }
       log_resume_download: {
         Args: { _candidate: string; _kind: string }
         Returns: string
