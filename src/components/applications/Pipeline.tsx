@@ -199,14 +199,14 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
       <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-5 shadow-soft sm:p-6">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">{jobId && <Link to="/recruiter/pipeline" className="text-sm text-muted-foreground hover:text-primary">← All pipelines</Link>}
+          <div className="min-w-0">{jobId && <Link to="/recruiter/pipeline" className="mb-2 block text-sm font-semibold text-muted-foreground hover:text-primary">← All Requisitions</Link>}
             <span className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-card/80 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-primary" /></span>AI pipeline active</span>
             <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{j ? `${j.job_title} Pipeline` : "Hiring Pipeline"}</h1>
             <p className="text-sm text-muted-foreground">{j ? `${j.location} · ${lbl(ARRANGEMENT, j.work_arrangement)}` : "Drag candidates between stages. Moving someone to Interviewing lets you book the interview."}</p></div>
           <div className="flex flex-wrap gap-2"><Link to="/recruiter/applications" className={btn}>Applications</Link>
-            <SearchSelect ariaLabel="Filter by company" className="w-52" value={coSel} onChange={(v) => { setCo(v); if (jobId) navigate({ to: "/recruiter/pipeline" }); }}
+            <SearchSelect ariaLabel="Filter by company" className="w-52" value={coSel} onChange={(v) => { setCo(v); if (jobId) navigate({ to: "/recruiter/pipeline", search: v ? { co: v } : {} }); }}
               allLabel="All companies" placeholder="Search companies..." options={companies.map(([id, name]) => ({ value: id, label: name }))} />
-            <SearchSelect ariaLabel="Filter by job" className="w-64" value={jobId ?? ""} onChange={(v) => { if (v) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: v } }); else navigate({ to: "/recruiter/pipeline" }); }}
+            <SearchSelect ariaLabel="Switch job" className="w-64" value={jobId ?? ""} onChange={(v) => { if (v) navigate({ to: "/recruiter/pipeline/$jobId", params: { jobId: v } }); else navigate({ to: "/recruiter/pipeline" }); }}
               allLabel="All jobs" placeholder="Search job titles..." options={myJobs.filter((j) => !coSel || j.companyId === coSel).map((j) => ({ value: j.id, label: coSel ? j.title : `${j.company} — ${j.title}` }))} /></div>
         </div>
         <div className="relative mt-5 grid gap-4 lg:grid-cols-[1fr_auto]">
