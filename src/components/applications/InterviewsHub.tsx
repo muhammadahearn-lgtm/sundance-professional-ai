@@ -202,7 +202,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
       <p className="flex items-center gap-2 rounded-xl bg-primary-soft/60 px-3 py-2 text-xs text-muted-foreground"><Bell className="h-4 w-4 text-primary" />Tip: add interviews to your calendar — each entry reminds you 1 hour and 15 minutes before it starts.</p>
 
       {role === "recruiter" && pending.length > 0 && (
-        <button type="button" onClick={() => { setTab("past"); setOnlyPending(true); }} className="flex w-full items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-left text-sm font-semibold text-warning-foreground hover:border-warning">
+        <button type="button" onClick={() => { setTab("past"); setOnlyPending(true); }} className="flex w-full items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-left text-sm font-semibold text-foreground hover:border-warning">
           <AlertCircle className="h-4 w-4 text-warning" />{pending.length} interview{pending.length === 1 ? "" : "s"} awaiting your scorecard<span className="ml-auto text-xs font-bold text-primary">Review →</span>
         </button>
       )}
@@ -212,7 +212,7 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
           {(["upcoming", "past"] as const).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === t ? "bg-card text-primary shadow-soft" : "text-muted-foreground"}`}>
               {t === "upcoming" ? `Upcoming (${upcoming.length})` : `Past (${past.length})`}
-              {t === "past" && role === "recruiter" && pending.length > 0 && <span className="rounded-full bg-warning px-1.5 text-[10px] font-bold text-warning-foreground">{pending.length}</span>}
+              {t === "past" && role === "recruiter" && pending.length > 0 && <span className="rounded-full bg-warning px-1.5 text-[10px] font-bold text-foreground">{pending.length}</span>}
             </button>
           ))}
         </div>
