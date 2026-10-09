@@ -1,4 +1,5 @@
 import { TeamNotes } from "./TeamNotes";
+import { ShareWithManager } from "./ShareWithManager";
 import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
@@ -500,6 +501,7 @@ export function CandidateProfileBody({ d, t, aside, stacked = false, jobId }: { 
       </div>
       <div className="min-w-0 space-y-6">
         {aside}
+        {jobId && <ShareWithManager candidateId={p.user_id} jobId={jobId} />}
         <TeamNotes candidateId={p.user_id} jobId={jobId} />
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
           <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technologies & Tools" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Spoken Languages" v={d.spokenLanguages.length ? d.spokenLanguages.map((x) => `${x.language_name} · ${cap(x.proficiency.replaceAll("_", " "))}`).join(", ") : "—"} /></div>
