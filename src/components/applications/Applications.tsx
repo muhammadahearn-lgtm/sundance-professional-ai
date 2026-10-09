@@ -33,6 +33,7 @@ import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwa
 import { ApplicationInsights } from "@/components/applications/ApplicationInsights";
 import { CandidateOfferCard } from "@/components/applications/Offers";
 import { ViewToggle } from "@/components/applications/ApplicationRequisitionHub";
+import { WITHDRAW_NOTE_MAX, WITHDRAW_REASONS, canWithdraw, withdrawReasonLabel } from "@/lib/withdrawal";
 
 const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
 const STATUS_STYLE: Record<string, string> =  { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
@@ -212,22 +213,41 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
   const q = useQuery({ queryKey: ["my-application", id], queryFn: () => loadMyApplication(id) });
   const ivs = useQuery({ queryKey: ["app-interviews", id], queryFn: () => listApplicationInterviews(id) });
   const [busy, setBusy] = useState(false);
+  const [wOpen, setWOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [wNote, setWNote] = useState("");
   if (q.isLoading) return <div className={`${card} h-72 animate-pulse`} />;
   if (q.error) return <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} />;
   if (!q.data) return <div className={`${card} p-10 text-center`}><p className="font-semibold">Application not found.</p><Link to="/candidate/applications" className={`${primaryBtn} mt-4`}>Back</Link></div>;
   const a = q.data;
   async function withdraw() {
-    if (!confirm("Withdraw this application? This cannot be undone.")) return;
+    if (!reason) { toast.error("Please choose a reason."); return; }
     setBusy(true);
-    try { await withdrawApplication(id); toast.success("Application withdrawn"); qc.invalidateQueries({ queryKey: ["my-applications"] }); history.back(); } catch (e) { toast.error(friendlyError(e, "Couldn't withdraw.")); }
+    try { await withdrawApplication(id, reason, wNote.trim()); toast.success("You've withdrawn. The recruiter has been notified."); setWOpen(false); q.refetch(); ivs.refetch(); qc.invalidateQueries({ queryKey: ["my-applications"] }); qc.invalidateQueries({ queryKey: ["candidate-offer"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't withdraw.")); }
     setBusy(false);
   }
+  const withdrawnAt = (a as { withdrawn_at?: string | null }).withdrawn_at ?? null;
+  const withdrawnReason = (a as { withdraw_reason?: string }).withdraw_reason ?? "";
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link to="/candidate/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
       <div className={`${card} p-6`}><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold">{a.job_id ? <Link to="/candidate/jobs/$id" params={{ id: a.job_id }} className="hover:text-primary hover:underline">{a.jobs?.job_title}</Link> : a.jobs?.job_title}</h1><p>{a.jobs?.companies?.company_name && <Link to="/candidate/jobs" search={{ q: a.jobs.companies.company_name }} className="hover:text-primary hover:underline">{a.jobs.companies.company_name}</Link>}</p><p className="text-sm text-muted-foreground">Applied {fmt(a.application_date)} · Updated {fmt(a.updated_at)}</p></div><AppStatusBadge s={a.application_status} /></div>
-        <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{["applied", "viewed"].includes(a.application_status) && <button onClick={withdraw} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
-      {a.application_status === "rejected" && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
+        <div className="mt-4 flex gap-2">{a.jobs && <Link to="/candidate/jobs/$id" params={{ id: a.jobs.job_id }} className={btn}>View Job</Link>}{a.jobs && <MessageButton role="candidate" candidateId={uid} jobId={a.jobs.job_id} className={btn} />}{canWithdraw(a.application_status, withdrawnAt) && <button onClick={() => setWOpen(true)} disabled={busy} className={btn}>Withdraw Application</button>}</div></div>
+      {withdrawnAt && <div className={`${card} border-warning/30 bg-warning/10 p-5 text-sm`}><p className="font-semibold">You withdrew from this role on {fmt(withdrawnAt)}.</p><p className="mt-1 text-muted-foreground">Reason shared with the recruiter: {withdrawReasonLabel(withdrawnReason)}. Any pending offer and upcoming interviews were cancelled.</p></div>}
+      {wOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" role="dialog" aria-modal="true" aria-label="Withdraw application">
+          <div className={`${card} w-full max-w-md p-6`}>
+            <h2 className="font-display text-xl font-extrabold">Withdraw from {a.jobs?.job_title}?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">The recruiter is notified right away. Any pending offer and upcoming interviews for this role are cancelled. This can't be undone.</p>
+            <p className="mt-4 text-sm font-semibold">Reason</p>
+            <div role="radiogroup" aria-label="Reason" className="mt-2 flex flex-wrap gap-2">{WITHDRAW_REASONS.map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={reason === k} onClick={() => setReason(k)} className={`rounded-full border px-3 py-1 text-xs font-semibold ${reason === k ? "border-primary bg-primary-soft text-primary" : "border-border hover:border-primary"}`}>{l}</button>)}</div>
+            <label htmlFor="w-note" className="mt-4 block text-sm font-semibold">Note to the recruiter <span className="font-normal text-muted-foreground">(optional, private)</span></label>
+            <textarea id="w-note" rows={3} maxLength={WITHDRAW_NOTE_MAX} value={wNote} onChange={(e) => setWNote(e.target.value)} className={`${inputCls} mt-1.5 resize-none`} placeholder="Thanks for your time — I've decided to…" />
+            <div className="mt-5 flex justify-end gap-2"><button onClick={() => setWOpen(false)} className={btn}>Keep application</button><button onClick={withdraw} disabled={busy || !reason} className={primaryBtn}>{busy ? "Withdrawing…" : "Withdraw"}</button></div>
+          </div>
+        </div>
+      )}
+      {a.application_status === "rejected" && !withdrawnAt && <div className={`${card} border-primary/20 bg-primary-soft/40 p-5 text-sm`}><p className="font-semibold">Thank you for your interest in this role.</p><p className="mt-1 text-muted-foreground">The hiring team has decided not to move forward for this specific opening. Your profile stays active and ready to match with other opportunities.</p><Link to="/candidate/jobs" className={`${btn} mt-3`}>Explore matching jobs</Link></div>}
       <HiringLeadCard applicationId={id} status={a.application_status} />
       {a.job_id && <CandidateOfferCard applicationId={id} uid={uid} jobId={a.job_id} jobTitle={a.jobs?.job_title ?? "this role"} />}
       <ApplicationInsights applicationId={id} status={a.application_status} />
