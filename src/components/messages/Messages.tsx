@@ -2,7 +2,7 @@ import { notifyByEmail } from "@/lib/applications-data";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, ArrowLeft, Check, CheckCheck, Download, Eye, FileText, Loader2, MessageSquare, Paperclip, Search, Send } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Check, CheckCheck, Download, ExternalLink, Eye, FileText, Loader2, MessageSquare, Paperclip, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { supabase } from "@/integrations/supabase/client";

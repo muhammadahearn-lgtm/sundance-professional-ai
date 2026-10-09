@@ -21,7 +21,9 @@ export function JobContextStrip({ c, role }: { c: Conversation; role: "recruiter
         {role === "candidate"
           ? <Link to="/candidate/jobs/$id" params={{ id: jobId }} className="truncate hover:text-primary hover:underline">{c.job_title ?? "View job"}</Link>
           : <Link to="/recruiter/jobs/$id" params={{ id: jobId }} className="truncate hover:text-primary hover:underline">{c.job_title ?? "View job"}</Link>}
-        {c.company_name && <span className="truncate font-normal text-muted-foreground">· {c.company_name}</span>}
+        {c.company_name && (role === "candidate"
+          ? <span className="truncate font-normal text-muted-foreground">· <Link to="/candidate/jobs" search={{ q: c.company_name }} className="hover:text-primary hover:underline">{c.company_name}</Link></span>
+          : <span className="truncate font-normal text-muted-foreground">· {c.company_name}</span>)}
       </span>
       {o && <span className="rounded-full bg-card px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{OFFER_TEXT[o.status] ?? "Offer"}{salary ? ` · ${salary}` : ""} · Rev {o.revision}</span>}
       <div className="ml-auto flex flex-wrap gap-2">
