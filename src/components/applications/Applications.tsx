@@ -32,6 +32,7 @@ import { InterviewCard } from "@/components/applications/Interviews";
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { ApplicationInsights } from "@/components/applications/ApplicationInsights";
 import { CandidateOfferCard } from "@/components/applications/Offers";
+import { ViewToggle } from "@/components/applications/ApplicationRequisitionHub";
 
 const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
 const STATUS_STYLE: Record<string, string> =  { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
@@ -241,14 +242,14 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
   );
 }
 
-export function RecruiterApplicationsPage({ uid }: { uid: string }) {
+export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?: string }) {
   const qc = useQueryClient();
   const tax = useTaxonomy();
   const q = useQuery({ queryKey: ["job-applications", uid], queryFn: () => listJobApplications(uid) });
   useAutoRecalc();
   const scores = useScores({});
   const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
-  const [f, setF] = useState({ co: "", job: "", tf: "", mm: 0, sort: "match", unrev: false });
+  const [f, setF] = useState({ co: "", job, tf: "", mm: 0, sort: "match", unrev: false });
   const [tab, setTab] = useState<TriageTab>("inbox");
   const pipe = useQuery({ queryKey: ["pipeline", uid, "all"], queryFn: () => listPipeline(uid) });
   const piped = useMemo(() => new Set((pipe.data ?? []).map((p) => `${p.candidate_id}:${p.job_id}`)), [pipe.data]);
@@ -279,7 +280,9 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   }
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
+      {job ? <Link to="/recruiter/applications" className="text-sm text-muted-foreground hover:text-primary">← All Jobs</Link> : null}
+      <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">{job ? (q.data?.find((a) => a.job_id === job)?.jobs.job_title ?? "Applications") : "Applications"}</h1><p className="text-sm text-muted-foreground">{job ? `Applicants for this job${q.data?.find((a) => a.job_id === job) ? ` · ${coName(q.data.find((a) => a.job_id === job)!)}` : ""}` : "Every applicant across all your jobs."}</p></div>
+        <div className="flex flex-wrap gap-2">{job ? <Link to="/recruiter/pipeline/$jobId" params={{ jobId: job }} className={btn}><GitBranch className="h-4 w-4" />Job Pipeline</Link> : <ViewToggle view="stream" />}</div></div>
       <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4`}>
         <SearchSelect ariaLabel="Filter by company" value={f.co} onChange={(v) => setF({ ...f, co: v, job: "" })} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
         <SearchSelect ariaLabel="Filter by job" value={f.job} onChange={(v) => setF({ ...f, job: v })} allLabel="All jobs" placeholder="Search job titles..." options={jobs.map(([id, t]) => ({ value: id, label: t }))} />
