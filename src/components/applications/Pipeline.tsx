@@ -145,7 +145,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     try { await moveStage(c, stage); toast.success(MSG[stage] ?? "Candidate Advanced"); if (stage === "interviewing" && !ivOf(c)) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
   }
-  const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], shortlisted: ["offer", "Extend Offer"], offer: ["hired", "Mark Hired"] };
+  const NEXT: Partial<Record<Stage, [Stage, string]>> = { contacted: ["interviewing", "Move To Interviewing"], interviewing: ["shortlisted", "Shortlist"], offer: ["hired", "Mark Hired"] };
   async function remove(c: PipelineCard) {
     if (!confirm(`Remove ${c.name} from the pipeline?`)) return;
     try { await removeFromPipeline(c.pipeline_id); toast.success("Candidate removed"); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
