@@ -1,0 +1,1 @@
+ALTER TABLE public.applications ADD COLUMN IF NOT EXISTS disposition_reason text CHECK (disposition_reason IS NULL OR char_length(disposition_reason) <= 60);
