@@ -40,4 +40,3 @@
 
 - Seeded company catalog rows have `is_catalog = true`, a nil-UUID creator and no members, so they are readable by all signed-in users, selectable for jobs, and editable by no one. Why: shared reference list without ownership.
 - Recruiter resume downloads require `resume_access_reason` and are logged by `log_resume_download`; requests use RPCs only. Why: candidate controls and sees downloads.
-- Post-interview scorecard prompts: hourly `deliver_scorecard_reminders()` sends one high-priority recruiter alert per ended, unscored interview (reset on reschedule) linking to `/recruiter/interviews?score=<id>`; pipeline chip derives from round steps. Why: no new polling job, chip never drifts from data.
