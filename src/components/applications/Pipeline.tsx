@@ -4,7 +4,14 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bell, CalendarClock, ChevronLeft, ChevronRight, Sparkles, Trash2 } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, ChevronLeft, ChevronRight, Sparkles, Star, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+async function listTeamRecommendations() {
+  const { data, error } = await supabase.from("team_recommendations").select("job_id, candidate_id, kind, note, job_stakeholders(name, hiring_role)");
+  if (error) throw error;
+  return data ?? [];
+}
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { listRecruiterInterviews } from "@/lib/interviews-data";
 import { InterviewPill, ScheduleInterviewDialog } from "@/components/applications/Interviews";
@@ -50,6 +57,8 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   };
 
   const ivQ = useQuery({ queryKey: ["interviews", uid], queryFn: () => listRecruiterInterviews(uid) });
+  const recsQ = useQuery({ queryKey: ["team-recommendations", uid], queryFn: listTeamRecommendations });
+  const picksOf = (c: PipelineCard) => (recsQ.data ?? []).filter((r) => r.kind === "recommend" && r.candidate_id === c.candidate_id && r.job_id === c.job_id);
   const roundsOf = (c: PipelineCard) => (ivQ.data ?? []).filter((i) => i.pipeline_id === c.pipeline_id || (!!c.applicationId && i.application_id === c.applicationId));
   /** The candidate's upcoming interview, if any (finished rounds don't count). */
   const ivOf = (c: PipelineCard) => roundsOf(c).find((i) => i.status === "scheduled" && new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000 > Date.now());
@@ -148,6 +157,8 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
                     {!["hired", "rejected"].includes(c.current_stage) && (() => { const a = stageAge(c.stage_date); return <p className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.stale ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"}`}>{a.days === 0 ? "Updated today" : `${a.days}d in ${title}`}</p>; })()}
                     {!jobId && c.jobs?.job_title && <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{c.jobs.job_title}</p>}
+                    {(() => { const r = picksOf(c); if (!r.length) return null; const tip = r.map((x) => `${x.job_stakeholders?.name ?? "Team member"}${x.job_stakeholders?.hiring_role ? ` (${x.job_stakeholders.hiring_role})` : ""}${x.note ? `: "${x.note}"` : ""}`).join("\n");
+                      return <p title={tip} className="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning"><Star className="h-3 w-3 shrink-0 fill-current" />Team Pick · {r.length === 1 ? (r[0]!.job_stakeholders?.name ?? "1 recommendation") : `${r.length} recommendations`}</p>; })()}
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
                     {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
                       : ["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && <button type="button" onClick={() => setSched(c)} className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1 text-[11px] font-semibold transition-colors hover:border-primary hover:text-primary ${c.current_stage === "interviewing" ? "border-warning/60 text-warning" : "border-border text-muted-foreground"}`}><CalendarClock className="h-3 w-3" />{doneRounds(c) ? `Schedule Round ${Math.max(...roundsOf(c).map((r) => r.round_number ?? 1)) + 1}` : "Schedule interview"}</button>}
