@@ -25,17 +25,16 @@ function amount(n: number, cur: string) {
   }
 }
 
-/** "$60,000 USD" */
+/** "$60,000" — symbol only; the trailing ISO code was dropped as redundant (2026-10-09). */
 export function formatSalaryAmount(n: number | null | undefined, cur: string | null | undefined): string {
   if (n == null) return "";
-  const c = cur || DEFAULT_CURRENCY;
-  return `${amount(n, c)} ${c}`;
+  return amount(n, cur || DEFAULT_CURRENCY);
 }
 
-/** "$120,000 - $150,000 USD", "From $120,000 USD", "Up to $150,000 USD" */
+/** "$120,000 - $150,000", "From $120,000", "Up to $150,000" */
 export function formatSalaryRange(min: number | null | undefined, max: number | null | undefined, cur: string | null | undefined): string {
   const c = cur || DEFAULT_CURRENCY;
-  if (min != null && max != null) return min === max ? formatSalaryAmount(min, c) : `${amount(min, c)} - ${amount(max, c)} ${c}`;
+  if (min != null && max != null) return min === max ? formatSalaryAmount(min, c) : `${amount(min, c)} - ${amount(max, c)}`;
   if (min != null) return `From ${formatSalaryAmount(min, c)}`;
   if (max != null) return `Up to ${formatSalaryAmount(max, c)}`;
   return "";
