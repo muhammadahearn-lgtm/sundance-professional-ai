@@ -9,7 +9,7 @@ import { btn, primaryBtn } from "@/components/talent/Talent";
 import { DatePicker } from "@/components/ui/date-picker";
 import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
 import { canRequestExtension, daysLeft, emptyOffer, extensionDate, negotiateMessage, normalizeSignature, offerExpired, offerExpiringSoon, signatureError, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
-import { latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, signAndAcceptOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
+import { approverOptions, latestOffer, offersForApplication, requestNegotiation, requestOfferExtension, respondOfferExtension, respondToOffer, signAndAcceptOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { supabase } from "@/integrations/supabase/client";
 import { SILVER_STAGES } from "@/lib/saved-candidates";
 import { markSilverMedalists } from "@/lib/talent-data";
@@ -55,28 +55,36 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
   const g = ctxQ.data;
   const overWarn = g && !revising ? overOfferWarning(g.headcount, g.hired, g.pending) : null;
   const salWarn = g ? salaryWarning(Number(f.salary) || null, g.min, g.max, f.currency) : null;
+  const approvers = approversQ.data ?? [];
+  const useApproval = !live && needApproval;
   async function submit() {
     if (Object.keys(errs).length) { setShow(true); return; }
+    if (useApproval && !approver) { toast.error("Pick who should approve this offer."); return; }
     setBusy(true);
     try {
-      if (revising) await reviseOffer(existing!.offer_id, f); else await sendOffer(ctx, f);
-      toast.success(revising ? "Offer Revised" : "Offer Sent"); onDone();
-      const id = revising ? existing!.offer_id : (await latestOffer(ctx.jobId, ctx.candidateId))?.offer_id;
-      if (id) void notifyOfferEvent({ data: { offerId: id, event: "sent" } }).catch(() => {});
+      const a = useApproval ? approver : null;
+      if (revising) await reviseOffer(existing!.offer_id, f, a); else await sendOffer(ctx, f, a);
+      toast.success(useApproval ? "Sent for internal approval" : revising ? "Offer Revised" : "Offer Sent"); onDone();
+      if (!useApproval) {
+        const id = revising ? existing!.offer_id : (await latestOffer(ctx.jobId, ctx.candidateId))?.offer_id;
+        if (id) void notifyOfferEvent({ data: { offerId: id, event: "sent" } }).catch(() => {});
+      }
     }
     catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't send the offer.")); }
     setBusy(false);
   }
   async function withdraw() {
-    if (!existing || !confirm("Withdraw this offer? The candidate will no longer be able to accept it.")) return;
-    try { await withdrawOffer(existing.offer_id); toast.success("Offer Withdrawn"); onDone(); } catch (e) { toast.error(friendlyError(e, "Couldn't withdraw.")); }
+    if (!existing || !confirm(inReview ? "Cancel this offer? It was never shown to the candidate." : "Withdraw this offer? The candidate will no longer be able to accept it.")) return;
+    try { await withdrawOffer(existing.offer_id); toast.success(inReview ? "Offer cancelled" : "Offer Withdrawn"); onDone(); } catch (e) { toast.error(friendlyError(e, "Couldn't withdraw.")); }
   }
   const err = (k: keyof typeof errs) => show && errs[k] ? <p className="mt-1 text-xs text-destructive">{errs[k]}</p> : null;
   return (
     <Modal label="Job offer" onClose={onClose} wide>
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />{revising ? `Revision ${existing!.revision + 1}` : "Formal offer"}</span>
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary"><Sparkles className="h-3 w-3" />{live ? `Revision ${existing!.revision + 1}` : inReview ? "Internal approval" : "Formal offer"}</span>
       <h2 className="mt-2 font-display text-xl font-extrabold">{revising ? "Revise offer for" : "Extend an offer to"} {candidateName}</h2>
       <p className="text-sm text-muted-foreground">{jobTitle}</p>
+      {existing?.status === "pending_approval" && <p className="mt-4 rounded-xl bg-primary-soft px-3 py-2 text-sm font-semibold text-primary">⏳ Waiting for internal approval. The candidate can't see this offer yet.</p>}
+      {existing?.status === "approval_declined" && <div role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm"><p className="font-semibold text-destructive">Sent back for changes</p>{existing.approval_note && <p className="mt-0.5">“{existing.approval_note}”</p>}<p className="mt-1 text-muted-foreground">Adjust the terms and resubmit for approval.</p></div>}
       {overWarn && <p role="alert" className="mt-4 rounded-xl bg-warning/15 px-3 py-2 text-sm font-semibold">{overWarn}</p>}
       <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_110px]">
         <label className="text-sm font-semibold">Base Salary (annual)<input inputMode="numeric" className={`${inputCls} mt-1`} value={f.salary} onChange={(e) => set("salary")(e.target.value)} placeholder="150000" />{err("salary")}{salWarn && <span role="alert" className="mt-1 block text-xs font-semibold text-foreground">{salWarn}</span>}</label>
@@ -88,11 +96,22 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
         <div className="text-sm font-semibold">Respond By<div className="mt-1"><DatePicker value={f.expiresOn} onChange={set("expiresOn")} aria-label="Offer deadline" placeholder="Optional" /></div>{err("expiresOn")}</div>
         <label className="text-sm font-semibold sm:col-span-2">Personal Note<textarea rows={4} maxLength={3000} className={`${inputCls} mt-1`} value={f.notes} onChange={(e) => set("notes")(e.target.value)} placeholder={`We'd love for you to join us as ${jobTitle}…`} />{err("notes")}</label>
       </div>
+      {!live && (
+        <div className="mt-5 rounded-xl border border-border p-3 text-sm">
+          <label className="flex items-start gap-3"><input type="checkbox" checked={needApproval} disabled={inReview} onChange={(e) => setNeedApproval(e.target.checked)} className="mt-0.5" /><span><strong>Require internal approval</strong><span className="block text-muted-foreground">A teammate (hiring manager or finance) signs off before the candidate sees the offer.</span></span></label>
+          {needApproval && (approvers.length ? (
+            <select aria-label="Approver" className={`${inputCls} mt-3`} value={approver} onChange={(e) => setApprover(e.target.value)}>
+              <option value="">Choose an approver…</option>
+              {approvers.map((a) => <option key={a.user_id} value={a.user_id}>{a.name}</option>)}
+            </select>
+          ) : <p className="mt-2 text-xs text-muted-foreground">{approversQ.isLoading ? "Loading teammates…" : "No teammates yet. Invite colleagues from your Company page to use approvals."}</p>)}
+        </div>
+      )}
       <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
-        {revising && <button type="button" onClick={withdraw} className={`${btn} mr-auto text-destructive`}>Withdraw Offer</button>}
+        {revising && <button type="button" onClick={withdraw} className={`${btn} mr-auto text-destructive`}>{inReview ? "Cancel Offer" : "Withdraw Offer"}</button>}
         {!revising && onSkip && <button type="button" onClick={onSkip} className={`${btn} mr-auto`}>Skip, Move Stage Only</button>}
         <button type="button" onClick={onClose} className={btn}>Cancel</button>
-        <button type="button" onClick={submit} disabled={busy} className={primaryBtn}>{busy ? "Sending…" : revising ? "Send Revised Offer" : "Send Official Offer"}</button>
+        <button type="button" onClick={submit} disabled={busy} className={primaryBtn}>{busy ? "Sending…" : useApproval ? (existing?.status === "pending_approval" ? "Update & Keep in Approval" : "Submit for Approval") : revising ? "Send Revised Offer" : "Send Official Offer"}</button>
       </div>
     </Modal>
   );
