@@ -261,8 +261,14 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
         <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} className={inputCls} aria-label="Sort by">{APP_SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
         <SearchSelect ariaLabel="Filter by company" value={f.co} onChange={(v) => setF({ ...f, co: v, job: "" })} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
         <SearchSelect ariaLabel="Filter by job" value={f.job} onChange={(v) => setF({ ...f, job: v })} allLabel="All jobs" placeholder="Search job titles..." options={jobs.map(([id, t]) => ({ value: id, label: t }))} />
-        <DatePicker value={f.since} onChange={(v) => setF({ ...f, since: v })} aria-label="Applied since" placeholder="Applied since" />
-        <div className="sm:col-span-2 lg:col-span-4"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
+        <select value={f.tf} onChange={(e) => setF({ ...f, tf: e.target.value })} className={inputCls} aria-label="Applied timeframe">{TIMEFRAMES.map(([k, l]) => <option key={k} value={k}>Applied: {l}</option>)}</select>
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4">
+          <div className="min-w-0 flex-1"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
+          <button type="button" role="switch" aria-checked={f.unrev} onClick={() => setF({ ...f, unrev: !f.unrev })}
+            className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${f.unrev ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary"}`}>
+            Unreviewed only
+          </button>
+        </div>
       </div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>
