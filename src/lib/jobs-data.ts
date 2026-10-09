@@ -1,3 +1,4 @@
+import { normalizePlan } from "./interview-plan";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formatLocation, normalizeLocationPart } from "./location";
@@ -89,7 +90,7 @@ export function toForm(d: LoadedJob): JobForm {
     languages: d.languages, skills: d.skills, technologies: d.technologies, softSkills: d.softSkills,
     minimum_salary: j.minimum_salary?.toString() ?? "", maximum_salary: j.maximum_salary?.toString() ?? "", salary_currency: j.salary_currency,
     bonus_info: j.bonus_info, benefits_summary: j.benefits_summary, is_confidential: j.is_confidential, confidential_label: j.confidential_label, max_applications: j.max_applications?.toString() ?? "",
-    equity_type: j.equity_type, equity_range: j.equity_range, equity_vesting: j.equity_vesting, screening: d.screening,
+    equity_type: j.equity_type, equity_range: j.equity_range, equity_vesting: j.equity_vesting, screening: d.screening, interview_plan: normalizePlan(j.interview_plan),
   };
 }
 
@@ -103,6 +104,7 @@ function toRow(f: JobForm): Omit<Insert, "recruiter_id"> {
     salary_currency: f.salary_currency, bonus_info: f.bonus_info.trim(), benefits_summary: f.benefits_summary.trim(), is_confidential: f.is_confidential, confidential_label: f.is_confidential ? f.confidential_label.trim().slice(0, 80) : "",
     max_applications: (() => { const n = num(f.max_applications); return n && n > 0 ? Math.min(n, 10000) : null; })(),
     equity_type: f.equity_type, equity_range: f.equity_type === "none" ? "" : f.equity_range.trim().slice(0, 80), equity_vesting: f.equity_type === "none" ? "" : f.equity_vesting.trim().slice(0, 160),
+    interview_plan: normalizePlan(f.interview_plan) as unknown as JobRow["interview_plan"],
   };
 }
 

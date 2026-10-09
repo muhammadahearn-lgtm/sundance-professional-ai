@@ -1,4 +1,5 @@
 import { parseSalaryInput } from "./salary";
+import { DEFAULT_PLAN, type PlanRound } from "./interview-plan";
 import { validateEquity, validateQuestions, type ScreeningQ } from "./screening";
 
 export type JobStatus = "draft" | "active" | "paused" | "closed";
@@ -13,14 +14,14 @@ export type JobForm = {
   languages: ReqItem[]; skills: ReqItem[]; technologies: ReqItem[]; softSkills: ReqItem[];
   minimum_salary: string; maximum_salary: string; salary_currency: string; bonus_info: string; benefits_summary: string;
   is_confidential: boolean; confidential_label: string; max_applications: string;
-  equity_type: string; equity_range: string; equity_vesting: string; screening: ScreeningQ[];
+  equity_type: string; equity_range: string; equity_vesting: string; screening: ScreeningQ[]; interview_plan: PlanRound[];
 };
 
 export const emptyJob = (company_id = ""): JobForm => ({
   job_title: "", custom_title: "", level_id: "", role_id: "", company_id, employment_type: "full_time", work_arrangement: "remote", location: "", location_country: "", location_state: "", location_city: "",
   minimum_years_experience: "", minimum_degree: "", experience_level: "", job_description: "", languages: [], skills: [], technologies: [], softSkills: [],
   minimum_salary: "", maximum_salary: "", salary_currency: "USD", bonus_info: "", benefits_summary: "", is_confidential: false, confidential_label: "", max_applications: "",
-  equity_type: "none", equity_range: "", equity_vesting: "", screening: [],
+  equity_type: "none", equity_range: "", equity_vesting: "", screening: [], interview_plan: DEFAULT_PLAN.map((r) => ({ ...r })),
 });
 
 type Errs = Partial<Record<keyof JobForm, string>>;
