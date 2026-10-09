@@ -85,6 +85,9 @@ export type Database = {
           candidate_id: string
           created_at: string
           job_id: string
+          rejection_deliver_at: string | null
+          rejection_notified_at: string | null
+          rejection_prev_stage: string | null
           renege_note: string
           renege_reason: string
           reneged_at: string | null
@@ -100,6 +103,9 @@ export type Database = {
           candidate_id: string
           created_at?: string
           job_id: string
+          rejection_deliver_at?: string | null
+          rejection_notified_at?: string | null
+          rejection_prev_stage?: string | null
           renege_note?: string
           renege_reason?: string
           reneged_at?: string | null
@@ -115,6 +121,9 @@ export type Database = {
           candidate_id?: string
           created_at?: string
           job_id?: string
+          rejection_deliver_at?: string | null
+          rejection_notified_at?: string | null
+          rejection_prev_stage?: string | null
           renege_note?: string
           renege_reason?: string
           reneged_at?: string | null
@@ -3053,6 +3062,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      deliver_due_rejections: { Args: never; Returns: number }
       education_degree_from_text: { Args: { _v: string }; Returns: string }
       education_suggestions: {
         Args: never
