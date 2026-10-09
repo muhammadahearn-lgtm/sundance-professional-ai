@@ -13,4 +13,8 @@ describe("sortApplications", () => {
   it("puts the highest match score first, ties by newest, unscored last", () => expect(ids("match")).toEqual(["b", "d", "a", "c"]));
   it("sorts lowest score first with unscored last", () => expect(ids("match_low")).toEqual(["a", "b", "d", "c"]));
   it("sorts by newest applied", () => expect(ids("newest")).toEqual(["c", "b", "d", "a"]));
+  it("sorts by most experienced, ties by newest", () => {
+    const exp: Record<string, number> = { a: 5, b: 12, c: 12, d: 3 };
+    expect(sortApplications(rows, "experience", (r) => r.s, (r) => exp[r.id]).map((r) => r.id)).toEqual(["c", "b", "a", "d"]);
+  });
 });
