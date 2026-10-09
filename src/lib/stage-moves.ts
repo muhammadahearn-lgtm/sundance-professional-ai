@@ -28,3 +28,24 @@ export function moveToast(from: Stage, to: Stage): string {
   if (to === "hired") return "Candidate Hired";
   return isBackwardMove(from, to) ? `Moved back to ${LABEL[to]}` : `Advanced to ${LABEL[to]}`;
 }
+
+/** Why a manual move to Hired needs a check: the candidate hasn't accepted, or there's no offer on record. */
+export type HireCheck = "ok" | "pending_offer" | "no_offer";
+export function hireCheck(offerStatus: string | null | undefined): HireCheck {
+  if (offerStatus === "accepted") return "ok";
+  if (offerStatus === "pending") return "pending_offer";
+  return "no_offer";
+}
+
+/** Active stages jumped over by a forward move (e.g. Contacted → Offer skips Interviewing, Shortlisted). */
+export function skippedStages(from: Stage, to: Stage): string[] {
+  const a = ORDER.indexOf(from), b = ORDER.indexOf(to);
+  if (a < 0 || b < 0 || b - a < 2) return [];
+  return ORDER.slice(a + 1, b).map((s) => LABEL[s]);
+}
+
+/** Simple moves between working stages can be undone from the toast; terminal or offer moves cannot. */
+export function canUndoMove(from: Stage, to: Stage): boolean {
+  const simple: Stage[] = ["contacted", "interviewing", "shortlisted"];
+  return simple.includes(from) && simple.includes(to);
+}

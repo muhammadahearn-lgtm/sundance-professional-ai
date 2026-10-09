@@ -33,7 +33,7 @@ import { markSilverMedalists } from "@/lib/talent-data";
 import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwardDialog";
 import { HireDialog, OfferDialog, OfferPill } from "@/components/applications/Offers";
 import { latestOffer, withdrawOffer, type Offer } from "@/lib/offers-data";
-import { canMoveCard, moveToast, needsOfferWithdrawal, shouldAutoSchedule } from "@/lib/stage-moves";
+import { canMoveCard, canUndoMove, hireCheck, moveToast, needsOfferWithdrawal, shouldAutoSchedule, skippedStages } from "@/lib/stage-moves";
 import { formatSalaryAmount } from "@/lib/salary";
 import { withdrawReasonLabel } from "@/lib/withdrawal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -144,10 +144,22 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     setOfferFor({ c, existing, advance }); return true;
   }
   const [offerGuard, setOfferGuard] = useState<{ c: PipelineCard; stage: Stage; offer: Offer } | null>(null);
-  async function move(c: PipelineCard, stage: Stage, confirmed = false, offerChecked = false) {
+  const [guard, setGuard] = useState<{ c: PipelineCard; stage: Stage; kind: "pending_offer" | "no_offer" | "skip"; skipped: string[] } | null>(null);
+  const [outside, setOutside] = useState(false);
+  async function move(c: PipelineCard, stage: Stage, confirmed = false, offerChecked = false, guarded = false) {
     const from = c.current_stage as Stage;
     if (from === stage) return;
     if (!canMoveCard(from, c.jobs?.job_status)) { toast.info("Hired candidates are locked — the job is closed. Reopen the job to make changes."); return; }
+    if (!guarded && stage === "hired" && c.job_id) {
+      let o: Offer | null = null;
+      try { o = await latestOffer(c.job_id, c.candidate_id); } catch { /* treat as no offer */ }
+      const k = hireCheck(o?.status);
+      if (k !== "ok") { setOutside(false); setGuard({ c, stage, kind: k, skipped: [] }); return; }
+    }
+    if (!guarded && !confirmed && stage !== "hired") {
+      const skipped = skippedStages(from, stage);
+      if (skipped.length) { setGuard({ c, stage, kind: "skip", skipped }); return; }
+    }
     if (from === "offer" && !offerChecked && c.job_id) {
       let o: Offer | null = null;
       try { o = await latestOffer(c.job_id, c.candidate_id); } catch { /* ignore */ }
@@ -158,7 +170,11 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
     if (stage === "hired" && c.job_id) setHired({ ...c, current_stage: stage });
     const key = ["pipeline", uid, jobId ?? "all"];
     qc.setQueryData<PipelineCard[]>(key, (p = []) => p.map((x) => (x.pipeline_id === c.pipeline_id ? { ...x, current_stage: stage, stage_date: new Date().toISOString() } : x)));
-    try { await moveStage(c, stage); toast.success(moveToast(from, stage)); if (shouldAutoSchedule(from, stage, !!ivOf(c))) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
+    try {
+      await moveStage(c, stage);
+      if (canUndoMove(from, stage)) toast.success(moveToast(from, stage), { duration: 6000, action: { label: "Undo", onClick: () => { void moveStage(c, from).then(() => { toast.success(`Moved back to ${from[0]!.toUpperCase()}${from.slice(1)}`); qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] }); }).catch((e) => toast.error(friendlyError(e, "Couldn't undo"))); } } });
+      else toast.success(moveToast(from, stage));
+      if (shouldAutoSchedule(from, stage, !!ivOf(c))) setSched({ ...c, current_stage: stage }); } catch (e) { toast.error(friendlyError(e, "Unable To Update Pipeline")); }
     qc.invalidateQueries({ queryKey: ["pipeline"] }); qc.invalidateQueries({ queryKey: ["job-applications"] });
   }
   async function withdrawAndMove() {
@@ -288,6 +304,25 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         <button type="button" onClick={shareSel} disabled={sel.length < 2 || !!busy} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"><Send className="h-4 w-4" />{busy === "share" ? "Sending…" : "Share with Hiring Team"}</button>
         <button type="button" onClick={() => setSel([])} aria-label="Clear selection" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>}
+      <AlertDialog open={!!guard} onOpenChange={(o) => { if (!o) setGuard(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{guard?.kind === "pending_offer" ? "Offer not accepted yet" : guard?.kind === "no_offer" ? "No accepted offer on record" : `Skip ${guard?.skipped.join(" and ")}?`}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {guard?.kind === "pending_offer" ? `${guard.c.name} hasn't accepted the offer yet. They'll move to Hired automatically the moment they accept it. Marking them hired now could close the job and notify other candidates too early.`
+                : guard?.kind === "no_offer" ? `${guard.c.name} has no accepted offer in the platform. Only continue if they accepted outside the platform (for example, a signed paper offer).`
+                : guard ? `You're moving ${guard.c.name} straight to ${guard.stage === "offer" ? "Offer" : guard.stage[0]!.toUpperCase() + guard.stage.slice(1)}, skipping ${guard.skipped.join(" and ")}. Was that intended?` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {guard?.kind === "no_offer" && <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm"><input type="checkbox" checked={outside} onChange={(e) => setOutside(e.target.checked)} className="mt-0.5" /><span>I confirm {guard.c.name} accepted an offer outside the platform.</span></label>}
+          <AlertDialogFooter>
+            <AlertDialogCancel>{guard?.kind === "skip" ? "Cancel" : "Keep Current Stage"}</AlertDialogCancel>
+            {guard?.kind === "pending_offer" && <AlertDialogAction onClick={() => { const g = guard; setGuard(null); void openOffer(g.c, false); }}>Review Offer</AlertDialogAction>}
+            {guard?.kind === "no_offer" && <AlertDialogAction disabled={!outside} onClick={() => { const g = guard; setGuard(null); void move(g.c, g.stage, false, false, true); }}>Mark Hired</AlertDialogAction>}
+            {guard?.kind === "skip" && <AlertDialogAction onClick={() => { const g = guard; setGuard(null); void move(g.c, g.stage, false, false, true); }}>Yes, Move</AlertDialogAction>}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={!!offerGuard} onOpenChange={(o) => { if (!o) setOfferGuard(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
