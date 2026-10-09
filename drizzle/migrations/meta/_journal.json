@@ -568,6 +568,20 @@
       "when": 1791573302154,
       "tag": "0080_pipeline_disposition_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1791573693390,
+      "tag": "0081_candidate_team_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1791573722179,
+      "tag": "0082_candidate_notes_feed",
+      "breakpoints": true
     }
   ]
 }

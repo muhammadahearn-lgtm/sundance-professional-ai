@@ -1,3 +1,4 @@
+import { TeamNotes } from "./TeamNotes";
 import { RecruiterResumeAction } from "@/components/profile/ResumeAccess";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
@@ -483,7 +484,7 @@ const prof = (rows: { lookup_id: string; proficiency_level: string; years_experi
   rows.length ? <div className="flex flex-wrap gap-1.5">{rows.map((r) => <span key={r.lookup_id} className={`rounded-full border px-3 py-1 text-xs ${TINT[tint]}`}><strong className="font-semibold">{nameOf(opts, r.lookup_id)}</strong> · {cap(r.proficiency_level)}{r.years_experience ? ` · ${r.years_experience}y` : ""}</span>)}</div> : <span className="text-sm text-muted-foreground">—</span>;
 
 /** Full recruiter-facing profile body (used by talent profile and application review). */
-export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode; stacked?: boolean }) {
+export function CandidateProfileBody({ d, t, aside, stacked = false, jobId }: { d: CandidateFull; t: Taxonomy; aside?: ReactNode; stacked?: boolean; jobId?: string | undefined }) {
   const p = d.profile;
   const resume = recruiterResume(d);
   return (
@@ -499,6 +500,7 @@ export function CandidateProfileBody({ d, t, aside, stacked = false }: { d: Cand
       </div>
       <div className="min-w-0 space-y-6">
         {aside}
+        <TeamNotes candidateId={p.user_id} jobId={jobId} />
         <div className={`${card} space-y-5 p-6`}><h2 className="font-display text-lg font-bold">Skills & Technologies</h2>
           <Item k="Programming Languages" v={prof(d.languages, t.languages, "violet")} /><Item k="Technologies & Tools" v={prof(d.technologies, t.technologies, "teal")} /><Item k="Technical Skills" v={prof(d.skills, t.skills)} /><Item k="Soft Skills" v={<Chips soft ids={d.softSkills} opts={t.softSkills} max={50} />} /><Item k="Spoken Languages" v={d.spokenLanguages.length ? d.spokenLanguages.map((x) => `${x.language_name} · ${cap(x.proficiency.replaceAll("_", " "))}`).join(", ") : "—"} /></div>
         <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Education</h2>{d.education.length ? <ul className="mt-3 space-y-3">{d.education.map((e) => <li key={e.education_id}><EducationLines e={e} /></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">—</p>}</div>
@@ -585,7 +587,7 @@ export function RecruiterCandidatePage({ uid, id, jobId }: { uid: string; id: st
         <SaveToJobControl uid={uid} candidateId={id} name={cd.name ?? "candidate"} preferJobId={lensJob || jobId} />
         <button onClick={() => lists.toggleCompare(id)} className={`${btn} ${cmp ? "border-primary text-primary" : ""}`}><GitCompare className="h-4 w-4" />{cmp ? "Comparing" : "Compare Candidate"}</button>
         <ReportButton type="user" targetId={id} /></>} />
-      <CandidateProfileBody d={cd} t={tx} aside={<JobMatchLens uid={uid} d={cd} t={tx} jobId={lensJob} onJob={setLensJob} />} />
+      <CandidateProfileBody d={cd} t={tx} jobId={jobId} aside={<JobMatchLens uid={uid} d={cd} t={tx} jobId={lensJob} onJob={setLensJob} />} />
       </>}</LensState>
     </div>
   );
