@@ -12,3 +12,4 @@
 - [x] Silver Medalist "Finalist" badges in Talent Search + Add to Requisition fast-track on profile
 - [x] Downloadable Offer Summary & Acceptance Confirmation PDF (candidate + recruiter)
 - [ ] Reference checks: candidate submits referees, no-login referee questionnaire, answers into Team Notes
+- [x] Candidate offer acceptance e-signature

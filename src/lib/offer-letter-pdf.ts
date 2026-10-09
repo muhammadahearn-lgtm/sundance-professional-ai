@@ -43,6 +43,12 @@ export async function buildOfferLetterPdf(i: OfferLetterInput): Promise<Uint8Arr
     y -= 10; page.drawText("Additional terms", { x: M, y, size: 12, font, color: navy }); y -= 18;
     for (const l of wrap(i.notes.trim(), font, 10, W - 2 * M).slice(0, 18)) { page.drawText(l, { x: M, y, size: 10, font, color: navy }); y -= 14; }
   }
+  if (i.signedName) {
+    y -= 24; page.drawText("Candidate signature", { x: M, y, size: 12, font, color: navy }); y -= 30;
+    page.drawText(i.signedName, { x: M, y, size: 22, font, color: blue });
+    page.drawLine({ start: { x: M, y: y - 6 }, end: { x: M + 280, y: y - 6 }, thickness: 0.8, color: navy }); y -= 20;
+    page.drawText(`Electronically signed ${i.signedAt ? new Date(i.signedAt).toUTCString().replace("GMT", "UTC") : ""} · typed legal name`, { x: M, y, size: 9, font, color: muted });
+  }
   const foot = wrap("Accepted digitally inside Sundance Professionals. The acceptance time above is recorded by the platform and cannot be edited by either party. Keep this confirmation for HR, payroll and onboarding records.", font, 8.5, W - 2 * M);
   foot.forEach((l, n) => page.drawText(l, { x: M, y: M + (foot.length - n) * 12, size: 8.5, font, color: muted }));
   return doc.save();

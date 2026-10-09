@@ -1412,6 +1412,8 @@ export type Database = {
           revision: number
           salary_amount: number | null
           salary_currency: string
+          signed_at: string | null
+          signed_name: string | null
           signing_bonus: number | null
           start_date: string | null
           status: string
@@ -1439,6 +1441,8 @@ export type Database = {
           revision?: number
           salary_amount?: number | null
           salary_currency?: string
+          signed_at?: string | null
+          signed_name?: string | null
           signing_bonus?: number | null
           start_date?: string | null
           status?: string
@@ -1466,6 +1470,8 @@ export type Database = {
           revision?: number
           salary_amount?: number | null
           salary_currency?: string
+          signed_at?: string | null
+          signed_name?: string | null
           signing_bonus?: number | null
           start_date?: string | null
           status?: string
@@ -3222,6 +3228,10 @@ export type Database = {
       resume_access_reason: { Args: { _candidate: string }; Returns: string }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv: string }
+        Returns: undefined
+      }
+      sign_and_accept_offer: {
+        Args: { _name: string; _offer: string }
         Returns: undefined
       }
       start_conversation: {

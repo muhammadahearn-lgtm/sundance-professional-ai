@@ -24,7 +24,7 @@ export function OfferLetterButton({ offer, jobTitle, side, className }: { offer:
       const bytes = await buildOfferLetterPdf({
         offerId: offer.offer_id, candidateName, jobTitle: title, companyName: (job.data?.companies as { company_name: string } | null)?.company_name ?? "",
         salaryAmount: offer.salary_amount, currency: offer.salary_currency, signingBonus: offer.signing_bonus, equity: offer.equity_details ?? "",
-        startDate: offer.start_date, notes: offer.notes ?? "", revision: offer.revision, respondedAt: offer.responded_at, status: offer.status,
+        startDate: offer.start_date, notes: offer.notes ?? "", revision: offer.revision, respondedAt: offer.responded_at, status: offer.status, signedName: offer.signed_name ?? null, signedAt: offer.signed_at ?? null,
       });
       const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/pdf" }));
       const a = document.createElement("a"); a.href = url; a.download = offerLetterFileName(candidateName, title); a.click();

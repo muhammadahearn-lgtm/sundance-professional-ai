@@ -4,6 +4,7 @@ export type OfferLetterInput = {
   offerId: string; candidateName: string; jobTitle: string; companyName: string;
   salaryAmount: number | null; currency: string; signingBonus: number | null; equity: string;
   startDate: string | null; notes: string; revision: number; respondedAt: string | null; status: string;
+  signedName?: string | null; signedAt?: string | null;
 };
 
 /** Only accepted offers with a recorded decision time get an acceptance certificate. */
@@ -24,6 +25,7 @@ export function offerLetterRows(i: OfferLetterInput): [string, string][] {
   rows.push(["Start date", day(i.startDate)]);
   rows.push(["Offer revision", String(i.revision)]);
   rows.push(["Accepted on", i.respondedAt ? `${new Date(i.respondedAt).toUTCString().replace("GMT", "UTC")}` : "—"]);
+  if (i.signedName) rows.push(["Signed by", i.signedName]);
   rows.push(["Confirmation ID", i.offerId.slice(0, 8).toUpperCase()]);
   return rows;
 }
