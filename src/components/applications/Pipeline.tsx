@@ -18,7 +18,7 @@ async function listTeamRecommendations() {
   return data ?? [];
 }
 import { listJobApplications, listPipeline, moveStage, type PipelineCard } from "@/lib/applications-data";
-import { listRecruiterInterviews } from "@/lib/interviews-data";
+import { cancelInterview, listRecruiterInterviews } from "@/lib/interviews-data";
 import { ScheduleInterviewDialog, ScorecardDialog } from "@/components/applications/Interviews";
 import { RoundStepper, ShortlistSummary } from "@/components/applications/RoundStepper";
 import { normalizePlan, roundProgress, FOLLOW_UP_PLAN, interviewPerformance, compareByInterview } from "@/lib/interview-plan";
@@ -343,7 +343,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} silverEligible={isSilverEligible(closing.current_stage) && !!closing.job_id} onCancel={() => setClosing(null)} onConfirm={(silver) => { const c = closing; setClosing(null); void move(c, "rejected", true); if (silver && c.job_id) void markSilverMedalists(uid, [c.candidate_id], c.job_id).then(() => { toast.success(`${c.name} saved as a Silver Medalist`); void qc.invalidateQueries({ queryKey: ["saved-entries", uid] }); }).catch((e) => toast.error(friendlyError(e, "Could not save Silver Medalist"))); }} />}
+      {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} upcomingInterview={(() => { const iv = ivOf(closing); return iv ? fmtInterview(iv.scheduled_at) : null; })()} silverEligible={isSilverEligible(closing.current_stage) && !!closing.job_id} onCancel={() => setClosing(null)} onConfirm={(silver, reason) => { const c = closing; setClosing(null); const iv = ivOf(c); void move(c, "rejected", true).then(async () => { await supabase.from("recruiting_pipeline").update({ disposition_reason: reason }).eq("pipeline_id", c.pipeline_id); if (iv) { await cancelInterview(iv.interview_id); toast.info("Upcoming interview cancelled"); void qc.invalidateQueries({ queryKey: ["interviews", uid] }); } }).catch((e) => toast.error(friendlyError(e, "Could not finish closing out"))); if (silver && c.job_id) void markSilverMedalists(uid, [c.candidate_id], c.job_id).then(() => { toast.success(`${c.name} saved as a Silver Medalist`); void qc.invalidateQueries({ queryKey: ["saved-entries", uid] }); }).catch((e) => toast.error(friendlyError(e, "Could not save Silver Medalist"))); }} />}
       {offerFor && offerFor.c.job_id && <OfferDialog ctx={{ uid, jobId: offerFor.c.job_id, candidateId: offerFor.c.candidate_id, applicationId: offerFor.c.applicationId ?? null }}
         candidateName={offerFor.c.name} jobTitle={offerFor.c.jobs?.job_title ?? j?.job_title ?? "this role"} existing={offerFor.existing}
         defaultSalary={j?.maximum_salary ?? null} defaultCurrency={j?.salary_currency}
