@@ -1,5 +1,5 @@
 import { APP_SORTS, sortApplications } from "@/lib/application-sort";
-import { TRIAGE_TABS, inTriageTab, type TriageTab } from "@/lib/application-triage";
+import { TRIAGE_TABS, canBulkSelect, inTriageTab, topIds, type TriageTab } from "@/lib/application-triage";
 import { listPipeline } from "@/lib/applications-data";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhoto } from "@/components/app/ProfilePhoto";
@@ -262,6 +262,21 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   const rows = sortApplications(filtered.filter((a) => inTriageTab(tab, a.application_status, inPipe(a))), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkReject, setBulkReject] = useState(false);
+  const eligible = (a: (typeof rows)[number]) => canBulkSelect(a.application_status, inPipe(a));
+  const selRows = rows.filter((a) => sel.has(a.application_id) && eligible(a));
+  const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  async function bulk(kind: "pipe" | "reject") {
+    setBulkBusy(true); let ok = 0;
+    for (const a of selRows) { try { if (kind === "pipe") await addToPipeline(uid, a.candidate_id, a.job_id); else await setApplicationStatus(a.application_id, "rejected"); ok++; } catch { /* counted below */ } }
+    const failed = selRows.length - ok;
+    if (ok) toast.success(kind === "pipe" ? `${ok} moved to Pipeline` : `${ok} marked Not Moving Forward`);
+    if (failed) toast.error(`${failed} couldn't be updated. Please try again.`);
+    setSel(new Set()); setBulkBusy(false);
+    qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] });
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
