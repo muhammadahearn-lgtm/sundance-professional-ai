@@ -7,6 +7,7 @@ export type Interview = {
   interview_id: string; pipeline_id: string | null; application_id: string | null; recruiter_id: string; candidate_id: string; job_id: string | null;
   format: string; interview_type: string; custom_round_name: string; round_number: number; platform: string; meeting_url: string; location_address: string; location_instructions: string;
   scheduled_at: string; duration_minutes: number; timezone: string; notes: string; status: string;
+  reschedule_requested_at?: string | null; reschedule_note?: string;
 };
 
 export async function listRecruiterInterviews(uid: string): Promise<Interview[]> {
@@ -66,5 +67,15 @@ export async function listMyScorecards(uid: string): Promise<Scorecard[]> {
 
 export async function saveScorecard(uid: string, interviewId: string, d: ScorecardDraft) {
   const { error } = await supabase.from("interview_scorecards").upsert({ interview_id: interviewId, recruiter_id: uid, recommendation: d.recommendation, rating: d.rating, strengths: d.strengths.trim(), concerns: d.concerns.trim(), notes: d.notes.trim() });
+  if (error) throw error;
+}
+
+export async function requestReschedule(id: string, note: string) {
+  const { error } = await supabase.rpc("request_interview_reschedule", { _interview: id, _note: note });
+  if (error) throw error;
+}
+
+export async function candidateCancelInterview(id: string, reason: string) {
+  const { error } = await supabase.rpc("candidate_cancel_interview", { _interview: id, _reason: reason });
   if (error) throw error;
 }

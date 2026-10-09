@@ -143,3 +143,15 @@ export function otherZoneTime(iso: string, zone: string | null | undefined, view
   if (!zone || zone === viewerZone) return null;
   try { return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone: zone, timeZoneName: "short" }); } catch { return null; }
 }
+
+/** Candidates can ask to move or cancel only interviews that haven't started and aren't cancelled. */
+export function canCandidateChange(i: { scheduled_at: string; status: string }, now = new Date()) {
+  return i.status !== "cancelled" && new Date(i.scheduled_at).getTime() > now.getTime();
+}
+/** Returns the first problem with a candidate's cancel reason, or null. */
+export function validateCancelReason(r: string): string | null {
+  const t = r.trim();
+  if (t.length < 3) return "Please add a short reason.";
+  if (t.length > 500) return "Reason must be 500 characters or fewer.";
+  return null;
+}
