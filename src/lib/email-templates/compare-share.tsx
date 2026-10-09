@@ -15,6 +15,7 @@ export interface CompareEmailCandidate {
   score?: number | null
   strengths?: string[]
   gaps?: string[]
+  pickUrl?: string
 }
 
 interface Props {
@@ -32,7 +33,7 @@ const pct = (s?: number | null) => (s == null ? '—' : `${Math.round(s)}%`)
 
 const Best = () => <span style={best}>🏆 BEST</span>
 
-const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, candidates = [] }: Props) => {
+const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, candidates = [], actionUrl }: Props) => {
   const sorted = [...candidates].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   const top = sorted[0]
   const lead = top?.score != null && sorted[1]?.score != null ? Math.round(top.score - (sorted[1].score ?? 0)) : null
@@ -127,12 +128,25 @@ const CompareShare = ({ recipientName, jobTitle = 'this role', clientCompany, ca
                   ))}
                 </tr>
               ))}
+              {sorted.some((c) => c.pickUrl) ? (
+                <tr>
+                  {sorted.map((c, i) => (
+                    <td key={`pick-${i}`} align="center" style={{ ...cell(i), backgroundColor: i === 0 ? '#f3f6fe' : '#ffffff', textAlign: 'center' }}>
+                      {c.pickUrl ? <a href={c.pickUrl} style={pickBtn}>Recommend {c.name.split(' ')[0]}</a> : null}
+                    </td>
+                  ))}
+                </tr>
+              ) : null}
             </tbody>
           </table>
 
           <Section style={ask}>
             <Text style={{ ...text, margin: 0, fontWeight: 600, color: '#151a33' }}>Which candidate would you invite to apply for {jobTitle}?</Text>
-            <Text style={{ ...text, margin: '4px 0 0' }}>Reply to your recruiter with your pick.</Text>
+            {actionUrl && sorted.some((c) => c.pickUrl) ? (
+              <Text style={{ ...text, margin: '4px 0 0' }}>Tap "Recommend" under your pick — no sign-in needed. None of these fit? <a href={actionUrl} style={{ color: '#2f5be0', fontWeight: 600 }}>Request more candidates</a>.</Text>
+            ) : (
+              <Text style={{ ...text, margin: '4px 0 0' }}>Reply to your recruiter with your pick.</Text>
+            )}
           </Section>
 
           <Text style={muted}>For privacy, this comparison shows first names and last initials only. Contact details stay private on Sundance Professionals.</Text>
@@ -182,3 +196,4 @@ const sub = { fontSize: '11px', color: '#64748b', marginTop: '3px' }
 const best = { display: 'inline-block', marginLeft: '6px', backgroundColor: '#e7f6ec', color: '#1f8a4c', fontSize: '10px', fontWeight: 700, borderRadius: '6px', padding: '1px 6px' }
 const ask = { backgroundColor: '#f8fafc', borderRadius: '12px', padding: '14px 16px', margin: '20px 0 16px' }
 const muted = { fontSize: '12px', color: '#8a8fa8', lineHeight: '1.5', margin: '24px 0 0' }
+const pickBtn = { display: 'inline-block', backgroundColor: '#2f5be0', color: '#ffffff', fontSize: '13px', fontWeight: 700, borderRadius: '999px', padding: '9px 16px', textDecoration: 'none' }

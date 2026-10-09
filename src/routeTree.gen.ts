@@ -22,6 +22,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TeamReviewRouteImport } from './routes/team-review'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as AuthenticatedCandidateRouteImport } from './routes/_authenticated/candidate'
@@ -153,6 +154,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamReviewRoute = TeamReviewRouteImport.update({
+  id: '/team-review',
+  path: '/team-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -570,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/team-review': typeof TeamReviewRoute
   '/terms': typeof TermsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/candidate': typeof AuthenticatedCandidateRouteWithChildren
@@ -652,6 +659,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/team-review': typeof TeamReviewRoute
   '/terms': typeof TermsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -724,6 +732,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/team-review': typeof TeamReviewRoute
   '/terms': typeof TermsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/_authenticated/candidate': typeof AuthenticatedCandidateRouteWithChildren
@@ -808,6 +817,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/team-review'
     | '/terms'
     | '/unauthorized'
     | '/candidate'
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/team-review'
     | '/terms'
     | '/unauthorized'
     | '/auth/callback'
@@ -961,6 +972,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/team-review'
     | '/terms'
     | '/unauthorized'
     | '/_authenticated/candidate'
@@ -1045,6 +1057,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TeamReviewRoute: typeof TeamReviewRoute
   TermsRoute: typeof TermsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1144,6 +1157,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team-review': {
+      id: '/team-review'
+      path: '/team-review'
+      fullPath: '/team-review'
+      preLoaderRoute: typeof TeamReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1955,6 +1975,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TeamReviewRoute: TeamReviewRoute,
   TermsRoute: TermsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   AuthCallbackRoute: AuthCallbackRoute,

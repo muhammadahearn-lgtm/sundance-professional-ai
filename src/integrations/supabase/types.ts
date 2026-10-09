@@ -2412,6 +2412,96 @@ export type Database = {
           },
         ]
       }
+      team_recommendations: {
+        Row: {
+          candidate_id: string | null
+          created_at: string
+          job_id: string
+          kind: string
+          note: string
+          recommendation_id: string
+          stakeholder_id: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string
+          job_id: string
+          kind: string
+          note?: string
+          recommendation_id?: string
+          stakeholder_id: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string
+          job_id?: string
+          kind?: string
+          note?: string
+          recommendation_id?: string
+          stakeholder_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_recommendations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "team_recommendations_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "job_stakeholders"
+            referencedColumns: ["stakeholder_id"]
+          },
+        ]
+      }
+      team_review_links: {
+        Row: {
+          candidate_ids: string[]
+          created_at: string
+          expires_at: string
+          job_id: string
+          stakeholder_id: string
+          token_hash: string
+        }
+        Insert: {
+          candidate_ids: string[]
+          created_at?: string
+          expires_at: string
+          job_id: string
+          stakeholder_id: string
+          token_hash: string
+        }
+        Update: {
+          candidate_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          job_id?: string
+          stakeholder_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_review_links_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "team_review_links_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "job_stakeholders"
+            referencedColumns: ["stakeholder_id"]
+          },
+        ]
+      }
       technical_skills: {
         Row: {
           created_at: string
