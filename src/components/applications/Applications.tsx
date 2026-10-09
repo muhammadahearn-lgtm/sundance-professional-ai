@@ -403,7 +403,7 @@ export function RecruiterApplicationsPage({ uid, job = "" }: { uid: string; job?
 function QualPills({ s }: { s?: { skill_alignment_score: number; technology_alignment_score: number; experience_alignment_score: number } | undefined }) {
   const pills = qualificationPills(s);
   if (!pills.length) return null;
-  return <div className="mt-3 flex flex-wrap gap-1.5">{pills.map((p) => <span key={p.label} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.tone === "good" ? "bg-success/10 text-success" : "bg-warning/10 text-warning-foreground"}`}>{p.label}</span>)}</div>;
+  return <div className="mt-3 flex flex-wrap gap-1.5">{pills.map((p) => <span key={p.label} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.tone === "good" ? "bg-success/10 text-success" : "bg-warning/15 text-foreground"}`}>{p.label}</span>)}</div>;
 }
 
 function SpeedReview({ a, pos, total, score, sub, dealbreakers, piped, onClose, onPrev, onNext, onPipe, onReject }: {
