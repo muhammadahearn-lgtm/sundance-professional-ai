@@ -23,7 +23,6 @@ import { applyToJob, addToPipeline, listJobApplications, listMyApplications, loa
 import { loadCandidateFull } from "@/lib/talent-data";
 import { APP_STATUSES, canApply, timeline, type AppStatus } from "@/lib/talent-rules";
 import { card, friendlyError, inputCls, label, AVAILABILITY } from "@/components/profile/parts";
-import { DatePicker } from "@/components/ui/date-picker";
 import { ARRANGEMENT, lbl } from "@/components/jobs/shared";
 import { Avatar, CandidateProfileBody, Chips, ErrorBox, MatchPlaceholder, ProfileHeader, btn, nameOf, primaryBtn, useTaxonomy } from "@/components/talent/Talent";
 import { listApplicationInterviews } from "@/lib/interviews-data";
@@ -32,7 +31,8 @@ import { NotMovingForwardDialog } from "@/components/applications/NotMovingForwa
 import { ApplicationInsights } from "@/components/applications/ApplicationInsights";
 import { CandidateOfferCard } from "@/components/applications/Offers";
 
-const STATUS_STYLE: Record<string, string> = { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
+const TIMEFRAMES: [string, string][] = [["", "All time"], ["1", "Past 24 hours"], ["7", "Past 7 days"], ["14", "Past 14 days"], ["30", "Past 30 days"]];
+const STATUS_STYLE: Record<string, string> =  { applied: "bg-primary-soft text-primary", viewed: "bg-muted text-foreground", recruiter_contacted: "bg-primary-soft text-primary", interviewing: "bg-warning/15 text-warning", offer: "bg-success/15 text-success", hired: "bg-success text-primary-foreground", rejected: "bg-muted text-muted-foreground" };
 export function AppStatusBadge({ s }: { s: string }) {
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[s] ?? "bg-muted"}`}>{label(APP_STATUSES, s)}</span>;
 }
