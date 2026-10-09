@@ -54,7 +54,7 @@ export const submitTeamReview = createServerFn({ method: "POST" })
     // Replace this reviewer's answer for the job with the new set of picks.
     const { error: delErr } = await supabaseAdmin.from("team_recommendations").delete().eq("job_id", link.job_id).eq("stakeholder_id", link.stakeholder_id);
     if (delErr) throw new Error("Could not save your recommendation. Please try again.");
-    const rows = data.picks.length
+    const rows: { job_id: string; stakeholder_id: string; candidate_id: string | null; kind: string; note: string }[] = data.picks.length
       ? data.picks.map((id) => ({ job_id: link.job_id, stakeholder_id: link.stakeholder_id, candidate_id: id, kind: "recommend", note }))
       : [{ job_id: link.job_id, stakeholder_id: link.stakeholder_id, candidate_id: null, kind: "pass_all", note }];
     const { error } = await supabaseAdmin.from("team_recommendations").insert(rows);
@@ -78,7 +78,7 @@ async function emailRecruiter(
   if (!job) return;
   const { data: rp } = await supabaseAdmin.from("profiles").select("first_name, email").eq("user_id", job.recruiter_id).maybeSingle();
   if (!rp?.email) return;
-  let picked: { name: string; role?: string; score: number | null }[] = [];
+  let picked: { name: string; role?: string | undefined; score: number | null }[] = [];
   if (picks.length) {
     const [{ data: ps }, { data: cps }, { data: ss }] = await Promise.all([
       supabaseAdmin.from("profiles").select("user_id, first_name, last_name").in("user_id", picks),
