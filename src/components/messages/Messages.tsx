@@ -8,6 +8,7 @@ import { ReportButton } from "@/components/moderation/ReportButton";
 import { supabase } from "@/integrations/supabase/client";
 import { filterInbox, linkify, MESSAGE_MAX, unreadConversations, validateAttachment, validateMessage, type InboxFilter, type InboxRow } from "@/lib/messaging";
 import { AppStatusBadge } from "@/components/applications/Applications";
+import { JobContextStrip } from "@/components/messages/JobContextStrip";
 
 type Role = "candidate" | "recruiter";
 const card = "rounded-2xl border border-border bg-card shadow-soft";
@@ -270,6 +271,7 @@ function Thread({ uid, role, c }: { uid: string; role: Role; c: Conversation }) 
           </div>
         </div>
       </header>
+      {c.job_id && <JobContextStrip c={c} role={role} />}
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/30 p-4">
         {msgs.isLoading ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           : msgs.error ? <p className="text-center text-sm text-destructive">{errMsg(msgs.error, "Unable to load messages")}</p>
