@@ -1,20 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { RecruiterApplicationsPage } from "@/components/applications/Applications";
 import { ApplicationRequisitionHub } from "@/components/applications/ApplicationRequisitionHub";
 
-const schema = z.object({
-  job: fallback(z.string(), "").optional(),
-  view: fallback(z.string(), "").optional(),
-  q: fallback(z.string(), "").optional(),
-  co: fallback(z.string(), "").optional(),
-  status: fallback(z.string(), "").optional(),
-});
+type S = { job?: string; view?: string; q?: string; co?: string; status?: string };
+const KEYS = ["job", "view", "q", "co", "status"] as const;
 
 export const Route = createFileRoute("/_authenticated/recruiter/applications/")({
   staticData: { sitemap: false },
-  validateSearch: zodValidator(schema),
+  validateSearch: (s: Record<string, unknown>): S => {
+    const out: S = {};
+    for (const k of KEYS) { const v = s[k]; if (typeof v === "string" && v) out[k] = v.slice(0, 100); }
+    return out;
+  },
   head: () => ({ meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { title: "Applications — Sundance Professionals" }, { name: "description", content: "Review applications to your jobs." }, { property: "og:title", content: "Applications — Sundance Professionals" }, { property: "og:description", content: "Review applications to your jobs." }] }),
   component: Page,
 });

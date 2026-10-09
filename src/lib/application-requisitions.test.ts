@@ -10,8 +10,8 @@ describe("application requisitions", () => {
   });
   it("keeps the highest match score and latest date", () => {
     const [j] = summarizeApplications([row({ candidate_id: "a", application_date: "2026-10-02" }), row({ candidate_id: "b", application_date: "2026-10-05" })], () => false, (r) => (r.candidate_id === "a" ? 91 : 70));
-    expect(j.topMatch).toBe(91);
-    expect(j.latest).toBe("2026-10-05");
+    expect(j?.topMatch).toBe(91);
+    expect(j?.latest).toBe("2026-10-05");
   });
   it("sorts jobs with the most unreviewed applicants first", () => {
     const list = summarizeApplications([row({ job_id: "x" }), row({ job_id: "y" }), row({ job_id: "y", candidate_id: "d" })], () => false, () => undefined);
