@@ -119,7 +119,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   }
   async function negotiate() {
     setBusy(true);
-    if (!o) return; try { const id = o.negotiated_at && o.negotiation_conversation_id ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
+    if (!o) return; try { const id = (o.negotiated_at ? o.negotiation_conversation_id : null) ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
     catch (e) { toast.error(friendlyError(e, "Unable to start conversation")); }
     setBusy(false);
   }
