@@ -10,6 +10,7 @@ import { CURRENCIES, formatSalaryAmount } from "@/lib/salary";
 import { daysLeft, emptyOffer, negotiateMessage, offerExpired, todayISO, validateOffer, type OfferForm } from "@/lib/offer-rules";
 import { latestOffer, offersForApplication, requestNegotiation, respondToOffer, reviseOffer, sendOffer, withdrawOffer, wrapUpOthers, type Offer } from "@/lib/offers-data";
 import { setJobStatus } from "@/lib/jobs-data";
+import { notifyOfferEvent } from "@/lib/offer-email.functions";
 
 const Modal = ({ label, onClose, children, wide }: { label: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
   <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" role="dialog" aria-modal="true" aria-label={label} onClick={onClose}>
@@ -34,7 +35,12 @@ export function OfferDialog({ ctx, candidateName, jobTitle, existing, defaultSal
   async function submit() {
     if (Object.keys(errs).length) { setShow(true); return; }
     setBusy(true);
-    try { if (revising) await reviseOffer(existing!.offer_id, f); else await sendOffer(ctx, f); toast.success(revising ? "Offer Revised" : "Offer Sent"); onDone(); }
+    try {
+      if (revising) await reviseOffer(existing!.offer_id, f); else await sendOffer(ctx, f);
+      toast.success(revising ? "Offer Revised" : "Offer Sent"); onDone();
+      const id = revising ? existing!.offer_id : (await latestOffer(ctx.jobId, ctx.candidateId))?.offer_id;
+      if (id) void notifyOfferEvent({ data: { offerId: id, event: "sent" } }).catch(() => {});
+    }
     catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't send the offer.")); }
     setBusy(false);
   }
@@ -113,13 +119,13 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
   const refresh = () => ["offer", "my-application", "my-applications"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
   async function respond(accept: boolean) {
     setBusy(true);
-    try { await respondToOffer(o!.offer_id, accept, reason); toast.success(accept ? "Offer accepted. Congratulations!" : "Offer declined"); setDlg(null); refresh(); }
+    try { await respondToOffer(o!.offer_id, accept, reason); toast.success(accept ? "Offer accepted. Congratulations!" : "Offer declined"); setDlg(null); refresh(); void notifyOfferEvent({ data: { offerId: o!.offer_id, event: accept ? "accepted" : "declined" } }).catch(() => {}); }
     catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Couldn't respond.")); }
     setBusy(false);
   }
   async function negotiate() {
     setBusy(true);
-    if (!o) return; try { const id = (o.negotiated_at ? o.negotiation_conversation_id : null) ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
+    if (!o) return; try { const first = !o.negotiated_at; const id = (o.negotiated_at ? o.negotiation_conversation_id : null) ?? await requestNegotiation(o.offer_id, negotiateMessage(jobTitle)); if (first) void notifyOfferEvent({ data: { offerId: o.offer_id, event: "negotiation" } }).catch(() => {}); qc.invalidateQueries({ queryKey: ["offer", applicationId] }); nav({ to: "/candidate/messages/$conversationId", params: { conversationId: id } }); }
     catch (e) { toast.error(friendlyError(e, "Unable to start conversation")); }
     setBusy(false);
   }
