@@ -610,6 +610,13 @@
       "when": 1791575441639,
       "tag": "0086_delayed_rejection_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1791575710788,
+      "tag": "0087_offer_expiry_reminders",
+      "breakpoints": true
     }
   ]
 }

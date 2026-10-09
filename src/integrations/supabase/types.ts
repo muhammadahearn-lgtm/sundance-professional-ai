@@ -1394,6 +1394,7 @@ export type Database = {
           decline_reason: string
           equity_details: string
           expires_on: string | null
+          expiry_reminded_at: string | null
           extension_note: string
           extension_requested_until: string | null
           extension_responded_at: string | null
@@ -1420,6 +1421,7 @@ export type Database = {
           decline_reason?: string
           equity_details?: string
           expires_on?: string | null
+          expiry_reminded_at?: string | null
           extension_note?: string
           extension_requested_until?: string | null
           extension_responded_at?: string | null
@@ -1446,6 +1448,7 @@ export type Database = {
           decline_reason?: string
           equity_details?: string
           expires_on?: string | null
+          expiry_reminded_at?: string | null
           extension_note?: string
           extension_requested_until?: string | null
           extension_responded_at?: string | null
@@ -3063,6 +3066,7 @@ export type Database = {
         Returns: undefined
       }
       deliver_due_rejections: { Args: never; Returns: number }
+      deliver_offer_expiry_reminders: { Args: never; Returns: number }
       education_degree_from_text: { Args: { _v: string }; Returns: string }
       education_suggestions: {
         Args: never
