@@ -118,7 +118,7 @@ export async function markViewed(id: string, current: string) {
 
 // ---------- Pipeline ----------
 export async function listPipeline(uid: string, jobId?: string) {
-  let q = supabase.from("recruiting_pipeline").select("pipeline_id, candidate_id, job_id, current_stage, stage_date, created_at, jobs(job_title, interview_plan)").eq("recruiter_id", uid).order("stage_date", { ascending: false });
+  let q = supabase.from("recruiting_pipeline").select("pipeline_id, candidate_id, job_id, current_stage, stage_date, created_at, jobs(job_title, interview_plan, job_status)").eq("recruiter_id", uid).order("stage_date", { ascending: false });
   if (jobId) q = q.eq("job_id", jobId);
   const { data, error } = await q;
   if (error) throw error;

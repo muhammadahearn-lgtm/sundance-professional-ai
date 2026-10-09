@@ -53,6 +53,13 @@ export const notifyOfferEvent = createServerFn({ method: "POST" })
       const url = data.event === "negotiation" && o.negotiation_conversation_id
         ? `${SITE}/recruiter/messages/${o.negotiation_conversation_id}`
         : `${SITE}/recruiter/pipeline/${o.job_id}?candidate=${o.candidate_id}`;
+      if (data.event === "accepted" && o.responded_at) {
+        // Position filled: let each applicant closed out by this acceptance know.
+        const since = new Date(new Date(o.responded_at).getTime() - 10 * 60 * 1000).toISOString();
+        const { data: closed } = await supabaseAdmin.from("applications").select("application_id").eq("job_id", o.job_id).eq("application_status", "rejected").neq("candidate_id", o.candidate_id).gte("updated_at", since);
+        const { sendJobClosedNotice } = await import("./job-closed-email.server");
+        for (const a of closed ?? []) { try { await sendJobClosedNotice(a.application_id); } catch (e) { console.error("job closed email failed", e); } }
+      }
       const r = await sendTemplateEmail("offer-recruiter-alert", rec.email, {
         templateData: { recruiterName: rec.first_name, candidateName: shortName(cand?.first_name ?? "", cand?.last_name ?? "") || "Your candidate", jobTitle, kind: data.event, salary, startDate: fmt(o.start_date), reason, url },
         idempotencyKey: `offer-recruiter-${o.offer_id}-r${o.revision}-${data.event}`,

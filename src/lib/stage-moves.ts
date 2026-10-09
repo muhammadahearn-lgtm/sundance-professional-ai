@@ -9,8 +9,8 @@ export function isBackwardMove(from: Stage, to: Stage): boolean {
   return a >= 0 && b >= 0 && b < a;
 }
 
-/** Hired candidates are locked: the job closed and others were let go. */
-export function canMoveCard(from: Stage): boolean { return from !== "hired"; }
+/** Hired candidates are locked while the job is closed; reopening (e.g. a renege) unlocks them. */
+export function canMoveCard(from: Stage, jobStatus?: string | null): boolean { return from !== "hired" || (!!jobStatus && jobStatus !== "closed"); }
 
 /** Only auto-open the scheduler when entering Interviewing forward (from Contacted) without a booked interview. */
 export function shouldAutoSchedule(from: Stage, to: Stage, hasUpcoming: boolean): boolean {

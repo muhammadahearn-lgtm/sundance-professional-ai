@@ -90,13 +90,13 @@ export function jobQuality(j: { title: string; description: string; minSalary: n
   };
 }
 
-export type JobAction = "publish" | "pause" | "resume" | "close";
+export type JobAction = "publish" | "pause" | "resume" | "close" | "reopen";
 export function allowedActions(s: JobStatus): JobAction[] {
   switch (s) {
     case "draft": return ["publish", "close"];
     case "active": return ["pause", "close"];
     case "paused": return ["resume", "close"];
-    case "closed": return [];
+    case "closed": return ["reopen"];
   }
 }
 export function nextStatus(a: JobAction): JobStatus {

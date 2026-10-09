@@ -23,7 +23,7 @@ describe("job quality", () => {
 });
 
 describe("job status", () => {
-  it("closed jobs are read-only", () => { expect(allowedActions("closed")).toEqual([]); expect(canEdit("closed")).toBe(false); });
+  it("closed jobs are read-only but can be reopened", () => { expect(allowedActions("closed")).toEqual(["reopen"]); expect(canEdit("closed")).toBe(false); });
   it("drafts can be published", () => expect(allowedActions("draft")).toContain("publish"));
   it("cannot delete jobs with applications", () => { expect(canDelete(1)).toBe(false); expect(canDelete(0)).toBe(true); });
 });
