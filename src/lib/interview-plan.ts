@@ -1,31 +1,56 @@
 import { INTERVIEW_TYPES, CUSTOM_TYPE } from "./interview-rules";
 
-/** One planned interview round for a job. Position in the array = round number. */
-export type PlanRound = { type: string; name: string; duration_minutes: number };
+/** One planned interview round for a job. Position in the array = round number. Optional kit: focus + rubric criteria. */
+export type PlanRound = { type: string; name: string; duration_minutes: number; focus?: string; rubric?: string[] };
 
 export const PLAN_MIN = 1;
 export const PLAN_MAX = 5;
 export const PLAN_DURATIONS = [30, 45, 60, 90];
+export const RUBRIC_MAX = 5;
+export const RUBRIC_ITEM_MAX = 120;
+export const FOCUS_MAX = 100;
+
+/** Suggested interview kit per round type. */
+export const DEFAULT_KITS: Record<string, { focus: string; rubric: string[] }> = {
+  screen: { focus: "Motivation and basic fit", rubric: ["Background & career trajectory", "Motivation for this role", "Compensation & timeline alignment"] },
+  technical: { focus: "Hands-on technical depth", rubric: ["Problem-solving approach", "Code quality & testing", "Handling edge cases"] },
+  system_design: { focus: "Architecture and trade-offs", rubric: ["Scalability & bottlenecks", "Clear component boundaries", "Data storage trade-offs"] },
+  behavioral: { focus: "Teamwork and ownership", rubric: ["Conflict resolution & taking feedback", "Ownership & proactive execution", "Cross-team collaboration"] },
+  final: { focus: "Long-term fit and impact", rubric: ["Strategic impact", "Mutual long-term fit", "Clear communication with leaders"] },
+};
+export const defaultKit = (type: string) => DEFAULT_KITS[type] ?? { focus: "", rubric: [] };
 
 export const DEFAULT_PLAN: PlanRound[] = [
-  { type: "screen", name: "Initial Screen", duration_minutes: 30 },
-  { type: "technical", name: "Technical Deep Dive", duration_minutes: 60 },
-  { type: "final", name: "Final Round", duration_minutes: 45 },
+  { type: "screen", name: "Initial Screen", duration_minutes: 30, ...structuredClone(defaultKit("screen")) },
+  { type: "technical", name: "Technical Deep Dive", duration_minutes: 60, ...structuredClone(defaultKit("technical")) },
+  { type: "final", name: "Final Round", duration_minutes: 45, ...structuredClone(defaultKit("final")) },
 ];
 
 const typeName = (t: string) => INTERVIEW_TYPES.find(([k]) => k === t)?.[1] ?? "";
 
+/** Clean a rubric list: trimmed, non-empty, deduped, capped. */
+export function normalizeRubric(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  const out: string[] = [];
+  for (const x of v) {
+    const s = typeof x === "string" ? x.trim().slice(0, RUBRIC_ITEM_MAX) : "";
+    if (s && !out.some((o) => o.toLowerCase() === s.toLowerCase())) out.push(s);
+    if (out.length >= RUBRIC_MAX) break;
+  }
+  return out;
+}
+
 /** Clean any stored value into a valid plan (falls back to the default). */
 export function normalizePlan(v: unknown): PlanRound[] {
-  if (!Array.isArray(v)) return DEFAULT_PLAN.map((r) => ({ ...r }));
+  if (!Array.isArray(v)) return DEFAULT_PLAN.map((r) => structuredClone(r));
   const out = v.slice(0, PLAN_MAX).map((r): PlanRound => {
     const o = (r ?? {}) as Partial<PlanRound>;
     const type = typeof o.type === "string" && (o.type === CUSTOM_TYPE || INTERVIEW_TYPES.some(([k]) => k === o.type)) ? o.type : CUSTOM_TYPE;
     const name = (typeof o.name === "string" ? o.name.trim() : "").slice(0, 60) || typeName(type) || "Interview";
     const d = Number(o.duration_minutes);
-    return { type, name, duration_minutes: Number.isFinite(d) && d >= 10 && d <= 480 ? Math.round(d) : 45 };
+    return { type, name, duration_minutes: Number.isFinite(d) && d >= 10 && d <= 480 ? Math.round(d) : 45, focus: typeof o.focus === "string" ? o.focus.trim().slice(0, FOCUS_MAX) : "", rubric: normalizeRubric(o.rubric) };
   });
-  return out.length ? out : DEFAULT_PLAN.map((r) => ({ ...r }));
+  return out.length ? out : DEFAULT_PLAN.map((r) => structuredClone(r));
 }
 
 /** Grow or shrink the plan to `n` rounds, keeping existing rows. */
@@ -35,7 +60,7 @@ export function resizePlan(plan: PlanRound[], n: number): PlanRound[] {
   const extra: PlanRound[] = [];
   for (let i = plan.length; i < size; i++) {
     const t = INTERVIEW_TYPES[Math.min(i, INTERVIEW_TYPES.length - 1)]!;
-    extra.push({ type: t[0], name: t[1], duration_minutes: 45 });
+    extra.push({ type: t[0], name: t[1], duration_minutes: 45, ...structuredClone(defaultKit(t[0])) });
   }
   return [...plan, ...extra];
 }

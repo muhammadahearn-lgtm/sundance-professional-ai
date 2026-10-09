@@ -8,7 +8,30 @@ import { inputCls, friendlyError } from "@/components/profile/parts";
 const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 import { CUSTOM_TYPE, interviewTypeLabel, DURATIONS, INTERVIEW_TYPES, PLATFORMS, RECOMMENDATIONS, detectPlatform, nextRound, roundLabel, validateScorecard, type ScorecardDraft, fmtInterview, googleCalendarUrl, interviewIcs, outlookCalendarUrl, validateInterview, type InterviewDraft, canCandidateChange, validateCancelReason } from "@/lib/interview-rules";
 import { cancelInterview, candidateCancelInterview, requestReschedule, saveInterview, saveScorecard, type Interview, type Scorecard } from "@/lib/interviews-data";
-import type { PlanRound } from "@/lib/interview-plan";
+import { normalizePlan, type PlanRound } from "@/lib/interview-plan";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+/** The job's interview kit (focus + rubric) for this round, shown inside the scorecard. */
+function InterviewKit({ interview, onCite }: { interview: Interview; onCite: (text: string, field: "strengths" | "concerns") => void }) {
+  const q = useQuery({
+    queryKey: ["job-plan", interview.job_id], enabled: !!interview.job_id,
+    queryFn: async () => { const { data } = await supabase.from("jobs").select("interview_plan").eq("job_id", interview.job_id!).maybeSingle(); return normalizePlan(data?.interview_plan); },
+  });
+  const round = q.data?.[(interview.round_number ?? 1) - 1];
+  if (!round || (!round.focus && !round.rubric?.length)) return null;
+  return (
+    <div className="rounded-xl border border-primary/30 bg-primary-soft/40 p-3">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Interview kit · {round.name}</p>
+      {round.focus && <p className="mt-0.5 text-sm font-semibold">Focus: {round.focus}</p>}
+      {!!round.rubric?.length && <ul className="mt-2 space-y-1">{round.rubric.map((r) => (
+        <li key={r} className="flex items-center gap-2 text-sm"><span className="min-w-0 flex-1">• {r}</span>
+          <button type="button" onClick={() => onCite(r, "strengths")} className="rounded-md px-1.5 text-[11px] font-semibold text-success hover:bg-success/10">+ Strength</button>
+          <button type="button" onClick={() => onCite(r, "concerns")} className="rounded-md px-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/10">+ Concern</button>
+        </li>))}</ul>}
+    </div>
+  );
+}
 import { AddressAutocomplete } from "@/components/location/AddressAutocomplete";
 
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -179,6 +202,7 @@ export function ScorecardDialog({ open, onOpenChange, uid, interview, candidateN
           <DialogDescription className="flex items-center gap-1"><Lock className="h-3 w-3" />Private to you. The candidate never sees this.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <InterviewKit interview={interview} onCite={(t, field) => setD((p) => ({ ...p, [field]: p[field].trim() ? `${p[field].trim()}\n• ${t}: ` : `• ${t}: ` }))} />
           <div><p className={label}>Recommendation</p><div className="grid grid-cols-2 gap-2">{RECOMMENDATIONS.map(([k, l]) => <button key={k} type="button" aria-pressed={d.recommendation === k} onClick={() => setD((p) => ({ ...p, recommendation: k }))} className={`h-10 rounded-xl border text-sm font-bold transition-all ${d.recommendation === k ? tone(k) : "border-border bg-card hover:border-primary/50"}`}>{l}</button>)}</div></div>
           <div><p className={label}>Overall rating</p><div className="flex gap-1">{[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" aria-label={`${n} star${n === 1 ? "" : "s"}`} onClick={() => setD((p) => ({ ...p, rating: n }))}><Star className={`h-7 w-7 ${n <= d.rating ? "fill-warning text-warning" : "text-muted-foreground/40"}`} /></button>)}</div></div>
           <div><label className={label}>Strengths</label><textarea rows={2} className={inputCls} placeholder="What stood out?" value={d.strengths} onChange={(e) => setD((p) => ({ ...p, strengths: e.target.value }))} /></div>
