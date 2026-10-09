@@ -246,23 +246,22 @@ export function RecruiterApplicationsPage({ uid }: { uid: string }) {
   useAutoRecalc();
   const scores = useScores({});
   const scoreOf = (c: string, j: string) => scores.data?.find((r) => r.candidate_id === c && r.job_id === j)?.overall_match_score;
-  const [f, setF] = useState({ co: "", job: "", status: "", since: "", mm: 0, sort: "match" });
+  const [f, setF] = useState({ co: "", job: "", since: "", mm: 0, sort: "match" });
   const coName = (a: { jobs: { companies: { company_name: string } | null } }) => a.jobs.companies?.company_name ?? "No company";
   const companies = useMemo(() => [...new Set((q.data ?? []).map(coName))].sort(), [q.data]);
   const jobs = useMemo(() => [...new Map((q.data ?? []).filter((a) => !f.co || coName(a) === f.co).map((a) => [a.job_id, f.co ? a.jobs.job_title : `${coName(a)} — ${a.jobs.job_title}`])).entries()], [q.data, f.co]);
-  const rows = sortApplications((q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!f.status || a.application_status === f.status) && (!f.since || a.application_date >= f.since) && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)), f.sort, (a) => scoreOf(a.candidate_id, a.job_id));
+  const rows = sortApplications((q.data ?? []).filter((a) => (!f.co || coName(a) === f.co) && (!f.job || a.job_id === f.job) && (!f.since || a.application_date >= f.since) && meetsMinMatch(scoreOf(a.candidate_id, a.job_id), f.mm)), f.sort, (a) => scoreOf(a.candidate_id, a.job_id), (a) => a.years);
   const [closing, setClosing] = useState<{ id: string; name: string; job: string } | null>(null);
   async function act(fn: () => Promise<void>, msg: string) { try { await fn(); toast.success(msg); qc.invalidateQueries({ queryKey: ["job-applications"] }); qc.invalidateQueries({ queryKey: ["pipeline"] }); } catch (e) { toast.error(friendlyError(e, e instanceof Error ? e.message : "Unable To Update Pipeline")); } }
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Applications</h1><p className="text-sm text-muted-foreground">Review candidates who applied to your jobs.</p></div><Link to="/recruiter/pipeline" className={btn}><GitBranch className="h-4 w-4" />Pipeline</Link></div>
-      <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5`}>
+      <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4`}>
         <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} className={inputCls} aria-label="Sort by">{APP_SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
         <SearchSelect ariaLabel="Filter by company" value={f.co} onChange={(v) => setF({ ...f, co: v, job: "" })} allLabel="All companies" placeholder="Search companies..." options={companies.map((c) => ({ value: c, label: c }))} />
         <SearchSelect ariaLabel="Filter by job" value={f.job} onChange={(v) => setF({ ...f, job: v })} allLabel="All jobs" placeholder="Search job titles..." options={jobs.map(([id, t]) => ({ value: id, label: t }))} />
-        <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className={inputCls} aria-label="Status"><option value="">All statuses</option>{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         <DatePicker value={f.since} onChange={(v) => setF({ ...f, since: v })} aria-label="Applied since" placeholder="Applied since" />
-        <div className="sm:col-span-2 lg:col-span-5"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
+        <div className="sm:col-span-2 lg:col-span-4"><MatchFilter value={f.mm} onChange={(mm) => setF({ ...f, mm })} /></div>
       </div>
       {q.error ? <ErrorBox msg="Unable To Load Applications" retry={() => q.refetch()} /> : q.isLoading || !tax.data ? <div className={`${card} h-48 animate-pulse`} />
         : !rows.length ? <div className={`${card} p-10 text-center`}><p className="font-display text-lg font-bold">No applications</p><p className="mt-1 text-sm text-muted-foreground">{q.data?.length ? "No applications match these filters." : "Applications to your active jobs will appear here."}</p></div>
