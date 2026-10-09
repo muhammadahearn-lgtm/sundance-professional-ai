@@ -461,6 +461,96 @@ export type Database = {
           },
         ]
       }
+      candidate_references: {
+        Row: {
+          candidate_id: string
+          company: string
+          confidential_note: string | null
+          confirmed_relationship: boolean | null
+          created_at: string
+          email: string
+          expires_at: string
+          growth: string | null
+          job_id: string
+          name: string
+          note_id: string | null
+          rating: number | null
+          reference_id: string
+          rehire_comment: string | null
+          relationship: string
+          reminded_at: string | null
+          request_id: string
+          status: string
+          strengths: string | null
+          submitted_at: string | null
+          token_hash: string
+          worked_together: string
+        }
+        Insert: {
+          candidate_id: string
+          company?: string
+          confidential_note?: string | null
+          confirmed_relationship?: boolean | null
+          created_at?: string
+          email: string
+          expires_at: string
+          growth?: string | null
+          job_id: string
+          name: string
+          note_id?: string | null
+          rating?: number | null
+          reference_id?: string
+          rehire_comment?: string | null
+          relationship: string
+          reminded_at?: string | null
+          request_id: string
+          status?: string
+          strengths?: string | null
+          submitted_at?: string | null
+          token_hash: string
+          worked_together?: string
+        }
+        Update: {
+          candidate_id?: string
+          company?: string
+          confidential_note?: string | null
+          confirmed_relationship?: boolean | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          growth?: string | null
+          job_id?: string
+          name?: string
+          note_id?: string | null
+          rating?: number | null
+          reference_id?: string
+          rehire_comment?: string | null
+          relationship?: string
+          reminded_at?: string | null
+          request_id?: string
+          status?: string
+          strengths?: string | null
+          submitted_at?: string | null
+          token_hash?: string
+          worked_together?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_references_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "candidate_references_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "reference_requests"
+            referencedColumns: ["request_id"]
+          },
+        ]
+      }
       candidate_skills: {
         Row: {
           candidate_id: string
@@ -2183,6 +2273,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recruiter_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      reference_requests: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          job_id: string
+          message: string
+          recruiter_id: string
+          request_id: string
+          status: string
+          target_count: number
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          job_id: string
+          message?: string
+          recruiter_id: string
+          request_id?: string
+          status?: string
+          target_count?: number
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          job_id?: string
+          message?: string
+          recruiter_id?: string
+          request_id?: string
+          status?: string
+          target_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reference_requests_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
           },
         ]
       }

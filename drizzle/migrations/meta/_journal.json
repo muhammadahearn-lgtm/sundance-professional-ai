@@ -589,6 +589,20 @@
       "when": 1791574082914,
       "tag": "0083_profile_review_links",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1791574948249,
+      "tag": "0084_reference_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1791574975105,
+      "tag": "0085_reference_notify_priority",
+      "breakpoints": true
     }
   ]
 }
