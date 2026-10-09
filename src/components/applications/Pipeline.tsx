@@ -4,8 +4,13 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Bell, CalendarClock, ChevronLeft, ChevronRight, Sparkles, Star, Trash2 } from "lucide-react";
+import { ArrowRight, Bell, CalendarClock, Check, ChevronLeft, ChevronRight, GitCompare, Send, Sparkles, Star, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { shareCompareWithTeam } from "@/lib/hiring-team.functions";
+import { listComparedCandidates, setComparedCandidate } from "@/lib/talent-data";
+
+const SELECT_MAX = 4;
 
 async function listTeamRecommendations() {
   const { data, error } = await supabase.from("team_recommendations").select("job_id, candidate_id, kind, note, job_stakeholders(name, hiring_role)");
@@ -64,6 +69,40 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
   const ivOf = (c: PipelineCard) => roundsOf(c).find((i) => i.status === "scheduled" && new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000 > Date.now());
   const doneRounds = (c: PipelineCard) => roundsOf(c).length;
   const [sched, setSched] = useState<PipelineCard | null>(null);
+  const [sel, setSel] = useState<PipelineCard[]>([]);
+  const [busy, setBusy] = useState<"" | "compare" | "share">("");
+  const share = useServerFn(shareCompareWithTeam);
+  const isSel = (c: PipelineCard) => sel.some((x) => x.pipeline_id === c.pipeline_id);
+  const toggleSel = (c: PipelineCard) => {
+    if (isSel(c)) { setSel((s) => s.filter((x) => x.pipeline_id !== c.pipeline_id)); return; }
+    if (sel.length && sel[0]!.job_id !== c.job_id) { toast.error("Pick candidates from the same job to compare them."); return; }
+    if (sel.some((x) => x.candidate_id === c.candidate_id)) return;
+    if (sel.length >= SELECT_MAX) { toast.error(`You can compare up to ${SELECT_MAX} candidates.`); return; }
+    setSel((s) => [...s, c]);
+  };
+  const selJob = sel[0]?.job_id ?? null;
+  async function compareSel() {
+    setBusy("compare");
+    try {
+      const current = await listComparedCandidates(uid);
+      const ids = sel.map((c) => c.candidate_id);
+      for (const id of current) if (!ids.includes(id)) await setComparedCandidate(uid, id, false);
+      for (const id of ids) if (!current.includes(id)) await setComparedCandidate(uid, id, true);
+      await qc.invalidateQueries({ queryKey: ["cmp-cands", uid] });
+      navigate({ to: "/recruiter/candidates/compare", search: selJob ? { job: selJob } : {} });
+    } catch (e) { toast.error(friendlyError(e, "Could not open the comparison.")); }
+    finally { setBusy(""); }
+  }
+  async function shareSel() {
+    if (!selJob) return;
+    setBusy("share");
+    try {
+      const r = await share({ data: { jobId: selJob, candidateIds: sel.map((c) => c.candidate_id) } });
+      if (!r.team) toast.info("This job has no hiring team yet. Add them on the job page.");
+      else { toast.success(`Comparison sent to ${r.sent} of ${r.team} hiring team member${r.team === 1 ? "" : "s"}.`); setSel([]); }
+    } catch (e) { toast.error(friendlyError(e, "Could not share the comparison.")); }
+    finally { setBusy(""); }
+  }
 
   const [closing, setClosing] = useState<PipelineCard | null>(null);
   const [offerFor, setOfferFor] = useState<{ c: PipelineCard; existing: Offer | null; advance: boolean } | null>(null);
@@ -151,8 +190,8 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
                 <div className="min-h-24 space-y-3">{col.map((c) => {
                   const iv = ivOf(c); const next = NEXT[c.current_stage as Stage];
                   return (
-                  <article key={c.pipeline_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""}`}>
-                    <div className="flex items-start gap-2">{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
+                  <article key={c.pipeline_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""}`}>
+                    <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
                       <button onClick={() => remove(c)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></div>
                     <div className="mt-2 flex items-center justify-between gap-2"><MatchBadge score={scoreOf(c)} /><span className="text-[11px] text-muted-foreground">{c.appDate ? `Applied ${fmt(c.appDate)}` : "Sourced"}</span></div>
                     {!["hired", "rejected"].includes(c.current_stage) && (() => { const a = stageAge(c.stage_date); return <p className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.stale ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"}`}>{a.days === 0 ? "Updated today" : `${a.days}d in ${title}`}</p>; })()}
@@ -185,6 +224,12 @@ export function PipelinePage({ uid, jobId }: { uid: string; jobId?: string | und
           {activity.length ? <ul className="mt-3 space-y-2 text-sm">{activity.map((c) => <li key={c.pipeline_id} className="flex justify-between gap-2"><span><strong>{c.name}</strong> moved to {STAGES.find(([k]) => k === c.current_stage)?.[1]}</span><span className="text-xs text-muted-foreground">{fmt(c.stage_date)}</span></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No activity yet. Move applicants into the pipeline to start tracking.</p>}</div>
       </div>
 
+      {sel.length > 0 && <div role="region" aria-label="Selected candidates" className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-2xl flex-wrap items-center gap-3 rounded-2xl border border-border bg-card/90 p-3 shadow-elevated backdrop-blur-md">
+        <div className="min-w-0 flex-1"><p className="text-sm font-bold">{sel.length} of {SELECT_MAX} selected</p><p className="truncate text-xs text-muted-foreground">{sel.length < 2 ? "Select at least 2 candidates from the same job" : sel.map((c) => c.name).join(", ")}</p></div>
+        <button type="button" onClick={compareSel} disabled={sel.length < 2 || !!busy} className={`${btn} disabled:opacity-50`}><GitCompare className="h-4 w-4" />{busy === "compare" ? "Opening…" : "Compare"}</button>
+        <button type="button" onClick={shareSel} disabled={sel.length < 2 || !!busy} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"><Send className="h-4 w-4" />{busy === "share" ? "Sending…" : "Share with Hiring Team"}</button>
+        <button type="button" onClick={() => setSel([])} aria-label="Clear selection" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>}
       {closing && <NotMovingForwardDialog name={closing.name} jobTitle={closing.jobs?.job_title ?? j?.job_title} onCancel={() => setClosing(null)} onConfirm={() => { const c = closing; setClosing(null); move(c, "rejected", true); }} />}
       {offerFor && offerFor.c.job_id && <OfferDialog ctx={{ uid, jobId: offerFor.c.job_id, candidateId: offerFor.c.candidate_id, applicationId: offerFor.c.applicationId ?? null }}
         candidateName={offerFor.c.name} jobTitle={offerFor.c.jobs?.job_title ?? j?.job_title ?? "this role"} existing={offerFor.existing}
