@@ -22,3 +22,8 @@ export function isExpired(expiresAt: string, now: Date = new Date()): boolean {
 export function validPick(pick: string | null, shared: string[]): boolean {
   return pick === null || shared.includes(pick);
 }
+
+/** Several picks allowed; every one must be shared, no duplicates. Empty = "none of these fit". */
+export function validPicks(picks: string[], shared: string[]): boolean {
+  return new Set(picks).size === picks.length && picks.every((p) => shared.includes(p));
+}
