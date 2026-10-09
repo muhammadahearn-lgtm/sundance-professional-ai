@@ -1,3 +1,4 @@
+import { OfferLetterButton } from "./OfferLetterButton";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -180,6 +181,7 @@ export function CandidateOfferCard({ applicationId, uid, jobId, jobTitle }: { ap
           {o.status === "pending" && !expired && left !== null && <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">{left === 0 ? "Respond today" : `${left} day${left === 1 ? "" : "s"} to respond`}</span>}
         </div>
         <h2 className="mt-2 font-display text-xl font-extrabold">{o.status === "pending" ? (expired ? "This offer has expired" : "You received an offer!") : STATUS_TEXT[o.status]}</h2>
+        {o.status === "accepted" && <div className="mt-3"><OfferLetterButton offer={o} jobTitle={jobTitle} side="candidate" /></div>}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Item icon={<Wallet className="h-3.5 w-3.5" />} label="Base salary" value={formatSalaryAmount(o.salary_amount, o.salary_currency) || "—"} />
           <Item icon={<Gift className="h-3.5 w-3.5" />} label="Signing bonus" value={o.signing_bonus ? formatSalaryAmount(o.signing_bonus, o.salary_currency) : "—"} />
@@ -257,6 +259,7 @@ export function OfferPill({ jobId, candidateId, onOpen }: { jobId: string; candi
         <div className="mt-1.5 flex items-center gap-1"><div className="flex-1"><DatePicker value={newDate} onChange={setNewDate} aria-label="New offer deadline" placeholder="New deadline" /></div><button type="button" disabled={extBusy || !newDate} onClick={() => answer(true, newDate)} className="rounded-md bg-primary px-2 py-1.5 font-semibold text-primary-foreground disabled:opacity-50">Extend</button></div>)}
       {o.status === "pending" && o.negotiated_at && o.negotiation_conversation_id && <Link to="/recruiter/messages/$conversationId" params={{ conversationId: o.negotiation_conversation_id }} className="mt-1.5 block w-full rounded-md bg-primary px-2 py-1 text-center font-semibold text-primary-foreground hover:opacity-90">Open Chat</Link>}
       <button type="button" onClick={onOpen} className="mt-1.5 w-full rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary">{o.status === "pending" ? "View / Revise" : "View Details"}</button>
+      {o.status === "accepted" && <OfferLetterButton offer={o} jobTitle="" side="recruiter" className="mt-1.5 inline-flex w-full items-center justify-center gap-1 rounded-md border border-border px-2 py-1 font-semibold hover:border-primary hover:text-primary" />}
     </div>
   );
 }
