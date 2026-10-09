@@ -147,7 +147,7 @@ export const getProfileReview = createServerFn({ method: "POST" })
         score: s ? Math.round(Number(s.overall_match_score)) : null, strengths: (det.strengths ?? []).slice(0, 4),
         // Current employer is never shown on review links.
         experience: (exp ?? []).map((e) => ({ title: e.job_title, company: e.current_position ? "Current employer" : e.company_name, start: e.start_date, end: e.current_position ? "Present" : e.end_date, summary: (e.responsibilities ?? "").slice(0, 600) })),
-        education: (edu ?? []).map((e) => { const r = e as Record<string, unknown>; return [r.degree_type, r.field_of_study, r.institution_name, r.graduation_year].filter(Boolean).map(String).join(" · "); }).filter(Boolean),
+        education: (edu ?? []).map((e) => { const r = e as Record<string, unknown>; return [r["degree_type"], r["field_of_study"], r["institution_name"], r["graduation_year"]].filter(Boolean).map(String).join(" · "); }).filter(Boolean),
         languages: names(langs, "programming_languages", "language_name"), skills: names(skills, "technical_skills", "skill_name"), technologies: names(techs, "technologies", "technology_name"),
       },
       current: link.verdict ? { verdict: link.verdict, feedback: link.feedback } : null,
