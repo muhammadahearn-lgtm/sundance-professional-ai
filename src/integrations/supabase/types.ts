@@ -1065,6 +1065,8 @@ export type Database = {
       interviews: {
         Row: {
           application_id: string | null
+          cancel_reason: string
+          cancelled_by: string
           candidate_id: string
           created_at: string
           custom_round_name: string
@@ -1080,6 +1082,8 @@ export type Database = {
           pipeline_id: string | null
           platform: string
           recruiter_id: string
+          reschedule_note: string
+          reschedule_requested_at: string | null
           round_number: number
           scheduled_at: string
           status: string
@@ -1088,6 +1092,8 @@ export type Database = {
         }
         Insert: {
           application_id?: string | null
+          cancel_reason?: string
+          cancelled_by?: string
           candidate_id: string
           created_at?: string
           custom_round_name?: string
@@ -1103,6 +1109,8 @@ export type Database = {
           pipeline_id?: string | null
           platform?: string
           recruiter_id: string
+          reschedule_note?: string
+          reschedule_requested_at?: string | null
           round_number?: number
           scheduled_at: string
           status?: string
@@ -1111,6 +1119,8 @@ export type Database = {
         }
         Update: {
           application_id?: string | null
+          cancel_reason?: string
+          cancelled_by?: string
           candidate_id?: string
           created_at?: string
           custom_round_name?: string
@@ -1126,6 +1136,8 @@ export type Database = {
           pipeline_id?: string | null
           platform?: string
           recruiter_id?: string
+          reschedule_note?: string
+          reschedule_requested_at?: string | null
           round_number?: number
           scheduled_at?: string
           status?: string
@@ -2697,6 +2709,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      candidate_cancel_interview: {
+        Args: { _interview: string; _reason: string }
+        Returns: undefined
+      }
       candidate_names: {
         Args: { _ids: string[] }
         Returns: {
@@ -2897,6 +2913,10 @@ export type Database = {
       recruiter_can_view_candidate: {
         Args: { _candidate: string }
         Returns: boolean
+      }
+      request_interview_reschedule: {
+        Args: { _interview: string; _note: string }
+        Returns: undefined
       }
       request_offer_negotiation: {
         Args: { _message: string; _offer: string }

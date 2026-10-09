@@ -253,7 +253,7 @@ export function CandidateApplicationDetail({ id, uid }: { id: string; uid: strin
       <ApplicationInsights applicationId={id} status={a.application_status} />
       {a.job_id && ["applied", "viewed", "recruiter_contacted", "interviewing"].includes(a.application_status) && <PrepCard jobId={a.job_id} />}
       {a.job_id && <ScreeningAnswers applicationId={id} jobId={a.job_id} />}
-      {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} />)}
+      {(ivs.data ?? []).map((i) => <InterviewCard key={i.interview_id} i={i} title={`Interview: ${a.jobs?.job_title ?? "Job"} at ${a.jobs?.companies?.company_name ?? ""}`} candidate onChanged={() => ivs.refetch()} />)}
       <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Status Timeline</h2>
         <ol className="mt-5 space-y-4">{timeline(a.application_status as AppStatus).map((s) => (
           <li key={s.key} className="flex items-center gap-3">{s.state === "done" ? <CheckCircle2 className="h-5 w-5 text-success" /> : s.state === "rejected" ? <XCircle className="h-5 w-5 text-muted-foreground" /> : <Circle className={`h-5 w-5 ${s.state === "current" ? "text-primary" : "text-muted-foreground"}`} />}
