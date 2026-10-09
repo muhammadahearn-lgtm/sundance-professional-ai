@@ -18,3 +18,4 @@
 - Standard resume retention: after publish, `prune_standard_resume_versions` deletes rows beyond the newest N (`STANDARD_RESUME_KEEP_VERSIONS`) and the client removes their PDFs. Why: bounded storage, unlimited publishing.
 - Appearance (light/dark/system) is a browser-only preference in localStorage via `src/lib/theme.ts`, applied by an inline head script before paint; colors come only from `.dark` tokens in styles.css. Why: no flash, no DB writes.
 - Interview plans: per-job `jobs.interview_plan` (1–5 rounds); rules + card progress in `interview-plan.ts`, rendered by `RoundStepper`. Why: one source for scheduler defaults and round tracking.
+- Offer emails: client calls `notifyOfferEvent` after each offer action; the server re-checks the offer state as the caller before emailing the other party. Why: emails cannot be forged; failures never block the offer.
