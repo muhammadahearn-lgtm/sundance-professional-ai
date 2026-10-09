@@ -86,6 +86,7 @@ function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; o
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" />{fmtInterview(i.scheduled_at)} · {i.duration_minutes} min</span>
             <span className="inline-flex items-center gap-1">{online ? <Video className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-primary" />}{online ? lbl(PLATFORMS, i.platform) : i.location_address}</span>
+            <ZoneHint i={i} />
           </p>
           {i.location_instructions && <p className="mt-1 text-xs text-muted-foreground">{i.location_instructions}</p>}
           {i.notes && <p className="mt-3 whitespace-pre-line rounded-xl bg-muted/60 p-3 text-sm">{i.notes}</p>}
@@ -94,6 +95,7 @@ function Spotlight({ i, role, onEdit, rounds }: { i: InterviewRow; role: Role; o
             {online && <button type="button" onClick={() => { navigator.clipboard.writeText(i.meeting_url); toast.success("Link copied"); }} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:border-primary hover:text-primary"><Copy className="h-4 w-4" />Copy link</button>}
             <AddToCalendar i={i} title={calTitle(i, role)} />
             {onEdit && <EditButton onClick={onEdit} />}
+            {role === "recruiter" && <QuickLinks i={i} />}
           </div>
         </div>
       </div>
@@ -156,15 +158,19 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
   const all = q.data ?? [];
   const companies = useMemo(() => [...new Set(all.map((i) => i.company_name).filter(Boolean))].sort().map((c) => ({ value: c, label: c })), [all]);
   const jobs = useMemo(() => [...new Map(all.filter((i) => !co || i.company_name === co).filter((i) => i.job_id).map((i) => [i.job_id!, i.job_title])).entries()].map(([value, label]) => ({ value, label })), [all, co]);
-  const filtered = all.filter((i) => (!co || i.company_name === co) && (!job || i.job_id === job));
+  const [term, setTerm] = useState(""); const [onlyPending, setOnlyPending] = useState(false);
+  const t = term.trim().toLowerCase();
+  const filtered = all.filter((i) => (!co || i.company_name === co) && (!job || i.job_id === job)
+    && (!t || [i.candidate_name, i.job_title, i.company_name].some((s) => s?.toLowerCase().includes(t))));
   const { upcoming, past } = splitInterviews(filtered);
   const next = upcoming[0];
-  const list = tab === "upcoming" ? upcoming : past;
   const qc = useQueryClient();
   const [editing, setEditing] = useState<InterviewRow | null>(null);
   const editFor = (i: InterviewRow) => (role === "recruiter" ? () => setEditing(i) : undefined);
   const sc = useQuery({ queryKey: ["scorecards", uid], queryFn: () => listMyScorecards(uid), enabled: role === "recruiter" });
   const cardOf = (i: InterviewRow) => (sc.data ?? []).find((c) => c.interview_id === i.interview_id);
+  const pending = role === "recruiter" && sc.data ? needsScorecard(past, new Set(sc.data.map((c) => c.interview_id))) : [];
+  const list = tab === "upcoming" ? upcoming : onlyPending ? pending : past;
   const roundsOf = (i: InterviewRow) => all.filter((x) => processKey(x) === processKey(i)).sort((a, b) => (a.round_number ?? 1) - (b.round_number ?? 1) || a.scheduled_at.localeCompare(b.scheduled_at));
   const isLatest = (i: InterviewRow) => { const r = roundsOf(i); return r[r.length - 1]?.interview_id === i.interview_id; };
   const [scoring, setScoring] = useState<InterviewRow | null>(null);
@@ -195,16 +201,42 @@ export function InterviewsHub({ uid, role }: { uid: string; role: Role }) {
 
       <p className="flex items-center gap-2 rounded-xl bg-primary-soft/60 px-3 py-2 text-xs text-muted-foreground"><Bell className="h-4 w-4 text-primary" />Tip: add interviews to your calendar — each entry reminds you 1 hour and 15 minutes before it starts.</p>
 
-      <div className="flex gap-1 rounded-xl bg-muted p-1 w-fit" role="tablist">
-        {(["upcoming", "past"] as const).map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === t ? "bg-card text-primary shadow-soft" : "text-muted-foreground"}`}>
-            {t === "upcoming" ? `Upcoming (${upcoming.length})` : `Past (${past.length})`}
-          </button>
-        ))}
+      {role === "recruiter" && pending.length > 0 && (
+        <button type="button" onClick={() => { setTab("past"); setOnlyPending(true); }} className="flex w-full items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-left text-sm font-semibold text-warning-foreground hover:border-warning">
+          <AlertCircle className="h-4 w-4 text-warning" />{pending.length} interview{pending.length === 1 ? "" : "s"} awaiting your scorecard<span className="ml-auto text-xs font-bold text-primary">Review →</span>
+        </button>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-fit gap-1 rounded-xl bg-muted p-1" role="tablist">
+          {(["upcoming", "past"] as const).map((t) => (
+            <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === t ? "bg-card text-primary shadow-soft" : "text-muted-foreground"}`}>
+              {t === "upcoming" ? `Upcoming (${upcoming.length})` : `Past (${past.length})`}
+              {t === "past" && role === "recruiter" && pending.length > 0 && <span className="rounded-full bg-warning px-1.5 text-[10px] font-bold text-warning-foreground">{pending.length}</span>}
+            </button>
+          ))}
+        </div>
+        {tab === "past" && role === "recruiter" && (
+          <label className="inline-flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={onlyPending} onChange={(e) => setOnlyPending(e.target.checked)} className="accent-primary" />Needs scorecard only</label>
+        )}
+        <div className="relative ml-auto w-full sm:w-64">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input type="search" value={term} onChange={(e) => setTerm(e.target.value)} aria-label={role === "recruiter" ? "Search candidates" : "Search interviews"} placeholder={role === "recruiter" ? "Search candidate name…" : "Search job or company…"} className="h-9 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary" />
+        </div>
       </div>
-      {list.length ? <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past={tab === "past"} onEdit={editFor(i)}
-          card={cardOf(i)} onScore={role === "recruiter" ? () => setScoring(i) : undefined} onNext={role === "recruiter" && tab === "past" && isLatest(i) ? () => setNextFor(i) : undefined} />)}</ul>
-        : <p className="text-sm text-muted-foreground">{tab === "upcoming" ? "No upcoming interviews yet." : "No past interviews yet."}</p>}
+      {list.length ? (
+        tab === "upcoming" ? (
+          <div className="space-y-5">{groupByDay(list).map((g) => (
+            <section key={g.label} aria-label={g.label}>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{g.label} <span className="font-semibold">· {g.items.length}</span></h3>
+              <ul className="space-y-3">{g.items.map((i) => <Row key={i.interview_id} i={i} role={role} onEdit={editFor(i)} />)}</ul>
+            </section>
+          ))}</div>
+        ) : (
+          <ul className="space-y-3">{list.map((i) => <Row key={i.interview_id} i={i} role={role} past onEdit={editFor(i)}
+            card={cardOf(i)} onScore={role === "recruiter" ? () => setScoring(i) : undefined} onNext={role === "recruiter" && isLatest(i) ? () => setNextFor(i) : undefined} />)}</ul>
+        )
+      ) : <p className="text-sm text-muted-foreground">{term ? "No interviews match your search." : tab === "upcoming" ? "No upcoming interviews yet." : onlyPending ? "All scorecards are in — nice work." : "No past interviews yet."}</p>}
       {editing && <ScheduleInterviewDialog key={editing.interview_id} open onOpenChange={(o) => { if (!o) setEditing(null); }} existing={editing} candidateName={editing.candidate_name}
         ctx={{ uid, candidateId: editing.candidate_id, jobId: editing.job_id, pipelineId: editing.pipeline_id, applicationId: editing.application_id }}
         priorRounds={roundsOf(editing)} onSaved={refresh} />}
