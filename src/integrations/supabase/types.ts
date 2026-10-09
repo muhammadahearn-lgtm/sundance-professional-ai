@@ -1504,6 +1504,7 @@ export type Database = {
           equity_type: string
           equity_vesting: string
           experience_level: string
+          interview_plan: Json
           is_confidential: boolean
           job_description: string
           job_id: string
@@ -1541,6 +1542,7 @@ export type Database = {
           equity_type?: string
           equity_vesting?: string
           experience_level?: string
+          interview_plan?: Json
           is_confidential?: boolean
           job_description?: string
           job_id?: string
@@ -1578,6 +1580,7 @@ export type Database = {
           equity_type?: string
           equity_vesting?: string
           experience_level?: string
+          interview_plan?: Json
           is_confidential?: boolean
           job_description?: string
           job_id?: string

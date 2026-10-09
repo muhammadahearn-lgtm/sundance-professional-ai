@@ -19,7 +19,10 @@ async function listTeamRecommendations() {
 }
 import { listJobApplications, listPipeline, moveStage, removeFromPipeline, type PipelineCard } from "@/lib/applications-data";
 import { listRecruiterInterviews } from "@/lib/interviews-data";
-import { InterviewPill, ScheduleInterviewDialog } from "@/components/applications/Interviews";
+import { ScheduleInterviewDialog, ScorecardDialog } from "@/components/applications/Interviews";
+import { RoundStepper } from "@/components/applications/RoundStepper";
+import { normalizePlan, roundProgress } from "@/lib/interview-plan";
+import { listMyScorecards, type Interview } from "@/lib/interviews-data";
 import { fmtInterview } from "@/lib/interview-rules";
 import { listMyJobsWithCompany, loadJob } from "@/lib/jobs-data";
 import { STAGES, stageAge, type Stage } from "@/lib/talent-rules";
@@ -69,7 +72,11 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
   const roundsOf = (c: PipelineCard) => (ivQ.data ?? []).filter((i) => i.pipeline_id === c.pipeline_id || (!!c.applicationId && i.application_id === c.applicationId));
   /** The candidate's upcoming interview, if any (finished rounds don't count). */
   const ivOf = (c: PipelineCard) => roundsOf(c).find((i) => i.status === "scheduled" && new Date(i.scheduled_at).getTime() + i.duration_minutes * 60000 > Date.now());
-  const doneRounds = (c: PipelineCard) => roundsOf(c).length;
+  const scQ = useQuery({ queryKey: ["scorecards", uid], queryFn: () => listMyScorecards(uid) });
+  const planOf = (c: PipelineCard) => normalizePlan((c.jobs as { interview_plan?: unknown } | null)?.interview_plan);
+  const stepsOf = (c: PipelineCard) => roundProgress(planOf(c), roundsOf(c), scQ.data ?? []);
+  const [scoreFor, setScoreFor] = useState<{ c: PipelineCard; i: Interview } | null>(null);
+  const [editIv, setEditIv] = useState<Interview | undefined>(undefined);
   const [sched, setSched] = useState<PipelineCard | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const focused = useRef(false);
@@ -202,7 +209,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                 <div className={`mb-3 h-1 rounded-full ${tone} ${key === "rejected" ? "opacity-60" : ""}`} style={key === "rejected" || key === "hired" ? undefined : { opacity: 0.35 + si * 0.12 }} />
                 <div className="mb-3 flex items-center justify-between px-1"><h2 className="text-sm font-bold">{title}</h2><span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">{col.length}</span></div>
                 <div className="min-h-24 space-y-3">{col.map((c) => {
-                  const iv = ivOf(c); const next = NEXT[c.current_stage as Stage];
+                  const next = NEXT[c.current_stage as Stage];
                   return (
                   <article key={c.pipeline_id} data-candidate={c.candidate_id} draggable onDragStart={() => setDrag(c.pipeline_id)} onDragEnd={() => setDrag(null)} className={`${card} group/card cursor-grab p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 active:cursor-grabbing ${drag === c.pipeline_id ? "opacity-50" : ""} ${isSel(c) ? "border-primary ring-2 ring-primary/30" : ""} ${flash === c.candidate_id ? "scroll-m-24 border-primary ring-4 ring-primary/40 shadow-elevated animate-pulse" : ""}`}>
                     <div className="flex items-start gap-2">{c.job_id && <button type="button" role="checkbox" aria-checked={isSel(c)} aria-label={`Select ${c.name} to compare`} onClick={() => toggleSel(c)} className={`mt-2 grid h-4 w-4 shrink-0 place-items-center rounded border transition-opacity ${isSel(c) ? "border-primary bg-primary text-primary-foreground opacity-100" : `border-input bg-card hover:border-primary ${sel.length ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus:opacity-100"}`}`}>{isSel(c) && <Check className="h-3 w-3" />}</button>}{(() => { const inner = <><Avatar name={c.name} size="h-9 w-9 text-xs ring-2 ring-primary/30 ring-offset-1 ring-offset-card" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold group-hover:text-primary group-hover:underline">{c.name}</p><p className="truncate text-xs text-muted-foreground">{c.candTitle} · {c.years}y</p></div></>; const cls = "group flex min-w-0 flex-1 items-start gap-2 rounded-lg"; return c.applicationId ? <Link to="/recruiter/applications/$id" params={{ id: c.applicationId }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link> : <Link to="/recruiter/candidates/$id" params={{ id: c.candidate_id }} className={cls} aria-label={`View ${c.name}`}>{inner}</Link>; })()}
@@ -214,9 +221,9 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
                       return <><p title={tip} className="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning"><Star className="h-3 w-3 shrink-0 fill-current" />Team Pick · {r.length === 1 ? (r[0]!.job_stakeholders?.name ?? "1 recommendation") : `${r.length} recommendations`}</p>
                         {r.filter((x) => x.note).map((x, i) => <blockquote key={i} className="mt-1.5 rounded-lg border-l-2 border-warning bg-warning/10 px-2 py-1 text-[11px] leading-snug text-foreground"><span className="italic">“{x.note}”</span><span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">— {x.job_stakeholders?.name ?? "Team member"}{x.job_stakeholders?.hiring_role ? `, ${x.job_stakeholders.hiring_role}` : ""}</span></blockquote>)}</>; })()}
                     <div className="mt-2"><Chips ids={c.skills} opts={tax.data!.skills} max={3} /></div>
-                    {iv ? <div className="mt-2"><InterviewPill i={iv} onClick={() => setSched(c)} /></div>
-                      : ["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && <button type="button" onClick={() => setSched(c)} className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1 text-[11px] font-semibold transition-colors hover:border-primary hover:text-primary ${c.current_stage === "interviewing" ? "border-warning/60 text-warning" : "border-border text-muted-foreground"}`}><CalendarClock className="h-3 w-3" />{doneRounds(c) ? `Schedule Round ${Math.max(...roundsOf(c).map((r) => r.round_number ?? 1)) + 1}` : "Schedule interview"}</button>}
-                    {!iv && doneRounds(c) > 0 && <p className="mt-1 text-center text-[10px] font-semibold text-muted-foreground">{doneRounds(c)} round{doneRounds(c) === 1 ? "" : "s"} completed</p>}
+                    {["contacted", "interviewing", "shortlisted"].includes(c.current_stage) && (roundsOf(c).length > 0 || c.current_stage !== "contacted"
+                      ? <RoundStepper steps={stepsOf(c)} planned={planOf(c).length} canSchedule onSchedule={() => { setEditIv(undefined); setSched(c); }} onEdit={(i) => { setEditIv(i); setSched(c); }} onScorecard={(i) => setScoreFor({ c, i })} />
+                      : <button type="button" onClick={() => { setEditIv(undefined); setSched(c); }} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"><CalendarClock className="h-3 w-3" />Schedule R1: {planOf(c)[0]?.name ?? "Interview"}</button>)}
                     {c.current_stage === "offer" && c.job_id && <button type="button" onClick={() => openOffer(c, false)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-success/50 px-2 py-1 text-[11px] font-semibold text-success hover:border-success">Offer terms</button>}
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
                       <MessageButton role="recruiter" candidateId={c.candidate_id} jobId={c.job_id} label="Message" className={`${miniBtn} shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5`} />
@@ -253,9 +260,10 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         onSkip={offerFor.advance ? () => { const c = offerFor.c; setOfferFor(null); move(c, "offer", true); } : undefined}
         onDone={() => { const o = offerFor; setOfferFor(null); if (o.advance) move(o.c, "offer", true); }} />}
       {hired && hired.job_id && <HireDialog name={hired.name} jobId={hired.job_id} jobTitle={hired.jobs?.job_title ?? j?.job_title ?? "this role"} candidateId={hired.candidate_id} onClose={() => setHired(null)} />}
-      {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={ivOf(sched)} priorRounds={roundsOf(sched)}
+      {sched && <ScheduleInterviewDialog key={sched.pipeline_id} open onOpenChange={(o) => !o && setSched(null)} candidateName={sched.name} existing={editIv ?? ivOf(sched)} priorRounds={roundsOf(sched)} plan={planOf(sched)}
         ctx={{ uid, candidateId: sched.candidate_id, jobId: sched.job_id, pipelineId: sched.pipeline_id, applicationId: sched.applicationId }}
         onSaved={() => { qc.invalidateQueries({ queryKey: ["interviews"] }); qc.invalidateQueries({ queryKey: ["my-interviews"] }); }} />}
+      {scoreFor && <ScorecardDialog key={scoreFor.i.interview_id} open onOpenChange={(o) => !o && setScoreFor(null)} uid={uid} interview={scoreFor.i} candidateName={scoreFor.c.name} existing={(scQ.data ?? []).find((x) => x.interview_id === scoreFor.i.interview_id)} onSaved={() => qc.invalidateQueries({ queryKey: ["scorecards"] })} />}
     </div>
   );
 }

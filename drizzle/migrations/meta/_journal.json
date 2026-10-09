@@ -498,6 +498,13 @@
       "when": 1791549861691,
       "tag": "0070_team_rec_deeplink",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1791554784582,
+      "tag": "0071_job_interview_plan",
+      "breakpoints": true
     }
   ]
 }
