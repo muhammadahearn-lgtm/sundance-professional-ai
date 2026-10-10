@@ -69,7 +69,7 @@ export function useAutoRecalc(enabled = true) {
 /** 90%+ / 80%+ / 70%+ / 60%+ / All Matches. 0 = all. */
 export function MatchFilter({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const opts: [number, string][] = [...MATCH_FILTERS.map((n): [number, string] => [n, `${n}%+`]), [0, "All Matches"]];
-  return <div className="flex flex-wrap gap-1.5" role="group" aria-label="Minimum match">{opts.map(([n, l]) => <button key={n} type="button" onClick={() => onChange(n)} aria-pressed={value === n} className={`rounded-full border px-2.5 py-1 text-xs font-medium ${value === n ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}>{l}</button>)}</div>;
+  return <div className="flex flex-wrap gap-1.5" role="group" aria-label="Minimum match">{opts.map(([n, l]) => <button key={n} type="button" onClick={() => onChange(n)} aria-pressed={value === n} className={`rounded-full border px-2.5 py-1 text-xs font-medium ${value === n ? "border-primary bg-primary bg-gradient-primary text-primary-foreground" : "border-border hover:border-primary"}`}>{l}</button>)}</div>;
 }
 
 const toneCls = { success: "bg-success/15 text-success", primary: "bg-primary-soft text-primary", warning: "bg-warning/15 text-warning", muted: "bg-muted text-muted-foreground" };

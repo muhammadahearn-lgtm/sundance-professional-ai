@@ -52,7 +52,7 @@
   --card-foreground: oklch(0.2 0.03 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.03 260);
-  --primary: oklch(0.55 0.21 260);
+  --primary: oklch(0.55 0.185 260);
   --primary-foreground: oklch(0.99 0 0);
   --primary-soft: oklch(0.96 0.03 260);
   --secondary: oklch(0.955 0.006 260);
@@ -70,10 +70,10 @@
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.935 0.007 260);
   --input: oklch(0.91 0.01 260);
-  --ring: oklch(0.55 0.21 260);
+  --ring: oklch(0.55 0.185 260);
   --ink: oklch(0.18 0.04 262);
   --ink-foreground: oklch(0.97 0.005 260);
-  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.21 260), oklch(0.62 0.17 235));
+  --gradient-primary: linear-gradient(90deg, oklch(0.5 0.2 268), oklch(0.57 0.17 255));
   --gradient-hero: radial-gradient(60% 60% at 70% 20%, oklch(0.94 0.05 255) 0%, transparent 70%),
     radial-gradient(40% 50% at 10% 10%, oklch(0.96 0.03 220) 0%, transparent 70%);
   /* Ambient studio light — whisper-soft bloom at the top of the app canvas */
@@ -90,8 +90,8 @@
   --card-foreground: oklch(0.9 0.006 70);
   --popover: oklch(0.2 0.008 70);
   --popover-foreground: oklch(0.9 0.006 70);
-  --primary: oklch(0.68 0.13 258);
-  --primary-foreground: oklch(0.16 0.02 258);
+  --primary: oklch(0.62 0.16 260);
+  --primary-foreground: oklch(0.99 0 0);
   --primary-soft: oklch(0.25 0.04 258);
   --secondary: oklch(0.22 0.008 70);
   --secondary-foreground: oklch(0.86 0.006 70);
@@ -108,10 +108,10 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.235 0.008 70);
   --input: oklch(0.28 0.008 70);
-  --ring: oklch(0.68 0.13 258);
+  --ring: oklch(0.62 0.16 260);
   --ink: oklch(0.11 0.008 70);
   --ink-foreground: oklch(0.92 0.005 70);
-  --gradient-primary: linear-gradient(135deg, oklch(0.64 0.13 258), oklch(0.68 0.1 238));
+  --gradient-primary: linear-gradient(90deg, oklch(0.56 0.18 268), oklch(0.63 0.15 255));
   --gradient-hero: radial-gradient(60% 60% at 70% 20%, oklch(0.26 0.04 258 / 0.5) 0%, transparent 70%),
     radial-gradient(40% 50% at 10% 10%, oklch(0.24 0.03 230 / 0.4) 0%, transparent 70%);
   --gradient-ambient: radial-gradient(75% 30rem at 50% -8rem, oklch(0.5 0.012 75 / 0.07) 0%, transparent 72%);
