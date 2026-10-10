@@ -244,11 +244,37 @@ function SavedBadge({ uid, candidateId, jobId }: { uid: string; candidateId: str
   return <span title={text} className={`inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${forThis ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary"}`}>{forThis ? <Sparkles className="h-3 w-3 shrink-0" /> : <BookmarkCheck className="h-3 w-3 shrink-0" />}<span className="truncate">{text}</span></span>;
 }
 
+/** Phone-only compact candidate row; tap opens Quick View (or the profile). */
+function CompactCandidate({ c, lists, score, jobId, onPreview }: { c: TalentRow; lists: Lists; score?: number | undefined; jobId?: string | undefined; onPreview?: ((id: string) => void) | undefined }) {
+  const navigate = useNavigate();
+  const open = () => (onPreview ? onPreview(c.id) : navigate({ to: "/recruiter/candidates/$id", params: { id: c.id }, search: jobId ? { job: jobId } : {} }));
+  return (
+    <article className={`${card} relative p-3 sm:hidden`}>
+      <button type="button" onClick={open} aria-label={`Open ${c.name}`} className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+      <div className="pointer-events-none grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+        <Avatar name={c.name} path={c.avatarPath} size="h-9 w-9 text-xs" />
+        <div className="min-w-0">
+          <p className="truncate font-display text-[15px] font-bold leading-tight">{c.name}</p>
+          <p className="truncate text-xs text-muted-foreground">{c.jobTitle || "—"}{c.location && ` · ${c.location}`}</p>
+          <p className="mt-1 flex min-w-0 items-center gap-2 text-xs"><span className="shrink-0 font-semibold">{c.years} yrs</span>{c.salary && <span className="truncate text-muted-foreground">Expects {c.salary}</span>}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          {score != null ? <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${matchTone(score)}`}>{Math.round(score)}%</span>
+            : c.availability ? <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold ${availTone(c.availability)}`}>{label(AVAILABILITY, c.availability)}</span> : null}
+          <div className="pointer-events-auto relative"><SaveToJobControl uid={lists.uid} candidateId={c.id} name={c.name} variant="icon" preferJobId={jobId} /></div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, eduAlign, jobId, onPreview }: { jobId?: string | undefined; c: TalentRow; t: Taxonomy; lists: Lists; score?: number | undefined; jobTitle?: string | undefined; row?: ScoreRow | undefined; locAlign?: LocationAlignment | undefined; eduAlign?: EducationAlignment | null | undefined; onPreview?: ((id: string) => void) | undefined }) {
   const cmp = lists.isCompared(c.id);
   const [open, setOpen] = useState(false);
   return (
-    <article className={`${card} p-5`}>
+    <>
+    <CompactCandidate c={c} lists={lists} score={jobTitle ? score : undefined} jobId={jobId} onPreview={onPreview} />
+    <article className={`${card} hidden p-5 sm:block`}>
       <div className="flex gap-4">
         <Avatar name={c.name} path={c.avatarPath} />
         <div className="min-w-0 flex-1">
