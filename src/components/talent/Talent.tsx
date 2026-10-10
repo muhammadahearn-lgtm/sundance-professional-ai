@@ -298,6 +298,7 @@ export function CandidateCard({ c, t, lists, score, jobTitle, row, locAlign, edu
         </div>
       </div>
     </article>
+    </>
   );
 }
 
@@ -358,6 +359,7 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
         </div>
       </div>
     </article>
+    </>
   );
 }
 
