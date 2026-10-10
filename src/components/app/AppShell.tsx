@@ -72,7 +72,7 @@ function WorkspaceTabs({ account, pathname }: { account: Account; pathname: stri
         const on = t.to === p;
         return (
           <Link key={t.to} to={t.to} role="tab" aria-selected={on}
-            className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${on ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+            className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${on ? "bg-primary bg-gradient-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
             {t.label}{t.badge === "compare" && <CompareBadge uid={account.userId} role={account.role} inline />}{t.badge === "interviews" && <InterviewBadge uid={account.userId} role={account.role} inline />}
           </Link>
         );
