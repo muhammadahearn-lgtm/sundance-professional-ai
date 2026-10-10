@@ -165,6 +165,12 @@ export function AppShell({ account }: { account: Account }) {
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             )}
+            {!onboarding && (
+              <button type="button" className="hidden shrink-0 rounded-lg p-2.5 hover:bg-muted lg:inline-flex" aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
+                title={collapsed ? "Show sidebar" : "Hide sidebar"} aria-expanded={!collapsed} onClick={toggleCollapsed}>
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
             <div className="min-w-0"><Logo /></div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
