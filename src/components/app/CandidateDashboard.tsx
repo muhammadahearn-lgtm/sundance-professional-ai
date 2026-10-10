@@ -226,7 +226,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
           </Widget>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid min-w-0 content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
           <Widget title="Profile Completion">
             <div className="flex justify-between text-sm"><span className="font-medium">Overall</span><span className="font-bold text-primary">{completion.percent}%</span></div>
             <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-gradient-primary" style={{ width: `${completion.percent}%` }} /></div>
