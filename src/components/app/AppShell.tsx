@@ -109,7 +109,9 @@ export function AppShell({ account }: { account: Account }) {
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(240);
   useEffect(() => {
-    setCollapsed(localStorage.getItem("sundance.sidebarCollapsed") === "1");
+    const saved = localStorage.getItem("sundance.sidebarCollapsed");
+    // Mid-size screens (tablets in landscape) start collapsed unless the user chose otherwise.
+    setCollapsed(saved === null ? window.innerWidth < 1200 : saved === "1");
     const w = Number(localStorage.getItem("sundance.sidebarWidth"));
     if (w >= 200 && w <= 360) setWidth(w);
   }, []);

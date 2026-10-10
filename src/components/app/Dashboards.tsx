@@ -57,8 +57,8 @@ export function CandidateDashboard({ account }: { account: Account }) {
         <Stat Icon={FileText} n="6" label="Active applications" />
         <Stat Icon={Eye} n="23" label="Recruiter views" />
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+        <div className="space-y-6 xl:col-span-2">
           <Widget title="Recommended Jobs" action="View all">
             <div className="space-y-2">
               <Row title="Senior Frontend Engineer" sub="Northwind Labs · Remote · US" right={<Badge n={96} />} />
@@ -104,8 +104,8 @@ export function RecruiterDashboard({ account }: { account: Account }) {
         <Stat Icon={CalendarCheck} n="27" label="Interviews" />
         <Stat Icon={TrendingUp} n="18d" label="Avg. time to hire" />
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+        <div className="space-y-6 xl:col-span-2">
           <Widget title="Hiring Pipeline">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[["Sourced", 42], ["Screening", 18], ["Interview", 9], ["Offer", 3]].map(([l, n]) => (

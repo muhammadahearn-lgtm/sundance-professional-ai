@@ -52,11 +52,11 @@ function Widget({ title, children, action }: { title: string; children: ReactNod
 }
 function Stat({ Icon, n, label }: { Icon: typeof Briefcase; n: number | string; label: string }) {
   return (
-    <div className={`${card} group relative overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/40`}>
+    <div className={`${card} group relative flex h-full flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/40`}>
       <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100" />
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft"><Icon className="h-4 w-4" /></span>
       <div className="mt-3 text-2xl font-extrabold tracking-tight">{n}</div>
-      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="text-sm leading-snug text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -121,8 +121,8 @@ export function CandidateDashboard({ account }: { account: Account }) {
       <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
             <div className="rounded-full bg-gradient-primary p-0.5 shadow-soft"><div className="rounded-full bg-card p-0.5"><DashboardAvatar name={`${account.firstName} ${account.lastName}`} path={data.avatarPath} /></div></div>
             <div className="min-w-0">
               <span className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-card/70 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
@@ -142,7 +142,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
               </p>
             </div>
           </div>
-          <div className="flex flex-col items-start gap-3 lg:items-end">
+          <div className="flex flex-col items-start gap-3 xl:items-end">
             <div className="flex items-center gap-3">
               <div className="relative h-14 w-14 rounded-full" style={{ background: `conic-gradient(var(--primary) ${completion.percent * 3.6}deg, var(--muted) 0deg)` }}>
                 <div className="absolute inset-1 flex items-center justify-center rounded-full bg-card text-sm font-extrabold text-primary">{completion.percent}%</div>
@@ -158,7 +158,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
         </div>
       </section>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-6">
         <Stat Icon={FileText} n={m.total} label="Total applications" />
         <Stat Icon={Briefcase} n={m.thisMonth} label="This month" />
         <Stat Icon={Target} n={m.active} label="Active" />
@@ -167,8 +167,8 @@ export function CandidateDashboard({ account }: { account: Account }) {
         <Stat Icon={CircleSlash} n={m.rejected} label="Not Moving Forward" />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="min-w-0 space-y-6 lg:col-span-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="min-w-0 space-y-6 xl:col-span-2">
           <Widget title="Application Status">
             <div className="space-y-2.5">
               {breakdown.map((b) => (
@@ -236,7 +236,7 @@ export function CandidateDashboard({ account }: { account: Account }) {
           </Widget>
 
           <Widget title="Quick Actions">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2">
               <Link to="/candidate/jobs" className={linkBtn}><Search className="h-4 w-4" />Search Jobs</Link>
               <Link to="/candidate/profile" className={linkBtn}><UserCheck className="h-4 w-4" />Edit Profile</Link>
               <Link to="/candidate/applications" className={linkBtn}><FileText className="h-4 w-4" />Applications</Link>
