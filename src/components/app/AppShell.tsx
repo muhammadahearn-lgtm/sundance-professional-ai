@@ -1,4 +1,3 @@
-import { PanelShowButton, PanelToggleButton } from "@/components/ui/panel-toggle";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -165,9 +164,6 @@ export function AppShell({ account }: { account: Account }) {
                 aria-expanded={open} aria-controls="mobile-nav" onClick={() => setOpen(!open)}>
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-            )}
-            {!onboarding && (
-              <PanelToggleButton open={!collapsed} label="sidebar" onClick={toggleCollapsed} size="md" className="hidden lg:inline-flex" />
             )}
             <div className="min-w-0"><Logo /></div>
           </div>

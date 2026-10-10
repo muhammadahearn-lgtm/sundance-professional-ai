@@ -35,7 +35,7 @@ export function PanelSeparator({ label, width, setWidth, min, max, onHide, class
       className={`group absolute inset-y-0 -right-2 z-10 hidden w-4 cursor-col-resize justify-center outline-none lg:flex ${className}`}>
       <span className={`h-full w-px transition-all ${drag ? "w-0.5 bg-primary" : "bg-transparent group-hover:w-0.5 group-hover:bg-primary/50 group-focus-visible:w-0.5 group-focus-visible:bg-primary"}`} />
       <button type="button" onClick={onHide} aria-label={`Hide ${label}`} title={`Hide ${label}`}
-        className={`absolute top-1/2 grid h-8 w-4 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-soft transition-opacity hover:border-primary hover:text-primary ${drag ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"}`}>
+        className={`absolute top-1/2 grid h-8 w-4 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-muted-foreground shadow-soft transition-opacity hover:border-primary hover:text-primary ${drag ? "opacity-100" : "opacity-45 group-hover:opacity-100 group-focus-visible:opacity-100"}`}>
         <ChevronLeft className="h-3 w-3" />
       </button>
     </div>
