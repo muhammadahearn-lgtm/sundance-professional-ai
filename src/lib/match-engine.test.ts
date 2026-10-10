@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryScore, computeMatch, experienceScore, matchTier, meetsMinMatch, preferenceScore, salaryNumber, type MatchCandidate, type MatchJob } from "./match-engine";
+import { requiredCap, categoryScore, computeMatch, experienceScore, matchTier, meetsMinMatch, preferenceScore, salaryNumber, type MatchCandidate, type MatchJob } from "./match-engine";
 
 const cand: MatchCandidate = { langs: ["py", "sql"], skills: ["etl"], techs: ["aws"], years: 8, workArrangement: "remote", location: "Austin, TX", locationsOfInterest: [], targetRoles: ["Data Engineer"], roleId: null, availability: "active" };
 const job: MatchJob = { langs: [{ id: "py", level: "required" }, { id: "sql", level: "required" }], skills: [{ id: "etl", level: "required" }], techs: [{ id: "aws", level: "required" }, { id: "kafka", level: "preferred" }], minYears: 5, workArrangement: "remote", location: "Remote", roleId: null, title: "Senior Data Engineer" };
@@ -38,5 +38,16 @@ describe("match engine", () => {
   });
   it("tiers: 90 excellent, 75 strong, 60 moderate, 59 weak", () => {
     expect([90, 75, 60, 59].map((n) => matchTier(n).label)).toEqual(["Excellent Match", "Strong Match", "Moderate Match", "Weak Match"]);
+  });
+  it("blank categories are left out, not free 100s", () => {
+    const j2: MatchJob = { ...job, langs: [], skills: [], techs: [{ id: "aws", level: "required" }, { id: "kafka", level: "preferred" }], minYears: 0 };
+    // only tech (60, weight 20) + preferences (100, weight 10) count
+    expect(computeMatch(cand, j2).overall).toBe(Math.round((60 * 20 + 100 * 10) / 30));
+  });
+  it("missing required items cap the score: 1 → 75, 2+ → 60", () => {
+    expect([0, 1, 2, 5].map(requiredCap)).toEqual([100, 75, 60, 60]);
+    const r = computeMatch({ ...cand, techs: [] }, { ...job, techs: [{ id: "aws", level: "required" }] }, { aws: "AWS" });
+    expect(r.overall).toBe(75);
+    expect(r.details.cap?.reason).toContain("AWS");
   });
 });
