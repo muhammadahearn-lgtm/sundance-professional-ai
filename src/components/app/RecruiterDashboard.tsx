@@ -109,7 +109,7 @@ export function RecruiterDashboard({ account }: { account: Account }) {
       <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary-soft via-card to-card p-6 shadow-soft">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-gradient-primary p-0.5 shadow-soft">
           {data.logo ? <img src={data.logo} alt={`${company?.company_name} logo`} className="h-14 w-14 shrink-0 rounded-xl border-2 border-card object-cover" />

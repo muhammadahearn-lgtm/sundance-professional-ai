@@ -75,7 +75,7 @@ export function JobsDashboard({ account }: { account: Account }) {
           <ul className="space-y-3">
             {rows.map((j) => (
               <li key={j.job_id} className={`${card} p-5`}>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2"><Link to="/recruiter/jobs/$id" params={{ id: j.job_id }} className="font-display text-lg font-bold hover:text-primary">{j.job_title}</Link><StatusBadge s={j.job_status} /></div>
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">

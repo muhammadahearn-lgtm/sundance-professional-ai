@@ -106,7 +106,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-6">
         <Header account={account} p={p} />
         <ResumeAutofillPanel uid={uid} profile={p} open={autofill} initialFile={autofillFile} onOpenChange={(v) => { setAutofill(v); if (!v) setAutofillFile(null); }} />
@@ -182,7 +182,7 @@ export function CandidateProfilePage({ account }: { account: Account }) {
         </>}
       </div>
 
-      <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+      <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
         <div className={`${card} p-6`}>
           <p className="text-sm font-semibold text-muted-foreground">Profile Completion</p>
           <p className="mt-1 font-display text-4xl font-extrabold text-primary">{completion.percent}%</p>
@@ -464,7 +464,7 @@ function RecruiterPreview({ account, data, onBack }: { account: Account; data: D
         </div>
         <div className="mt-4"><LinkBadges p={p} /></div>
       </section>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 space-y-6">
           {block("Professional Overview", <>
             {p.headline && <p className="font-medium">{p.headline}</p>}

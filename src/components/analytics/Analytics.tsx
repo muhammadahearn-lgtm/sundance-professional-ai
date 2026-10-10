@@ -321,8 +321,8 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
         <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} />
         <Tabs tabs={[["overview", "Overview", Sparkles], ["applications", "Applications", Send], ["match", "Match Intelligence", Target], ["growth", "Growth & Activity", TrendingUp]]} value={tab} onChange={setTab} />
         {tab === "overview" && <div className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2"><AiBrief points={[
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="md:col-span-2"><AiBrief points={[
               m.kpis.submitted ? `You've sent ${m.kpis.submitted} application${m.kpis.submitted === 1 ? "" : "s"} in this period; ${m.kpis.interviews} reached interviews.` : "No applications in this period yet — your highest matches are a great place to start.",
               m.topRoles[0] ? `Your strongest fit is ${m.topRoles[0].name} roles, averaging a ${m.topRoles[0].value}% match.` : "Add more skills and tools to unlock role-level match insights.",
               m.kpis.completion < 100 ? `Your profile is ${m.kpis.completion}% complete — finishing it improves how recruiters find you.` : "Your profile is complete — recruiters see your full picture.",
@@ -340,11 +340,11 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
             m.kpis.interviews ? `You have ${m.kpis.interviews} application${m.kpis.interviews === 1 ? "" : "s"} at interview stage or beyond — review each job's match breakdown to prepare.` : m.apps.length ? `${m.apps.length} application${m.apps.length === 1 ? " is" : "s are"} in progress; follow up through Messages to stand out.` : "No applications in this period — start with your highest-match jobs.",
             m.byRole[0] ? `Most of your applications target ${m.byRole[0].name} roles.` : "Your target roles will appear here as you apply.",
           ]} />
-          <div className="grid gap-4 lg:grid-cols-5">
-            <div className="lg:col-span-3"><ChartCard title="Applications Over Time" empty={!m.apps.length}><Trend height={240} data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard></div>
-            <div className="lg:col-span-2"><ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard></div>
+          <div className="grid gap-4 xl:grid-cols-5">
+            <div className="xl:col-span-3"><ChartCard title="Applications Over Time" empty={!m.apps.length}><Trend height={240} data={m.byMonth.map((b) => ({ x: b.month, Applications: b.count }))} keys={[{ k: "Applications", name: "Applications" }]} /></ChartCard></div>
+            <div className="xl:col-span-2"><ChartCard title="Applications By Status" empty={!m.apps.length}><Donut data={m.byStatus} /></ChartCard></div>
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Target Roles" empty={!m.apps.length}><Bars data={m.byRole} /></ChartCard>
             <ChartCard title="Target Companies" empty={!m.apps.length}><Bars data={m.byCompany} /></ChartCard>
             <ChartCard title="Target Locations" empty={!m.apps.length}><Bars data={m.byLocation} /></ChartCard>
@@ -357,9 +357,9 @@ export function CandidateAnalyticsPage({ uid }: { uid: string }) {
             m.topTech[0] ? `${m.topTech[0].name} jobs fit you best, averaging ${m.topTech[0].value}%.` : "Add tools and technologies to unlock technology-level insights.",
           ]} />
           <Stat items={[["Average Match", `${m.stats.average}%`], ["Highest Match", `${m.stats.highest}%`], ["Lowest Match", `${m.stats.lowest}%`], ["Jobs Scored", m.stats.count]]} />
-          <div className="grid gap-4 lg:grid-cols-5">
-            <div className="lg:col-span-3"><ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard></div>
-            <div className="lg:col-span-2"><ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard></div>
+          <div className="grid gap-4 xl:grid-cols-5">
+            <div className="xl:col-span-3"><ChartCard title="Match Score Trend" empty={!m.snaps.length}><Trend data={m.snaps.map((s) => ({ x: monthKey(`${s.snapshot_date}T12:00:00`), Match: s.average_match == null ? null : Math.round(Number(s.average_match)) }))} keys={[{ k: "Match", name: "Average match %" }]} /></ChartCard></div>
+            <div className="xl:col-span-2"><ChartCard title="Match Distribution" empty={!m.scores.length}><Bars data={matchDistribution(m.scores)} /></ChartCard></div>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCard title="Top Matching Roles" empty={!m.topRoles.length}><Bars data={m.topRoles} unit="%" /></ChartCard>
@@ -477,8 +477,8 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
         <FilterBar f={f} set={setF} options={options} refreshing={q.isFetching} onRefresh={() => void refresh(q)} />
         <Tabs tabs={[["overview", "Overview", Sparkles], ["pipeline", "Pipeline & Funnel", KanbanSquare], ["jobs", "Job Performance", Briefcase], ["candidates", "Candidate Quality", Users]]} value={tab} onChange={setTab} />
         {tab === "overview" && <div className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2"><AiBrief points={[
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="md:col-span-2"><AiBrief points={[
               m.kpis.applications ? `${m.kpis.applications} application${m.kpis.applications === 1 ? "" : "s"} across ${m.kpis.active} active job${m.kpis.active === 1 ? "" : "s"}; ${m.kpis.interviewing} candidate${m.kpis.interviewing === 1 ? " is" : "s are"} interviewing.` : `You have ${m.kpis.active} active job${m.kpis.active === 1 ? "" : "s"} and no applications in this period yet.`,
               m.topCands[0] ? `Your highest match is ${m.topCands[0].name} at ${m.topCands[0].score}% for ${m.topCands[0].job}.` : "Search talent to surface high-match candidates for your jobs.",
               m.topJobs[0] ? `${m.topJobs[0].job} is your top-performing job (${m.topJobs[0].applications} applications).` : "Publish a job to start tracking performance.",
@@ -517,12 +517,12 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
             <HeroKpi Icon={Clock} n={m.kpis.timeToHire == null ? "—" : `${m.kpis.timeToHire}d`} l="Avg Time To Hire" />
             <HeroKpi Icon={Sparkles} n={`${recRate}%`} l="Recommendation Success" />
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Hiring Funnel" empty={!m.fun[0]!.value}><Funnel data={m.fun} /></ChartCard>
             <ChartCard title="Conversion Rates"><Rates data={m.conv} /></ChartCard>
             <ChartCard title="Pipeline By Stage" empty={!m.pipe.length}><Bars data={m.stages} /></ChartCard>
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Recommendations"><Stat items={[["Viewed", m.recs.viewed], ["Opened", m.recs.clicked], ["Contacted", m.recs.contacted], ["Hired", m.recs.hired]]} /><p className="mt-3 text-xs text-muted-foreground">Success rate (contacted ÷ recommended): <b>{recRate}%</b></p></ChartCard>
             <ChartCard title="Messaging"><Stat items={[["Sent", m.messaging.sent], ["Received", m.messaging.received], ["Response", `${m.messaging.responseRate}%`], ["Avg Reply", m.messaging.avgResponseHours == null ? "—" : `${m.messaging.avgResponseHours}h`]]} /><p className="mt-3 text-xs text-muted-foreground">{m.messaging.conversations} active conversations</p></ChartCard>
             <ChartCard title="Notifications"><Stat items={[["Sent", m.notifs.sent], ["Opened", m.notifs.opened], ["Engagement", `${m.notifs.engagement}%`], ["Unopened", m.notifs.sent - m.notifs.opened]]} /></ChartCard>
@@ -557,17 +557,17 @@ export function RecruiterAnalyticsPage({ uid }: { uid: string }) {
             <HeroKpi Icon={Sparkles} n={<span className="block truncate text-2xl">{m.skills[0]?.name ?? "—"}</span>} l="Top Skill" />
             <HeroKpi Icon={TrendingUp} n={<span className="block truncate text-2xl">{m.candLocations[0]?.name.split(",")[0] ?? "—"}</span>} l="Top Location" />
           </div>
-          <Section title="Fit & Experience"><div className="grid gap-4 lg:grid-cols-3">
+          <Section title="Fit & Experience"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Match Distribution" empty={!m.distribution.some((x) => x.value)}><Bars data={m.distribution} /></ChartCard>
             <ChartCard title="Candidate Experience" empty={!m.experience.some((x) => x.value)}><Bars data={m.experience} /></ChartCard>
             <ChartCard title="Candidate Availability" empty={!m.availability.length}><Donut data={m.availability} /></ChartCard>
           </div></Section>
-          <Section title="Skills"><div className="grid gap-4 lg:grid-cols-3">
+          <Section title="Skills"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Candidate Skills" empty={!m.skills.length}><Bars data={m.skills} /></ChartCard>
             <ChartCard title="Most Requested Soft Skills" empty={!m.softRequested.length}><Bars data={m.softRequested} /></ChartCard>
             <ChartCard title="Most Common Candidate Soft Skills" empty={!m.candidateSoft.length}><Bars data={m.candidateSoft} /></ChartCard>
           </div></Section>
-          <Section title="Background & Location"><div className="grid gap-4 lg:grid-cols-3">
+          <Section title="Background & Location"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard title="Candidate Locations" empty={!m.candLocations.length}><Bars data={m.candLocations} /></ChartCard>
             <ChartCard title="Candidate Education Levels" empty={!m.candDegrees.length}><Bars data={m.candDegrees} /></ChartCard>
             <ChartCard title="Candidate Fields Of Study" empty={!m.candFields.length}><Bars data={m.candFields} /></ChartCard>

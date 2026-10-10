@@ -33,7 +33,7 @@ export function JobPreview({ id }: { id: string }) {
               <button disabled className="mt-5 cursor-not-allowed rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground opacity-70">Apply Now</button>
             </div>
           </div>
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0 space-y-6">
               <div className={`${card} p-6`}><Markdown text={j.job_description} /></div>
               {(j.benefits_summary || j.bonus_info || equitySummary(j)) && <div className={`${card} p-6`}><h2 className="font-display text-lg font-bold">Benefits & Compensation</h2>{j.bonus_info && <p className="mt-2 text-sm"><strong>Bonus:</strong> {j.bonus_info}</p>}{equitySummary(j) && <p className="mt-2 text-sm"><strong>Equity:</strong> {equitySummary(j)}{j.equity_vesting ? ` · ${j.equity_vesting}` : ""}</p>}{j.benefits_summary && <p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p>}</div>}

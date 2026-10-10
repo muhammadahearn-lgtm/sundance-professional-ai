@@ -42,7 +42,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
       const j = d.job, { percent, recommendations } = qualityOf(d);
       const role = d.tax.roles.find((r) => r.id === j.role_id)?.name;
       return (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-6">
             <Link to="/recruiter/jobs" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"><ArrowLeft className="h-4 w-4" />All jobs</Link>
             <div className={`${card} p-6`}>
@@ -83,7 +83,7 @@ export function JobDetail({ account, id }: { account: Account; id: string }) {
               {j.benefits_summary && <><h3 className="mt-6 font-display text-base font-bold">Benefits</h3><p className="mt-2 whitespace-pre-line text-sm">{j.benefits_summary}</p></>}</div>
           </div>
 
-          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
             <CompletionCard title="Job Quality Score" percent={percent} suggestions={recommendations} />
             <div className={`${card} p-5`}>
               <p className="font-display font-bold">Applications</p>

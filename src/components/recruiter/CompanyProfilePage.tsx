@@ -144,7 +144,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-6">
         {header}
         {tabBar}
@@ -183,7 +183,7 @@ export function CompanyProfilePage({ account }: { account: Account }) {
           )}
         </Section>
       </div>
-      <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+      <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
         <CompletionCard title="Company Profile" percent={percent} suggestions={suggestions} />
       </aside>
     </div>

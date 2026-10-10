@@ -475,9 +475,9 @@ export function RecruiterApplicationDetail({ uid, id }: { uid: string; id: strin
   return (
     <div className="space-y-6 pb-16">
       <Link to="/recruiter/applications" className="text-sm text-muted-foreground hover:text-primary">← All applications</Link>
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-6"><ProfileHeader d={cand.data} /><ScreeningAnswers applicationId={id} jobId={a.job_id} recruiter /><ActivityHistory applicationId={id} /><CandidateProfileBody d={cand.data} t={tax.data} jobId={a.job_id} /></div>
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
           <AppMatch candidateId={a.candidate_id} jobId={a.job_id} />
           <div className={`${card} space-y-3 p-5`}><p className="font-display font-bold">Application Status</p><p className="text-sm text-muted-foreground">For {a.jobs?.job_title} · applied {fmt(a.application_date)}</p>
             <select value={a.application_status} onChange={(e) => update(e.target.value as AppStatus)} className={inputCls} aria-label="Application status">{APP_STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
