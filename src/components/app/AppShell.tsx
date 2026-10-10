@@ -153,8 +153,9 @@ export function AppShell({ account }: { account: Account }) {
   );
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
+    <div className="relative min-h-screen bg-muted/30">
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[30rem] bg-gradient-ambient" />
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             {!onboarding && (
@@ -207,7 +208,7 @@ export function AppShell({ account }: { account: Account }) {
       </header>
       <div className="flex">
         {!onboarding && !collapsed && (
-          <aside aria-label="Sidebar" className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border bg-background lg:block" style={{ width }}>
+          <aside aria-label="Sidebar" className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border/60 bg-background/80 backdrop-blur-xl lg:block" style={{ width }}>
             <div className="flex h-full flex-col overflow-y-auto p-4">{nav}</div>
             <PanelSeparator label="sidebar" width={width} setWidth={(w) => { const c = Math.min(360, Math.max(200, w)); setWidth(c); localStorage.setItem("sundance.sidebarWidth", String(c)); }} min={200} max={360} onHide={toggleCollapsed} />
           </aside>
