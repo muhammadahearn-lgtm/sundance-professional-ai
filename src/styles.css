@@ -187,3 +187,17 @@
     box-shadow: var(--shadow-soft), 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent), 0 12px 32px -16px color-mix(in oklab, var(--primary) 35%, transparent);
   }
 }
+
+/* Micro-interactions: calm, functional feedback */
+@layer base {
+  [role="tab"], [role="radio"], [data-state] { transition: color .15s ease-out, background-color .15s ease-out, border-color .15s ease-out, box-shadow .15s ease-out; }
+  .bg-card:not([data-no-glow]) { transition: transform .2s ease-out, border-color .2s ease-out, box-shadow .2s ease-out; }
+  a.bg-card:hover, [role="button"].bg-card:hover, [data-clickable].bg-card:hover, .bg-card.cursor-pointer:hover { transform: translateY(-1px); }
+  button[aria-pressed="true"] svg, button[aria-label*="Save" i][data-saved="true"] svg { animation: sp-pop .18s ease-out; }
+  :where(a[href], button, input, select, textarea, summary, [tabindex], [role="button"], [role="tab"], [role="link"]):focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-ring) 55%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-ring) 15%, transparent);
+  }
+}
+@keyframes sp-pop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } .bg-card:hover { transform: none !important; } }
