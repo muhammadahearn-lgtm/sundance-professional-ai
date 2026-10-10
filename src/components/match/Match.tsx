@@ -126,6 +126,8 @@ export function MatchPanel({ row, loading, onRecalc, recalculating, title = "Mat
       </div>
       <details className="mt-4 rounded-xl bg-muted/50 p-3 text-sm" open>
         <summary className="cursor-pointer font-semibold">Why this score?</summary>
+        {d.cap && <p className="mt-3 rounded-lg bg-warning/10 px-2.5 py-1.5 text-xs text-warning">{d.cap.reason}</p>}
+        <p className="mt-2 text-[11px] text-muted-foreground">Categories this job doesn't ask for are left out, and their weight goes to the rest.</p>
         {d.strengths.length > 0 && <><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-success">Strengths</p><ul className="mt-1 space-y-0.5">{d.strengths.map((s) => <li key={s}>✓ {s}</li>)}</ul></>}
         {(missing.length > 0 || d.experienceGap > 0) && <><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-destructive">Missing requirements</p><ul className="mt-1 space-y-0.5">{missing.map((s) => <li key={s}>• {s}{d.missing.requiredMissing.includes(s) ? " (required)" : ""}</li>)}{d.experienceGap > 0 && <li>• {d.experienceGap} more year{d.experienceGap === 1 ? "" : "s"} of experience</li>}</ul></>}
         {d.recommendations.length > 0 && <><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-primary">Recommendations</p><ul className="mt-1 space-y-0.5">{d.recommendations.map((s) => <li key={s}>→ {s}</li>)}</ul></>}
