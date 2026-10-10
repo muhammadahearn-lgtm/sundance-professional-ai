@@ -18,6 +18,8 @@ export type MatchDetails = {
   missing: { languages: string[]; skills: string[]; technologies: string[]; requiredMissing: string[] };
   experienceGap: number;
   recommendations: string[];
+  /** Set when missing required items capped the score. */
+  cap?: { at: number; reason: string } | null;
 };
 export type MatchResult = {
   overall: number; languages: number; skills: number; technologies: number; experience: number; preferences: number;
@@ -136,6 +138,7 @@ export function computeMatch(c: MatchCandidate, j: MatchJob, names: Names = {}):
       missing: { languages: L.missing.map((r) => nm(r.id)), skills: S.missing.map((r) => nm(r.id)), technologies: T.missing.map((r) => nm(r.id)), requiredMissing },
       experienceGap: gap,
       recommendations,
+      cap: raw > cap ? { at: cap, reason: `Score capped at ${cap}% because ${requiredMissing.join(", ")} ${requiredMissing.length === 1 ? "is a" : "are"} required for this role.` } : null,
     },
   };
 }
