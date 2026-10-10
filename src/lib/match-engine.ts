@@ -83,12 +83,37 @@ export function matchTier(score: number): { label: string; tone: "success" | "pr
   return { label: "Weak Match", tone: "muted" };
 }
 
+/** Missing required items cap the overall score: 1 missing → 75, 2+ missing → 60. */
+export function requiredCap(missingRequired: number): number {
+  return missingRequired >= 2 ? 60 : missingRequired === 1 ? 75 : 100;
+}
+
+/**
+ * Weighted overall where categories the job doesn't ask for are left out and their
+ * weight is shared by the rest — blank categories never hand out free points.
+ */
+export function weightedOverall(parts: { score: number; weight: number; active: boolean }[]): number {
+  const on = parts.filter((p) => p.active);
+  const total = on.reduce((s, p) => s + p.weight, 0);
+  if (!total) return 0;
+  return Math.round(on.reduce((s, p) => s + p.score * p.weight, 0) / total);
+}
+
 export function computeMatch(c: MatchCandidate, j: MatchJob, names: Names = {}): MatchResult {
   const nm = (id: string) => names[id] ?? "Unknown";
   const L = categoryScore(c.langs, j.langs), S = categoryScore(c.skills, j.skills), T = categoryScore(c.techs, j.techs);
   const E = experienceScore(c.years, j.minYears), P = preferenceScore(c, j);
   const w = MATCH_WEIGHTS;
-  const overall = Math.round((L.score * w.languages + S.score * w.skills + T.score * w.technologies + E * w.experience + P.score * w.preferences) / 100);
+  const raw = weightedOverall([
+    { score: L.score, weight: w.languages, active: j.langs.length > 0 },
+    { score: S.score, weight: w.skills, active: j.skills.length > 0 },
+    { score: T.score, weight: w.technologies, active: j.techs.length > 0 },
+    { score: E, weight: w.experience, active: j.minYears > 0 },
+    { score: P.score, weight: w.preferences, active: true },
+  ]);
+  const reqMissingCount = [...L.missing, ...S.missing, ...T.missing].filter((r) => r.level === "required").length;
+  const cap = requiredCap(reqMissingCount);
+  const overall = Math.min(raw, cap);
 
   const strengths: string[] = [];
   for (const r of [...L.matched, ...S.matched, ...T.matched].filter((r) => r.level === "required")) strengths.push(`${nm(r.id)} (required) matches`);
