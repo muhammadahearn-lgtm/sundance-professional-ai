@@ -1,6 +1,6 @@
 import type { EducationAlignment } from "@/lib/education";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Bookmark, BookmarkCheck, Building2, Check, ChevronDown, Clock, Eye, GitCompare, MapPin, Share2, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { JobCardRow } from "@/lib/job-search-data";
@@ -167,8 +167,28 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
   const [insightsOpen, setInsightsOpen] = useState(false);
   const saved = lists.isSaved(j.job_id), compared = lists.isCompared(j.job_id);
   const salary = formatSalary(j.minimum_salary, j.maximum_salary, j.salary_currency);
+  const navigate = useNavigate();
+  const s = score ?? (scoreRow ? Number(scoreRow.overall_match_score) : undefined);
+  const openJob = () => (onPreview ? onPreview(j.job_id) : navigate({ to: "/candidate/jobs/$id", params: { id: j.job_id } }));
   return (
-    <article className={`${card} p-5 transition-all duration-200 hover:border-primary/45 hover:shadow-md dark:hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent),0_8px_30px_-12px_color-mix(in_oklab,var(--primary)_45%,transparent)]`}>
+    <>
+    {/* Phone: compact scan row; tap opens the preview sheet. */}
+    <article className={`${card} relative p-3 sm:hidden`}>
+      <button type="button" onClick={openJob} aria-label={`Open ${j.job_title}`} className="absolute inset-0 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+      <div className="pointer-events-none grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+        <CompanyLogo path={j.companies?.logo_url} name={j.is_confidential ? null : j.companies?.company_name} size="h-9 w-9" />
+        <div className="min-w-0">
+          <p className="truncate font-display text-[15px] font-bold leading-tight">{j.job_title}</p>
+          <p className="truncate text-xs text-muted-foreground">{j.companies?.company_name ?? "Confidential"} · {lbl(ARRANGEMENT, j.work_arrangement)}</p>
+          <p className="mt-1 truncate text-xs font-semibold tabular-nums text-foreground/80">{salary || "Salary not listed"}{applied && <span className="ml-2 text-success">✓ Applied</span>}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          {s != null ? <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-bold tabular-nums ${softTone(Math.round(s))}`}><ScoreRing s={s} />{Math.round(s)}%</span> : <span className="text-[11px] text-muted-foreground">No score</span>}
+          <button type="button" onClick={() => (onRemove ? onRemove() : lists.toggleSave(j.job_id))} aria-pressed={saved} aria-label={saved ? "Unsave job" : "Save job"} className={`pointer-events-auto relative grid h-8 w-8 place-items-center rounded-lg border ${saved || onRemove ? "border-primary bg-primary-soft text-primary" : "border-border text-muted-foreground"}`}>{saved || onRemove ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}</button>
+        </div>
+      </div>
+    </article>
+    <article className={`${card} hidden p-5 transition-all duration-200 hover:border-primary/45 hover:shadow-md sm:block dark:hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent),0_8px_30px_-12px_color-mix(in_oklab,var(--primary)_45%,transparent)]`}>
       <div className="flex items-start gap-4">
         <CompanyLogo path={j.companies?.logo_url} name={j.is_confidential ? null : j.companies?.company_name} />
         <div className="min-w-0 flex-1">
@@ -214,6 +234,7 @@ export function JobCard({ applied, onPreview, j, roleName, lists, onRemove, scor
             {scoreRow && <button onClick={() => setInsightsOpen((v) => !v)} aria-expanded={insightsOpen} className={`${act} ml-auto ${insightsOpen ? "border-primary text-primary" : ""}`}><Sparkles className="h-4 w-4" />Why this match<ChevronDown className={`h-3.5 w-3.5 transition-transform ${insightsOpen ? "rotate-180" : ""}`} /></button>}
       </div>
     </article>
+    </>
   );
 }
 
