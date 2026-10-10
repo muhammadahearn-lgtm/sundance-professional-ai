@@ -326,7 +326,9 @@ export function CandidateGridCard({ c, t, lists, score, row, jobId, onPreview }:
   const cmp = lists.isCompared(c.id);
   const icon = "grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:border-primary hover:text-primary";
   return (
-    <article className={`${card} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated @container`}>
+    <>
+    <CompactCandidate c={c} lists={lists} score={score} jobId={jobId} onPreview={onPreview} />
+    <article className={`${card} group hidden flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated sm:flex @container`}>
       <div className="relative aspect-[16/10] max-h-52 w-full overflow-hidden bg-muted">
         <Link to="/recruiter/candidates/$id" params={{ id: c.id }} search={jobId ? { job: jobId } : {}} className="block h-full w-full" aria-label={`View ${c.name} profile`}>
           <PhotoCover name={c.name} path={c.avatarPath} />
