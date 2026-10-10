@@ -57,7 +57,7 @@ export function ApplicationRequisitionHub({ uid, q, co, status }: { uid: string;
           <p className="text-sm text-muted-foreground">{totalNew ? `${totalNew} new applicant${totalNew === 1 ? "" : "s"} waiting across your open jobs. Busiest inboxes first.` : "Pick a job to review its applicants."}</p></div>
         <ViewToggle view="hub" />
       </div>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
         <div className="flex gap-1.5">{TABS.map(([k, l]) => <button key={k} type="button" onClick={() => set({ status: k })} className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ${st === k ? "bg-primary text-primary-foreground" : "border border-border hover:border-primary hover:text-primary"}`}>{l} <span className="opacity-70">{count(k)}</span></button>)}</div>
         <div className="flex flex-1 flex-col gap-2 sm:flex-row lg:justify-end">
           <label className="relative sm:w-72"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

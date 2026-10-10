@@ -305,7 +305,7 @@ export function PipelinePage({ uid, jobId, focus }: { uid: string; jobId?: strin
         </div></div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <div className={`${card} p-5`}><div className="flex items-center gap-2"><span className="h-4 w-1 rounded-full bg-gradient-primary" /><p className="font-display font-bold">Upcoming Interviews</p></div>
           {upcoming.length ? <ul className="mt-3 space-y-2">{upcoming.slice(0, 6).map((i) => <li key={i.interview_id} className="flex items-center gap-3 rounded-xl border border-border p-2.5"><CalendarClock className="h-4 w-4 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{nameOfPipe(i.pipeline_id)}</p><p className="truncate text-xs text-muted-foreground">{fmtInterview(i.scheduled_at)} · {i.format === "online" ? "Online" : i.location_address}</p></div>{i.format === "online" && <a href={i.meeting_url} target="_blank" rel="noreferrer" className={miniBtn}>Join</a>}</li>)}</ul>
             : <p className="mt-2 text-sm text-muted-foreground">No interviews booked. Move a candidate to Interviewing to schedule one.</p>}</div>
