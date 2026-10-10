@@ -153,7 +153,7 @@ export function AppShell({ account }: { account: Account }) {
   );
 
   return (
-    <div className="relative min-h-screen bg-muted/30">
+    <div className="relative min-h-screen bg-background">
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[30rem] bg-gradient-ambient" />
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
