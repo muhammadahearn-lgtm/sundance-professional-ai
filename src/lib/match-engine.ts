@@ -3,6 +3,9 @@
 export const MATCH_WEIGHTS = { languages: 20, skills: 30, technologies: 20, experience: 20, preferences: 10 } as const;
 export const LEVEL_WEIGHT: Record<string, number> = { required: 3, preferred: 2, optional: 1 };
 export const MATCH_FILTERS = [90, 80, 70, 60] as const;
+/** Salary up to 10% above the job's max counts as negotiable and earns 70% of the salary check. */
+export const SALARY_BUFFER = 0.1;
+export const SALARY_BUFFER_CREDIT = 0.7;
 
 export type Req = { id: string; level: string };
 export type MatchCandidate = {
@@ -74,8 +77,15 @@ export function preferenceScore(c: MatchCandidate, j: MatchJob): { score: number
   if (norm(c.availability) !== "not_looking") hits.push("Open to opportunities"); else misses.push("Not currently looking");
   const want = c.salaryAmount ?? null;
   const sameCur = !c.salaryCurrency || !j.salaryCurrency || c.salaryCurrency === j.salaryCurrency;
-  if (!want || !j.maxSalary || !sameCur || want <= j.maxSalary) hits.push("Salary alignment"); else misses.push("Salary expectation above range");
-  return { score: hits.length * 20, hits, misses };
+  let salaryPts = 0;
+  if (!want || !j.maxSalary || !sameCur || want <= j.maxSalary) { hits.push("Salary alignment"); salaryPts = 20; }
+  else if (want <= j.maxSalary * (1 + SALARY_BUFFER)) {
+    const over = Math.max(1, Math.round(((want - j.maxSalary) / j.maxSalary) * 100));
+    hits.push(`Salary within negotiable range (+${over}%)`);
+    salaryPts = Math.round(20 * SALARY_BUFFER_CREDIT);
+  } else misses.push("Salary expectation above range");
+  const others = hits.length - (salaryPts > 0 ? 1 : 0);
+  return { score: others * 20 + salaryPts, hits, misses };
 }
 
 export function matchTier(score: number): { label: string; tone: "success" | "primary" | "warning" | "muted" } {
